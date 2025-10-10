@@ -1,19 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snt.L.Mo. Exclusive Sports Hub</title>
-    <meta http-equiv="Content-Security-Policy" 
-        content="default-src 'self' 'unsafe-inline'; 
-                 script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com https://www.googleadservices.com;
-                 connect-src 'self' 'unsafe-inline' https://www.googleapis.com https://firebaseinstallations.googleapis.com https://firestore.googleapis.com https://www.googleadservices.com;
-                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-                 font-src 'self' https://fonts.gstatic.com;
-                 media-src 'self' https://assets.mixkit.co;
-                 frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com;">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script type="module">
+<script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, addDoc, serverTimestamp, where, increment, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -239,12 +224,14 @@
                             setupLockerRoomListener(); 
                             window.toggleSidebarMode('ACTIVE'); 
                             window.toggleStreamTab('HS_COLLEGE'); 
-                            
+
                             // Check for first-time premium access to launch narrator
                             if (!userData.tourCompleted) {
                                 document.getElementById('narrator-launch-btn').classList.remove('hidden');
                             } else {
                                 document.getElementById('narrator-launch-btn').classList.add('hidden');
+                                // Start the continuous idle narrator
+                                startIdleNarrator();
                             }
 
                         } else {
@@ -743,4 +730,272 @@
                 users.forEach(user => {
                     const item = document.createElement('div');
                     item.className = 'p-2 rounded-lg cursor-pointer hover:bg-metro-accent/20 transition duration-150 flex justify-between items-center';
-                    item.innerHTML = `<span class="font-semibold text-gray-800">${user.nickname}</span> <span class="text-xs text-metro-primary ml-2">(${user.id.substring(0,
+                    item.innerHTML = `<span class="font-semibold text-gray-800">${user.nickname}</span> <span class="text-xs text-metro-primary ml-2">(${user.id.substring(0, 4)}...)</span>`;
+                    item.onclick = () => setRecipientForPM(user.id, user.nickname);
+                    list.appendChild(item);
+                });
+            }
+
+            window.toggleSidebarMode = function(mode) {
+                window.sidebarMode = mode;
+                document.getElementById('active-users-list').classList.toggle('hidden', mode !== 'ACTIVE');
+                document.getElementById('leaderboard-list').classList.toggle('hidden', mode !== 'LEADERBOARD');
+                
+                document.getElementById('mode-active-btn').classList.toggle('bg-metro-primary', mode === 'ACTIVE');
+                document.getElementById('mode-active-btn').classList.toggle('text-white', mode === 'ACTIVE');
+                document.getElementById('mode-leaderboard-btn').classList.toggle('bg-metro-primary', mode === 'LEADERBOARD');
+                document.getElementById('mode-leaderboard-btn').classList.toggle('text-white', mode === 'LEADERBOARD');
+            }
+
+            function setupLeaderboardListener() {
+                const q = query(window.dbRef.leaderboard, orderBy('contributions', 'desc'), limit(5));
+                onSnapshot(q, (snapshot) => {
+                    const contributors = [];
+                    snapshot.forEach(doc => {
+                        contributors.push(doc.data());
+                    });
+                    renderLeaderboard(contributors);
+                }, (error) => {
+                    console.error("Error listening to leaderboard:", error);
+                });
+            }
+
+            function renderLeaderboard(contributors) {
+                const list = document.getElementById('leaderboard-list');
+                list.innerHTML = '';
+                
+                if (contributors.length === 0) {
+                    list.innerHTML = '<p class="text-sm text-gray-500 p-2">No contributions recorded yet.</p>';
+                    return;
+                }
+
+                contributors.forEach((contributor, index) => {
+                    const rank = index + 1;
+                    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🏅';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'p-2 rounded-lg flex justify-between items-center border-b border-gray-100';
+                    item.innerHTML = `
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg font-bold w-6 text-center text-metro-primary">${medal}</span>
+                            <span class="font-semibold text-gray-800">${contributor.nickname}</span>
+                        </div>
+                        <span class="text-sm font-bold bg-green-200 text-green-800 px-2 py-0.5 rounded-full">${contributor.contributions} Posts</span>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+            
+            window.setRecipientForPM = function(id, name) {
+                window.chatMode = 'private';
+                window.recipientId = id;
+                document.getElementById('chat-mode-toggle').value = 'private';
+                document.getElementById('recipient-id-input').value = id;
+                document.getElementById('recipient-display').innerText = `PM to: ${name} (${id.substring(0, 4)}...)`;
+                document.getElementById('recipient-container').classList.remove('hidden');
+                document.getElementById('video-call-btn').classList.remove('hidden');
+                setupChatListener();
+            }
+            
+            window.toggleChatMode = function() {
+                window.chatMode = document.getElementById('chat-mode-toggle').value;
+                const recipientContainer = document.getElementById('recipient-container');
+                const videoBtn = document.getElementById('video-call-btn');
+
+                if (window.chatMode === 'private') {
+                    recipientContainer.classList.remove('hidden');
+                    videoBtn.classList.remove('hidden');
+                    window.recipientId = document.getElementById('recipient-id-input').value.trim();
+                    document.getElementById('recipient-display').innerText = window.recipientId ? `PM to: (${window.recipientId.substring(0, 4)}...)` : 'PM Mode Active';
+                } else {
+                    recipientContainer.classList.add('hidden');
+                    videoBtn.classList.add('hidden');
+                    window.recipientId = '';
+                }
+                setupChatListener();
+            }
+
+            // --- SAMPLE CHAT DATA ADDED HERE ---
+            function getSampleChatMessages() {
+                return [
+                    { senderId: 'SYSTEM', senderNickname: 'ZEUS HUB ALERT', text: '🚨 Welcome to the Hub! Use the "Submit Sports Data" button to contribute to the scoreboard.', timestamp: serverTimestamp(), isPrivate: false, recipientId: '', type: 'SYSTEM_ANNOUNCEMENT' },
+                    { senderId: 'USER_1', senderNickname: 'STL_MVP', text: 'Vashon is looking strong this week, ready for the playoffs! What are your predictions?', timestamp: new Date(Date.now() - 300000), isPrivate: false, recipientId: '', type: 'text' },
+                    { senderId: 'USER_2', senderNickname: 'MizzouFan', text: 'Glad the Pro stream tab is back. Any Cardinals highlights coming up?', timestamp: new Date(Date.now() - 120000), isPrivate: false, recipientId: '', type: 'text' },
+                    { senderId: 'USER_3', senderNickname: 'Admin_Test', text: 'PM Mode is essential for scouting. Testing private message to another user.', timestamp: new Date(Date.now() - 60000), isPrivate: true, recipientId: '05806734626095127961', type: 'text' }
+                ];
+            }
+
+            function setupChatListener() {
+                if (!window.currentUserId) return;
+                const publicMessagesCollectionRef = collection(window.db, `artifacts/${appId}/public/data/messages`);
+                
+                let q;
+                
+                if (window.chatMode === 'public') {
+                    q = query(publicMessagesCollectionRef, where('recipientId', '==', ''), orderBy('timestamp', 'desc'), limit(50));
+                } else {
+                    q = query(publicMessagesCollectionRef, where('isPrivate', '==', true), orderBy('timestamp', 'desc'), limit(50));
+                }
+
+                onSnapshot(q, async (snapshot) => {
+                    const messages = [];
+                    snapshot.forEach(doc => {
+                        messages.push(doc.data());
+                    });
+
+                    // ⬇️ Load sample data if the collection is empty ⬇️
+                    if (messages.length === 0 && window.chatMode === 'public') {
+                         messages.push(...getSampleChatMessages());
+                    }
+                    
+                    messages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+                    
+                    renderMessages(messages);
+                }, (error) => {
+                    console.error("Error listening to chat:", error);
+                });
+            }
+            // --- END SAMPLE CHAT DATA ---
+
+            function renderMessages(messages) {
+                const chatBox = document.getElementById('chat-messages');
+                chatBox.innerHTML = '';
+                
+                messages.forEach(msg => {
+                    const isSystem = msg.type === 'SYSTEM_ANNOUNCEMENT'; 
+                    const isSelf = msg.senderId === window.currentUserId;
+                    const isPM = msg.isPrivate;
+                    const isVideoRequest = msg.type === 'VIDEO_REQUEST';
+                    const isVideoResponse = msg.type === 'VIDEO_RESPONSE';
+                    
+                    const messageContainer = document.createElement('div');
+                    
+                    let bubbleClass = `max-w-xs md:max-w-md px-4 py-2 text-white rounded-xl shadow-md `;
+                    let senderClass = `font-bold text-sm mb-1 `;
+                    
+                    if (isSystem) {
+                        messageContainer.className = `flex justify-center mb-3 text-center`;
+                        bubbleClass = `max-w-xl px-4 py-2 text-white rounded-xl shadow-lg bg-red-700/90`;
+                        senderClass = `font-bold text-sm mb-1 text-yellow-300`;
+                    } else {
+                        messageContainer.className = `flex mb-3 ${isSelf ? 'justify-end' : 'justify-start'}`;
+                        bubbleClass += isSelf ? 'bg-metro-primary rounded-br-none' : 'bg-gray-700 rounded-tl-none';
+                        senderClass += isSelf ? 'text-white/80' : 'text-metro-accent';
+                    }
+
+                    const messageBubble = document.createElement('div');
+                    messageBubble.className = bubbleClass;
+                    
+                    const senderName = document.createElement('div');
+                    senderName.className = senderClass;
+                    
+                    if (isSystem) {
+                        senderName.innerText = msg.senderNickname;
+                        messageBubble.innerHTML = `<div class="font-bold text-base mb-1 text-yellow-300">${msg.senderNickname}</div>`;
+                    } else if (isPM) {
+                         senderName.innerText = `PM: ${msg.senderNickname}`;
+                    } else if (isSelf) {
+                        senderName.innerText = `You (${msg.senderNickname})`;
+                    } else {
+                        senderName.innerText = msg.senderNickname;
+                    }
+
+                    if (isVideoRequest) {
+                        messageBubble.innerHTML = `<p class="font-bold text-lg">📹 Video Call Request</p>`;
+                        if (!isSelf && msg.recipientId === window.currentUserId) {
+                            const buttonContainer = document.createElement('div');
+                            buttonContainer.className = 'mt-2 flex space-x-2';
+                            buttonContainer.innerHTML = `
+                                <button onclick="handleVideoResponse('${msg.senderId}', '${msg.senderNickname}', 'accept')" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-1 px-3 rounded-full transition" aria-label="Accept video call request from ${msg.senderNickname}">Accept Call</button>
+                                <button onclick="handleVideoResponse('${msg.senderId}', '${msg.senderNickname}', 'decline')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-full transition" aria-label="Decline video call request from ${msg.senderNickname}">Decline</button>
+                            `;
+                            messageBubble.appendChild(buttonContainer);
+                        } else if (isSelf) {
+                            messageBubble.innerHTML += `<p class="text-xs text-white/70">Waiting for ${msg.recipientNickname}'s response...</p>`;
+                        } else {
+                            messageBubble.innerHTML += `<p class="text-xs text-white/70">Request sent to ${msg.recipientNickname}</p>`;
+                        }
+                    } else if (isVideoResponse) {
+                        const callLink = `https://meet.google.com/${msg.callSessionId}`;
+                        messageBubble.innerHTML = `<p class="font-bold text-lg">📹 Call Response: ${msg.responseStatus}</p>`;
+                        if (msg.responseStatus === 'Accepted') {
+                             messageBubble.innerHTML += `<a href="${callLink}" target="_blank" class="block mt-2 bg-yellow-400 text-gray-900 font-bold py-1 px-3 rounded-full text-center hover:bg-yellow-500 transition" aria-label="Join video call now">Join Call Now!</a>`;
+                        }
+                    } else {
+                        const messageText = document.createElement('p');
+                        messageText.className = 'text-white text-base break-words';
+                        messageText.innerText = msg.text;
+                        messageBubble.appendChild(senderName);
+                        messageBubble.appendChild(messageText);
+                    }
+                    
+                    messageContainer.appendChild(messageBubble);
+                    chatBox.appendChild(messageContainer);
+                });
+
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            window.sendMessage = async function(type = 'text', text = '') {
+                const messageInput = document.getElementById('message-input');
+                const messageText = text || messageInput.value.trim();
+                
+                if ((messageText && type === 'text') || type === 'VIDEO_REQUEST') {
+                    if (window.chatMode === 'private' && !window.recipientId) {
+                        console.error('Please set a recipient ID for private messages.');
+                        return;
+                    }
+
+                    const messageData = {
+                        senderId: window.currentUserId,
+                        senderNickname: window.nickname,
+                        text: messageText,
+                        timestamp: serverTimestamp(),
+                        isPrivate: window.chatMode === 'private',
+                        recipientId: window.chatMode === 'private' ?
+                        window.recipientId : '',
+                        type: type, 
+                    };
+                    try {
+                        await addDoc(window.dbRef.publicMessages, messageData);
+                        messageInput.value = ''; 
+                    } catch (error) {
+                        console.error("Error sending message:", error);
+                    }
+                }
+            }
+            
+            window.handleVideoResponse = async function(requesterId, requesterNickname, status) {
+                const callSessionId = 'stl-sports-' + Date.now().toString().substring(5);
+                const responseData = {
+                    senderId: window.currentUserId,
+                    senderNickname: window.nickname,
+                    recipientId: requesterId,
+                    recipientNickname: requesterNickname,
+                    text: `Call request was ${status}.`,
+                    timestamp: serverTimestamp(),
+                    isPrivate: true,
+                    type: 'VIDEO_RESPONSE',
+                    responseStatus: status === 'accept' ?
+                    'Accepted' : 'Declined',
+                    callSessionId: status === 'accept' ?
+                    callSessionId : '',
+                };
+                try {
+                    await addDoc(window.dbRef.publicMessages, responseData);
+                } catch (error) {
+                    console.error("Error sending video response:", error);
+                }
+            }
+            
+            // --- Sports Data Functions ---
+            window.toggleSportsDataModal = function(show) {
+                document.getElementById('sports-data-modal').classList.toggle('hidden', !show);
+            }
+
+            window.submitSportsData = async function() {
+                const type = document.getElementById('data-type').value;
+                const title = document.getElementById('data-title').value.trim();
+                const details = document.getElementById('data-details').value.trim();
+                const school = document.getElementById('data-school').value;
+                const videoUrl = document.getElementById('data-video-url').value.trim();/* /index.html 200
