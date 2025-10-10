@@ -86,916 +86,1583 @@
         }
 
         // --- Core Application Logic ---
-
-        if (!firebaseConfig) { console.error("Firebase config not found. The app will not function.");
-        } else {
+        
+        // --- FIREBASE INITIALIZATION FIX (Prevents Blank Screen Crash) ---
+        if (firebaseConfig) {
             setLogLevel('Debug');
             window.app = initializeApp(firebaseConfig);
             window.db = getFirestore(window.app);
             window.auth = getAuth(window.app);
             window.serverTimestamp = serverTimestamp;
+        } else {
+            console.error("Firebase config not found. The app will default to logged out mode.");
+            // Authentication function will handle the visual fallback
+        }
+        // --- END FIREBASE INITIALIZATION FIX ---
 
-            // Global State Variables
-            window.currentUserId = null;
-            window.dbRef = null;
-            window.chatMode = 'public'; 
-            window.recipientId = '';
-            window.nickname = 'Guest';
-            window.sportsDataFilter = 'ALL';
-            window.isLoggedIn = false;
-            window.isPremium = false; 
-            window.sidebarMode = 'ACTIVE'; 
-            window.streamTab = 'HS_COLLEGE'; 
-            window.lockerMediaCount = 0;
-            
-            // --- UPDATED AUTHENTICATE FUNCTION ---
-            async function authenticate() {
-                try {
-                    if (initialAuthToken) {
-                        await signInWithCustomToken(window.auth, initialAuthToken);
-                    } else {
-                        document.getElementById('login-modal').classList.remove('hidden');
-                        generateLoginQR(); 
-                    }
-                } catch (error) {
-                    console.error("--- CRITICAL AUTHENTICATION FAILURE ---");
-                    
-                    if (error.code === 'app/no-app' || error.message.includes('Firebase: No Firebase App')) {
-                        console.error("Error Hint: Firebase config not loaded (check __firebase_config variable in HTML).");
-                        alert("Authentication Setup Error: Missing configuration. Check your Firebase console setup.");
-                    } else if (error.code === 'auth/invalid-custom-token' || error.message.includes('token')) {
-                        console.error("Error Hint: Invalid initialAuthToken (may be expired or incorrect). Falling back to login modal.");
-                        // Fallback to showing the user login modal if token fails
-                        document.getElementById('login-modal').classList.remove('hidden');
-                        generateLoginQR();
-                    } else {
-                        // General error for network or other issues
-                        console.error("Authentication failed:", error);
-                        alert("Authentication Failed: Could not connect to the server. Check your network or configuration.");
-                        // Ensure login modal is visible so user can try manual login
-                        document.getElementById('login-modal').classList.remove('hidden');
-                        generateLoginQR();
-                    }
-                }
+        // Global State Variables
+        window.currentUserId = null;
+        window.dbRef = null;
+        window.chatMode = 'public'; 
+        window.recipientId = '';
+        window.nickname = 'Guest';
+        window.sportsDataFilter = 'ALL';
+        window.isLoggedIn = false;
+        window.isPremium = false; 
+        window.sidebarMode = 'ACTIVE'; 
+        window.streamTab = 'HS_COLLEGE'; 
+        window.lockerMediaCount = 0;
+
+        
+        // --- UPDATED AUTHENTICATE FUNCTION (Handles Missing Firebase) ---
+        async function authenticate() {
+            if (!window.db) {
+                // Critical Firebase failure, ensure only login modal is visible
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.getElementById('main-content').classList.add('hidden');
+                document.getElementById('paywall-content').classList.add('hidden');
+                generateLoginQR();
+                return;
             }
-            // --- END UPDATED AUTHENTICATE FUNCTION ---
 
-            onAuthStateChanged(window.auth, (user) => {
-                const loginModal = document.getElementById('login-modal');
-                const headerAuthBtn = document.getElementById('header-auth-btn');
-                const accountBtn = document.getElementById('account-btn');
-                
-                const adminBtn = document.getElementById('admin-btn');
-                const mobileMenu = document.getElementById('mobile-menu');
-
-                if (user) {
-                    window.currentUserId = user.uid;
-                    window.isLoggedIn = true;
-                    
-                    loginModal.classList.add('hidden');
-                    
-                    headerAuthBtn.classList.add('hidden');
-                    accountBtn.classList.remove('hidden'); 
-                    
-                    // Show Admin Button if user is the Admin
-                    adminBtn.classList.toggle('hidden', user.uid !== ADMIN_USER_ID);
-                    mobileMenu.classList.remove('hidden');
-                    window.dbRef = {
-                        users: (uid) => doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`),
-                        allUsersCollection: collection(window.db, `artifacts/${appId}/users`), 
-                        publicMessages: collection(window.db, `artifacts/${appId}/public/data/messages`),
-                        activeUsersCollection: collection(window.db, `artifacts/${appId}/public/data/active_users`),
-                        sportsData: collection(window.db, `artifacts/${appId}/public/data/sports_data`),
-                        leaderboard: collection(window.db, `artifacts/${appId}/public/data/leaderboard`),
-                        mediaLocker: (uid) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker`),
-                        // ADDED: Reference for comments on a specific media item
-                        mediaComments: (uid, mediaId) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker/${mediaId}/comments`) 
-                    };
-                    
-                    loadUserStatusAndContent();
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(window.auth, initialAuthToken);
                 } else {
-                    window.currentUserId = null;
-                    window.isLoggedIn = false;
-                    window.isPremium = false;
-                    document.getElementById('main-content').classList.add('hidden'); 
-                    document.getElementById('paywall-content').classList.add('hidden'); 
-                    loginModal.classList.remove('hidden'); 
-                    
-                    headerAuthBtn.classList.remove('hidden'); 
-                    accountBtn.classList.add('hidden'); 
-                    adminBtn.classList.add('hidden');
-                    mobileMenu.classList.add('hidden');
-
+                    document.getElementById('login-modal').classList.remove('hidden');
                     generateLoginQR(); 
-                    renderUserStatus({});
                 }
-            });
-            async function loadUserStatusAndContent() {
-                const mainContent = document.getElementById('main-content');
-                const paywallContent = document.getElementById('paywall-content');
-                let isExpired = false;
+            } catch (error) {
+                console.error("--- CRITICAL AUTHENTICATION FAILURE ---");
+                
+                if (error.code === 'app/no-app' || error.message.includes('Firebase: No Firebase App')) {
+                    console.error("Error Hint: Firebase config not loaded (check __firebase_config variable in HTML).");
+                    alert("Authentication Setup Error: Missing configuration. Check your Firebase console setup.");
+                } else if (error.code === 'auth/invalid-custom-token' || error.message.includes('token')) {
+                    console.error("Error Hint: Invalid initialAuthToken (may be expired or incorrect). Falling back to login modal.");
+                    // Fallback to showing the user login modal if token fails
+                    document.getElementById('login-modal').classList.remove('hidden');
+                    generateLoginQR();
+                } else {
+                    // General error for network or other issues
+                    console.error("Authentication failed:", error);
+                    alert("Authentication Failed: Could not connect to the server. Check your network or configuration.");
+                    // Ensure login modal is visible so user can try manual login
+                    document.getElementById('login-modal').classList.remove('hidden');
+                    generateLoginQR();
+                }
+            }
+        }
+        // --- END UPDATED AUTHENTICATE FUNCTION ---
 
+        onAuthStateChanged(window.auth, (user) => {
+            const loginModal = document.getElementById('login-modal');
+            const headerAuthBtn = document.getElementById('header-auth-btn');
+            const accountBtn = document.getElementById('account-btn');
+            
+            const adminBtn = document.getElementById('admin-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (user) {
+                window.currentUserId = user.uid;
+                window.isLoggedIn = true;
+                
+                loginModal.classList.add('hidden');
+                
+                headerAuthBtn.classList.add('hidden');
+                accountBtn.classList.remove('hidden'); 
+                
+                // Show Admin Button if user is the Admin
+                adminBtn.classList.toggle('hidden', user.uid !== ADMIN_USER_ID);
+                mobileMenu.classList.remove('hidden');
+                window.dbRef = {
+                    users: (uid) => doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`),
+                    allUsersCollection: collection(window.db, `artifacts/${appId}/users`), 
+                    publicMessages: collection(window.db, `artifacts/${appId}/public/data/messages`),
+                    activeUsersCollection: collection(window.db, `artifacts/${appId}/public/data/active_users`),
+                    sportsData: collection(window.db, `artifacts/${appId}/public/data/sports_data`),
+                    leaderboard: collection(window.db, `artifacts/${appId}/public/data/leaderboard`),
+                    mediaLocker: (uid) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker`),
+                    // ADDED: Reference for comments on a specific media item
+                    mediaComments: (uid, mediaId) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker/${mediaId}/comments`) 
+                };
+                
+                loadUserStatusAndContent();
+            } else {
+                window.currentUserId = null;
+                window.isLoggedIn = false;
+                window.isPremium = false;
+                document.getElementById('main-content').classList.add('hidden'); 
+                document.getElementById('paywall-content').classList.add('hidden'); 
+                loginModal.classList.remove('hidden'); 
+                
+                headerAuthBtn.classList.remove('hidden'); 
+                accountBtn.classList.add('hidden'); 
+                adminBtn.classList.add('hidden');
+                mobileMenu.classList.add('hidden');
+
+                generateLoginQR(); 
+                renderUserStatus({});
+            }
+        });
+        async function loadUserStatusAndContent() {
+            const mainContent = document.getElementById('main-content');
+            const paywallContent = document.getElementById('paywall-content');
+            let isExpired = false;
+
+            try {
+                const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
+                if (docSnap.exists()) {
+                    const userData = docSnap.data();
+                    window.nickname = userData.nickname || 'Guest';
+                    document.getElementById('nickname-input').value = window.nickname;
+                    
+                    if (userData.premiumExpires && userData.premiumExpires.toDate) {
+                        const expirationDate = userData.premiumExpires.toDate();
+                        if (expirationDate < new Date()) {
+                            isExpired = true;
+                        }
+                    }
+                    
+                    window.isPremium = (userData.isPremium && !isExpired) ||
+                    false;
+
+                    renderUserStatus(userData); 
+
+                    if (window.isPremium) {
+                        mainContent.classList.remove('hidden');
+                        paywallContent.classList.add('hidden');
+                        startPresenceTracking(window.currentUserId);
+                        setupChatListener();
+                        setupSportsDataListener();
+                        setupLeaderboardListener(); 
+                        setupLockerRoomListener(); 
+                        window.toggleSidebarMode('ACTIVE'); 
+                        window.toggleStreamTab('HS_COLLEGE'); 
+
+                        // Check for first-time premium access to launch narrator
+                        if (!userData.tourCompleted) {
+                            document.getElementById('narrator-launch-btn').classList.remove('hidden');
+                        } else {
+                            document.getElementById('narrator-launch-btn').classList.add('hidden');
+                            // Start the continuous idle narrator
+                            startIdleNarrator();
+                        }
+
+                    } else {
+                        mainContent.classList.add('hidden');
+                        paywallContent.classList.remove('hidden');
+                        setupLockerRoomListener(); 
+                    }
+                } else {
+                     mainContent.classList.add('hidden');
+                     paywallContent.classList.remove('hidden');
+                     renderUserStatus({});
+                     setupLockerRoomListener(); 
+                }
+            } catch (error) {
+                console.error("Error loading user status:", error);
+                mainContent.classList.add('hidden');
+                paywallContent.classList.remove('hidden');
+                renderUserStatus({});
+            }
+        }
+        
+        // --- UX FUNCTION: Renders Nickname, Status, and Expiration ---
+        function renderUserStatus(userData) {
+            const statusDisplay = document.getElementById('user-status-display');
+            const idDisplay = document.getElementById('user-id-display');
+            const expiry = userData.premiumExpires?.toDate ? userData.premiumExpires.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+            
+            // Optimized check for logged in status
+            if (!window.isLoggedIn) {
+                statusDisplay.innerHTML = 'Logged Out';
+                idDisplay.innerText = '';
+                return;
+            }
+            
+            idDisplay.innerText = window.currentUserId.substring(0, 8) + '...';
+            idDisplay.title = window.currentUserId;
+            
+            let html = `<span class="font-bold text-metro-accent mr-2" id="nickname-display">${window.nickname}</span>`;
+            if (window.isPremium) {
+                html += `<span class="text-xs font-bold text-white bg-green-600 px-2 py-0.5 rounded-full mr-3">⭐ PRO MEMBER</span>`;
+                html += `<span class="text-xs text-gray-500">Expires: ${expiry}</span>`;
+            } else {
+                html += `<span class="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">STANDARD</span>`;
+            }
+
+            statusDisplay.innerHTML = html;
+            // Update Account Modal
+            document.getElementById('account-uid').innerText = window.currentUserId;
+            document.getElementById('account-nickname').value = window.nickname;
+            document.getElementById('account-premium-status').innerText = window.isPremium ? `Active (Expires ${expiry})` : 'Inactive';
+            document.getElementById('account-premium-status').className = window.isPremium ?
+            'text-green-600 font-bold' : 'text-red-500 font-bold';
+        }
+        // --- END UX FUNCTION ---
+        
+        // --- ACCOUNT MANAGEMENT MODAL FUNCTIONS ---
+        window.toggleAccountModal = function(show) {
+            document.getElementById('account-modal').classList.toggle('hidden', !show);
+            if (show) document.getElementById('account-password-error').innerText = '';
+        }
+        
+        window.updateUserPassword = async function() {
+            const newPassword = document.getElementById('account-new-password').value.trim();
+            const errorDisplay = document.getElementById('account-password-error');
+            errorDisplay.innerText = '';
+
+            if (newPassword.length < 6) {
+                errorDisplay.innerText = "New password must be at least 6 characters.";
+                return;
+            }
+            
+            try {
+                await updatePassword(window.auth.currentUser, newPassword);
+                errorDisplay.innerText = "Password updated successfully! Please log in with your new password on your next session.";
+                document.getElementById('account-new-password').value = '';
+            } catch (error) {
+                errorDisplay.innerText = "Error changing password. You may need to log out and log back in before attempting to change your password.";
+                console.error("Password change error:", error);
+            }
+        }
+        
+        window.saveAccountNickname = async function() {
+            const input = document.getElementById('account-nickname').value.trim();
+            if (input && window.currentUserId) {
+                window.nickname = input;
                 try {
+                    await setDoc(window.dbRef.users(window.currentUserId), { nickname: input }, { merge: true });
+                    document.getElementById('nickname-input').value = input; 
                     const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        window.nickname = userData.nickname || 'Guest';
-                        document.getElementById('nickname-input').value = window.nickname;
-                        
-                        if (userData.premiumExpires && userData.premiumExpires.toDate) {
-                            const expirationDate = userData.premiumExpires.toDate();
-                            if (expirationDate < new Date()) {
-                                isExpired = true;
-                            }
-                        }
-                        
-                        window.isPremium = (userData.isPremium && !isExpired) ||
-                        false;
-
-                        renderUserStatus(userData); 
-
-                        if (window.isPremium) {
-                            mainContent.classList.remove('hidden');
-                            paywallContent.classList.add('hidden');
-                            startPresenceTracking(window.currentUserId);
-                            setupChatListener();
-                            setupSportsDataListener();
-                            setupLeaderboardListener(); 
-                            setupLockerRoomListener(); 
-                            window.toggleSidebarMode('ACTIVE'); 
-                            window.toggleStreamTab('HS_COLLEGE'); 
-
-                            // Check for first-time premium access to launch narrator
-                            if (!userData.tourCompleted) {
-                                document.getElementById('narrator-launch-btn').classList.remove('hidden');
-                            } else {
-                                document.getElementById('narrator-launch-btn').classList.add('hidden');
-                                // Start the continuous idle narrator
-                                startIdleNarrator();
-                            }
-
-                        } else {
-                            mainContent.classList.add('hidden');
-                            paywallContent.classList.remove('hidden');
-                            setupLockerRoomListener(); 
-                        }
-                    } else {
-                         mainContent.classList.add('hidden');
-                         paywallContent.classList.remove('hidden');
-                         renderUserStatus({});
-                         setupLockerRoomListener(); 
-                    }
+                    if (docSnap.exists()) renderUserStatus(docSnap.data()); 
+                    alert("Nickname saved successfully across all features.");
                 } catch (error) {
-                    console.error("Error loading user status:", error);
-                    mainContent.classList.add('hidden');
-                    paywallContent.classList.remove('hidden');
-                    renderUserStatus({});
+                    console.error("Error saving nickname:", error);
                 }
             }
-            
-            // --- UX FUNCTION: Renders Nickname, Status, and Expiration ---
-            function renderUserStatus(userData) {
-                const statusDisplay = document.getElementById('user-status-display');
-                const idDisplay = document.getElementById('user-id-display');
-                const expiry = userData.premiumExpires?.toDate ? userData.premiumExpires.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-                
-                // Optimized check for logged in status
-                if (!window.isLoggedIn) {
-                    statusDisplay.innerHTML = 'Logged Out';
-                    idDisplay.innerText = '';
-                    return;
-                }
-                
-                idDisplay.innerText = window.currentUserId.substring(0, 8) + '...';
-                idDisplay.title = window.currentUserId;
-                
-                let html = `<span class="font-bold text-metro-accent mr-2" id="nickname-display">${window.nickname}</span>`;
-                if (window.isPremium) {
-                    html += `<span class="text-xs font-bold text-white bg-green-600 px-2 py-0.5 rounded-full mr-3">⭐ PRO MEMBER</span>`;
-                    html += `<span class="text-xs text-gray-500">Expires: ${expiry}</span>`;
-                } else {
-                    html += `<span class="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">STANDARD</span>`;
-                }
+        }
+        // --- END ACCOUNT MANAGEMENT MODAL FUNCTIONS ---
 
-                statusDisplay.innerHTML = html;
-                // Update Account Modal
-                document.getElementById('account-uid').innerText = window.currentUserId;
-                document.getElementById('account-nickname').value = window.nickname;
-                document.getElementById('account-premium-status').innerText = window.isPremium ? `Active (Expires ${expiry})` : 'Inactive';
-                document.getElementById('account-premium-status').className = window.isPremium ?
-                'text-green-600 font-bold' : 'text-red-500 font-bold';
-            }
-            // --- END UX FUNCTION ---
-            
-            // --- ACCOUNT MANAGEMENT MODAL FUNCTIONS ---
-            window.toggleAccountModal = function(show) {
-                document.getElementById('account-modal').classList.toggle('hidden', !show);
-                if (show) document.getElementById('account-password-error').innerText = '';
-            }
-            
-            window.updateUserPassword = async function() {
-                const newPassword = document.getElementById('account-new-password').value.trim();
-                const errorDisplay = document.getElementById('account-password-error');
-                errorDisplay.innerText = '';
+        // --- PAYMENT MODALS ---
+        window.togglePaymentModal = function(show) {
+            document.getElementById('payment-success-modal').classList.toggle('hidden', !show);
+        }
+        
+        window.toggleCashAppModal = function(show) {
+            document.getElementById('cashapp-modal').classList.toggle('hidden', !show);
+            if (show) generateCashAppQR(); 
+        }
 
-                if (newPassword.length < 6) {
-                    errorDisplay.innerText = "New password must be at least 6 characters.";
-                    return;
-                }
-                
-                try {
-                    await updatePassword(window.auth.currentUser, newPassword);
-                    errorDisplay.innerText = "Password updated successfully! Please log in with your new password on your next session.";
-                    document.getElementById('account-new-password').value = '';
-                } catch (error) {
-                    errorDisplay.innerText = "Error changing password. You may need to log out and log back in before attempting to change your password.";
-                    console.error("Password change error:", error);
-                }
+        function generateCashAppQR() {
+            const qrCodeDiv = document.getElementById('cashapp-qrcode');
+            qrCodeDiv.innerHTML = ''; 
+            const cashtag = "Mac100dime"; 
+            const amount = "10.00";
+            const paymentLink = `https://cash.app/$${cashtag}/${amount}`;
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrCodeDiv, {
+                    text: paymentLink,
+                    width: 180,
+                    height: 180,
+                    colorDark : "#0047AB", 
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            } else {
+                qrCodeDiv.innerHTML = `<p class="text-sm text-red-500">QR Code library not loaded. Ensure it's included in your HTML head.</p>`;
             }
+        }
+        
+        window.simulatePaymentSuccess = function() {
+            window.upgradeToPremiumForOneYear();
+            togglePaymentModal(false);
+        }
+        // --- END PAYMENT MODALS ---
+        
+        // --- LOGIN/AUTH QR CODE GENERATION ---
+        function generateLoginQR() {
+            const qrCodeDiv = document.getElementById('login-qrcode');
+            const idInput = document.getElementById('login-qr-id-input');
+            qrCodeDiv.innerHTML = ''; 
             
-            window.saveAccountNickname = async function() {
-                const input = document.getElementById('account-nickname').value.trim();
-                if (input && window.currentUserId) {
-                    window.nickname = input;
-                    try {
-                        await setDoc(window.dbRef.users(window.currentUserId), { nickname: input }, { merge: true });
-                        document.getElementById('nickname-input').value = input; 
-                        const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
-                        if (docSnap.exists()) renderUserStatus(docSnap.data()); 
-                        alert("Nickname saved successfully across all features.");
-                    } catch (error) {
-                        console.error("Error saving nickname:", error);
-                    }
-                }
+            const userIdToEncode = window.currentUserId || 'MOCK_ID_' + Math.random().toString(36).substring(2, 8);
+            idInput.value = userIdToEncode;
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrCodeDiv, {
+                    text: userIdToEncode,
+                    width: 100,
+                    height: 100,
+                    colorDark : "#0047AB", 
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.L
+                });
+            } else {
+                qrCodeDiv.innerHTML = `<p class="text-xs text-red-500">QR Code library not loaded.</p>`;
             }
-            // --- END ACCOUNT MANAGEMENT MODAL FUNCTIONS ---
-
-            // --- PAYMENT MODALS ---
-            window.togglePaymentModal = function(show) {
-                document.getElementById('payment-success-modal').classList.toggle('hidden', !show);
-            }
-            
-            window.toggleCashAppModal = function(show) {
-                document.getElementById('cashapp-modal').classList.toggle('hidden', !show);
-                if (show) generateCashAppQR(); 
-            }
-
-            function generateCashAppQR() {
-                const qrCodeDiv = document.getElementById('cashapp-qrcode');
-                qrCodeDiv.innerHTML = ''; 
-                const cashtag = "Mac100dime"; 
-                const amount = "10.00";
-                const paymentLink = `https://cash.app/$${cashtag}/${amount}`;
-                if (typeof QRCode !== 'undefined') {
-                    new QRCode(qrCodeDiv, {
-                        text: paymentLink,
-                        width: 180,
-                        height: 180,
-                        colorDark : "#0047AB", 
-                        colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
-                    });
-                } else {
-                    qrCodeDiv.innerHTML = `<p class="text-sm text-red-500">QR Code library not loaded. Ensure it's included in your HTML head.</p>`;
-                }
-            }
-            
-            window.simulatePaymentSuccess = function() {
-                window.upgradeToPremiumForOneYear();
-                togglePaymentModal(false);
-            }
-            // --- END PAYMENT MODALS ---
-            
-            // --- LOGIN/AUTH QR CODE GENERATION ---
-            function generateLoginQR() {
-                const qrCodeDiv = document.getElementById('login-qrcode');
-                const idInput = document.getElementById('login-qr-id-input');
-                qrCodeDiv.innerHTML = ''; 
-                
-                const userIdToEncode = window.currentUserId || 'MOCK_ID_' + Math.random().toString(36).substring(2, 8);
-                idInput.value = userIdToEncode;
-                if (typeof QRCode !== 'undefined') {
-                    new QRCode(qrCodeDiv, {
-                        text: userIdToEncode,
-                        width: 100,
-                        height: 100,
-                        colorDark : "#0047AB", 
-                        colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.L
-                    });
-                } else {
-                    qrCodeDiv.innerHTML = `<p class="text-xs text-red-500">QR Code library not loaded.</p>`;
-                }
-            }
-            
-            window.copyQrCodeText = function() {
-                const idInput = document.getElementById('login-qr-id-input');
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(idInput.value).then(() => {
-                        alert("User ID copied to clipboard!");
-                    }).catch(err => {
-                        console.error('Could not copy text: ', err);
-                        alert("Could not copy text automatically. Please select and copy the ID.");
-                    });
-                } else {
+        }
+        
+        window.copyQrCodeText = function() {
+            const idInput = document.getElementById('login-qr-id-input');
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(idInput.value).then(() => {
+                    alert("User ID copied to clipboard!");
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
                     alert("Could not copy text automatically. Please select and copy the ID.");
-                }
+                });
+            } else {
+                alert("Could not copy text automatically. Please select and copy the ID.");
             }
-            // --- END LOGIN/AUTH QR CODE GENERATION ---
+        }
+        // --- END LOGIN/AUTH QR CODE GENERATION ---
 
 
-            // --- Authentication Handlers ---
-            window.toggleLoginModal = function(show) {
-                document.getElementById('login-modal').classList.toggle('hidden', !show);
-                if (show) setTimeout(generateLoginQR, 100); 
+        // --- Authentication Handlers ---
+        window.toggleLoginModal = function(show) {
+            document.getElementById('login-modal').classList.toggle('hidden', !show);
+            if (show) setTimeout(generateLoginQR, 100); 
+        }
+
+        window.logIn = async function() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errorDisplay = document.getElementById('login-error');
+            errorDisplay.innerText = '';
+            if (!email || !password) {
+                errorDisplay.innerText = "Please enter email and password.";
+                return;
             }
+            
+            try {
+                await signInWithEmailAndPassword(window.auth, email, password);
+                document.getElementById('login-modal').classList.add('hidden');
+            } catch (error) {
+                errorDisplay.innerText = error.message.replace('Firebase: ', '');
+                console.error("Login Error:", error);
+            }
+        }
+        
+        window.register = async function() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errorDisplay = document.getElementById('login-error');
+            errorDisplay.innerText = '';
+            if (!email || password.length < 6) {
+                errorDisplay.innerText = "Email required, and password must be at least 6 characters.";
+                return;
+            }
+            
+            try {
+                const userCredential = await createUserWithEmailAndPassword(window.auth, email, password);
+                const uid = userCredential.user.uid;
 
-            window.logIn = async function() {
-                const email = document.getElementById('login-email').value.trim();
-                const password = document.getElementById('login-password').value.trim();
-                const errorDisplay = document.getElementById('login-error');
-                errorDisplay.innerText = '';
-                if (!email || !password) {
-                    errorDisplay.innerText = "Please enter email and password.";
-                    return;
-                }
+                await setDoc(doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`), {
+                    nickname: 'NewPlayer' + uid.substring(0, 4),
+                    email: email,
+                    isPremium: false, 
+                    createdAt: serverTimestamp(),
+                    contributions: 0 
+                });
+                document.getElementById('login-modal').classList.add('hidden');
+
+            } catch (error) {
+                errorDisplay.innerText = error.message.replace('Firebase: ', '');
+                console.error("Registration Error:", error);
+            }
+        }
+        
+        window.logOut = async function() {
+            try {
+                // Optimized to rely solely on onAuthStateChanged listener to handle state cleanup
+                await signOut(window.auth);
+            } catch (error) {
+                console.error("Logout Error:", error);
+            }
+        }
+
+        // --- ADMIN FUNCTION FOR TESTING PAYWALL ACCESS ---
+        window.upgradeToPremiumForOneYear = async function(targetUid = window.currentUserId) {
+            if (!window.currentUserId) {
+                alert('You must be logged in to use this admin function.');
+                return;
+            }
+            
+            if (window.currentUserId !== ADMIN_USER_ID) {
+                alert('Access Denied: Only the designated ADMIN_USER_ID can run this function.');
+                return;
+            }
+            
+            // FIXED: Removed the check for the literal "YOUR_FIREBASE_USER_UID_HERE" placeholder.
+
+            try {
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+                await updateDoc(window.dbRef.users(targetUid), {
+                    isPremium: true,
+                    premiumActivated: serverTimestamp(),
+                    premiumExpires: oneYearFromNow, 
+                });
                 
+                alert(`Success! User ${targetUid} is now Premium until ${oneYearFromNow.toLocaleDateString()}. Refresh the page to update status.`);
+                if (targetUid === window.currentUserId) loadUserStatusAndContent(); 
+            } catch (error) {
+                console.error("Admin Upgrade Error:", error);
+                alert("Admin upgrade failed. Check console for details.");
+            }
+        }
+        
+        window.downgradeFromPremium = async function(targetUid) {
+            if (window.currentUserId !== ADMIN_USER_ID) {
+                alert('Access Denied.');
+                return;
+            }
+             try {
+                await updateDoc(window.dbRef.users(targetUid), {
+                    isPremium: false,
+                    premiumExpires: null, 
+                });
+                alert(`Success! User ${targetUid} is now downgraded.`);
+                if (targetUid === window.currentUserId) loadUserStatusAndContent(); 
+            } catch (error) {
+                console.error("Admin Downgrade Error:", error);
+                alert("Admin downgrade failed. Check console for details.");
+            }
+        }
+        
+        // --- ADMIN MODAL FUNCTIONS ---
+        window.toggleAdminModal = async function(show) {
+            if (show && window.currentUserId !== ADMIN_USER_ID) {
+                alert('Access Denied: Only the designated ADMIN can open this panel.');
+                return;
+            }
+            document.getElementById('admin-modal').classList.toggle('hidden', !show);
+            if (show) await fetchAllUsersForAdmin();
+        }
+
+        async function fetchAllUsersForAdmin() {
+            const usersList = document.getElementById('admin-users-list');
+            usersList.innerHTML = '<p class="text-gray-500 text-center py-4">Loading user list...</p>';
+            
+            try {
+                const q = query(window.dbRef.allUsersCollection);
+                const querySnapshot = await getDocs(q);
+                
+                usersList.innerHTML = '';
+                querySnapshot.forEach(userDoc => {
+                    const infoRef = doc(userDoc.ref, 'profile/info');
+                    getDoc(infoRef).then(infoSnap => {
+                        if (infoSnap.exists()) renderAdminUserRow(userDoc.id, infoSnap.data());
+                    });
+                });
+            } catch (error) {
+                usersList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading users. Check security rules/console.</p>';
+                console.error("Error fetching all user profiles for admin:", error);
+            }
+        }
+
+        function renderAdminUserRow(uid, userData) {
+            const usersList = document.getElementById('admin-users-list');
+            const isPremium = userData.isPremium;
+            const expiry = userData.premiumExpires?.toDate ? userData.premiumExpires.toDate().toLocaleDateString() : 'N/A';
+            
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-5 gap-2 p-2 border-b items-center text-sm';
+            row.innerHTML = `
+                <div role="cell" class="truncate font-semibold">${userData.nickname || 'N/A'}</div>
+                <div role="cell" class="truncate text-xs text-gray-500" title="${uid}">${uid.substring(0, 8)}...</div>
+                <div role="cell" class="font-medium ${isPremium ? 'text-green-600' : 'text-red-500'}">
+                    ${isPremium ? 'PRO' : 'STANDARD'}
+                </div>
+                <div role="cell" class="text-xs text-gray-600">${expiry}</div>
+                <div role="cell">
+                    <button onclick="window.downgradeFromPremium('${uid}')" class="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600" aria-label="Downgrade ${userData.nickname} status" ${!isPremium ? 'disabled' : ''}>Downgrade</button>
+                    <button onclick="window.upgradeToPremiumForOneYear('${uid}')" class="bg-green-500 text-white text-xs px-2 py-1 rounded hover:bg-green-600" aria-label="Upgrade ${userData.nickname} status" ${isPremium ? 'disabled' : ''}>Upgrade</button>
+                </div>
+            `;
+            usersList.appendChild(row);
+        }
+        // --- END ADMIN MODAL FUNCTIONS ---
+
+        // --- MOBILE NAVIGATION ---
+        window.toggleMobileNav = function(show) {
+            document.getElementById('mobile-nav-panel').classList.toggle('hidden', !show);
+        }
+
+        window.scrollToSection = function(id) {
+            const section = document.getElementById(id);
+            if (section) section.scrollIntoView({ behavior: 'smooth' });
+            toggleMobileNav(false); 
+        }
+        // --- END MOBILE NAVIGATION ---
+
+        window.saveNickname = async function() {
+            const input = document.getElementById('nickname-input').value.trim();
+            if (input && window.currentUserId) {
+                window.nickname = input;
+                document.getElementById('nickname-display').innerText = input;
                 try {
-                    await signInWithEmailAndPassword(window.auth, email, password);
-                    document.getElementById('login-modal').classList.add('hidden');
+                    await setDoc(window.dbRef.users(window.currentUserId), { nickname: input }, { merge: true });
+                    const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
+                    if (docSnap.exists()) renderUserStatus(docSnap.data()); 
+                    alert("Nickname saved successfully.");
                 } catch (error) {
-                    errorDisplay.innerText = error.message.replace('Firebase: ', '');
-                    console.error("Login Error:", error);
+                    console.error("Error saving nickname:", error);
+                }
+            }
+        }
+        
+        // --- ZEUS NARRATOR TOUR ---
+        window.startZeusNarratorTour = async function() {
+            document.getElementById('narrator-launch-btn').classList.add('hidden');
+            const tourSteps = [
+                { target: '#scoreboard-section', message: "Welcome, Pro Member! I am Zeus, your guide. Observe the Community Scoreboard—this is where your real-time data flows. Submit scores below!", offset: -50 },
+                { target: '#chat-heading', message: "Next, the Team Chat. Use this to strategize with other Pro Members or send private messages using the Active Users list.", offset: -10 },
+                { target: '#locker-room-section', message: "This is your Personal Locker Room. Unlimited media storage is now yours. Upload your highlights!", offset: -10 },
+                { target: '#interview-heading', message: "And finally, the Exclusive Interview Corner. Submit questions for our next celebrity guest here. Go forth and dominate!", offset: -10 }
+            ];
+            for (const step of tourSteps) {
+                const targetElement = document.querySelector(step.target);
+                if (targetElement) {
+                    // Scroll smoothly to the element
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                    // Wait for scroll to finish (approx 1 second)
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Play the speech
+                    await window.generateAndSpeak(step.message);
+                    // Wait a moment for the user to absorb the info
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                 }
             }
             
-            window.register = async function() {
-                const email = document.getElementById('login-email').value.trim();
-                const password = document.getElementById('login-password').value.trim();
-                const errorDisplay = document.getElementById('login-error');
-                errorDisplay.innerText = '';
-                if (!email || password.length < 6) {
-                    errorDisplay.innerText = "Email required, and password must be at least 6 characters.";
-                    return;
-                }
-                
-                try {
-                    const userCredential = await createUserWithEmailAndPassword(window.auth, email, password);
-                    const uid = userCredential.user.uid;
-
-                    await setDoc(doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`), {
-                        nickname: 'NewPlayer' + uid.substring(0, 4),
-                        email: email,
-                        isPremium: false, 
-                        createdAt: serverTimestamp(),
-                        contributions: 0 
-                    });
-                    document.getElementById('login-modal').classList.add('hidden');
-
-                } catch (error) {
-                    errorDisplay.innerText = error.message.replace('Firebase: ', '');
-                    console.error("Registration Error:", error);
-                }
+            // Mark tour as complete in Firestore
+            if (window.currentUserId) {
+                await updateDoc(window.dbRef.users(window.currentUserId), { tourCompleted: true });
             }
-            
-            window.logOut = async function() {
-                try {
-                    // Optimized to rely solely on onAuthStateChanged listener to handle state cleanup
-                    await signOut(window.auth);
-                } catch (error) {
-                    console.error("Logout Error:", error);
-                }
-            }
+        }
+        // --- END ZEUS NARRATOR TOUR ---
 
-            // --- ADMIN FUNCTION FOR TESTING PAYWALL ACCESS ---
-            window.upgradeToPremiumForOneYear = async function(targetUid = window.currentUserId) {
-                if (!window.currentUserId) {
-                    alert('You must be logged in to use this admin function.');
-                    return;
-                }
+        // --- IDLE NARRATOR DATA (For Background Audio) ---
+        let lastNarratedIndex = -1;
+        const IDLE_NARRATOR_UPDATES = [
+            "BREAKING NEWS: Former Vashon star Jayson Tatum dominated the Celtics game last night, dropping 40 points in a historic fourth-quarter surge! The St. Louis legacy continues.",
+            "Live from Columbia: Mizzou Football is locked in a defensive battle! The score remains 7 to 3 at the half. Zeus demands relentless effort in the third quarter!",
+            "St. Louis City SC update: The team secured a thrilling victory thanks to a stunning bicycle kick from their new forward. What a performance!",
+            "Check the board! Local talent Ezekiel Elliott carried the Cowboys to a win, reminding everyone that St. Louis RBs are built different.",
+            LONG_MOTIVATIONAL_SPEECH // Re-uses your existing motivational speech
+        ];
+
+        // --- IDLE NARRATOR LOGIC (Runs every 30 seconds if TTS input is empty) ---
+        function startIdleNarrator() {
+            setInterval(() => {
+                const ttsInput = document.getElementById('tts-input');
+                const isInputEmpty = ttsInput && ttsInput.value.trim() === '';
                 
-                if (window.currentUserId !== ADMIN_USER_ID) {
-                    alert('Access Denied: Only the designated ADMIN_USER_ID can run this function.');
-                    return;
-                }
-                
-                // FIXED: Removed the check for the literal "YOUR_FIREBASE_USER_UID_HERE" placeholder.
-
-                try {
-                    const oneYearFromNow = new Date();
-                    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-
-                    await updateDoc(window.dbRef.users(targetUid), {
-                        isPremium: true,
-                        premiumActivated: serverTimestamp(),
-                        premiumExpires: oneYearFromNow, 
-                    });
+                // Only run if the user isn't actively typing or using the TTS feature
+                if (window.isPremium && isInputEmpty && window.auth.currentUser) {
+                    lastNarratedIndex = (lastNarratedIndex + 1) % IDLE_NARRATOR_UPDATES.length;
+                    const update = IDLE_NARRATOR_UPDATES[lastNarratedIndex];
                     
-                    alert(`Success! User ${targetUid} is now Premium until ${oneYearFromNow.toLocaleDateString()}. Refresh the page to update status.`);
-                    if (targetUid === window.currentUserId) loadUserStatusAndContent(); 
-                } catch (error) {
-                    console.error("Admin Upgrade Error:", error);
-                    alert("Admin upgrade failed. Check console for details.");
+                    // We only run the full TTS on every 3rd cycle to prevent spamming the API and audio
+                    if (lastNarratedIndex % 3 === 0) {
+                        window.generateAndSpeak(update);
+                    }
                 }
-            }
-            
-            window.downgradeFromPremium = async function(targetUid) {
-                if (window.currentUserId !== ADMIN_USER_ID) {
-                    alert('Access Denied.');
-                    return;
-                }
-                 try {
-                    await updateDoc(window.dbRef.users(targetUid), {
-                        isPremium: false,
-                        premiumExpires: null, 
-                    });
-                    alert(`Success! User ${targetUid} is now downgraded.`);
-                    if (targetUid === window.currentUserId) loadUserStatusAndContent(); 
-                } catch (error) {
-                    console.error("Admin Downgrade Error:", error);
-                    alert("Admin downgrade failed. Check console for details.");
-                }
-            }
-            
-            // --- ADMIN MODAL FUNCTIONS ---
-            window.toggleAdminModal = async function(show) {
-                if (show && window.currentUserId !== ADMIN_USER_ID) {
-                    alert('Access Denied: Only the designated ADMIN can open this panel.');
-                    return;
-                }
-                document.getElementById('admin-modal').classList.toggle('hidden', !show);
-                if (show) await fetchAllUsersForAdmin();
+            }, 30000); // Check every 30 seconds
+        }
+        // --- END IDLE NARRATOR LOGIC ---
+
+
+        // --- NEW: Zeus Flying Function ---
+        window.flyZeusAndClick = function(targetElementId, clickFunction, duration = 1000) {
+            if (!window.isPremium && targetElementId !== 'submit-data-btn') {
+                alert("You must be a PRO MEMBER to use Zeus features.");
+                return;
             }
 
-            async function fetchAllUsersForAdmin() {
-                const usersList = document.getElementById('admin-users-list');
-                usersList.innerHTML = '<p class="text-gray-500 text-center py-4">Loading user list...</p>';
+            const targetElement = document.getElementById(targetElementId);
+            const zeusElement = document.getElementById('zeus-avatar-svg');
+
+            if (!targetElement || !zeusElement) {
+                console.error("Missing elements for Zeus flight.");
+                clickFunction(); 
+                return;
+            }
+            
+            zeusElement.style.opacity = '0';
+            const targetRect = targetElement.getBoundingClientRect();
+            const zeusRect = zeusElement.getBoundingClientRect(); 
+            
+            const deltaX = (targetRect.left + targetRect.width / 2) - (zeusRect.left + zeusRect.width / 2);
+            const deltaY = (targetRect.top + targetRect.height / 2) - (zeusRect.top + zeusRect.height / 2);
+
+            const flyingZeus = zeusElement.cloneNode(true);
+            flyingZeus.removeAttribute('id');
+            flyingZeus.classList.add('flying-zeus');
+            flyingZeus.style.position = 'fixed';
+            flyingZeus.style.top = `${zeusRect.top}px`;
+            flyingZeus.style.left = `${zeusRect.left}px`;
+            flyingZeus.style.zIndex = '50';
+            
+            document.body.appendChild(flyingZeus);
+            
+            let phrase = getRandomPhrase(); 
+
+            window.generateAndSpeak(phrase);
+            setTimeout(() => {
+                flyingZeus.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.5)`;
+                flyingZeus.style.opacity = '0.2'; 
+            }, 10);
+            setTimeout(() => {
+                clickFunction();
+                targetElement.classList.add('ring-4', 'ring-green-400', 'ring-opacity-75');
                 
-                try {
-                    const q = query(window.dbRef.allUsersCollection);
-                    const querySnapshot = await getDocs(q);
-                    
-                    usersList.innerHTML = '';
-                    querySnapshot.forEach(userDoc => {
-                        const infoRef = doc(userDoc.ref, 'profile/info');
-                        getDoc(infoRef).then(infoSnap => {
-                            if (infoSnap.exists()) renderAdminUserRow(userDoc.id, infoSnap.data());
-                        });
-                    });
-                } catch (error) {
-                    usersList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading users. Check security rules/console.</p>';
-                    console.error("Error fetching all user profiles for admin:", error);
+                flyingZeus.remove();
+                
+                zeusElement.style.opacity = '1';
+
+                setTimeout(() => {
+                    targetElement.classList.remove('ring-4', 'ring-green-400', 'ring-opacity-75');
+                }, 300);
+            }, duration);
+        };
+        // --- END Zeus Flying Function ---
+
+
+        // --- Presence Tracking and Chat Logic ---
+        function startPresenceTracking(uid) {
+            const userDocRef = doc(window.dbRef.activeUsersCollection, uid);
+            setInterval(async () => {
+                if (window.currentUserId && window.isPremium) {
+                    await setDoc(userDocRef, {
+                        id: uid,
+                        nickname: window.nickname,
+                        lastActive: serverTimestamp()
+                    }, { merge: true });
                 }
+            }, 30000);
+
+            setDoc(userDocRef, {
+                id: uid,
+                nickname: window.nickname,
+                lastActive: serverTimestamp()
+            }, { merge: true });
+            onSnapshot(window.dbRef.activeUsersCollection, (snapshot) => {
+                const users = [];
+                const cutoffTime = Date.now() - 60000; 
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.lastActive && data.lastActive.toMillis() > cutoffTime && data.id !== window.currentUserId) {
+                        users.push(data);
+                    }
+                });
+                renderActiveUsers(users);
+            }, (error) => {
+                console.error("Error listening to active users:", error);
+            });
+        }
+
+        function renderActiveUsers(users) {
+            const list = document.getElementById('active-users-list');
+            list.innerHTML = '';
+            if (users.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-500 p-2">No other active users right now.</p>';
+                return;
+            }
+            users.forEach(user => {
+                const item = document.createElement('div');
+                item.className = 'p-2 rounded-lg cursor-pointer hover:bg-metro-accent/20 transition duration-150 flex justify-between items-center';
+                item.innerHTML = `<span class="font-semibold text-gray-800">${user.nickname}</span> <span class="text-xs text-metro-primary ml-2">(${user.id.substring(0, 4)}...)</span>`;
+                item.onclick = () => setRecipientForPM(user.id, user.nickname);
+                list.appendChild(item);
+            });
+        }
+
+        window.toggleSidebarMode = function(mode) {
+            window.sidebarMode = mode;
+            document.getElementById('active-users-list').classList.toggle('hidden', mode !== 'ACTIVE');
+            document.getElementById('leaderboard-list').classList.toggle('hidden', mode !== 'LEADERBOARD');
+            
+            document.getElementById('mode-active-btn').classList.toggle('bg-metro-primary', mode === 'ACTIVE');
+            document.getElementById('mode-active-btn').classList.toggle('text-white', mode === 'ACTIVE');
+            document.getElementById('mode-leaderboard-btn').classList.toggle('bg-metro-primary', mode === 'LEADERBOARD');
+            document.getElementById('mode-leaderboard-btn').classList.toggle('text-white', mode === 'LEADERBOARD');
+        }
+
+        function setupLeaderboardListener() {
+            const q = query(window.dbRef.leaderboard, orderBy('contributions', 'desc'), limit(5));
+            onSnapshot(q, (snapshot) => {
+                const contributors = [];
+                snapshot.forEach(doc => {
+                    contributors.push(doc.data());
+                });
+                renderLeaderboard(contributors);
+            }, (error) => {
+                console.error("Error listening to leaderboard:", error);
+            });
+        }
+
+        function renderLeaderboard(contributors) {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            
+            if (contributors.length === 0) {
+                list.innerHTML = '<p class="text-sm text-gray-500 p-2">No contributions recorded yet.</p>';
+                return;
             }
 
-            function renderAdminUserRow(uid, userData) {
-                const usersList = document.getElementById('admin-users-list');
-                const isPremium = userData.isPremium;
-                const expiry = userData.premiumExpires?.toDate ? userData.premiumExpires.toDate().toLocaleDateString() : 'N/A';
+            contributors.forEach((contributor, index) => {
+                const rank = index + 1;
+                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🏅';
                 
-                const row = document.createElement('div');
-                row.className = 'grid grid-cols-5 gap-2 p-2 border-b items-center text-sm';
-                row.innerHTML = `
-                    <div role="cell" class="truncate font-semibold">${userData.nickname || 'N/A'}</div>
-                    <div role="cell" class="truncate text-xs text-gray-500" title="${uid}">${uid.substring(0, 8)}...</div>
-                    <div role="cell" class="font-medium ${isPremium ? 'text-green-600' : 'text-red-500'}">
-                        ${isPremium ? 'PRO' : 'STANDARD'}
+                const item = document.createElement('div');
+                item.className = 'p-2 rounded-lg flex justify-between items-center border-b border-gray-100';
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg font-bold w-6 text-center text-metro-primary">${medal}</span>
+                        <span class="font-semibold text-gray-800">${contributor.nickname}</span>
                     </div>
-                    <div role="cell" class="text-xs text-gray-600">${expiry}</div>
-                    <div role="cell">
-                        <button onclick="window.downgradeFromPremium('${uid}')" class="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600" aria-label="Downgrade ${userData.nickname} status" ${!isPremium ? 'disabled' : ''}>Downgrade</button>
-                        <button onclick="window.upgradeToPremiumForOneYear('${uid}')" class="bg-green-500 text-white text-xs px-2 py-1 rounded hover:bg-green-600" aria-label="Upgrade ${userData.nickname} status" ${isPremium ? 'disabled' : ''}>Upgrade</button>
-                    </div>
+                    <span class="text-sm font-bold bg-green-200 text-green-800 px-2 py-0.5 rounded-full">${contributor.contributions} Posts</span>
                 `;
-                usersList.appendChild(row);
-            }
-            // --- END ADMIN MODAL FUNCTIONS ---
+                list.appendChild(item);
+            });
+        }
+        
+        window.setRecipientForPM = function(id, name) {
+            window.chatMode = 'private';
+            window.recipientId = id;
+            document.getElementById('chat-mode-toggle').value = 'private';
+            document.getElementById('recipient-id-input').value = id;
+            document.getElementById('recipient-display').innerText = `PM to: ${name} (${id.substring(0, 4)}...)`;
+            document.getElementById('recipient-container').classList.remove('hidden');
+            document.getElementById('video-call-btn').classList.remove('hidden');
+            setupChatListener();
+        }
+        
+        window.toggleChatMode = function() {
+            window.chatMode = document.getElementById('chat-mode-toggle').value;
+            const recipientContainer = document.getElementById('recipient-container');
+            const videoBtn = document.getElementById('video-call-btn');
 
-            // --- MOBILE NAVIGATION ---
-            window.toggleMobileNav = function(show) {
-                document.getElementById('mobile-nav-panel').classList.toggle('hidden', !show);
+            if (window.chatMode === 'private') {
+                recipientContainer.classList.remove('hidden');
+                videoBtn.classList.remove('hidden');
+                window.recipientId = document.getElementById('recipient-id-input').value.trim();
+                document.getElementById('recipient-display').innerText = window.recipientId ? `PM to: (${window.recipientId.substring(0, 4)}...)` : 'PM Mode Active';
+            } else {
+                recipientContainer.classList.add('hidden');
+                videoBtn.classList.add('hidden');
+                window.recipientId = '';
             }
+            setupChatListener();
+        }
 
-            window.scrollToSection = function(id) {
-                const section = document.getElementById(id);
-                if (section) section.scrollIntoView({ behavior: 'smooth' });
-                toggleMobileNav(false); 
-            }
-            // --- END MOBILE NAVIGATION ---
+        // --- SAMPLE CHAT DATA ADDED HERE ---
+        function getSampleChatMessages() {
+            return [
+                { senderId: 'SYSTEM', senderNickname: 'ZEUS HUB ALERT', text: '🚨 Welcome to the Hub! Use the "Submit Sports Data" button to contribute to the scoreboard.', timestamp: serverTimestamp(), isPrivate: false, recipientId: '', type: 'SYSTEM_ANNOUNCEMENT' },
+                { senderId: 'USER_1', senderNickname: 'STL_MVP', text: 'Vashon is looking strong this week, ready for the playoffs! What are your predictions?', timestamp: new Date(Date.now() - 300000), isPrivate: false, recipientId: '', type: 'text' },
+                { senderId: 'USER_2', senderNickname: 'MizzouFan', text: 'Glad the Pro stream tab is back. Any Cardinals highlights coming up?', timestamp: new Date(Date.now() - 120000), isPrivate: false, recipientId: '', type: 'text' },
+                { senderId: 'USER_3', senderNickname: 'Admin_Test', text: 'PM Mode is essential for scouting. Testing private message to another user.', timestamp: new Date(Date.now() - 60000), isPrivate: true, recipientId: '05806734626095127961', type: 'text' }
+            ];
+        }
 
-            window.saveNickname = async function() {
-                const input = document.getElementById('nickname-input').value.trim();
-                if (input && window.currentUserId) {
-                    window.nickname = input;
-                    document.getElementById('nickname-display').innerText = input;
-                    try {
-                        await setDoc(window.dbRef.users(window.currentUserId), { nickname: input }, { merge: true });
-                        const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
-                        if (docSnap.exists()) renderUserStatus(docSnap.data()); 
-                        alert("Nickname saved successfully.");
-                    } catch (error) {
-                        console.error("Error saving nickname:", error);
-                    }
-                }
-            }
+        function setupChatListener() {
+            if (!window.currentUserId) return;
+            const publicMessagesCollectionRef = collection(window.db, `artifacts/${appId}/public/data/messages`);
             
-            // --- ZEUS NARRATOR TOUR ---
-            window.startZeusNarratorTour = async function() {
-                document.getElementById('narrator-launch-btn').classList.add('hidden');
-                const tourSteps = [
-                    { target: '#scoreboard-section', message: "Welcome, Pro Member! I am Zeus, your guide. Observe the Community Scoreboard—this is where your real-time data flows. Submit scores below!", offset: -50 },
-                    { target: '#chat-heading', message: "Next, the Team Chat. Use this to strategize with other Pro Members or send private messages using the Active Users list.", offset: -10 },
-                    { target: '#locker-room-section', message: "This is your Personal Locker Room. Unlimited media storage is now yours. Upload your highlights!", offset: -10 },
-                    { target: '#interview-heading', message: "And finally, the Exclusive Interview Corner. Submit questions for our next celebrity guest here. Go forth and dominate!", offset: -10 }
-                ];
-                for (const step of tourSteps) {
-                    const targetElement = document.querySelector(step.target);
-                    if (targetElement) {
-                        // Scroll smoothly to the element
-                        targetElement.scrollIntoView({ behavior: 'smooth' });
-                        // Wait for scroll to finish (approx 1 second)
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        // Play the speech
-                        await window.generateAndSpeak(step.message);
-                        // Wait a moment for the user to absorb the info
-                        await new Promise(resolve => setTimeout(resolve, 3000));
-                    }
-                }
-                
-                // Mark tour as complete in Firestore
-                if (window.currentUserId) {
-                    await updateDoc(window.dbRef.users(window.currentUserId), { tourCompleted: true });
-                }
-            }
-            // --- END ZEUS NARRATOR TOUR ---
-
-
-            // --- NEW: Zeus Flying Function ---
-            window.flyZeusAndClick = function(targetElementId, clickFunction, duration = 1000) {
-                if (!window.isPremium && targetElementId !== 'submit-data-btn') {
-                    alert("You must be a PRO MEMBER to use Zeus features.");
-                    return;
-                }
-
-                const targetElement = document.getElementById(targetElementId);
-                const zeusElement = document.getElementById('zeus-avatar-svg');
-
-                if (!targetElement || !zeusElement) {
-                    console.error("Missing elements for Zeus flight.");
-                    clickFunction(); 
-                    return;
-                }
-                
-                zeusElement.style.opacity = '0';
-                const targetRect = targetElement.getBoundingClientRect();
-                const zeusRect = zeusElement.getBoundingClientRect(); 
-                
-                const deltaX = (targetRect.left + targetRect.width / 2) - (zeusRect.left + zeusRect.width / 2);
-                const deltaY = (targetRect.top + targetRect.height / 2) - (zeusRect.top + zeusRect.height / 2);
-
-                const flyingZeus = zeusElement.cloneNode(true);
-                flyingZeus.removeAttribute('id');
-                flyingZeus.classList.add('flying-zeus');
-                flyingZeus.style.position = 'fixed';
-                flyingZeus.style.top = `${zeusRect.top}px`;
-                flyingZeus.style.left = `${zeusRect.left}px`;
-                flyingZeus.style.zIndex = '50';
-                
-                document.body.appendChild(flyingZeus);
-                
-                let phrase = getRandomPhrase(); 
-
-                window.generateAndSpeak(phrase);
-                setTimeout(() => {
-                    flyingZeus.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.5)`;
-                    flyingZeus.style.opacity = '0.2'; 
-                }, 10);
-                setTimeout(() => {
-                    clickFunction();
-                    targetElement.classList.add('ring-4', 'ring-green-400', 'ring-opacity-75');
-                    
-                    flyingZeus.remove();
-                    
-                    zeusElement.style.opacity = '1';
-
-                    setTimeout(() => {
-                        targetElement.classList.remove('ring-4', 'ring-green-400', 'ring-opacity-75');
-                    }, 300);
-                }, duration);
-            };
-            // --- END Zeus Flying Function ---
-
-
-            // --- Presence Tracking and Chat Logic ---
-            function startPresenceTracking(uid) {
-                const userDocRef = doc(window.dbRef.activeUsersCollection, uid);
-                setInterval(async () => {
-                    if (window.currentUserId && window.isPremium) {
-                        await setDoc(userDocRef, {
-                            id: uid,
-                            nickname: window.nickname,
-                            lastActive: serverTimestamp()
-                        }, { merge: true });
-                    }
-                }, 30000);
-
-                setDoc(userDocRef, {
-                    id: uid,
-                    nickname: window.nickname,
-                    lastActive: serverTimestamp()
-                }, { merge: true });
-                onSnapshot(window.dbRef.activeUsersCollection, (snapshot) => {
-                    const users = [];
-                    const cutoffTime = Date.now() - 60000; 
-
-                    snapshot.forEach(doc => {
-                        const data = doc.data();
-                        if (data.lastActive && data.lastActive.toMillis() > cutoffTime && data.id !== window.currentUserId) {
-                            users.push(data);
-                        }
-                    });
-                    renderActiveUsers(users);
-                }, (error) => {
-                    console.error("Error listening to active users:", error);
-                });
-            }
-
-            function renderActiveUsers(users) {
-                const list = document.getElementById('active-users-list');
-                list.innerHTML = '';
-                if (users.length === 0) {
-                    list.innerHTML = '<p class="text-sm text-gray-500 p-2">No other active users right now.</p>';
-                    return;
-                }
-                users.forEach(user => {
-                    const item = document.createElement('div');
-                    item.className = 'p-2 rounded-lg cursor-pointer hover:bg-metro-accent/20 transition duration-150 flex justify-between items-center';
-                    item.innerHTML = `<span class="font-semibold text-gray-800">${user.nickname}</span> <span class="text-xs text-metro-primary ml-2">(${user.id.substring(0, 4)}...)</span>`;
-                    item.onclick = () => setRecipientForPM(user.id, user.nickname);
-                    list.appendChild(item);
-                });
-            }
-
-            window.toggleSidebarMode = function(mode) {
-                window.sidebarMode = mode;
-                document.getElementById('active-users-list').classList.toggle('hidden', mode !== 'ACTIVE');
-                document.getElementById('leaderboard-list').classList.toggle('hidden', mode !== 'LEADERBOARD');
-                
-                document.getElementById('mode-active-btn').classList.toggle('bg-metro-primary', mode === 'ACTIVE');
-                document.getElementById('mode-active-btn').classList.toggle('text-white', mode === 'ACTIVE');
-                document.getElementById('mode-leaderboard-btn').classList.toggle('bg-metro-primary', mode === 'LEADERBOARD');
-                document.getElementById('mode-leaderboard-btn').classList.toggle('text-white', mode === 'LEADERBOARD');
-            }
-
-            function setupLeaderboardListener() {
-                const q = query(window.dbRef.leaderboard, orderBy('contributions', 'desc'), limit(5));
-                onSnapshot(q, (snapshot) => {
-                    const contributors = [];
-                    snapshot.forEach(doc => {
-                        contributors.push(doc.data());
-                    });
-                    renderLeaderboard(contributors);
-                }, (error) => {
-                    console.error("Error listening to leaderboard:", error);
-                });
-            }
-
-            function renderLeaderboard(contributors) {
-                const list = document.getElementById('leaderboard-list');
-                list.innerHTML = '';
-                
-                if (contributors.length === 0) {
-                    list.innerHTML = '<p class="text-sm text-gray-500 p-2">No contributions recorded yet.</p>';
-                    return;
-                }
-
-                contributors.forEach((contributor, index) => {
-                    const rank = index + 1;
-                    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🏅';
-                    
-                    const item = document.createElement('div');
-                    item.className = 'p-2 rounded-lg flex justify-between items-center border-b border-gray-100';
-                    item.innerHTML = `
-                        <div class="flex items-center space-x-2">
-                            <span class="text-lg font-bold w-6 text-center text-metro-primary">${medal}</span>
-                            <span class="font-semibold text-gray-800">${contributor.nickname}</span>
-                        </div>
-                        <span class="text-sm font-bold bg-green-200 text-green-800 px-2 py-0.5 rounded-full">${contributor.contributions} Posts</span>
-                    `;
-                    list.appendChild(item);
-                });
-            }
+            let q;
             
-            window.setRecipientForPM = function(id, name) {
-                window.chatMode = 'private';
-                window.recipientId = id;
-                document.getElementById('chat-mode-toggle').value = 'private';
-                document.getElementById('recipient-id-input').value = id;
-                document.getElementById('recipient-display').innerText = `PM to: ${name} (${id.substring(0, 4)}...)`;
-                document.getElementById('recipient-container').classList.remove('hidden');
-                document.getElementById('video-call-btn').classList.remove('hidden');
-                setupChatListener();
+            if (window.chatMode === 'public') {
+                q = query(publicMessagesCollectionRef, where('recipientId', '==', ''), orderBy('timestamp', 'desc'), limit(50));
+            } else {
+                q = query(publicMessagesCollectionRef, where('isPrivate', '==', true), orderBy('timestamp', 'desc'), limit(50));
             }
-            
-            window.toggleChatMode = function() {
-                window.chatMode = document.getElementById('chat-mode-toggle').value;
-                const recipientContainer = document.getElementById('recipient-container');
-                const videoBtn = document.getElementById('video-call-btn');
 
-                if (window.chatMode === 'private') {
-                    recipientContainer.classList.remove('hidden');
-                    videoBtn.classList.remove('hidden');
-                    window.recipientId = document.getElementById('recipient-id-input').value.trim();
-                    document.getElementById('recipient-display').innerText = window.recipientId ? `PM to: (${window.recipientId.substring(0, 4)}...)` : 'PM Mode Active';
+            onSnapshot(q, async (snapshot) => {
+                const messages = [];
+                snapshot.forEach(doc => {
+                    messages.push(doc.data());
+                });
+
+                // ⬇️ Load sample data if the collection is empty ⬇️
+                if (messages.length === 0 && window.chatMode === 'public') {
+                     messages.push(...getSampleChatMessages());
+                }
+                
+                messages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
+                
+                renderMessages(messages);
+            }, (error) => {
+                console.error("Error listening to chat:", error);
+            });
+        }
+        // --- END SAMPLE CHAT DATA ---
+
+        function renderMessages(messages) {
+            const chatBox = document.getElementById('chat-messages');
+            chatBox.innerHTML = '';
+            
+            messages.forEach(msg => {
+                const isSystem = msg.type === 'SYSTEM_ANNOUNCEMENT'; 
+                const isSelf = msg.senderId === window.currentUserId;
+                const isPM = msg.isPrivate;
+                const isVideoRequest = msg.type === 'VIDEO_REQUEST';
+                const isVideoResponse = msg.type === 'VIDEO_RESPONSE';
+                
+                const messageContainer = document.createElement('div');
+                
+                let bubbleClass = `max-w-xs md:max-w-md px-4 py-2 text-white rounded-xl shadow-md `;
+                let senderClass = `font-bold text-sm mb-1 `;
+                
+                if (isSystem) {
+                    messageContainer.className = `flex justify-center mb-3 text-center`;
+                    bubbleClass = `max-w-xl px-4 py-2 text-white rounded-xl shadow-lg bg-red-700/90`;
+                    senderClass = `font-bold text-sm mb-1 text-yellow-300`;
                 } else {
-                    recipientContainer.classList.add('hidden');
-                    videoBtn.classList.add('hidden');
-                    window.recipientId = '';
+                    messageContainer.className = `flex mb-3 ${isSelf ? 'justify-end' : 'justify-start'}`;
+                    bubbleClass += isSelf ? 'bg-metro-primary rounded-br-none' : 'bg-gray-700 rounded-tl-none';
+                    senderClass += isSelf ? 'text-white/80' : 'text-metro-accent';
                 }
-                setupChatListener();
-            }
 
-            // --- SAMPLE CHAT DATA ADDED HERE ---
-            function getSampleChatMessages() {
-                return [
-                    { senderId: 'SYSTEM', senderNickname: 'ZEUS HUB ALERT', text: '🚨 Welcome to the Hub! Use the "Submit Sports Data" button to contribute to the scoreboard.', timestamp: serverTimestamp(), isPrivate: false, recipientId: '', type: 'SYSTEM_ANNOUNCEMENT' },
-                    { senderId: 'USER_1', senderNickname: 'STL_MVP', text: 'Vashon is looking strong this week, ready for the playoffs! What are your predictions?', timestamp: new Date(Date.now() - 300000), isPrivate: false, recipientId: '', type: 'text' },
-                    { senderId: 'USER_2', senderNickname: 'MizzouFan', text: 'Glad the Pro stream tab is back. Any Cardinals highlights coming up?', timestamp: new Date(Date.now() - 120000), isPrivate: false, recipientId: '', type: 'text' },
-                    { senderId: 'USER_3', senderNickname: 'Admin_Test', text: 'PM Mode is essential for scouting. Testing private message to another user.', timestamp: new Date(Date.now() - 60000), isPrivate: true, recipientId: '05806734626095127961', type: 'text' }
-                ];
-            }
-
-            function setupChatListener() {
-                if (!window.currentUserId) return;
-                const publicMessagesCollectionRef = collection(window.db, `artifacts/${appId}/public/data/messages`);
+                const messageBubble = document.createElement('div');
+                messageBubble.className = bubbleClass;
                 
-                let q;
+                const senderName = document.createElement('div');
+                senderName.className = senderClass;
                 
-                if (window.chatMode === 'public') {
-                    q = query(publicMessagesCollectionRef, where('recipientId', '==', ''), orderBy('timestamp', 'desc'), limit(50));
+                if (isSystem) {
+                    senderName.innerText = msg.senderNickname;
+                    messageBubble.innerHTML = `<div class="font-bold text-base mb-1 text-yellow-300">${msg.senderNickname}</div>`;
+                } else if (isPM) {
+                     senderName.innerText = `PM: ${msg.senderNickname}`;
+                } else if (isSelf) {
+                    senderName.innerText = `You (${msg.senderNickname})`;
                 } else {
-                    q = query(publicMessagesCollectionRef, where('isPrivate', '==', true), orderBy('timestamp', 'desc'), limit(50));
+                    senderName.innerText = msg.senderNickname;
                 }
 
-                onSnapshot(q, async (snapshot) => {
-                    const messages = [];
-                    snapshot.forEach(doc => {
-                        messages.push(doc.data());
-                    });
-
-                    // ⬇️ Load sample data if the collection is empty ⬇️
-                    if (messages.length === 0 && window.chatMode === 'public') {
-                         messages.push(...getSampleChatMessages());
-                    }
-                    
-                    messages.sort((a, b) => (a.timestamp?.toMillis() || 0) - (b.timestamp?.toMillis() || 0));
-                    
-                    renderMessages(messages);
-                }, (error) => {
-                    console.error("Error listening to chat:", error);
-                });
-            }
-            // --- END SAMPLE CHAT DATA ---
-
-            function renderMessages(messages) {
-                const chatBox = document.getElementById('chat-messages');
-                chatBox.innerHTML = '';
-                
-                messages.forEach(msg => {
-                    const isSystem = msg.type === 'SYSTEM_ANNOUNCEMENT'; 
-                    const isSelf = msg.senderId === window.currentUserId;
-                    const isPM = msg.isPrivate;
-                    const isVideoRequest = msg.type === 'VIDEO_REQUEST';
-                    const isVideoResponse = msg.type === 'VIDEO_RESPONSE';
-                    
-                    const messageContainer = document.createElement('div');
-                    
-                    let bubbleClass = `max-w-xs md:max-w-md px-4 py-2 text-white rounded-xl shadow-md `;
-                    let senderClass = `font-bold text-sm mb-1 `;
-                    
-                    if (isSystem) {
-                        messageContainer.className = `flex justify-center mb-3 text-center`;
-                        bubbleClass = `max-w-xl px-4 py-2 text-white rounded-xl shadow-lg bg-red-700/90`;
-                        senderClass = `font-bold text-sm mb-1 text-yellow-300`;
-                    } else {
-                        messageContainer.className = `flex mb-3 ${isSelf ? 'justify-end' : 'justify-start'}`;
-                        bubbleClass += isSelf ? 'bg-metro-primary rounded-br-none' : 'bg-gray-700 rounded-tl-none';
-                        senderClass += isSelf ? 'text-white/80' : 'text-metro-accent';
-                    }
-
-                    const messageBubble = document.createElement('div');
-                    messageBubble.className = bubbleClass;
-                    
-                    const senderName = document.createElement('div');
-                    senderName.className = senderClass;
-                    
-                    if (isSystem) {
-                        senderName.innerText = msg.senderNickname;
-                        messageBubble.innerHTML = `<div class="font-bold text-base mb-1 text-yellow-300">${msg.senderNickname}</div>`;
-                    } else if (isPM) {
-                         senderName.innerText = `PM: ${msg.senderNickname}`;
+                if (isVideoRequest) {
+                    messageBubble.innerHTML = `<p class="font-bold text-lg">📹 Video Call Request</p>`;
+                    if (!isSelf && msg.recipientId === window.currentUserId) {
+                        const buttonContainer = document.createElement('div');
+                        buttonContainer.className = 'mt-2 flex space-x-2';
+                        buttonContainer.innerHTML = `
+                            <button onclick="handleVideoResponse('${msg.senderId}', '${msg.senderNickname}', 'accept')" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-1 px-3 rounded-full transition" aria-label="Accept video call request from ${msg.senderNickname}">Accept Call</button>
+                            <button onclick="handleVideoResponse('${msg.senderId}', '${msg.senderNickname}', 'decline')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-full transition" aria-label="Decline video call request from ${msg.senderNickname}">Decline</button>
+                        `;
+                        messageBubble.appendChild(buttonContainer);
                     } else if (isSelf) {
-                        senderName.innerText = `You (${msg.senderNickname})`;
+                        messageBubble.innerHTML += `<p class="text-xs text-white/70">Waiting for ${msg.recipientNickname}'s response...</p>`;
                     } else {
-                        senderName.innerText = msg.senderNickname;
+                        messageBubble.innerHTML += `<p class="text-xs text-white/70">Request sent to ${msg.recipientNickname}</p>`;
                     }
-
-                    if (isVideoRequest) {
-                        messageBubble.innerHTML = `<p class="font-bold text-lg">📹 Video Call Request</p>`;
-                        if (!isSelf && msg.recipientId === window.currentUserId) {
-                            const buttonContainer = document.createElement('div');
-                            buttonContainer.className = 'mt-2 flex space-x-2';
-                            buttonContainer.innerHTML = `
-                                <button onclick="handleVideoResponse('${msg.senderId}', '${msg.senderNickname}', 'accept')" class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-1 px-3 rounded-full transition" aria-label="Accept video call request from ${msg.senderNickname}">Accept Call</button>
-                                <button onclick="handleVideoResponse('${msg.senderId}', '${msg.senderNickname}', 'decline')" class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-3 rounded-full transition" aria-label="Decline video call request from ${msg.senderNickname}">Decline</button>
-                            `;
-                            messageBubble.appendChild(buttonContainer);
-                        } else if (isSelf) {
-                            messageBubble.innerHTML += `<p class="text-xs text-white/70">Waiting for ${msg.recipientNickname}'s response...</p>`;
-                        } else {
-                            messageBubble.innerHTML += `<p class="text-xs text-white/70">Request sent to ${msg.recipientNickname}</p>`;
-                        }
-                    } else if (isVideoResponse) {
-                        const callLink = `https://meet.google.com/${msg.callSessionId}`;
-                        messageBubble.innerHTML = `<p class="font-bold text-lg">📹 Call Response: ${msg.responseStatus}</p>`;
-                        if (msg.responseStatus === 'Accepted') {
-                             messageBubble.innerHTML += `<a href="${callLink}" target="_blank" class="block mt-2 bg-yellow-400 text-gray-900 font-bold py-1 px-3 rounded-full text-center hover:bg-yellow-500 transition" aria-label="Join video call now">Join Call Now!</a>`;
-                        }
-                    } else {
-                        const messageText = document.createElement('p');
-                        messageText.className = 'text-white text-base break-words';
-                        messageText.innerText = msg.text;
-                        messageBubble.appendChild(senderName);
-                        messageBubble.appendChild(messageText);
+                } else if (isVideoResponse) {
+                    const callLink = `https://meet.google.com/${msg.callSessionId}`;
+                    messageBubble.innerHTML = `<p class="font-bold text-lg">📹 Call Response: ${msg.responseStatus}</p>`;
+                    if (msg.responseStatus === 'Accepted') {
+                         messageBubble.innerHTML += `<a href="${callLink}" target="_blank" class="block mt-2 bg-yellow-400 text-gray-900 font-bold py-1 px-3 rounded-full text-center hover:bg-yellow-500 transition" aria-label="Join video call now">Join Call Now!</a>`;
                     }
-                    
-                    messageContainer.appendChild(messageBubble);
-                    chatBox.appendChild(messageContainer);
-                });
-
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-
-            window.sendMessage = async function(type = 'text', text = '') {
-                const messageInput = document.getElementById('message-input');
-                const messageText = text || messageInput.value.trim();
-                
-                if ((messageText && type === 'text') || type === 'VIDEO_REQUEST') {
-                    if (window.chatMode === 'private' && !window.recipientId) {
-                        console.error('Please set a recipient ID for private messages.');
-                        return;
-                    }
-
-                    const messageData = {
-                        senderId: window.currentUserId,
-                        senderNickname: window.nickname,
-                        text: messageText,
-                        timestamp: serverTimestamp(),
-                        isPrivate: window.chatMode === 'private',
-                        recipientId: window.chatMode === 'private' ?
-                        window.recipientId : '',
-                        type: type, 
-                    };
-                    try {
-                        await addDoc(window.dbRef.publicMessages, messageData);
-                        messageInput.value = ''; 
-                    } catch (error) {
-                        console.error("Error sending message:", error);
-                    }
+                } else {
+                    const messageText = document.createElement('p');
+                    messageText.className = 'text-white text-base break-words';
+                    messageText.innerText = msg.text;
+                    messageBubble.appendChild(senderName);
+                    messageBubble.appendChild(messageText);
                 }
-            }
+                
+                messageContainer.appendChild(messageBubble);
+                chatBox.appendChild(messageContainer);
+            });
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        window.sendMessage = async function(type = 'text', text = '') {
+            const messageInput = document.getElementById('message-input');
+            const messageText = text || messageInput.value.trim();
             
-            window.handleVideoResponse = async function(requesterId, requesterNickname, status) {
-                const callSessionId = 'stl-sports-' + Date.now().toString().substring(5);
-                const responseData = {
+            if ((messageText && type === 'text') || type === 'VIDEO_REQUEST') {
+                if (window.chatMode === 'private' && !window.recipientId) {
+                    console.error('Please set a recipient ID for private messages.');
+                    return;
+                }
+
+                const messageData = {
                     senderId: window.currentUserId,
                     senderNickname: window.nickname,
-                    recipientId: requesterId,
-                    recipientNickname: requesterNickname,
-                    text: `Call request was ${status}.`,
+                    text: messageText,
                     timestamp: serverTimestamp(),
-                    isPrivate: true,
-                    type: 'VIDEO_RESPONSE',
-                    responseStatus: status === 'accept' ?
-                    'Accepted' : 'Declined',
-                    callSessionId: status === 'accept' ?
-                    callSessionId : '',
+                    isPrivate: window.chatMode === 'private',
+                    recipientId: window.chatMode === 'private' ?
+                    window.recipientId : '',
+                    type: type, 
                 };
                 try {
-                    await addDoc(window.dbRef.publicMessages, responseData);
+                    await addDoc(window.dbRef.publicMessages, messageData);
+                    messageInput.value = ''; 
                 } catch (error) {
-                    console.error("Error sending video response:", error);
+                    console.error("Error sending message:", error);
                 }
             }
-            
-            // --- Sports Data Functions ---
-            window.toggleSportsDataModal = function(show) {
-                document.getElementById('sports-data-modal').classList.toggle('hidden', !show);
+        }
+        
+        window.handleVideoResponse = async function(requesterId, requesterNickname, status) {
+            const callSessionId = 'stl-sports-' + Date.now().toString().substring(5);
+            const responseData = {
+                senderId: window.currentUserId,
+                senderNickname: window.nickname,
+                recipientId: requesterId,
+                recipientNickname: requesterNickname,
+                text: `Call request was ${status}.`,
+                timestamp: serverTimestamp(),
+                isPrivate: true,
+                type: 'VIDEO_RESPONSE',
+                responseStatus: status === 'accept' ?
+                'Accepted' : 'Declined',
+                callSessionId: status === 'accept' ?
+                callSessionId : '',
+            };
+            try {
+                await addDoc(window.dbRef.publicMessages, responseData);
+            } catch (error) {
+                console.error("Error sending video response:", error);
+            }
+        }
+        
+        // --- Sports Data Functions ---
+        window.toggleSportsDataModal = function(show) {
+            document.getElementById('sports-data-modal').classList.toggle('hidden', !show);
+        }
+
+        window.submitSportsData = async function() {
+            const type = document.getElementById('data-type').value;
+            const title = document.getElementById('data-title').value.trim();
+            const details = document.getElementById('data-details').value.trim();
+            const school = document.getElementById('data-school').value;
+            const videoUrl = document.getElementById('data-video-url').value.trim();
+            if (!title || !details) {
+                console.error("Title and details are required.");
+                return;
             }
 
-            window.submitSportsData = async function() {
-                const type = document.getElementById('data-type').value;
-                const title = document.getElementById('data-title').value.trim();
-                const details = document.getElementById('data-details').value.trim();
-                const school = document.getElementById('data-school').value;
-                const videoUrl = document.getElementById('data-video-url').value.trim();/* /index.html 200
+            const data = {
+                type: type, 
+                school: school, 
+                title: title,
+                details: details,
+                submittedBy: window.nickname,
+                timestamp: serverTimestamp(),
+                videoUrl: videoUrl, 
+            };
+            try {
+                await addDoc(window.dbRef.sportsData, data);
+                if (type === 'SCORE') {
+                    const announcement = `BREAKING SCORE ALERT! ${SCHOOL_ICONS[school] || ''} ${school}: ${title}. Check the scoreboard now!`;
+                    window.generateAndSpeak(announcement); 
+                    
+                    const systemMessageText = `🚨 ${SCHOOL_ICONS[school] ||
+                    'SCORE'} ALERT: ${school} - ${title}. Posted by ${window.nickname}.`;
+                    await addDoc(window.dbRef.publicMessages, {
+                        senderId: 'SYSTEM',
+                        senderNickname: 'ZEUS HUB ALERT',
+                        text: systemMessageText,
+                        timestamp: serverTimestamp(),
+                        isPrivate: false,
+                        recipientId: '',
+                        type: 'SYSTEM_ANNOUNCEMENT' 
+                    });
+                }
+
+                const leaderboardRef = doc(window.dbRef.leaderboard, window.currentUserId);
+                await setDoc(leaderboardRef, {
+                    nickname: window.nickname,
+                    contributions: increment(1), 
+                    lastContributed: serverTimestamp()
+                }, { 
+                merge: true });
+                
+                document.getElementById('data-title').value = '';
+                document.getElementById('data-details').value = '';
+                document.getElementById('data-video-url').value = ''; 
+                toggleSportsDataModal(false);
+                console.log("Sports data submitted successfully.");
+            } catch (error) {
+                console.error("Error submitting sports data:", error);
+            }
+        }
+
+        // --- SAMPLE SPORTS DATA ADDED HERE ---
+        function getSampleSportsData() {
+            return [
+                { type: 'SCORE', school: 'VASHON', title: 'Basketball City Championship', details: 'Vashon beats Soldan 68-55 to claim the City Basketball Championship!', submittedBy: 'Admin', timestamp: new Date(Date.now() - 3600000) },
+                { type: 'HIGHLIGHT', school: 'MCKINLEY', title: 'Top-Corner Goal', details: 'McKinley Goldbugs Soccer Star, Marcus K., scores a spectacular top-corner goal. Must watch highlight!', submittedBy: 'CoachT', timestamp: new Date(Date.now() - 7200000), videoUrl: 'https://www.youtube.com/watch?v=n_w4E1c4J68' },
+                { type: 'ACTIVITY', school: 'HICKMAN', title: 'Track Meet Rescheduled', details: 'Due to severe weather, the Hickman Track Meet is rescheduled for next Tuesday.', submittedBy: 'Hickman AD', timestamp: new Date(Date.now() - 10800000) }
+            ];
+        }
+
+        function setupSportsDataListener() {
+            if (!window.currentUserId) return;
+            const sportsDataCollectionRef = collection(window.db, `artifacts/${appId}/public/data/sports_data`);
+            
+            const q = query(sportsDataCollectionRef, orderBy('timestamp', 'desc'), limit(50));
+            
+            onSnapshot(q, async (snapshot) => {
+                let data = [];
+                snapshot.forEach(doc => {
+                    data.push(doc.data());
+                });
+
+                // ⬇️ Conditional Load: Only inject samples if Firestore data is empty ⬇️
+                if (data.length === 0) {
+                     data.push(...getSampleSportsData());
+                }
+                
+                renderSportsData(data);
+            }, (error) => {
+                console.error("Error listening to sports data:", error);
+            });
+        }
+
+        function renderSportsData(data) {
+            const container = document.getElementById('sports-data-display');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-8 col-span-full">No scores or highlights have been submitted yet. Be the first!</p>';
+                return;
+            }
+
+            data.forEach(item => {
+                const typeClass = item.type === 'SCORE' ? 'bg-green-100 border-green-400' : 
+                                  item.type === 'HIGHLIGHT' ? 'bg-yellow-100 border-yellow-400' : 
+                                  'bg-blue-100 border-blue-400';
+                const typeLabel = item.type === 'SCORE' ? 'SCORE' : 
+                                  item.type === 'HIGHLIGHT' ? 'HIGHLIGHT' : 'ACTIVITY';
+                
+                const schoolIcon = SCHOOL_ICONS[item.school] || '🏆'; 
+                
+                const card = document.createElement('div');
+                card.setAttribute('data-type', item.type);
+                card.className = `p-4 rounded-lg border-l-4 shadow-sm ${typeClass}`;
+                
+                let timestamp = '';
+                if (item.timestamp && item.timestamp.toDate) {
+                    timestamp = item.timestamp.toDate().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ' ' + 
+                                item.timestamp.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+                
+                const videoButton = item.videoUrl ?
+                `<a href="${item.videoUrl}" target="_blank" class="mt-3 inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150" aria-label="Watch highlight video for ${item.title}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 
+                            8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                        </svg>
+                        Watch Highlight
+                    </a>` : '';
+
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full ${item.type === 'SCORE' ? 'bg-green-500' : 'bg-metro-primary'} text-white">${typeLabel}</span>
+                        <span class="text-xs text-gray-700">${timestamp}</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-gray-800">${schoolIcon} ${item.title} (${item.school})</h4>
+                    <p class="text-gray-600 mt-1">${item.details}</p>
+                    ${videoButton}
+                    <p class="text-xs text-gray-400 mt-2">Submitted by: ${item.submittedBy}</p>
+                `;
+                container.appendChild(card);
+            });
+            
+            window.setSportsDataFilter(window.sportsDataFilter);
+        }
+        
+        // --- Streaming Tab Functions ---
+        window.toggleStreamTab = function(tab) {
+            document.getElementById('stream-hs-college').classList.toggle('hidden', tab !== 'HS_COLLEGE');
+            document.getElementById('stream-pro').classList.toggle('hidden', tab !== 'PRO');
+            
+            document.getElementById('tab-hs-college').classList.toggle('bg-metro-primary', tab === 'HS_COLLEGE');
+            document.getElementById('tab-hs-college').classList.toggle('text-white', tab === 'HS_COLLEGE');
+            document.getElementById('tab-pro').classList.toggle('bg-metro-primary', tab === 'PRO');
+            document.getElementById('tab-pro').classList.toggle('text-white', tab === 'PRO');
+            document.getElementById('tab-hs-college').classList.toggle('bg-gray-200', tab !== 'HS_COLLEGE');
+            document.getElementById('tab-hs-college').classList.toggle('text-gray-700', tab !== 'HS_COLLEGE');
+            document.getElementById('tab-pro').classList.toggle('bg-gray-200', tab !== 'PRO');
+            document.getElementById('tab-pro').classList.toggle('text-gray-700', tab !== 'PRO');
+        }
+        // --- End Streaming Tab Functions ---
+        
+        // --- Locker Room Functions ---
+        window.MAX_FREE_MEDIA = 2;
+        function setupLockerRoomListener() {
+            if (!window.currentUserId) return;
+            const q = query(window.dbRef.mediaLocker(window.currentUserId), orderBy('timestamp', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                window.lockerMediaCount = snapshot.size;
+                const media = [];
+                snapshot.forEach(doc => media.push({ id: doc.id, ...doc.data() }));
+                
+                renderLockerRoom(media);
+            }, (error) => {
+                console.error("Error listening to locker room:", error);
+            });
+        }
+        
+        // --- Comment Management Functions ---
+
+        window.setupCommentListener = function(mediaOwnerId, mediaId) {
+            const commentContainer = document.getElementById(`comments-${mediaId}`);
+            if (!commentContainer) return;
+
+            const q = query(window.dbRef.mediaComments(mediaOwnerId, mediaId), orderBy('timestamp', 'asc'), limit(50));
+
+            onSnapshot(q, (snapshot) => {
+                commentContainer.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const comment = doc.data();
+                    const commentDiv = document.createElement('div');
+                    commentDiv.className = 'text-sm mb-2 p-2 bg-gray-200 rounded-lg';
+                    commentDiv.innerHTML = `
+                        <p class="font-bold text-metro-primary">${comment.nickname}:</p>
+                        <p class="text-gray-800">${comment.text}</p>
+                    `;
+                    commentContainer.appendChild(commentDiv);
+                });
+                if (snapshot.empty) {
+                    commentContainer.innerHTML = '<p class="text-xs text-gray-500 italic">No comments yet. Be the first!</p>';
+                }
+                // Scroll to the latest comment
+                commentContainer.scrollTop = commentContainer.scrollHeight; 
+
+            }, (error) => {
+                console.error("Error listening to comments:", error);
+            });
+        }
+
+        window.submitComment = async function(mediaOwnerId, mediaId, inputId) {
+            if (!window.isPremium) {
+                alert("Only PRO MEMBERS can leave comments!");
+                return;
+            }
+            
+            const commentInput = document.getElementById(inputId);
+            const commentText = commentInput.value.trim();
+
+            if (!commentText) return;
+
+            const commentData = {
+                mediaId: mediaId,
+                mediaOwnerId: mediaOwnerId,
+                nickname: window.nickname,
+                text: commentText,
+                timestamp: serverTimestamp(),
+                senderId: window.currentUserId
+            };
+
+            try {
+                await addDoc(window.dbRef.mediaComments(mediaOwnerId, mediaId), commentData);
+                commentInput.value = ''; // Clear the input field
+            } catch (error) {
+                console.error("Error submitting comment:", error);
+                alert("Error submitting comment. Check your Firestore rules or internet connection.");
+            }
+        }
+        
+        // --- END Comment Management Functions ---
+
+        function renderLockerRoom(media) {
+            const container = document.getElementById('locker-media-display');
+            const statusText = document.getElementById('locker-status-text');
+            const uploadBtn = document.getElementById('locker-upload-btn');
+            const messageDiv = document.getElementById('locker-upload-message');
+            container.innerHTML = '';
+            let limitReached = !window.isPremium && window.lockerMediaCount >= window.MAX_FREE_MEDIA;
+
+            if (window.isPremium) {
+                statusText.innerText = 'Capacity: Unlimited (PRO)';
+                statusText.classList.remove('text-orange-600');
+                statusText.classList.add('text-green-600');
+                messageDiv.classList.add('hidden');
+                uploadBtn.disabled = false;
+            } else {
+                statusText.innerText = `Capacity: ${window.lockerMediaCount}/${window.MAX_FREE_MEDIA} (Standard)`;
+                statusText.classList.remove('text-green-600');
+                statusText.classList.add('text-orange-600');
+                
+                messageDiv.classList.toggle('hidden', !limitReached);
+                uploadBtn.disabled = limitReached;
+            }
+
+            if (media.length === 0) {
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">Your locker is empty. Upload your first highlight!</p>';
+                return;
+            }
+
+            // UPDATED: Use renderMediaCard to include comment section
+            media.forEach(item => {
+                container.appendChild(renderMediaCard(item, window.currentUserId));
+            });
+        }
+        
+        // --- UPDATED: renderMediaCard Function to display card and comments ---
+        function renderMediaCard(item, ownerId) {
+            const card = document.createElement('div');
+            const isVideo = item.type.startsWith('video');
+            card.className = 'p-4 rounded-xl bg-gray-100 border border-gray-200 shadow-lg relative flex flex-col h-full'; 
+            
+            let content;
+            if (isVideo) {
+                content = `<video src="${item.url}" controls class="w-full h-32 object-cover rounded-lg mb-2"></video>`;
+            } else {
+                content = `<img src="${item.url}" alt="${item.name}" class="w-full h-32 object-cover rounded-lg mb-2">`;
+            }
+            
+            const commentInputId = `comment-input-${item.id}`;
+
+            card.innerHTML = `
+                ${content}
+                <div class="flex-grow">
+                    <p class="text-sm font-semibold truncate">${item.name}</p>
+                    <p class="text-xs text-gray-500 mb-4">${isVideo ? 'Video' : 'Photo'} - ${Math.ceil(item.size / 1024)} KB</p>
+                </div>
+
+                <button onclick="deleteMediaItem('${item.id}')" class="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700" aria-label="Delete media item ${item.name}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+
+                <div class="mt-4 pt-4 border-t border-gray-300">
+                    <h5 class="text-sm font-bold text-gray-700 mb-2">Member Comments</h5>
+                    <div id="comments-${item.id}" class="h-24 overflow-y-auto mb-3 p-2 bg-white rounded-lg border border-gray-200">
+                        <p class="text-xs text-gray-500 italic">Loading comments...</p>
+                    </div>
+
+                    <div class="flex space-x-2">
+                        <input type="text" id="${commentInputId}" placeholder="${window.isPremium ? 'Add a comment...' : 'Upgrade to Pro to comment!'}" 
+                            class="flex-grow p-2 text-sm border border-gray-300 rounded-lg ${window.isPremium ? '' : 'bg-gray-200 cursor-not-allowed'}"
+                            onkeypress="if(event.key === 'Enter') submitComment('${ownerId}', '${item.id}', '${commentInputId}')" 
+                            aria-label="Comment input" ${!window.isPremium ? 'disabled' : ''}>
+                        <button onclick="submitComment('${ownerId}', '${item.id}', '${commentInputId}')" 
+                            class="bg-metro-primary text-white text-sm font-bold py-1 px-3 rounded-lg hover:bg-metro-primary/80 transition disabled:opacity-50" 
+                            aria-label="Submit comment" ${!window.isPremium ? 'disabled' : ''}>
+                            Post
+                        </button>
+                    </div>
+                </div>
+                `;
+            
+            // OPTIMIZED: Only set up the listener if the user is premium
+            if (window.isPremium) {
+                setTimeout(() => {
+                    window.setupCommentListener(ownerId, item.id);
+                }, 50);
+            }
+
+            return card;
+        }
+        // --- END UPDATED: renderMediaCard Function ---
+        
+        window.handleFileUpload = async function() {
+            const fileInput = document.getElementById('media-file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert("Please select a file to upload.");
+                return;
+            }
+            
+            if (!window.isPremium && window.lockerMediaCount >= window.MAX_FREE_MEDIA) {
+                alert("Upgrade to Pro Membership for unlimited storage!");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const mockUrl = e.target.result;
+                const mediaData = {
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    url: mockUrl,
+                    timestamp: serverTimestamp(),
+                };
+                try {
+                    await addDoc(window.dbRef.mediaLocker(window.currentUserId), mediaData);
+                    fileInput.value = ''; 
+                    alert(`File ${file.name} uploaded successfully!`);
+                } catch (error) {
+                    console.error("Error uploading media:", error);
+                    alert("Error saving media metadata to locker.");
+                }
+            };
+            reader.readAsDataURL(file); 
+        }
+
+        window.deleteMediaItem = async function(docId) {
+            if (!confirm("Are you sure you want to delete this media item?")) return;
+            try {
+                await deleteDoc(doc(window.dbRef.mediaLocker(window.currentUserId), docId));
+                alert("Item deleted.");
+            } catch (error) {
+                console.error("Error deleting media:", error);
+                alert("Error deleting item.");
+            }
+        }
+        // --- End Locker Room Functions ---
+
+
+        // --- BIRTHDAY TRACKER LOGIC ---
+        const STL_BIRTHDAYS = [
+            { name: "Jayson Tatum", date: "03/03", source: "NBA Star, Chaminade Alumnus" },
+            { name: "Jackie Joyner-Kersee", date: "03/03", source: "Olympic Legend, East STL" },
+            { name: "Larry Hughes", date: "01/23", source: "NBA Veteran, SLU" },
+            { name: "Ezekiel Elliott", date: "07/22", source: "NFL Star, John Burroughs Alumnus" },
+            { name: "Ike Taylor", date: "05/25", source: "NFL Veteran, Ritenour Alumnus" 
+            },
+            { name: "Stan Musial (Posthumous)", date: "11/21", source: "Cardinals Legend" },
+            // Note: The following test dates use the local time zone when generated, for dev testing purposes.
+            { name: "Test Bday Today", date: new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }), source: "Hub Developer" },
+            { name: "Test Bday +3", date: getFutureDate(3), source: "STL Coach" },
+            { name: "Test Bday -5 (Ignore)", date: getFutureDate(-5), source: "STL Coach" },
+        ];
+        function getFutureDate(days) {
+            const d = new Date();
+            d.setDate(d.getDate() + days);
+            return d.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
+        }
+
+        function renderBirthdayTracker() {
+            const container = document.getElementById('birthday-tracker-display');
+            container.innerHTML = '';
+            
+            const today = new Date();
+            const todayString = today.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' });
+            const endRange = new Date();
+            endRange.setDate(today.getDate() + 7); 
+
+            const upcomingBirthdays = STL_BIRTHDAYS.filter(item => {
+                const [month, day] = item.date.split('/').map(Number);
+                
+                let itemDate = new Date(today.getFullYear(), month - 1, day);
+                
+                if (itemDate < today && itemDate.getDate() > today.getDate() && month < today.getMonth() + 1) {
+                     itemDate.setFullYear(today.getFullYear() + 1);
+                }
+                
+                return itemDate.getTime() >= today.getTime() && itemDate.getTime() <= endRange.getTime();
+            }).sort((a, b) => {
+                const [aMonth, aDay] = a.date.split('/').map(Number);
+                const [bMonth, bDay] = 
+                b.date.split('/').map(Number);
+                return new Date(today.getFullYear(), aMonth - 1, aDay) - new Date(today.getFullYear(), bMonth - 1, bDay);
+            });
+            if (upcomingBirthdays.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 italic p-3">No major STL birthdays coming up this week.</p>';
+                return;
+            }
+
+            upcomingBirthdays.forEach(item => {
+                const isToday = item.date === todayString;
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl shadow-md border-l-4 ${isToday ? 'bg-yellow-100 border-yellow-500' : 'bg-gray-100 border-metro-primary'}`;
+                
+                card.innerHTML = `
+                    <p class="text-xs font-semibold ${isToday ? 'text-red-600' : 'text-metro-primary'}">${isToday ? '🎉 HAPPY BIRTHDAY TODAY!' : `Upcoming: ${item.date}`}</p>
+                    <h4 class="text-xl font-bold text-gray-800">${item.name}</h4>
+                    <p class="text-sm text-gray-700">${item.source}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', renderBirthdayTracker);
+        // --- END: BIRTHDAY TRACKER LOGIC ---
+
+
+        // Start authentication
+        authenticate();
+        // --- TTS LOGIC WITH SFX MIXING (FIXED ERROR HANDLING) ---
+        window.generateAndSpeak = async function(speechText) {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const textInput = document.getElementById('tts-input');
+            const text = speechText || textInput.value.trim();
+            const btn = document.getElementById('tts-btn');
+            
+            if (!text) return;
+
+            const apiKey = "16718f5b948d342ae7320dd5a82c5ff70aeebc4"; // ⚠️ YOUR KEY IS NOW CORRECTLY IN QUOTES ⚠️
+            if (!apiKey) {
+                alert("TTS Feature Error: Please enter your Gemini API Key in the source code's 'generateAndSpeak' function.");
+                console.error("TTS Error: API Key is missing.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Analyzing...';
+
+            let thunderSource = null, cheerSource = null, cheerGain = null;
+            const startTime = audioContext.currentTime;
+            let audio = null; // Declare audio locally
+
+            try {
+                // Start SFX
+                const thunder = createNoiseSource(0.05);
+                thunderSource = thunder.source;
+                thunder.gainNode.connect(audioContext.destination);
+                thunderSource.start(startTime);
+
+                const cheer = createNoiseSource(0);
+                cheerSource = cheer.source;
+                cheerGain = cheer.gainNode;
+                cheerGain.connect(audioContext.destination);
+                cheerSource.start(startTime);
+                
+                cheerGain.gain.setValueAtTime(0, startTime);
+                cheerGain.gain.linearRampToValueAtTime(0.5, startTime + 20);
+
+                const payload = {
+                    contents: [{
+                        parts: [{ text: `Act as a highly energetic St. Louis High School Sports Analyst.
+                        Deliver the following text with firm, motivating energy: ${text}` }]
+                    }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            voiceConfig: {
+                                prebuiltVoiceConfig: { voiceName: "Kore" }
+                            }
+                        }
+                    },
+                    model: "gemini-2.5-flash-preview-tts"
+                };
+                
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+                const maxRetries = 5;
+                let attempt = 0;
+                let response;
+                while (attempt < maxRetries) {
+                    try {
+                        response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        // 404/Network Error Check
+                        if (!response.ok) {
+                            if (response.status === 404 || response.status === 503) {
+                                throw new Error(`API returned HTTP ${response.status}. The external service may be down or the URL is incorrect.`);
+                            }
+                        }
+
+                        if (response.ok) break;
+
+                        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        attempt++;
+                    } catch (error) {
+                        if (error.message.includes('API returned HTTP')) {
+                            // Re-throw critical API errors immediately (like 404/503)
+                            throw error; 
+                        }
+                        const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        attempt++;
+                    }
+                }
+
+                if (!response || !response.ok) throw new Error(`API request failed after ${maxRetries} attempts.`);
+                const result = await response.json();
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+                if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
+                    const match = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = match ? parseInt(match[1], 10) : 16000;
+                    const pcmData = base64ToArrayBuffer(audioData);
+                    const pcm16 = new Int16Array(pcmData);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    
+                    audio = new Audio(audioUrl); // Assign to local audio variable
+                    audio.addEventListener('ended', () => {
+                        stopSFX(thunderSource, cheerSource, cheerGain);
+                        URL.revokeObjectURL(audioUrl); 
+                        // Set to null to ensure it is not double-cleaned in finally
+                        audio = null;
+                    });
+                    audio.play();
+                } else {
+                    console.error("Audio data missing or invalid type:", mimeType);
+                    stopSFX(thunderSource, cheerSource, cheerGain); 
+                }
+
+            } catch (error) {
+                alert(`ZEUS TTS FAILED: ${error.message || 'Check console for network error.'}`);
+                console.error("TTS Generation Error:", error);
+                // Ensure SFX is stopped immediately if an error occurs before audio starts
+                stopSFX(thunderSource, cheerSource, cheerGain); 
+            } finally {
+                // Final cleanup if audio hasn't successfully finished and cleaned itself up
+                if (audio) {
+                    // If audio is still present, it means the 'ended' event didn't fire (e.g., error)
+                    stopSFX(thunderSource, cheerSource, cheerGain);
+                }
+                btn.disabled = false;
+                btn.innerText = 'Generate Analysis & Speak!';
+            }
+        }
+        
+        // Utility function to convert base64 to ArrayBuffer
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        // Utility function to convert PCM data to WAV Blob
+        function pcmToWav(pcm16, sampleRate) {
+            const numChannels = 1;
+            const bitsPerSample = 16;
+            const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
+            const blockAlign = (numChannels * bitsPerSample) / 8;
+            const buffer = new ArrayBuffer(44 + pcm16.length * 2);
+            const view = new DataView(buffer);
+            
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + pcm16.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); 
+            view.setUint16(20, 1, true); 
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, pcm16.length * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < pcm16.length; i++) {
+                view.setInt16(offset, pcm16[i], true);
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+    </script>
