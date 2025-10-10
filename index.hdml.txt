@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snt.L.Mo. Exclusive Sports Hub</title>
+    <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self' 'unsafe-inline'; 
+                 script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://www.gstatic.com https://cdnjs.cloudflare.com https://unpkg.com https://www.googleadservices.com;
+                 connect-src 'self' 'unsafe-inline' https://www.googleapis.com https://firebaseinstallations.googleapis.com https://firestore.googleapis.com https://www.googleadservices.com;
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                 font-src 'self' https://fonts.gstatic.com;
+                 media-src 'self' https://assets.mixkit.co;
+                 frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com;">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, addDoc, serverTimestamp, where, increment, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Configuration and Initialization (MANDATORY GLOBALS)
+        const appId = typeof __app_id !== 'undefined' ?
+        __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? initialAuthToken : null;
+        // --- ADMIN SECURITY CONFIGURATION (CRUCIAL) ---
+        // IMPORTANT: Replace "05806734626095127961" with your actual Firebase User UID when setting up production.
+        const ADMIN_USER_ID = "05806734626095127961"; 
+        // --- END ADMIN CONFIG ---
+
+        // --- GLOBAL ERROR HANDLER (BUILT-IN 404/NETWORK FIX) ---
+        // This function intercepts uncaught errors (like script load failures, network issues, or other 404s)
+        window.addEventListener('error', function(event) {
+            console.error('*** Global Error Handler Caught Exception ***');
+            console.error('Error Message:', event.message);
+            
+            // Look for common network/resource loading errors (often manifest as a 404)
+            if (event.target && event.target.tagName) {
+                const tag = event.target.tagName.toLowerCase();
+                if (tag === 'script' || tag === 'link' || tag === 'img' || event.message.includes('404')) {
+                    console.error('Source causing 404-like error:', event.target.src || event.target.href || 'Unknown Source');
+                }
+            }
+        });
+        // --- END: GLOBAL ERROR HANDLER ---
+        
+        // --- ZEUS RANDOM PHRASES & SCHOOL MASCOT ICONS ---
+        const ZEUS_PHRASES = [
+            "Great choice! Now you're cooking.", "Big time! Let's get that data recorded.", "Zeus approves! The hub gets stronger.", "That's how champions move. Data collected.", 
+            "Strike hard! Mission accomplished.", "A move worthy of the Thunder God! Excellent.", "Feel the lightning! You're making history.", "Unstoppable! Carry on, champion.",
+            "A stroke of genius! The Gods demand excellence.", "By Olympus! That data is gold.", "Feel the force of the Thunder God! Progress secured.", "The lightning never misses. Great input.",
+            "That's a championship move, right there!", "Lock it in! Focus and finish.", "Level up the whole damn team! Fantastic work.", "We call that dominance! Keep the scores coming.",
+            "BOOM! Data locked.", "Money time! Solid effort.", "All business. Move quick.", "Executed! Nothing else matters.",
+            "Your command is absolute! Proceeding with access.", 
+            "Account secured. Let the games begin!" 
+        ];
+        function getRandomPhrase() { return ZEUS_PHRASES[Math.floor(Math.random() * ZEUS_PHRASES.length)]; }
+        
+        const SCHOOL_ICONS = { "VASHON": "🐺", "SUMNER": "🐶", "SOLDAN": "🐅", "MCKINLEY": "🐞", "ROOSEVELT": "🐎", "LADUE": "🐏", 
+            "KIRKWOOD": "🏈", "WEBSTER": "Statesman", "SLUH": "⚔️", "WHITFIELD": "🛡️", "LSW": "🦁", "BLUESPRINGS": "🐾", 
+            "ROCKHURST": "🦅", "HICKMAN": "🐉", "ROCKBRIDGE": "🐻", "KICKAPOO": "⚔️", "GLENDALE": "Falcon", "OTHER": "🏆"
+        };
+        // --- END ZEUS PHRASES / ICONS ---
+        
+        // --- TTS LONG MOTIVATIONAL SPEECH (FOR 30-SECOND DURATION) ---
+        const LONG_MOTIVATIONAL_SPEECH = "Champions rise and fall not on game day, but in the relentless, grinding hours of preparation. This is the truth of the arena. Every repetition, every drop of sweat, every moment of self-doubt conquered builds the fortress of your dominance. The clock is ticking on yesterday's efforts, and today demands more. Today, the world is watching, waiting for the thunder of your excellence. Do not give them average. Give them relentless. Give them legendary. You have the heart of a champion, the spirit of St. Louis, and the will of Zeus. Now, go seize your moment! The legacy is yours for the taking. Remember why you started this journey and finish the fight. You are the exclusive few. You are the best of Missouri. Finish strong, finish loud, and leave no doubt! You are the final countdown to victory, make this moment count!";
+        
+        // --- WEB AUDIO API SETUP ---
+        let audioContext; 
+
+        function createNoiseSource(volume) {
+            const bufferSize = 2 * audioContext.sampleRate;
+            const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1; 
+            }
+
+            const source = audioContext.createBufferSource();
+            source.buffer = noiseBuffer;
+            source.loop = true;
+
+            const gainNode = audioContext.createGain();
+            gainNode.gain.value = volume;
+
+            source.connect(gainNode);
+            return { source, gainNode };
+        }
+
+        function stopSFX(thunderSource, cheerSource, cheerGain) {
+            if (thunderSource) {
+                try { thunderSource.stop(); } catch(e) {}
+            }
+            if (cheerSource) {
+                try { cheerSource.stop(); } catch(e) {}
+            }
+            if (cheerGain) {
+                try { cheerGain.disconnect(); } catch(e) {}
+            }
+        }
+
+        // --- Core Application Logic ---
+
+        if (!firebaseConfig) { console.error("Firebase config not found. The app will not function.");
+        } else {
+            setLogLevel('Debug');
+            window.app = initializeApp(firebaseConfig);
+            window.db = getFirestore(window.app);
+            window.auth = getAuth(window.app);
+            window.serverTimestamp = serverTimestamp;
+
+            // Global State Variables
+            window.currentUserId = null;
+            window.dbRef = null;
+            window.chatMode = 'public'; 
+            window.recipientId = '';
+            window.nickname = 'Guest';
+            window.sportsDataFilter = 'ALL';
+            window.isLoggedIn = false;
+            window.isPremium = false; 
+            window.sidebarMode = 'ACTIVE'; 
+            window.streamTab = 'HS_COLLEGE'; 
+            window.lockerMediaCount = 0;
+            
+            // --- UPDATED AUTHENTICATE FUNCTION ---
+            async function authenticate() {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(window.auth, initialAuthToken);
+                    } else {
+                        document.getElementById('login-modal').classList.remove('hidden');
+                        generateLoginQR(); 
+                    }
+                } catch (error) {
+                    console.error("--- CRITICAL AUTHENTICATION FAILURE ---");
+                    
+                    if (error.code === 'app/no-app' || error.message.includes('Firebase: No Firebase App')) {
+                        console.error("Error Hint: Firebase config not loaded (check __firebase_config variable in HTML).");
+                        alert("Authentication Setup Error: Missing configuration. Check your Firebase console setup.");
+                    } else if (error.code === 'auth/invalid-custom-token' || error.message.includes('token')) {
+                        console.error("Error Hint: Invalid initialAuthToken (may be expired or incorrect). Falling back to login modal.");
+                        // Fallback to showing the user login modal if token fails
+                        document.getElementById('login-modal').classList.remove('hidden');
+                        generateLoginQR();
+                    } else {
+                        // General error for network or other issues
+                        console.error("Authentication failed:", error);
+                        alert("Authentication Failed: Could not connect to the server. Check your network or configuration.");
+                        // Ensure login modal is visible so user can try manual login
+                        document.getElementById('login-modal').classList.remove('hidden');
+                        generateLoginQR();
+                    }
+                }
+            }
+            // --- END UPDATED AUTHENTICATE FUNCTION ---
+
+            onAuthStateChanged(window.auth, (user) => {
+                const loginModal = document.getElementById('login-modal');
+                const headerAuthBtn = document.getElementById('header-auth-btn');
+                const accountBtn = document.getElementById('account-btn');
+                
+                const adminBtn = document.getElementById('admin-btn');
+                const mobileMenu = document.getElementById('mobile-menu');
+
+                if (user) {
+                    window.currentUserId = user.uid;
+                    window.isLoggedIn = true;
+                    
+                    loginModal.classList.add('hidden');
+                    
+                    headerAuthBtn.classList.add('hidden');
+                    accountBtn.classList.remove('hidden'); 
+                    
+                    // Show Admin Button if user is the Admin
+                    adminBtn.classList.toggle('hidden', user.uid !== ADMIN_USER_ID);
+                    mobileMenu.classList.remove('hidden');
+                    window.dbRef = {
+                        users: (uid) => doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`),
+                        allUsersCollection: collection(window.db, `artifacts/${appId}/users`), 
+                        publicMessages: collection(window.db, `artifacts/${appId}/public/data/messages`),
+                        activeUsersCollection: collection(window.db, `artifacts/${appId}/public/data/active_users`),
+                        sportsData: collection(window.db, `artifacts/${appId}/public/data/sports_data`),
+                        leaderboard: collection(window.db, `artifacts/${appId}/public/data/leaderboard`),
+                        mediaLocker: (uid) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker`),
+                        // ADDED: Reference for comments on a specific media item
+                        mediaComments: (uid, mediaId) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker/${mediaId}/comments`) 
+                    };
+                    
+                    loadUserStatusAndContent();
+                } else {
+                    window.currentUserId = null;
+                    window.isLoggedIn = false;
+                    window.isPremium = false;
+                    document.getElementById('main-content').classList.add('hidden'); 
+                    document.getElementById('paywall-content').classList.add('hidden'); 
+                    loginModal.classList.remove('hidden'); 
+                    
+                    headerAuthBtn.classList.remove('hidden'); 
+                    accountBtn.classList.add('hidden'); 
+                    adminBtn.classList.add('hidden');
+                    mobileMenu.classList.add('hidden');
+
+                    generateLoginQR(); 
+                    renderUserStatus({});
+                }
+            });
+            async function loadUserStatusAndContent() {
+                const mainContent = document.getElementById('main-content');
+                const paywallContent = document.getElementById('paywall-content');
+                let isExpired = false;
+
+                try {
+                    const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        window.nickname = userData.nickname || 'Guest';
+                        document.getElementById('nickname-input').value = window.nickname;
+                        
+                        if (userData.premiumExpires && userData.premiumExpires.toDate) {
+                            const expirationDate = userData.premiumExpires.toDate();
+                            if (expirationDate < new Date()) {
+                                isExpired = true;
+                            }
+                        }
+                        
+                        window.isPremium = (userData.isPremium && !isExpired) ||
+                        false;
+
+                        renderUserStatus(userData); 
+
+                        if (window.isPremium) {
+                            mainContent.classList.remove('hidden');
+                            paywallContent.classList.add('hidden');
+                            startPresenceTracking(window.currentUserId);
+                            setupChatListener();
+                            setupSportsDataListener();
+                            setupLeaderboardListener(); 
+                            setupLockerRoomListener(); 
+                            window.toggleSidebarMode('ACTIVE'); 
+                            window.toggleStreamTab('HS_COLLEGE'); 
+                            
+                            // Check for first-time premium access to launch narrator
+                            if (!userData.tourCompleted) {
+                                document.getElementById('narrator-launch-btn').classList.remove('hidden');
+                            } else {
+                                document.getElementById('narrator-launch-btn').classList.add('hidden');
+                            }
+
+                        } else {
+                            mainContent.classList.add('hidden');
+                            paywallContent.classList.remove('hidden');
+                            setupLockerRoomListener(); 
+                        }
+                    } else {
+                         mainContent.classList.add('hidden');
+                         paywallContent.classList.remove('hidden');
+                         renderUserStatus({});
+                         setupLockerRoomListener(); 
+                    }
+                } catch (error) {
+                    console.error("Error loading user status:", error);
+                    mainContent.classList.add('hidden');
+                    paywallContent.classList.remove('hidden');
+                    renderUserStatus({});
+                }
+            }
+            
+            // --- UX FUNCTION: Renders Nickname, Status, and Expiration ---
+            function renderUserStatus(userData) {
+                const statusDisplay = document.getElementById('user-status-display');
+                const idDisplay = document.getElementById('user-id-display');
+                const expiry = userData.premiumExpires?.toDate ? userData.premiumExpires.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
+                
+                // Optimized check for logged in status
+                if (!window.isLoggedIn) {
+                    statusDisplay.innerHTML = 'Logged Out';
+                    idDisplay.innerText = '';
+                    return;
+                }
+                
+                idDisplay.innerText = window.currentUserId.substring(0, 8) + '...';
+                idDisplay.title = window.currentUserId;
+                
+                let html = `<span class="font-bold text-metro-accent mr-2" id="nickname-display">${window.nickname}</span>`;
+                if (window.isPremium) {
+                    html += `<span class="text-xs font-bold text-white bg-green-600 px-2 py-0.5 rounded-full mr-3">⭐ PRO MEMBER</span>`;
+                    html += `<span class="text-xs text-gray-500">Expires: ${expiry}</span>`;
+                } else {
+                    html += `<span class="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">STANDARD</span>`;
+                }
+
+                statusDisplay.innerHTML = html;
+                // Update Account Modal
+                document.getElementById('account-uid').innerText = window.currentUserId;
+                document.getElementById('account-nickname').value = window.nickname;
+                document.getElementById('account-premium-status').innerText = window.isPremium ? `Active (Expires ${expiry})` : 'Inactive';
+                document.getElementById('account-premium-status').className = window.isPremium ?
+                'text-green-600 font-bold' : 'text-red-500 font-bold';
+            }
+            // --- END UX FUNCTION ---
+            
+            // --- ACCOUNT MANAGEMENT MODAL FUNCTIONS ---
+            window.toggleAccountModal = function(show) {
+                document.getElementById('account-modal').classList.toggle('hidden', !show);
+                if (show) document.getElementById('account-password-error').innerText = '';
+            }
+            
+            window.updateUserPassword = async function() {
+                const newPassword = document.getElementById('account-new-password').value.trim();
+                const errorDisplay = document.getElementById('account-password-error');
+                errorDisplay.innerText = '';
+
+                if (newPassword.length < 6) {
+                    errorDisplay.innerText = "New password must be at least 6 characters.";
+                    return;
+                }
+                
+                try {
+                    await updatePassword(window.auth.currentUser, newPassword);
+                    errorDisplay.innerText = "Password updated successfully! Please log in with your new password on your next session.";
+                    document.getElementById('account-new-password').value = '';
+                } catch (error) {
+                    errorDisplay.innerText = "Error changing password. You may need to log out and log back in before attempting to change your password.";
+                    console.error("Password change error:", error);
+                }
+            }
+            
+            window.saveAccountNickname = async function() {
+                const input = document.getElementById('account-nickname').value.trim();
+                if (input && window.currentUserId) {
+                    window.nickname = input;
+                    try {
+                        await setDoc(window.dbRef.users(window.currentUserId), { nickname: input }, { merge: true });
+                        document.getElementById('nickname-input').value = input; 
+                        const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
+                        if (docSnap.exists()) renderUserStatus(docSnap.data()); 
+                        alert("Nickname saved successfully across all features.");
+                    } catch (error) {
+                        console.error("Error saving nickname:", error);
+                    }
+                }
+            }
+            // --- END ACCOUNT MANAGEMENT MODAL FUNCTIONS ---
+
+            // --- PAYMENT MODALS ---
+            window.togglePaymentModal = function(show) {
+                document.getElementById('payment-success-modal').classList.toggle('hidden', !show);
+            }
+            
+            window.toggleCashAppModal = function(show) {
+                document.getElementById('cashapp-modal').classList.toggle('hidden', !show);
+                if (show) generateCashAppQR(); 
+            }
+
+            function generateCashAppQR() {
+                const qrCodeDiv = document.getElementById('cashapp-qrcode');
+                qrCodeDiv.innerHTML = ''; 
+                const cashtag = "Mac100dime"; 
+                const amount = "10.00";
+                const paymentLink = `https://cash.app/$${cashtag}/${amount}`;
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(qrCodeDiv, {
+                        text: paymentLink,
+                        width: 180,
+                        height: 180,
+                        colorDark : "#0047AB", 
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+                } else {
+                    qrCodeDiv.innerHTML = `<p class="text-sm text-red-500">QR Code library not loaded. Ensure it's included in your HTML head.</p>`;
+                }
+            }
+            
+            window.simulatePaymentSuccess = function() {
+                window.upgradeToPremiumForOneYear();
+                togglePaymentModal(false);
+            }
+            // --- END PAYMENT MODALS ---
+            
+            // --- LOGIN/AUTH QR CODE GENERATION ---
+            function generateLoginQR() {
+                const qrCodeDiv = document.getElementById('login-qrcode');
+                const idInput = document.getElementById('login-qr-id-input');
+                qrCodeDiv.innerHTML = ''; 
+                
+                const userIdToEncode = window.currentUserId || 'MOCK_ID_' + Math.random().toString(36).substring(2, 8);
+                idInput.value = userIdToEncode;
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(qrCodeDiv, {
+                        text: userIdToEncode,
+                        width: 100,
+                        height: 100,
+                        colorDark : "#0047AB", 
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.L
+                    });
+                } else {
+                    qrCodeDiv.innerHTML = `<p class="text-xs text-red-500">QR Code library not loaded.</p>`;
+                }
+            }
+            
+            window.copyQrCodeText = function() {
+                const idInput = document.getElementById('login-qr-id-input');
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(idInput.value).then(() => {
+                        alert("User ID copied to clipboard!");
+                    }).catch(err => {
+                        console.error('Could not copy text: ', err);
+                        alert("Could not copy text automatically. Please select and copy the ID.");
+                    });
+                } else {
+                    alert("Could not copy text automatically. Please select and copy the ID.");
+                }
+            }
+            // --- END LOGIN/AUTH QR CODE GENERATION ---
+
+
+            // --- Authentication Handlers ---
+            window.toggleLoginModal = function(show) {
+                document.getElementById('login-modal').classList.toggle('hidden', !show);
+                if (show) setTimeout(generateLoginQR, 100); 
+            }
+
+            window.logIn = async function() {
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value.trim();
+                const errorDisplay = document.getElementById('login-error');
+                errorDisplay.innerText = '';
+                if (!email || !password) {
+                    errorDisplay.innerText = "Please enter email and password.";
+                    return;
+                }
+                
+                try {
+                    await signInWithEmailAndPassword(window.auth, email, password);
+                    document.getElementById('login-modal').classList.add('hidden');
+                } catch (error) {
+                    errorDisplay.innerText = error.message.replace('Firebase: ', '');
+                    console.error("Login Error:", error);
+                }
+            }
+            
+            window.register = async function() {
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value.trim();
+                const errorDisplay = document.getElementById('login-error');
+                errorDisplay.innerText = '';
+                if (!email || password.length < 6) {
+                    errorDisplay.innerText = "Email required, and password must be at least 6 characters.";
+                    return;
+                }
+                
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(window.auth, email, password);
+                    const uid = userCredential.user.uid;
+
+                    await setDoc(doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`), {
+                        nickname: 'NewPlayer' + uid.substring(0, 4),
+                        email: email,
+                        isPremium: false, 
+                        createdAt: serverTimestamp(),
+                        contributions: 0 
+                    });
+                    document.getElementById('login-modal').classList.add('hidden');
+
+                } catch (error) {
+                    errorDisplay.innerText = error.message.replace('Firebase: ', '');
+                    console.error("Registration Error:", error);
+                }
+            }
+            
+            window.logOut = async function() {
+                try {
+                    // Optimized to rely solely on onAuthStateChanged listener to handle state cleanup
+                    await signOut(window.auth);
+                } catch (error) {
+                    console.error("Logout Error:", error);
+                }
+            }
+
+            // --- ADMIN FUNCTION FOR TESTING PAYWALL ACCESS ---
+            window.upgradeToPremiumForOneYear = async function(targetUid = window.currentUserId) {
+                if (!window.currentUserId) {
+                    alert('You must be logged in to use this admin function.');
+                    return;
+                }
+                
+                if (window.currentUserId !== ADMIN_USER_ID) {
+                    alert('Access Denied: Only the designated ADMIN_USER_ID can run this function.');
+                    return;
+                }
+                
+                // FIXED: Removed the check for the literal "YOUR_FIREBASE_USER_UID_HERE" placeholder.
+
+                try {
+                    const oneYearFromNow = new Date();
+                    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+                    await updateDoc(window.dbRef.users(targetUid), {
+                        isPremium: true,
+                        premiumActivated: serverTimestamp(),
+                        premiumExpires: oneYearFromNow, 
+                    });
+                    
+                    alert(`Success! User ${targetUid} is now Premium until ${oneYearFromNow.toLocaleDateString()}. Refresh the page to update status.`);
+                    if (targetUid === window.currentUserId) loadUserStatusAndContent(); 
+                } catch (error) {
+                    console.error("Admin Upgrade Error:", error);
+                    alert("Admin upgrade failed. Check console for details.");
+                }
+            }
+            
+            window.downgradeFromPremium = async function(targetUid) {
+                if (window.currentUserId !== ADMIN_USER_ID) {
+                    alert('Access Denied.');
+                    return;
+                }
+                 try {
+                    await updateDoc(window.dbRef.users(targetUid), {
+                        isPremium: false,
+                        premiumExpires: null, 
+                    });
+                    alert(`Success! User ${targetUid} is now downgraded.`);
+                    if (targetUid === window.currentUserId) loadUserStatusAndContent(); 
+                } catch (error) {
+                    console.error("Admin Downgrade Error:", error);
+                    alert("Admin downgrade failed. Check console for details.");
+                }
+            }
+            
+            // --- ADMIN MODAL FUNCTIONS ---
+            window.toggleAdminModal = async function(show) {
+                if (show && window.currentUserId !== ADMIN_USER_ID) {
+                    alert('Access Denied: Only the designated ADMIN can open this panel.');
+                    return;
+                }
+                document.getElementById('admin-modal').classList.toggle('hidden', !show);
+                if (show) await fetchAllUsersForAdmin();
+            }
+
+            async function fetchAllUsersForAdmin() {
+                const usersList = document.getElementById('admin-users-list');
+                usersList.innerHTML = '<p class="text-gray-500 text-center py-4">Loading user list...</p>';
+                
+                try {
+                    const q = query(window.dbRef.allUsersCollection);
+                    const querySnapshot = await getDocs(q);
+                    
+                    usersList.innerHTML = '';
+                    querySnapshot.forEach(userDoc => {
+                        const infoRef = doc(userDoc.ref, 'profile/info');
+                        getDoc(infoRef).then(infoSnap => {
+                            if (infoSnap.exists()) renderAdminUserRow(userDoc.id, infoSnap.data());
+                        });
+                    });
+                } catch (error) {
+                    usersList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading users. Check security rules/console.</p>';
+                    console.error("Error fetching all user profiles for admin:", error);
+                }
+            }
+
+            function renderAdminUserRow(uid, userData) {
+                const usersList = document.getElementById('admin-users-list');
+                const isPremium = userData.isPremium;
+                const expiry = userData.premiumExpires?.toDate ? userData.premiumExpires.toDate().toLocaleDateString() : 'N/A';
+                
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-5 gap-2 p-2 border-b items-center text-sm';
+                row.innerHTML = `
+                    <div role="cell" class="truncate font-semibold">${userData.nickname || 'N/A'}</div>
+                    <div role="cell" class="truncate text-xs text-gray-500" title="${uid}">${uid.substring(0, 8)}...</div>
+                    <div role="cell" class="font-medium ${isPremium ? 'text-green-600' : 'text-red-500'}">
+                        ${isPremium ? 'PRO' : 'STANDARD'}
+                    </div>
+                    <div role="cell" class="text-xs text-gray-600">${expiry}</div>
+                    <div role="cell">
+                        <button onclick="window.downgradeFromPremium('${uid}')" class="bg-red-500 text-white text-xs px-2 py-1 rounded hover:bg-red-600" aria-label="Downgrade ${userData.nickname} status" ${!isPremium ? 'disabled' : ''}>Downgrade</button>
+                        <button onclick="window.upgradeToPremiumForOneYear('${uid}')" class="bg-green-500 text-white text-xs px-2 py-1 rounded hover:bg-green-600" aria-label="Upgrade ${userData.nickname} status" ${isPremium ? 'disabled' : ''}>Upgrade</button>
+                    </div>
+                `;
+                usersList.appendChild(row);
+            }
+            // --- END ADMIN MODAL FUNCTIONS ---
+
+            // --- MOBILE NAVIGATION ---
+            window.toggleMobileNav = function(show) {
+                document.getElementById('mobile-nav-panel').classList.toggle('hidden', !show);
+            }
+
+            window.scrollToSection = function(id) {
+                const section = document.getElementById(id);
+                if (section) section.scrollIntoView({ behavior: 'smooth' });
+                toggleMobileNav(false); 
+            }
+            // --- END MOBILE NAVIGATION ---
+
+            window.saveNickname = async function() {
+                const input = document.getElementById('nickname-input').value.trim();
+                if (input && window.currentUserId) {
+                    window.nickname = input;
+                    document.getElementById('nickname-display').innerText = input;
+                    try {
+                        await setDoc(window.dbRef.users(window.currentUserId), { nickname: input }, { merge: true });
+                        const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
+                        if (docSnap.exists()) renderUserStatus(docSnap.data()); 
+                        alert("Nickname saved successfully.");
+                    } catch (error) {
+                        console.error("Error saving nickname:", error);
+                    }
+                }
+            }
+            
+            // --- ZEUS NARRATOR TOUR ---
+            window.startZeusNarratorTour = async function() {
+                document.getElementById('narrator-launch-btn').classList.add('hidden');
+                const tourSteps = [
+                    { target: '#scoreboard-section', message: "Welcome, Pro Member! I am Zeus, your guide. Observe the Community Scoreboard—this is where your real-time data flows. Submit scores below!", offset: -50 },
+                    { target: '#chat-heading', message: "Next, the Team Chat. Use this to strategize with other Pro Members or send private messages using the Active Users list.", offset: -10 },
+                    { target: '#locker-room-section', message: "This is your Personal Locker Room. Unlimited media storage is now yours. Upload your highlights!", offset: -10 },
+                    { target: '#interview-heading', message: "And finally, the Exclusive Interview Corner. Submit questions for our next celebrity guest here. Go forth and dominate!", offset: -10 }
+                ];
+                for (const step of tourSteps) {
+                    const targetElement = document.querySelector(step.target);
+                    if (targetElement) {
+                        // Scroll smoothly to the element
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                        // Wait for scroll to finish (approx 1 second)
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        // Play the speech
+                        await window.generateAndSpeak(step.message);
+                        // Wait a moment for the user to absorb the info
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                    }
+                }
+                
+                // Mark tour as complete in Firestore
+                if (window.currentUserId) {
+                    await updateDoc(window.dbRef.users(window.currentUserId), { tourCompleted: true });
+                }
+            }
+            // --- END ZEUS NARRATOR TOUR ---
+
+
+            // --- NEW: Zeus Flying Function ---
+            window.flyZeusAndClick = function(targetElementId, clickFunction, duration = 1000) {
+                if (!window.isPremium && targetElementId !== 'submit-data-btn') {
+                    alert("You must be a PRO MEMBER to use Zeus features.");
+                    return;
+                }
+
+                const targetElement = document.getElementById(targetElementId);
+                const zeusElement = document.getElementById('zeus-avatar-svg');
+
+                if (!targetElement || !zeusElement) {
+                    console.error("Missing elements for Zeus flight.");
+                    clickFunction(); 
+                    return;
+                }
+                
+                zeusElement.style.opacity = '0';
+                const targetRect = targetElement.getBoundingClientRect();
+                const zeusRect = zeusElement.getBoundingClientRect(); 
+                
+                const deltaX = (targetRect.left + targetRect.width / 2) - (zeusRect.left + zeusRect.width / 2);
+                const deltaY = (targetRect.top + targetRect.height / 2) - (zeusRect.top + zeusRect.height / 2);
+
+                const flyingZeus = zeusElement.cloneNode(true);
+                flyingZeus.removeAttribute('id');
+                flyingZeus.classList.add('flying-zeus');
+                flyingZeus.style.position = 'fixed';
+                flyingZeus.style.top = `${zeusRect.top}px`;
+                flyingZeus.style.left = `${zeusRect.left}px`;
+                flyingZeus.style.zIndex = '50';
+                
+                document.body.appendChild(flyingZeus);
+                
+                let phrase = getRandomPhrase(); 
+
+                window.generateAndSpeak(phrase);
+                setTimeout(() => {
+                    flyingZeus.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.5)`;
+                    flyingZeus.style.opacity = '0.2'; 
+                }, 10);
+                setTimeout(() => {
+                    clickFunction();
+                    targetElement.classList.add('ring-4', 'ring-green-400', 'ring-opacity-75');
+                    
+                    flyingZeus.remove();
+                    
+                    zeusElement.style.opacity = '1';
+
+                    setTimeout(() => {
+                        targetElement.classList.remove('ring-4', 'ring-green-400', 'ring-opacity-75');
+                    }, 300);
+                }, duration);
+            };
+            // --- END Zeus Flying Function ---
+
+
+            // --- Presence Tracking and Chat Logic ---
+            function startPresenceTracking(uid) {
+                const userDocRef = doc(window.dbRef.activeUsersCollection, uid);
+                setInterval(async () => {
+                    if (window.currentUserId && window.isPremium) {
+                        await setDoc(userDocRef, {
+                            id: uid,
+                            nickname: window.nickname,
+                            lastActive: serverTimestamp()
+                        }, { merge: true });
+                    }
+                }, 30000);
+
+                setDoc(userDocRef, {
+                    id: uid,
+                    nickname: window.nickname,
+                    lastActive: serverTimestamp()
+                }, { merge: true });
+                onSnapshot(window.dbRef.activeUsersCollection, (snapshot) => {
+                    const users = [];
+                    const cutoffTime = Date.now() - 60000; 
+
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.lastActive && data.lastActive.toMillis() > cutoffTime && data.id !== window.currentUserId) {
+                            users.push(data);
+                        }
+                    });
+                    renderActiveUsers(users);
+                }, (error) => {
+                    console.error("Error listening to active users:", error);
+                });
+            }
+
+            function renderActiveUsers(users) {
+                const list = document.getElementById('active-users-list');
+                list.innerHTML = '';
+                if (users.length === 0) {
+                    list.innerHTML = '<p class="text-sm text-gray-500 p-2">No other active users right now.</p>';
+                    return;
+                }
+                users.forEach(user => {
+                    const item = document.createElement('div');
+                    item.className = 'p-2 rounded-lg cursor-pointer hover:bg-metro-accent/20 transition duration-150 flex justify-between items-center';
+                    item.innerHTML = `<span class="font-semibold text-gray-800">${user.nickname}</span> <span class="text-xs text-metro-primary ml-2">(${user.id.substring(0,
