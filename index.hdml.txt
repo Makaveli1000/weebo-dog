@@ -181,17 +181,19 @@
                 // Show Admin Button if user is the Admin
                 adminBtn.classList.toggle('hidden', user.uid !== ADMIN_USER_ID);
                 mobileMenu.classList.remove('hidden');
-                window.dbRef = {
-                    users: (uid) => doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`),
-                    allUsersCollection: collection(window.db, `artifacts/${appId}/users`), 
-                    publicMessages: collection(window.db, `artifacts/${appId}/public/data/messages`),
-                    activeUsersCollection: collection(window.db, `artifacts/${appId}/public/data/active_users`),
-                    sportsData: collection(window.db, `artifacts/${appId}/public/data/sports_data`),
-                    leaderboard: collection(window.db, `artifacts/${appId}/public/data/leaderboard`),
-                    mediaLocker: (uid) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker`),
-                    // ADDED: Reference for comments on a specific media item
-                    mediaComments: (uid, mediaId) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker/${mediaId}/comments`) 
-                };
+                if (window.db) { // Only set dbRefs if Firebase initialized successfully
+                    window.dbRef = {
+                        users: (uid) => doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`),
+                        allUsersCollection: collection(window.db, `artifacts/${appId}/users`), 
+                        publicMessages: collection(window.db, `artifacts/${appId}/public/data/messages`),
+                        activeUsersCollection: collection(window.db, `artifacts/${appId}/public/data/active_users`),
+                        sportsData: collection(window.db, `artifacts/${appId}/public/data/sports_data`),
+                        leaderboard: collection(window.db, `artifacts/${appId}/public/data/leaderboard`),
+                        mediaLocker: (uid) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker`),
+                        // ADDED: Reference for comments on a specific media item
+                        mediaComments: (uid, mediaId) => collection(window.db, `artifacts/${appId}/users/${uid}/media_locker/${mediaId}/comments`) 
+                    };
+                }
                 
                 loadUserStatusAndContent();
             } else {
@@ -217,54 +219,61 @@
             let isExpired = false;
 
             try {
-                const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
-                if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    window.nickname = userData.nickname || 'Guest';
-                    document.getElementById('nickname-input').value = window.nickname;
-                    
-                    if (userData.premiumExpires && userData.premiumExpires.toDate) {
-                        const expirationDate = userData.premiumExpires.toDate();
-                        if (expirationDate < new Date()) {
-                            isExpired = true;
+                if (window.db) { // Only attempt Firestore operations if window.db exists
+                    const docSnap = await getDoc(window.dbRef.users(window.currentUserId));
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        window.nickname = userData.nickname || 'Guest';
+                        document.getElementById('nickname-input').value = window.nickname;
+                        
+                        if (userData.premiumExpires && userData.premiumExpires.toDate) {
+                            const expirationDate = userData.premiumExpires.toDate();
+                            if (expirationDate < new Date()) {
+                                isExpired = true;
+                            }
                         }
-                    }
-                    
-                    window.isPremium = (userData.isPremium && !isExpired) ||
-                    false;
+                        
+                        window.isPremium = (userData.isPremium && !isExpired) ||
+                        false;
 
-                    renderUserStatus(userData); 
+                        renderUserStatus(userData); 
 
-                    if (window.isPremium) {
-                        mainContent.classList.remove('hidden');
-                        paywallContent.classList.add('hidden');
-                        startPresenceTracking(window.currentUserId);
-                        setupChatListener();
-                        setupSportsDataListener();
-                        setupLeaderboardListener(); 
-                        setupLockerRoomListener(); 
-                        window.toggleSidebarMode('ACTIVE'); 
-                        window.toggleStreamTab('HS_COLLEGE'); 
+                        if (window.isPremium) {
+                            mainContent.classList.remove('hidden');
+                            paywallContent.classList.add('hidden');
+                            startPresenceTracking(window.currentUserId);
+                            setupChatListener();
+                            setupSportsDataListener();
+                            setupLeaderboardListener(); 
+                            setupLockerRoomListener(); 
+                            window.toggleSidebarMode('ACTIVE'); 
+                            window.toggleStreamTab('HS_COLLEGE'); 
 
-                        // Check for first-time premium access to launch narrator
-                        if (!userData.tourCompleted) {
-                            document.getElementById('narrator-launch-btn').classList.remove('hidden');
+                            // Check for first-time premium access to launch narrator
+                            if (!userData.tourCompleted) {
+                                document.getElementById('narrator-launch-btn').classList.remove('hidden');
+                            } else {
+                                document.getElementById('narrator-launch-btn').classList.add('hidden');
+                                // Start the continuous idle narrator
+                                startIdleNarrator();
+                            }
+
                         } else {
-                            document.getElementById('narrator-launch-btn').classList.add('hidden');
-                            // Start the continuous idle narrator
-                            startIdleNarrator();
+                            mainContent.classList.add('hidden');
+                            paywallContent.classList.remove('hidden');
+                            setupLockerRoomListener(); 
                         }
-
                     } else {
-                        mainContent.classList.add('hidden');
-                        paywallContent.classList.remove('hidden');
-                        setupLockerRoomListener(); 
+                         mainContent.classList.add('hidden');
+                         paywallContent.classList.remove('hidden');
+                         renderUserStatus({});
+                         setupLockerRoomListener(); 
                     }
                 } else {
+                     // Default to paywall/login if DB is not available
                      mainContent.classList.add('hidden');
                      paywallContent.classList.remove('hidden');
                      renderUserStatus({});
-                     setupLockerRoomListener(); 
                 }
             } catch (error) {
                 console.error("Error loading user status:", error);
@@ -315,6 +324,7 @@
         }
         
         window.updateUserPassword = async function() {
+            if (!window.auth) { alert("Error: Authentication not available."); return; }
             const newPassword = document.getElementById('account-new-password').value.trim();
             const errorDisplay = document.getElementById('account-password-error');
             errorDisplay.innerText = '';
@@ -335,6 +345,7 @@
         }
         
         window.saveAccountNickname = async function() {
+            if (!window.db) { alert("Error: Database connection failed. Cannot save nickname."); return; }
             const input = document.getElementById('account-nickname').value.trim();
             if (input && window.currentUserId) {
                 window.nickname = input;
@@ -382,6 +393,7 @@
         }
         
         window.simulatePaymentSuccess = function() {
+            if (!window.db) { alert("Error: Database connection failed. Cannot simulate payment."); return; }
             window.upgradeToPremiumForOneYear();
             togglePaymentModal(false);
         }
@@ -432,6 +444,7 @@
         }
 
         window.logIn = async function() {
+            if (!window.auth) { alert("Error: Authentication not available."); return; }
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value.trim();
             const errorDisplay = document.getElementById('login-error');
@@ -451,6 +464,7 @@
         }
         
         window.register = async function() {
+            if (!window.auth) { alert("Error: Authentication not available."); return; }
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value.trim();
             const errorDisplay = document.getElementById('login-error');
@@ -480,6 +494,7 @@
         }
         
         window.logOut = async function() {
+            if (!window.auth) { return; } // No need to crash if auth is missing
             try {
                 // Optimized to rely solely on onAuthStateChanged listener to handle state cleanup
                 await signOut(window.auth);
@@ -490,6 +505,7 @@
 
         // --- ADMIN FUNCTION FOR TESTING PAYWALL ACCESS ---
         window.upgradeToPremiumForOneYear = async function(targetUid = window.currentUserId) {
+            if (!window.db) { alert("Error: Database connection failed. Cannot use admin function."); return; }
             if (!window.currentUserId) {
                 alert('You must be logged in to use this admin function.');
                 return;
@@ -521,6 +537,7 @@
         }
         
         window.downgradeFromPremium = async function(targetUid) {
+            if (!window.db) { alert("Error: Database connection failed. Cannot use admin function."); return; }
             if (window.currentUserId !== ADMIN_USER_ID) {
                 alert('Access Denied.');
                 return;
@@ -549,6 +566,7 @@
         }
 
         async function fetchAllUsersForAdmin() {
+            if (!window.db) { return; } // Prevent crash
             const usersList = document.getElementById('admin-users-list');
             usersList.innerHTML = '<p class="text-gray-500 text-center py-4">Loading user list...</p>';
             
@@ -605,6 +623,7 @@
         // --- END MOBILE NAVIGATION ---
 
         window.saveNickname = async function() {
+            if (!window.db) { alert("Error: Database connection failed. Cannot save nickname."); return; }
             const input = document.getElementById('nickname-input').value.trim();
             if (input && window.currentUserId) {
                 window.nickname = input;
@@ -643,8 +662,8 @@
                 }
             }
             
-            // Mark tour as complete in Firestore
-            if (window.currentUserId) {
+            if (window.db) {
+                // Mark tour as complete in Firestore
                 await updateDoc(window.dbRef.users(window.currentUserId), { tourCompleted: true });
             }
         }
@@ -662,12 +681,13 @@
 
         // --- IDLE NARRATOR LOGIC (Runs every 30 seconds if TTS input is empty) ---
         function startIdleNarrator() {
+            if (!window.db) return; // Prevent crash if Firebase failed to initialize
             setInterval(() => {
                 const ttsInput = document.getElementById('tts-input');
                 const isInputEmpty = ttsInput && ttsInput.value.trim() === '';
                 
                 // Only run if the user isn't actively typing or using the TTS feature
-                if (window.isPremium && isInputEmpty && window.auth.currentUser) {
+                if (window.isPremium && window.auth && window.auth.currentUser && isInputEmpty) {
                     lastNarratedIndex = (lastNarratedIndex + 1) % IDLE_NARRATOR_UPDATES.length;
                     const update = IDLE_NARRATOR_UPDATES[lastNarratedIndex];
                     
@@ -896,7 +916,7 @@
                     messages.push(doc.data());
                 });
 
-                // ⬇️ Load sample data if the collection is empty ⬇️
+                // ⬇️ Conditional Load: Only inject samples if Firestore data is empty ⬇️
                 if (messages.length === 0 && window.chatMode === 'public') {
                      messages.push(...getSampleChatMessages());
                 }
@@ -990,6 +1010,7 @@
         }
 
         window.sendMessage = async function(type = 'text', text = '') {
+            if (!window.db) { alert("Error: Database connection failed. Cannot send message."); return; }
             const messageInput = document.getElementById('message-input');
             const messageText = text || messageInput.value.trim();
             
@@ -1019,6 +1040,7 @@
         }
         
         window.handleVideoResponse = async function(requesterId, requesterNickname, status) {
+            if (!window.db) { alert("Error: Database connection failed. Cannot send response."); return; }
             const callSessionId = 'stl-sports-' + Date.now().toString().substring(5);
             const responseData = {
                 senderId: window.currentUserId,
@@ -1047,6 +1069,7 @@
         }
 
         window.submitSportsData = async function() {
+            if (!window.db) { alert("Error: Database connection failed. Cannot submit data."); return; }
             const type = document.getElementById('data-type').value;
             const title = document.getElementById('data-title').value.trim();
             const details = document.getElementById('data-details').value.trim();
@@ -1225,6 +1248,7 @@
         // --- Comment Management Functions ---
 
         window.setupCommentListener = function(mediaOwnerId, mediaId) {
+            if (!window.db) return; // Prevent crash if Firebase failed to initialize
             const commentContainer = document.getElementById(`comments-${mediaId}`);
             if (!commentContainer) return;
 
@@ -1254,6 +1278,7 @@
         }
 
         window.submitComment = async function(mediaOwnerId, mediaId, inputId) {
+            if (!window.db) { alert("Error: Database connection failed. Cannot submit comment."); return; }
             if (!window.isPremium) {
                 alert("Only PRO MEMBERS can leave comments!");
                 return;
@@ -1658,6 +1683,7 @@
             view.setUint32(24, sampleRate, true);
             view.setUint32(28, byteRate, true);
             view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
             writeString(view, 36, 'data');
             view.setUint32(40, pcm16.length * 2, true);
 
