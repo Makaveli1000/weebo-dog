@@ -88,15 +88,21 @@
         // --- Core Application Logic ---
         
         // --- FIREBASE INITIALIZATION FIX (Prevents Blank Screen Crash) ---
-        if (firebaseConfig) {
-            setLogLevel('Debug');
-            window.app = initializeApp(firebaseConfig);
-            window.db = getFirestore(window.app);
-            window.auth = getAuth(window.app);
-            window.serverTimestamp = serverTimestamp;
+        if (firebaseConfig && Object.keys(firebaseConfig).length > 0) { // Check if config exists and is not empty
+            try {
+                setLogLevel('Debug');
+                window.app = initializeApp(firebaseConfig);
+                window.db = getFirestore(window.app);
+                window.auth = getAuth(window.app);
+                window.serverTimestamp = serverTimestamp;
+            } catch (e) {
+                console.error("Error initializing Firebase:", e);
+                // Set window.db to null so subsequent functions know to fall back
+                window.db = null;
+            }
         } else {
-            console.error("Firebase config not found. The app will default to logged out mode.");
-            // Authentication function will handle the visual fallback
+            console.error("Firebase config not found or empty. The app will default to logged out mode.");
+            window.db = null;
         }
         // --- END FIREBASE INITIALIZATION FIX ---
 
@@ -733,6 +739,7 @@
 
         // --- Presence Tracking and Chat Logic ---
         function startPresenceTracking(uid) {
+            if (!window.db) return; // Prevent crash if Firebase failed to initialize
             const userDocRef = doc(window.dbRef.activeUsersCollection, uid);
             setInterval(async () => {
                 if (window.currentUserId && window.isPremium) {
@@ -793,6 +800,7 @@
         }
 
         function setupLeaderboardListener() {
+            if (!window.db) return; // Prevent crash if Firebase failed to initialize
             const q = query(window.dbRef.leaderboard, orderBy('contributions', 'desc'), limit(5));
             onSnapshot(q, (snapshot) => {
                 const contributors = [];
@@ -1368,6 +1376,7 @@
         // --- END UPDATED: renderMediaCard Function ---
         
         window.handleFileUpload = async function() {
+            if (!window.db) { alert("Error: Database connection failed. Cannot upload media."); return; }
             const fileInput = document.getElementById('media-file-input');
             const file = fileInput.files[0];
             
@@ -1404,6 +1413,7 @@
         }
 
         window.deleteMediaItem = async function(docId) {
+            if (!window.db) { alert("Error: Database connection failed. Cannot delete media."); return; }
             if (!confirm("Are you sure you want to delete this media item?")) return;
             try {
                 await deleteDoc(doc(window.dbRef.mediaLocker(window.currentUserId), docId));
@@ -1421,7 +1431,7 @@
             { name: "Jayson Tatum", date: "03/03", source: "NBA Star, Chaminade Alumnus" },
             { name: "Jackie Joyner-Kersee", date: "03/03", source: "Olympic Legend, East STL" },
             { name: "Larry Hughes", date: "01/23", source: "NBA Veteran, SLU" },
-            { name: "Ezekiel Elliott", date: "07/22", source: "NFL Star, John Burroughs Alumnus" },
+            { name: "Ezekiel Elliott", date: "07/22", source: "NFL Star, John Burroughs School" },
             { name: "Ike Taylor", date: "05/25", source: "NFL Veteran, Ritenour Alumnus" 
             },
             { name: "Stan Musial (Posthumous)", date: "11/21", source: "Cardinals Legend" },
