@@ -1,1 +1,4 @@
-/* /index.html 200
+
+# This rule makes sure that a request for an actual file (like /env-config.js) is served directly.
+# Requests that look like a URL path (e.g., /dashboard/settings) but aren't a file are served index.html.
+/!* /index.html 200

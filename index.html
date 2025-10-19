@@ -1,4 +1,13 @@
-<!DOCTYPE html>
+  <head>
+    <script src="/env-config.js"></script> 
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script>
+        // Initialize Firebase using the variables defined in env-config.js
+        firebase.initializeApp(window.__firebase_config); 
+    </script>
+    <script src="app.js"></script> 
+</head>DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -802,41 +811,107 @@
         }
         function writeString(view, offset, string) {
             for (let i = 0; i < string.length; i++) { view.setUint8(offset + i, string.charCodeAt(i)); }
-        }
+        }// --- START OF REQUIRED FUNCTION DEFINITIONS (STUBS) ---
 
-        // Final function calls to start the app
-        document.addEventListener('DOMContentLoaded', () => {
-            authenticate();
-            // Assuming renderBirthdayTracker is defined and runs here
-        }); // --- Missing Core Functions ---
-async function authenticate() {
-    // [Existing authenticate logic here]
+// --- Modal Toggle Functions ---
+function toggleLoginModal(show = true) {
+    const modal = document.getElementById('login-modal');
+    modal.classList.toggle('hidden', !show);
+    console.log("LOG: toggleLoginModal called - [STUB]");
 }
-onAuthStateChanged(window.auth, (user) => {
-    // [Existing onAuthStateChanged logic here]
-});
-// ... all other listeners and handlers ...
+function toggleAccountModal(show = true) {
+    const modal = document.getElementById('account-modal');
+    modal.classList.toggle('hidden', !show);
+    console.log("LOG: toggleAccountModal called - [STUB]");
+}
+function toggleAdminModal(show = true) {
+    const modal = document.getElementById('admin-modal');
+    modal.classList.toggle('hidden', !show);
+    console.log("LOG: toggleAdminModal called - [STUB]");
+}
+function toggleCashAppModal(show = true) {
+    const modal = document.getElementById('cashapp-modal');
+    modal.classList.toggle('hidden', !show);
+    console.log("LOG: toggleCashAppModal called - [STUB]");
+}
+function toggleSportsDataModal(show = true) {
+    const modal = document.getElementById('sports-data-modal');
+    modal.classList.toggle('hidden', !show);
+    console.log("LOG: toggleSportsDataModal called - [STUB]");
+}
 
-// --- Missing Modal Functions ---
-window.toggleLoginModal = function(show) { /* ... */ };
-window.toggleAccountModal = function(show) { /* ... */ };
-window.toggleAdminModal = function(show) { /* ... */ };
-window.toggleCashAppModal = function(show) { /* ... */ };
-window.toggleSportsDataModal = function(show) { /* ... */ };
+// --- Authentication Functions ---
+function logIn() {
+    console.log("LOG: logIn called - [STUB] - Waiting for implementation.");
+}
+function register() {
+    console.log("LOG: register called - [STUB] - Waiting for implementation.");
+}
+function logOut() {
+    console.log("LOG: logOut called - [STUB] - Signing out.");
+    // For proper UX, you might want to call window.auth.signOut() here if it's available.
+}
 
-// --- Missing Feature Functions ---
-window.startZeusNarratorTour = async function() { /* ... */ };
-window.flyZeusAndClick = function(targetElementId, clickFunction, duration = 1000) { /* ... */ };
-window.generateLoginQR = function() { /* ... */ };
+// --- QR Code Generation ---
+function generateLoginQR() {
+    console.log("LOG: generateLoginQR called - [STUB]");
+}
 
-// --- Missing User Action Functions ---
-window.logIn = async function() { /* ... */ };
-window.register = async function() { /* ... */ };
-window.sendMessage = async function(type = 'text', text = '') { /* ... */ };
-window.submitSportsData = async function() { /* ... */ };
+// --- Real-time Listeners ---
+function setupChatListener() {
+    console.log("LOG: setupChatListener called - [STUB]");
+}
+function setupSportsDataListener() {
+    console.log("LOG: setupSportsDataListener called - [STUB]");
+}
+function setupLeaderboardListener() {
+    console.log("LOG: setupLeaderboardListener called - [STUB]");
+}
+function setupLockerRoomListener() {
+    console.log("LOG: setupLockerRoomListener called - [STUB]");
+}
+function setupPresenceTracking() {
+    console.log("LOG: setupPresenceTracking called - [STUB]");
+}
 
-// ... (All the functions that render your UI and handle data)
+// --- User Interaction Functions ---
+function sendMessage() {
+    console.log("LOG: sendMessage called - [STUB]");
+}
+function submitSportsData() {
+    console.log("LOG: submitSportsData called - [STUB]");
+}
+function toggleChatMode() {
+    console.log("LOG: toggleChatMode called - [STUB]");
+}
+function toggleSidebarMode() {
+    console.log("LOG: toggleSidebarMode called - [STUB]");
+}
 
-    </script>
-</body>
-</html>
+// --- Zeus Tour Feature ---
+function startZeusNarratorTour() {
+    console.log("LOG: startZeusNarratorTour called - [STUB]");
+}
+function flyZeusAndClick() {
+    console.log("LOG: flyZeusAndClick called - [STUB]");
+}
+
+// --- Account Management ---
+function saveAccountNickname() {
+    console.log("LOG: saveAccountNickname called - [STUB]");
+}
+function updateUserPassword() {
+    console.log("LOG: updateUserPassword called - [STUB]");
+}
+function handleFileUpload() {
+    console.log("LOG: handleFileUpload called - [STUB]");
+}
+
+// --- Payment Simulation ---
+function simulatePaymentSuccess() {
+    console.log("LOG: simulatePaymentSuccess called - [STUB]");
+}
+
+// --- END OF REQUIRED FUNCTION DEFINITIONS (STUBS) ---
+
+        
