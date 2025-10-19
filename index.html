@@ -808,7 +808,34 @@
         document.addEventListener('DOMContentLoaded', () => {
             authenticate();
             // Assuming renderBirthdayTracker is defined and runs here
-        });
+        }); // --- Missing Core Functions ---
+async function authenticate() {
+    // [Existing authenticate logic here]
+}
+onAuthStateChanged(window.auth, (user) => {
+    // [Existing onAuthStateChanged logic here]
+});
+// ... all other listeners and handlers ...
+
+// --- Missing Modal Functions ---
+window.toggleLoginModal = function(show) { /* ... */ };
+window.toggleAccountModal = function(show) { /* ... */ };
+window.toggleAdminModal = function(show) { /* ... */ };
+window.toggleCashAppModal = function(show) { /* ... */ };
+window.toggleSportsDataModal = function(show) { /* ... */ };
+
+// --- Missing Feature Functions ---
+window.startZeusNarratorTour = async function() { /* ... */ };
+window.flyZeusAndClick = function(targetElementId, clickFunction, duration = 1000) { /* ... */ };
+window.generateLoginQR = function() { /* ... */ };
+
+// --- Missing User Action Functions ---
+window.logIn = async function() { /* ... */ };
+window.register = async function() { /* ... */ };
+window.sendMessage = async function(type = 'text', text = '') { /* ... */ };
+window.submitSportsData = async function() { /* ... */ };
+
+// ... (All the functions that render your UI and handle data)
 
     </script>
 </body>
