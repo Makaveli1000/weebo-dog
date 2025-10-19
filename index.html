@@ -376,7 +376,8 @@
         const appId = typeof window.__app_id !== 'undefined' ?
         window.__app_id : 'default-app-id';
         
-        const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? JSON.parse(window.__firebase_config) : null;
+        // FIX: Remove JSON.parse() since the config is injected as a JS object by env-config.js
+const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.__firebase_config : null;
         
         // FIX 2: Corrected the ReferenceError (using window.__initialAuthToken)
         const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null; 
