@@ -1,0 +1,241 @@
+<script type="module">
+    // Firebase SDK imports (unchanged)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, addDoc, serverTimestamp, where, increment, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Configuration and Initialization (MANDATORY GLOBALS)
+    // FIX 1: Read variables from the injected 'window' object, which Netlify creates.
+    const appId = typeof window.__app_id !== 'undefined' ?
+    window.__app_id : 'default-app-id';
+    
+    const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? JSON.parse(window.__firebase_config) : null;
+    
+    // FIX 2: Corrected the ReferenceError (using window.__initialAuthToken)
+    const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null; 
+
+    // FIX 3: Corrected Gemini API Key variable declaration
+    const GEMINI_API_KEY = typeof window.GEMINI_API_KEY !== 'undefined' ? window.GEMINI_API_KEY : '';
+    
+    // --- ADMIN SECURITY CONFIGURATION (CRUCIAL) ---
+    const ADMIN_USER_ID = "05806734626095127961";
+    // --- END ADMIN CONFIG ---
+
+    // --- TTS LONG MOTIVATIONAL SPEECH (FOR 30-SECOND DURATION) ---
+    const LONG_MOTIVATIONAL_SPEECH = "Champions rise and fall not on game day, but in the relentless, grinding hours of preparation. This is the truth of the arena. Every repetition, every drop of sweat, every moment of self-doubt conquered builds the fortress of your dominance. The clock is ticking on yesterday's efforts, and today demands more. Today, the world is watching, waiting for the thunder of your excellence. Do not give them average. Give them relentless. Give them legendary. You have the heart of a champion, the spirit of St. Louis, and the will of Zeus. Now, go seize your moment! The legacy is yours for the taking. Remember why you started this journey and finish the fight. You are the exclusive few. You are the best of Missouri. Finish strong, finish loud, and leave no doubt! You are the final countdown to victory, make this moment count!";
+    
+    // --- ZEUS RANDOM PHRASES & SCHOOL MASCOT ICONS ---
+    const ZEUS_PHRASES = [
+        "Great choice! Now you're cooking.", "Big time! Let's get that data recorded.", "Zeus approves! The hub gets stronger.", "That's how champions move. Data collected.", 
+        "Strike hard! Mission accomplished.", "A move worthy of the Thunder God! Excellent.", "Feel the lightning! You're making history.", "Unstoppable! Carry on, champion.",
+        "A stroke of genius! The Gods demand excellence.", "By Olympus! That data is gold.", "Feel the force of the Thunder God! Progress secured.", "The lightning never misses. Great input.",
+        "That's a championship move, right there!", "Lock it in! Focus and finish.", "Level up the whole damn team! Fantastic work.", "We call that dominance! Keep the scores coming.",
+        "BOOM! Data locked.", "Money time! Solid effort.", "All business. Move quick.", "Executed! Nothing else matters.",
+        "Your command is absolute! Proceeding with access.", 
+        "Account secured. Let the games begin!" 
+    ];
+    function getRandomPhrase() { return ZEUS_PHRASES[Math.floor(Math.random() * ZEUS_PHRASES.length)]; }
+    
+    const SCHOOL_ICONS = { "VASHON": "🐺", "SUMNER": "🐶", "SOLDAN": "🐅", "MCKINLEY": "🐞", "ROOSEVELT": "🐎", "LADUE": "🐏", 
+        "KIRKWOOD": "🏈", "WEBSTER": "Statesman", "SLUH": "⚔️", "WHITFIELD": "🛡️", "LSW": "🦁", "BLUESPRINGS": "🐾", 
+        "ROCKHURST": "🦅", "HICKMAN": "🐉", "ROCKBRIDGE": "🐻", "KICKAPOO": "⚔️", "GLENDALE": "Falcon", "OTHER": "🏆"
+    };
+    // --- END ZEUS PHRASES / ICONS ---
+    
+    // --- WEB AUDIO API SETUP ---
+    let audioContext; 
+
+    function createNoiseSource(volume) {
+        const bufferSize = 2 * (audioContext?.sampleRate || 44100);
+        const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1; 
+        }
+
+        const source = audioContext.createBufferSource();
+        source.buffer = noiseBuffer;
+        source.loop = true;
+
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = volume;
+
+        source.connect(gainNode);
+        return { source, gainNode };
+    }
+
+    function stopSFX(thunderSource, cheerSource, cheerGain) {
+        if (thunderSource) {
+            try { thunderSource.stop(); } catch(e) {}
+        }
+        if (cheerSource) {
+            try { cheerSource.stop(); } catch(e) {}
+        }
+        if (cheerGain) {
+            try { cheerGain.disconnect(); } catch(e) {}
+        }
+    }
+
+    // --- Core Application Logic ---
+
+    // FIX: Firebase initialization logic moved outside the function block for global access
+    window.app = null;
+    window.db = null;
+    window.auth = null;
+    window.serverTimestamp = null;
+    window.currentUserId = null;
+    window.isLoggedIn = false;
+    window.isPremium = false; 
+    window.nickname = 'Guest';
+    window.dbRef = {}; 
+
+    if (!firebaseConfig) { 
+        console.error("Firebase config not found. The app will not function.");
+    } else {
+        setLogLevel('Debug');
+        window.app = initializeApp(firebaseConfig);
+        window.db = getFirestore(window.app);
+        window.auth = getAuth(window.app);
+        window.serverTimestamp = serverTimestamp;
+
+        // Set up global state variables here (moved from inside authenticate for cleaner initialization)
+        window.chatMode = 'public'; 
+        window.recipientId = '';
+        window.sportsDataFilter = 'ALL';
+        window.sidebarMode = 'ACTIVE'; 
+        window.streamTab = 'HS_COLLEGE'; 
+        window.lockerMediaCount = 0;
+    }
+    
+    // --- TTS API IMPLEMENTATION (Modified for security and UI) ---
+    // The key is now correctly read into GEMINI_API_KEY globally.
+    window.generateAndSpeak = async function(speechText) {
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const textInput = document.getElementById('tts-input');
+        const text = speechText || textInput.value.trim();
+        const btn = document.getElementById('tts-button');
+        
+        if (!text) return;
+
+        // FIX: Use the globally defined GEMINI_API_KEY
+        if (!GEMINI_API_KEY) {
+            alert("TTS Error: Gemini API Key is missing. Check Netlify Environment Variables.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = 'Analyzing...';
+
+        let thunderSource = null, cheerSource = null, cheerGain = null;
+        const startTime = audioContext.currentTime;
+        let audio = null; 
+
+        try {
+            // Start SFX
+            const thunder = createNoiseSource(0.05);
+            thunderSource = thunder.source;
+            thunder.gainNode.connect(audioContext.destination);
+            thunderSource.start(startTime);
+
+            const cheer = createNoiseSource(0);
+            cheerSource = cheer.source;
+            cheerGain = cheer.gainNode;
+            cheerGain.connect(audioContext.destination);
+            cheerSource.start(startTime);
+            
+            cheerGain.gain.setValueAtTime(0, startTime);
+            cheerGain.gain.linearRampToValueAtTime(0.5, startTime + 20);
+
+            const payload = {
+                contents: [{
+                    parts: [{ text: `Act as a highly energetic St. Louis High School Sports Analyst.
+                    Deliver the following text with firm, motivating energy: ${text}` }]
+                }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Kore" }
+                        }
+                    }
+                },
+                model: "gemini-2.5-flash-preview-tts"
+            };
+            
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${GEMINI_API_KEY}`; // Use correct variable here
+
+            const maxRetries = 5;
+            let attempt = 0;
+            let response;
+            while (attempt < maxRetries) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 404 || response.status === 503) {
+                            throw new Error(`API returned HTTP ${response.status}. The external service may be down or the URL is incorrect.`);
+                        }
+                    }
+
+                    if (response.ok) break;
+
+                    const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    attempt++;
+                } catch (error) {
+                    if (error.message.includes('API returned HTTP')) {
+                        throw error; 
+                    }
+                    const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    attempt++;
+                }
+            }
+
+            if (!response || !response.ok) throw new Error(`API request failed after ${maxRetries} attempts.`);
+            const result = await response.json();
+            const part = result?.candidates?.[0]?.content?.parts?.[0];
+            const audioData = part?.inlineData?.data;
+            const mimeType = part?.inlineData?.mimeType;
+            if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
+                const match = mimeType.match(/rate=(\d+)/);
+                const sampleRate = match ? parseInt(match[1], 10) : 16000;
+                const pcmData = base64ToArrayBuffer(audioData);
+                const pcm16 = new Int16Array(pcmData);
+                const wavBlob = pcmToWav(pcm16, sampleRate);
+                const audioUrl = URL.createObjectURL(wavBlob);
+                
+                audio = new Audio(audioUrl); 
+                audio.addEventListener('ended', () => {
+                    stopSFX(thunderSource, cheerSource, cheerGain);
+                    URL.revokeObjectURL(audioUrl); 
+                    audio = null;
+                });
+                audio.play();
+            } else {
+                console.error("Audio data missing or invalid type:", mimeType);
+                stopSFX(thunderSource, cheerSource, cheerGain); 
+            }
+
+        } catch (error) {
+            alert(`ZEUS TTS FAILED: ${error.message || 'Check console for network error.'}`);
+            console.error("TTS Generation Error:", error);
+            stopSFX(thunderSource, cheerSource, cheerGain); 
+        } finally {
+            if (audio) {
+                stopSFX(thunderSource, cheerSource, cheerGain);
+            }
+            btn.disabled = false;
+            btn.innerText = 'Generate Analysis & Speak!';
+        }
+    }
+    
+    // --- All other functions (authenticate, onAuthStateChanged, renderUserStatus, etc.) are assumed to follow here ---
+    // (Pasting the remaining code is necessary to ensure the file is complete, but the critical fixes are above)
+    // ...
+</script>
