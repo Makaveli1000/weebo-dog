@@ -1,21 +1,13 @@
   <!DOCTYPE html>
-    <script src="/env-config.js"></script> 
-
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script>
-        // Initialize Firebase using the variables defined in env-config.js
-        firebase.initializeApp(window.__firebase_config); 
-    </script>
-    <script src="app.js"></script> 
-</head>DOCTYPE html>
 <html lang="en">
-<!DOCTYPE html>
+<head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snt.L.Mo. Exclusive Sports Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     
-    <script src="./env-config.js"></script> 
+    <script src="/env-config.js"></script> 
+    
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
         /* Define a custom color scheme based on St. Louis sports (Metro Blue/Red/Yellow) */
@@ -365,7 +357,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script type="module">
-        // Firebase SDK imports (unchanged)
+        // Firebase SDK imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, addDoc, serverTimestamp, where, increment, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -375,22 +367,20 @@
         // FIX 1: Read variables from the injected 'window' object, which Netlify creates.
         const appId = typeof window.__app_id !== 'undefined' ?
         window.__app_id : 'default-app-id';
-        
-        // FIX: Remove JSON.parse() since the config is injected as a JS object by env-config.js
-const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.__firebase_config : null;
-        
+
+        // CORRECTED FIREBASE CONFIGURATION LINE (FIXES NETLIFY NAMING CONFLICT):
+        const firebaseConfig = (typeof window.NETLIFY_FIREBASE_CONFIG !== 'undefined' ? window.NETLIFY_FIREBASE_CONFIG : window.__firebase_config) || null;
+        // -------------------------------------------------------------------------
         // FIX 2: Corrected the ReferenceError (using window.__initialAuthToken)
         const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null; 
 
-        // FIX 3: Corrected Gemini API Key variable declaration
         const GEMINI_API_KEY = typeof window.GEMINI_API_KEY !== 'undefined' ? window.GEMINI_API_KEY : '';
         
         // --- ADMIN SECURITY CONFIGURATION (CRUCIAL) ---
         const ADMIN_USER_ID = "05806734626095127961";
         // --- END ADMIN CONFIG ---
 
-        // --- GLOBAL ERROR HANDLER (RE-ADDED FOR CODE COMPLETENESS) ---
-        // This function intercepts uncaught errors (like script load failures, network issues, or other 404s)
+        // --- GLOBAL ERROR HANDLER ---
         window.addEventListener('error', function(event) {
             console.error('*** Global Error Handler Caught Exception ***');
             console.error('Error Message:', event.message);
@@ -402,9 +392,8 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
                 }
             }
         });
-        // --- END: GLOBAL ERROR HANDLER ---
 
-        // --- TTS LONG MOTIVATIONAL SPEECH (FOR 30-SECOND DURATION) ---
+        // --- TTS LONG MOTIVATIONAL SPEECH (Used by Zeus) ---
         const LONG_MOTIVATIONAL_SPEECH = "Champions rise and fall not on game day, but in the relentless, grinding hours of preparation. This is the truth of the arena. Every repetition, every drop of sweat, every moment of self-doubt conquered builds the fortress of your dominance. The clock is ticking on yesterday's efforts, and today demands more. Today, the world is watching, waiting for the thunder of your excellence. Do not give them average. Give them relentless. Give them legendary. You have the heart of a champion, the spirit of St. Louis, and the will of Zeus. Now, go seize your moment! The legacy is yours for the taking. Remember why you started this journey and finish the fight. You are the exclusive few. You are the best of Missouri. Finish strong, finish loud, and leave no doubt! You are the final countdown to victory, make this moment count!";
         
         // --- ZEUS RANDOM PHRASES & SCHOOL MASCOT ICONS ---
@@ -423,9 +412,8 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
             "KIRKWOOD": "🏈", "WEBSTER": "Statesman", "SLUH": "⚔️", "WHITFIELD": "🛡️", "LSW": "🦁", "BLUESPRINGS": "🐾", 
             "ROCKHURST": "🦅", "HICKMAN": "🐉", "ROCKBRIDGE": "🐻", "KICKAPOO": "⚔️", "GLENDALE": "Falcon", "OTHER": "🏆"
         };
-        // --- END ZEUS PHRASES / ICONS ---
-        
-        // --- WEB AUDIO API SETUP ---
+
+        // --- WEB AUDIO API SETUP / TTS FUNCTIONALITY ---
         let audioContext; 
 
         function createNoiseSource(volume) {
@@ -459,7 +447,7 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
             }
         }
 
-        // --- Core Application Logic ---
+        // --- Core Initialization Variables and Setup ---
         window.app = null;
         window.db = null;
         window.auth = null;
@@ -487,7 +475,7 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
             window.lockerMediaCount = 0;
         }
         
-        // --- TTS API IMPLEMENTATION (CORRECTED) ---
+        // --- TTS API IMPLEMENTATION ---
         window.generateAndSpeak = async function(speechText) {
             if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const textInput = document.getElementById('tts-input');
@@ -496,7 +484,6 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
             
             if (!text) return;
 
-            // FIX: Use the globally defined GEMINI_API_KEY
             if (!GEMINI_API_KEY) {
                 alert("TTS Error: Gemini API Key is missing. Check Netlify Environment Variables.");
                 return;
@@ -613,7 +600,7 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
             }
         }
         
-        // --- START OF YOUR REMAINING CUSTOM FUNCTIONS ---
+        // --- Core Application Functions (Auth / Status Control) ---
         async function authenticate() {
             const loadingOverlay = document.getElementById('loading-overlay');
             if (!window.db) {
@@ -626,7 +613,7 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
                 if (initialAuthToken) {
                     await signInWithCustomToken(window.auth, initialAuthToken);
                 } else {
-                    // If no token, wait for user login via the modal (which is hidden/shown by onAuthStateChanged)
+                    // Logic waits for user interaction (login/register)
                 }
             } catch (error) {
                 console.error("Authentication failed during auto-sign-in:", error);
@@ -641,7 +628,6 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
             const accountBtn = document.getElementById('account-btn');
             
             const adminBtn = document.getElementById('admin-btn');
-            const mobileMenu = document.getElementById('mobile-menu');
 
             if (user) {
                 window.currentUserId = user.uid;
@@ -654,7 +640,6 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
                 
                 // Show Admin Button if user is the Admin
                 adminBtn.classList.toggle('hidden', user.uid !== ADMIN_USER_ID);
-                // mobileMenu.classList.remove('hidden'); // Mobile menu not in HTML structure
 
                 window.dbRef = {
                     users: (uid) => doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`),
@@ -674,16 +659,10 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
                 window.isPremium = false;
                 document.getElementById('main-content').classList.add('hidden'); 
                 document.getElementById('paywall-content').classList.remove('hidden'); 
-                // loginModal.classList.remove('hidden'); // Do not force open login modal on load
                 
                 headerAuthBtn.classList.remove('hidden'); 
                 accountBtn.classList.add('hidden'); 
                 adminBtn.classList.add('hidden');
-                // mobileMenu.classList.add('hidden');
-
-                // Assuming generateLoginQR is defined later
-                // generateLoginQR(); 
-                // renderUserStatus({});
             }
         });
         
@@ -697,7 +676,6 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     window.nickname = userData.nickname || 'Guest';
-                    // document.getElementById('nickname-input').value = window.nickname; // nickname-input not in modals
                     
                     if (userData.premiumExpires && userData.premiumExpires.toDate) {
                         const expirationDate = userData.premiumExpires.toDate();
@@ -713,11 +691,13 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
                     if (window.isPremium) {
                         mainContent.classList.remove('hidden');
                         paywallContent.classList.add('hidden');
-                        startPresenceTracking(window.currentUserId);
-                        // setupChatListener(); // Assuming these listeners are defined later
-                        // setupSportsDataListener();
-                        // setupLeaderboardListener(); 
-                        // setupLockerRoomListener(); 
+                        
+                        // PHASE 2: CALL ALL IMPLEMENTED LISTENERS
+                        setupPresenceTracking(window.currentUserId);
+                        setupChatListener();
+                        setupSportsDataListener();
+                        setupLeaderboardListener();
+                        setupLockerRoomListener();
                         
                         if (!userData.tourCompleted) {
                             document.getElementById('narrator-launch-btn').classList.remove('hidden');
@@ -728,14 +708,12 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
                     } else {
                         mainContent.classList.add('hidden');
                         paywallContent.classList.remove('hidden');
-                        // setupLockerRoomListener(); // Allow standard users to see free locker
                     }
                 } else {
                     // Default to paywall if profile document doesn't exist
                     mainContent.classList.add('hidden');
                     paywallContent.classList.remove('hidden');
                     renderUserStatus({});
-                    // setupLockerRoomListener(); 
                 }
             } catch (error) {
                 console.error("Error loading user status:", error);
@@ -779,14 +757,7 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
         }
         // --- END UX FUNCTION ---
         
-        // --- MISSING FUNCTIONS START HERE (Authentication, Modals, Listeners, Utilities) ---
-        // I cannot reconstruct the entire missing code, but based on your previous pastes, here are the function bodies that are required for your app to run.
-        
-        // The following functions are required but were not in the paste you provided:
-        // * The rest of the functions from your previous paste are needed here
-        //   (e.g., generateLoginQR, logIn, register, startPresenceTracking, setupChatListener, setupSportsDataListener, etc.)
-        
-        // Placeholder for missing helper functions (pcmToWav, base64ToArrayBuffer, writeString)
+        // --- HELPER FUNCTIONS (TTS Audio Encoding) ---
         function base64ToArrayBuffer(base64) {
              const binaryString = atob(base64);
              const len = binaryString.length;
@@ -802,188 +773,404 @@ const firebaseConfig = typeof window.__firebase_config !== 'undefined' ? window.
             const buffer = new ArrayBuffer(44 + pcm16.length * 2);
             const view = new DataView(buffer);
             writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + pcm16.length * 2, true);
-            writeString(view, 8, 'WAVE'); writeString(view, 12, 'fmt '); view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true);
-            view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitsPerSample, true);
-            writeString(view, 36, 'data'); view.setUint32(40, pcm16.length * 2, true);
-            let offset = 44;
+            writeString(view, 8, 'WAVE'); view.setUint32(12, 12, true); writeString(view, 16, 'fmt '); view.setUint32(20, 16, true);
+            view.setUint16(24, 1, true); view.setUint16(26, numChannels, true); view.setUint32(28, sampleRate, true);
+            view.setUint32(32, byteRate, true); view.setUint16(36, blockAlign, true); view.setUint16(38, bitsPerSample, true);
+            writeString(view, 40, 'data'); view.setUint32(44, pcm16.length * 2, true);
+            let offset = 48;
             for (let i = 0; i < pcm16.length; i++) { view.setInt16(offset, pcm16[i], true); offset += 2; }
             return new Blob([view], { type: 'audio/wav' });
         }
         function writeString(view, offset, string) {
             for (let i = 0; i < string.length; i++) { view.setUint8(offset + i, string.charCodeAt(i)); }
-        }// --- START OF REQUIRED FUNCTION DEFINITIONS (STUBS) ---
-
-function setupChatListener() {
-    console.log("LOG: setupChatListener: Setting up real-time chat listener.");
-    if (!window.dbRef.publicMessages) return;
-
-    const q = query(
-        window.dbRef.publicMessages,
-        orderBy('timestamp', 'desc'), // Show newest messages first
-        limit(50) // Limit to the last 50 messages
-    );
-
-    onSnapshot(q, (snapshot) => {
-        const chatMessagesDiv = document.getElementById('chat-messages');
-        let html = '';
-        
-        // Reverse array to show oldest first (since we query 'desc' but display 'asc')
-        snapshot.docs.reverse().forEach((doc) => {
-            const data = doc.data();
-            const timestamp = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString() : 'N/A';
-            const sender = data.nickname || 'Unknown User';
-            const isSelf = data.uid === window.currentUserId;
-            
-            // Basic chat message formatting (using Tailwind classes from your HTML structure)
-            html += `
-                <div class="text-sm ${isSelf ? 'text-right' : 'text-left'}">
-                    <span class="font-bold ${isSelf ? 'text-metro-accent' : 'text-metro-primary'}">${sender}:</span>
-                    <span>${data.message}</span>
-                    <span class="text-xs text-gray-400 ml-2">${timestamp}</span>
-                </div>
-            `;
-        });
-        
-        chatMessagesDiv.innerHTML = html || '<p class="text-center text-gray-500">No messages yet.</p>';
-        // Scroll to the bottom on new messages
-        chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
-    });
-}
-
-function setupSportsDataListener() {
-    console.log("LOG: setupSportsDataListener: Setting up real-time sports data listener.");
-    if (!window.dbRef.sportsData) return;
-
-    const q = query(
-        window.dbRef.sportsData,
-        orderBy('timestamp', 'desc'),
-        limit(10) // Show last 10 updates
-    );
-
-    onSnapshot(q, (snapshot) => {
-        const displayDiv = document.getElementById('sports-data-display');
-        let html = '';
-
-        if (snapshot.empty) {
-            displayDiv.innerHTML = '<p class="text-center text-gray-500 py-8 col-span-full">No data submitted yet. Be the first!</p>';
-            return;
         }
 
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const icon = window.SCHOOL_ICONS[data.school] || window.SCHOOL_ICONS['OTHER'];
-            const timeAgo = data.timestamp ? 
-                Math.round((new Date() - data.timestamp.toDate()) / 60000) + 'm ago' : 'Just now';
-
-            html += `
-                <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-metro-accent">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xl">${icon}</span>
-                        <span class="text-xs text-gray-500">${timeAgo} by ${data.nickname}</span>
-                    </div>
-                    <h4 class="font-semibold text-gray-800">${data.title}</h4>
-                    <p class="text-sm text-gray-600 truncate">${data.details}</p>
-                    <span class="text-xs font-mono text-metro-primary">${data.type} Update</span>
-                </div>
-            `;
-        });
-
-        displayDiv.innerHTML = html;
-        document.getElementById('latest-data').innerText = `Last update: ${new Date().toLocaleTimeString()}`;
-    });
-}
-
-function setupLeaderboardListener() {
-    console.log("LOG: setupLeaderboardListener: Setting up real-time leaderboard.");
-    if (!window.dbRef.leaderboard) return;
-
-    const q = query(
-        window.dbRef.leaderboard,
-        orderBy('score', 'desc'), // Order by score descending
-        limit(5) // Show top 5 users
-    );
-
-    onSnapshot(q, (snapshot) => {
-        const leaderboardList = document.getElementById('leaderboard-list');
-        let html = '<h4 class="text-lg font-bold text-gray-800 mb-2">Top Contributors:</h4>';
-        let rank = 1;
-
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const isCurrentUser = data.uid === window.currentUserId;
-            
-            html += `
-                <div class="flex justify-between items-center p-2 rounded-md ${isCurrentUser ? 'bg-yellow-100 font-bold' : 'hover:bg-gray-50'}">
-                    <span class="text-sm">${rank}. ${data.nickname}</span>
-                    <span class="text-metro-primary font-extrabold">${data.score} pts</span>
-                </div>
-            `;
-            rank++;
-        });
-
-        leaderboardList.innerHTML = html;
-        // The UI logic to toggle between Active Users/Leaderboard is handled by toggleSidebarMode, which is a stub.
-        // For now, this just populates the list.
-    });
-}
-
-function setupLockerRoomListener() {
-    console.log("LOG: setupLockerRoomListener: Setting up real-time locker.");
-    if (!window.dbRef.mediaLocker) return;
-
-    const q = query(
-        window.dbRef.mediaLocker(window.currentUserId),
-        orderBy('timestamp', 'desc')
-    );
-
-    onSnapshot(q, (snapshot) => {
-        const displayDiv = document.getElementById('locker-media-display');
-        window.lockerMediaCount = snapshot.size;
-        document.getElementById('locker-status-text').innerText = `Capacity: ${snapshot.size}/10 Files (Standard) - Upgrade for unlimited.`;
+        // =========================================================================
+        // --- FINAL CONSOLIDATED FUNCTION LIST (PHASES 1, 2, 3 & UTILITIES) ---
+        // =========================================================================
         
-        let html = '';
-
-        if (snapshot.empty) {
-            displayDiv.innerHTML = '<p class="text-center text-gray-500 py-4 col-span-full">Your locker is empty. Upload media!</p>';
-            return;
+        // 1. Modal Toggle Functions (Corrected and Cleaned Log)
+        function toggleLoginModal(show = true) {
+            const modal = document.getElementById('login-modal');
+            modal.classList.toggle('hidden', !show);
+            console.log(`LOG: Toggled Login Modal: ${show ? 'Show' : 'Hide'}`);
+        }
+        function toggleAccountModal(show = true) {
+            const modal = document.getElementById('account-modal');
+            modal.classList.toggle('hidden', !show);
+            console.log(`LOG: Toggled Account Modal: ${show ? 'Show' : 'Hide'}`);
+        }
+        function toggleAdminModal(show = true) {
+            const modal = document.getElementById('admin-modal');
+            modal.classList.toggle('hidden', !show);
+            console.log(`LOG: Toggled Admin Modal: ${show ? 'Show' : 'Hide'}`);
+        }
+        function toggleCashAppModal(show = true) {
+            const modal = document.getElementById('cashapp-modal');
+            modal.classList.toggle('hidden', !show);
+            console.log(`LOG: Toggled CashApp Modal: ${show ? 'Show' : 'Hide'}`);
+        }
+        function toggleSportsDataModal(show = true) {
+            const modal = document.getElementById('sports-data-modal');
+            modal.classList.toggle('hidden', !show);
+            console.log(`LOG: Toggled Sports Data Modal: ${show ? 'Show' : 'Hide'}`);
         }
 
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const isVideo = data.mimeType && data.mimeType.startsWith('video');
+        // 2. Authentication Functions (Phase 1 Implemented)
+        async function logIn() {
+            console.log("LOG: logIn called - Implementing Firebase sign-in.");
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorDisplay = document.getElementById('login-error');
+            errorDisplay.innerText = '';
 
-            html += `
-                <div class="card p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <p class="font-bold text-sm truncate mb-1">${data.fileName}</p>
-                    <p class="text-xs text-gray-600">${data.sizeKB} KB - ${isVideo ? 'Video' : 'Image'}</p>
-                    <a href="${data.url}" target="_blank" class="text-xs text-metro-accent hover:underline mt-1 block">View/Download</a>
-                </div>
-            `;
-        });
-        displayDiv.innerHTML = html;
-    });
-}
+            if (!email || password.length < 6) {
+                errorDisplay.innerText = 'Email is required and password must be at least 6 characters.';
+                return;
+            }
 
-function setupPresenceTracking(uid) {
-    console.log("LOG: setupPresenceTracking: Initializing presence tracking for:", uid);
-    if (!window.dbRef.activeUsersCollection) return;
+            try {
+                await signInWithEmailAndPassword(window.auth, email, password);
+            } catch (error) {
+                let message = 'Login failed. Please check your credentials.';
+                if (error.code === 'auth/user-not-found') message = 'No account found for this email.';
+                if (error.code === 'auth/wrong-password') message = 'Incorrect password.';
+                errorDisplay.innerText = message;
+                console.error("Login Error:", error);
+            }
+        }
+        async function register() {
+            console.log("LOG: register called - Implementing Firebase registration.");
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorDisplay = document.getElementById('login-error');
+            errorDisplay.innerText = '';
 
-    const userDocRef = doc(window.dbRef.activeUsersCollection, uid);
+            if (!email || password.length < 6) {
+                errorDisplay.innerText = 'Email is required and password must be at least 6 characters.';
+                return;
+            }
 
-    // Write the initial presence state (active)
-    setDoc(userDocRef, {
-        uid: uid,
-        nickname: window.nickname,
-        lastActive: new Date(), // Using a client-side date for simplicity in stubs
-        isOnline: true
-    }).catch(e => console.error("Error setting initial presence:", e));
+            try {
+                const userCredential = await createUserWithEmailAndPassword(window.auth, email, password);
+                const user = userCredential.user;
+                
+                await setDoc(doc(window.db, `artifacts/${appId}/users/${user.uid}/profile/info`), {
+                    nickname: email.split('@')[0],
+                    email: user.email,
+                    isPremium: false,
+                    joinedDate: window.serverTimestamp(),
+                    score: 0
+                });
 
-    // NOTE: True presence tracking requires a mechanism to set isOnline: false when the user leaves.
-    // This is typically handled with Firebase Realtime Database's onDisconnect feature, which is not 
-    // supported by the Firestore SDK imports you are using. This is a basic tracking stub.
-}
+            } catch (error) {
+                let message = 'Registration failed. Try again.';
+                if (error.code === 'auth/email-already-in-use') message = 'This email is already registered.';
+                if (error.code === 'auth/weak-password') message = 'Password is too weak. Must be 6+ characters.';
+                errorDisplay.innerText = message;
+                console.error("Registration Error:", error);
+            }
+        }
+        function logOut() {
+            console.log("LOG: logOut called - Implementing Firebase sign out.");
+            if (window.auth) {
+                signOut(window.auth)
+                    .catch((error) => {
+                        console.error("Sign Out Error:", error);
+                    });
+            }
+        }
+        async function simulatePaymentSuccess() {
+            console.log("LOG: simulatePaymentSuccess called - Granting Premium Access.");
+            if (!window.currentUserId || !window.db) {
+                alert("Must be logged in to upgrade!");
+                return;
+            }
 
-// ... continue with other stubs that were not updated ...
+            try {
+                const expiryDate = new Date();
+                expiryDate.setFullYear(expiryDate.getFullYear() + 1);
 
-        
+                await updateDoc(doc(window.db, `artifacts/${appId}/users/${window.currentUserId}/profile/info`), {
+                    isPremium: true,
+                    premiumExpires: expiryDate,
+                    score: increment(10)
+                });
+                
+                window.isPremium = true;
+                
+                toggleCashAppModal(false); 
+                alert("PRO Membership Activated! Welcome to the Hub!");
+                loadUserStatusAndContent();
+                
+            } catch (error) {
+                console.error("Payment Simulation Error:", error);
+                alert("Failed to activate premium status. Check console for details.");
+            }
+        }
+
+        // 3. Real-Time Listeners (Phase 2 Implemented)
+        function setupChatListener() {
+            console.log("LOG: setupChatListener: Setting up real-time chat listener.");
+            if (!window.dbRef.publicMessages) return;
+            const q = query(window.dbRef.publicMessages, orderBy('timestamp', 'desc'), limit(50));
+            onSnapshot(q, (snapshot) => {
+                const chatMessagesDiv = document.getElementById('chat-messages');
+                let html = '';
+                snapshot.docs.reverse().forEach((doc) => {
+                    const data = doc.data();
+                    const timestamp = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString() : 'N/A';
+                    const sender = data.nickname || 'Unknown User';
+                    const isSelf = data.uid === window.currentUserId;
+                    html += `<div class="text-sm ${isSelf ? 'text-right' : 'text-left'}"><span class="font-bold ${isSelf ? 'text-metro-accent' : 'text-metro-primary'}">${sender}:</span><span>${data.message}</span><span class="text-xs text-gray-400 ml-2">${timestamp}</span></div>`;
+                });
+                chatMessagesDiv.innerHTML = html || '<p class="text-center text-gray-500">No messages yet.</p>';
+                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+            });
+        }
+        function setupSportsDataListener() {
+            console.log("LOG: setupSportsDataListener: Setting up real-time sports data listener.");
+            if (!window.dbRef.sportsData) return;
+            const q = query(window.dbRef.sportsData, orderBy('timestamp', 'desc'), limit(10));
+            onSnapshot(q, (snapshot) => {
+                const displayDiv = document.getElementById('sports-data-display');
+                let html = '';
+                if (snapshot.empty) {
+                    displayDiv.innerHTML = '<p class="text-center text-gray-500 py-8 col-span-full">No data submitted yet. Be the first!</p>';
+                    return;
+                }
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const icon = window.SCHOOL_ICONS[data.school] || window.SCHOOL_ICONS['OTHER'];
+                    const timeAgo = data.timestamp ? Math.round((new Date() - data.timestamp.toDate()) / 60000) + 'm ago' : 'Just now';
+                    html += `<div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-metro-accent"><div class="flex items-center justify-between mb-2"><span class="text-xl">${icon}</span><span class="text-xs text-gray-500">${timeAgo} by ${data.nickname}</span></div><h4 class="font-semibold text-gray-800">${data.title}</h4><p class="text-sm text-gray-600 truncate">${data.details}</p><span class="text-xs font-mono text-metro-primary">${data.type} Update</span></div>`;
+                });
+                displayDiv.innerHTML = html;
+                document.getElementById('latest-data').innerText = `Last update: ${new Date().toLocaleTimeString()}`;
+            });
+        }
+        function setupLeaderboardListener() {
+            console.log("LOG: setupLeaderboardListener: Setting up real-time leaderboard.");
+            if (!window.dbRef.leaderboard) return;
+            const q = query(window.dbRef.leaderboard, orderBy('score', 'desc'), limit(5));
+            onSnapshot(q, (snapshot) => {
+                const leaderboardList = document.getElementById('leaderboard-list');
+                let html = '<h4 class="text-lg font-bold text-gray-800 mb-2">Top Contributors:</h4>';
+                let rank = 1;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const isCurrentUser = data.uid === window.currentUserId;
+                    html += `<div class="flex justify-between items-center p-2 rounded-md ${isCurrentUser ? 'bg-yellow-100 font-bold' : 'hover:bg-gray-50'}"><span class="text-sm">${rank}. ${data.nickname}</span><span class="text-metro-primary font-extrabold">${data.score} pts</span></div>`;
+                    rank++;
+                });
+                leaderboardList.innerHTML = html;
+            });
+        }
+        function setupLockerRoomListener() {
+            console.log("LOG: setupLockerRoomListener: Setting up real-time locker.");
+            if (!window.dbRef.mediaLocker) return;
+            const q = query(window.dbRef.mediaLocker(window.currentUserId), orderBy('timestamp', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                const displayDiv = document.getElementById('locker-media-display');
+                window.lockerMediaCount = snapshot.size;
+                document.getElementById('locker-status-text').innerText = `Capacity: ${snapshot.size}/10 Files (Standard) - Upgrade for unlimited.`;
+                let html = '';
+                if (snapshot.empty) {
+                    displayDiv.innerHTML = '<p class="text-center text-gray-500 py-4 col-span-full">Your locker is empty. Upload media!</p>';
+                    return;
+                }
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const isVideo = data.mimeType && data.mimeType.startsWith('video');
+                    html += `<div class="card p-3 bg-gray-50 rounded-lg shadow-sm border border-gray-200 overflow-hidden"><p class="font-bold text-sm truncate mb-1">${data.fileName}</p><p class="text-xs text-gray-600">${data.sizeKB} KB - ${isVideo ? 'Video' : 'Image'}</p><a href="${data.url}" target="_blank" class="text-xs text-metro-accent hover:underline mt-1 block">View/Download</a></div>`;
+                });
+                displayDiv.innerHTML = html;
+            });
+        }
+        function setupPresenceTracking(uid) {
+            console.log("LOG: setupPresenceTracking: Initializing presence tracking for:", uid);
+            if (!window.dbRef.activeUsersCollection) return;
+            const userDocRef = doc(window.dbRef.activeUsersCollection, uid);
+            setDoc(userDocRef, {
+                uid: uid,
+                nickname: window.nickname,
+                lastActive: new Date(),
+                isOnline: true
+            }).catch(e => console.error("Error setting initial presence:", e));
+        }
+
+        // 4. User Interaction and Management (Phase 3 Implemented)
+        async function sendMessage(type = 'text') {
+            console.log(`LOG: sendMessage called - Type: ${type}`);
+            if (!window.isLoggedIn || !window.dbRef.publicMessages) {
+                alert("You must be logged in to send a message.");
+                return;
+            }
+            const messageInput = document.getElementById('message-input');
+            const message = messageInput.value.trim();
+            if (!message && type === 'text') return;
+            try {
+                await addDoc(window.dbRef.publicMessages, {
+                    uid: window.currentUserId,
+                    nickname: window.nickname,
+                    message: message,
+                    type: type,
+                    timestamp: window.serverTimestamp()
+                });
+                messageInput.value = '';
+                console.log("Message sent successfully.");
+            } catch (error) {
+                console.error("Error sending message:", error);
+                alert("Failed to send message. Check console.");
+            }
+        }
+        async function submitSportsData() {
+            console.log("LOG: submitSportsData called - Saving new sports data entry.");
+            if (!window.isPremium || !window.dbRef.sportsData) {
+                alert("You must be a PRO MEMBER to submit data.");
+                return;
+            }
+            const dataType = document.getElementById('data-type').value;
+            const dataSchool = document.getElementById('data-school').value;
+            const dataTitle = document.getElementById('data-title').value.trim();
+            const dataDetails = document.getElementById('data-details').value.trim();
+            const dataVideoUrl = document.getElementById('data-video-url').value.trim();
+            if (!dataTitle || !dataDetails) {
+                alert("Title and Details are required for submission.");
+                return;
+            }
+            try {
+                await addDoc(window.dbRef.sportsData, {
+                    uid: window.currentUserId,
+                    nickname: window.nickname,
+                    type: dataType,
+                    school: dataSchool,
+                    title: dataTitle,
+                    details: dataDetails,
+                    videoUrl: dataVideoUrl || null,
+                    timestamp: window.serverTimestamp()
+                });
+                await updateDoc(doc(window.db, `artifacts/${appId}/users/${window.currentUserId}/profile/info`), {
+                    score: increment(5)
+                });
+                toggleSportsDataModal(false);
+                alert("Sports Data submitted! Score updated.");
+            } catch (error) {
+                console.error("Error submitting sports data:", error);
+                alert("Failed to submit data. Check console.");
+            }
+        }
+        function toggleChatMode() {
+            console.log("LOG: toggleChatMode called - Toggling chat mode.");
+            const modeSelect = document.getElementById('chat-mode-toggle');
+            const recipientInput = document.getElementById('recipient-id-input');
+            window.chatMode = modeSelect.value;
+            if (window.chatMode === 'private') {
+                recipientInput.classList.remove('hidden');
+            } else {
+                recipientInput.classList.add('hidden');
+            }
+            console.log(`Chat Mode set to: ${window.chatMode}`);
+        }
+        function toggleSidebarMode(mode) {
+            console.log(`LOG: toggleSidebarMode called - Switching sidebar to: ${mode}`);
+            window.sidebarMode = mode;
+            const activeList = document.getElementById('active-users-list');
+            const leaderboardList = document.getElementById('leaderboard-list');
+            const activeBtn = document.getElementById('mode-active-btn');
+            const leaderboardBtn = document.getElementById('mode-leaderboard-btn');
+            if (mode === 'LEADERBOARD') {
+                leaderboardList.classList.remove('hidden');
+                activeList.classList.add('hidden');
+                leaderboardBtn.classList.add('bg-metro-primary', 'text-white');
+                leaderboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                activeBtn.classList.remove('bg-metro-primary', 'text-white');
+                activeBtn.classList.add('bg-gray-200', 'text-gray-700');
+            } else { // 'ACTIVE'
+                activeList.classList.remove('hidden');
+                leaderboardList.classList.add('hidden');
+                activeBtn.classList.add('bg-metro-primary', 'text-white');
+                activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                leaderboardBtn.classList.remove('bg-metro-primary', 'text-white');
+                leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
+            }
+        }
+        async function saveAccountNickname() {
+            console.log("LOG: saveAccountNickname called - Updating user nickname.");
+            if (!window.currentUserId) return;
+            const newNickname = document.getElementById('account-nickname').value.trim();
+            if (!newNickname) {
+                alert("Nickname cannot be empty.");
+                return;
+            }
+            try {
+                await updateDoc(doc(window.db, `artifacts/${appId}/users/${window.currentUserId}/profile/info`), {
+                    nickname: newNickname
+                });
+                window.nickname = newNickname;
+                renderUserStatus({}); 
+                alert("Nickname saved successfully!");
+            } catch (error) {
+                console.error("Error saving nickname:", error);
+                alert("Failed to save nickname. Check console.");
+            }
+        }
+        async function updateUserPassword() {
+            console.log("LOG: updateUserPassword called - Attempting password change.");
+            if (!window.auth.currentUser) {
+                alert("You must be recently logged in to change your password.");
+                return;
+            }
+            const newPassword = document.getElementById('account-new-password').value;
+            const errorDisplay = document.getElementById('account-password-error');
+            errorDisplay.innerText = '';
+            if (newPassword.length < 6) {
+                errorDisplay.innerText = 'Password must be at least 6 characters.';
+                return;
+            }
+            try {
+                await updatePassword(window.auth.currentUser, newPassword);
+                errorDisplay.innerText = 'Password updated successfully!';
+                errorDisplay.classList.remove('text-red-500');
+                errorDisplay.classList.add('text-green-600');
+                document.getElementById('account-new-password').value = ''; 
+            } catch (error) {
+                let message = 'Failed to update. Try logging out and back in, then retry.';
+                if (error.code === 'auth/requires-recent-login') {
+                    message = 'Security alert: Please log out and log back in, then retry updating your password.';
+                }
+                errorDisplay.innerText = message;
+                console.error("Password Update Error:", error);
+            }
+        }
+        function handleFileUpload() {
+            console.log("LOG: handleFileUpload called - [STUB] - Needs Firebase Storage implementation.");
+            alert("File upload is not yet implemented. Please check console.");
+        }
+
+        // 5. Utilities (Stubs)
+        function generateLoginQR() {
+            console.log("LOG: generateLoginQR called - [STUB] - Needs qrcode.min.js implementation.");
+        }
+        function startZeusNarratorTour() {
+            console.log("LOG: startZeusNarratorTour called - [STUB] - Launching UI/Voice Tour.");
+            alert("The Zeus Narrator Tour is running! (Check console for next steps)");
+        }
+        function flyZeusAndClick(targetElementId, clickFunction, duration = 1000) {
+            console.log(`LOG: flyZeusAndClick called - Animating Zeus to click ${targetElementId}`);
+            if (typeof clickFunction === 'function') {
+                clickFunction();
+            }
+        }
+        // =========================================================================
+        // --- END OF CONSOLIDATED FUNCTION LIST ---
+        // =========================================================================
+
+        // Final function calls to start the app
+        document.addEventListener('DOMContentLoaded', () => {
+            authenticate();
+            // Assuming renderBirthdayTracker is defined and runs here
+        }); 
+    </script>
+</body>
+</html>
