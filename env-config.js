@@ -18,4 +18,15 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const analytics = getAnalytics(app);// This script runs and attaches the configuration object to the global window scope.
+window.FIREBASE_CONFIG = {
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "your-project-id.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project-id.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcde12345abcde12345"
+};
+
+// If you need other global config variables, you can add them here:
+window.ZEUS_HUB_API_URL = "https://api.zeushub.com/v1/";

@@ -1,0 +1,8 @@
+{
+  "name": "project-functions",
+  "version": "1.0.0",
+  "description": "Dependencies for Netlify Functions.",
+  "dependencies": {
+    "@google-cloud/text-to-speech": "^5.3.0"
+  }
+}
