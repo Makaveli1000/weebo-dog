@@ -1,362 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snt.L.Mo. Exclusive Sports Hub</title>
-    
-    <script src="/env-config.js"></script> 
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <style>
-        /* Define a custom color scheme based on St. Louis sports (Metro Blue/Red/Yellow) */
-        .text-metro-primary { color: #0047AB; /* Navy Blue */ }
-        .bg-metro-primary { background-color: #0047AB; }
-        .border-metro-primary { border-color: #0047AB; }
-        .text-metro-accent { color: #DC143C; /* Red */ }
-        .bg-metro-accent { background-color: #DC143C; }
-        
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .card { transition: transform 0.2s, box-shadow 0.2s; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); }
-        .loading-overlay { display: flex; justify-content: center; align-items: center; background-color: rgba(255, 255, 255, 0.8); z-index: 100; }
-        #tts-button {
-            background-color: #ef4444; 
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        #tts-button:hover:not(:disabled) {
-            background-color: #dc2626; 
-        }
-        #tts-button:disabled {
-            background-color: #9ca3af; 
-            cursor: not-allowed;
-        }
-        /* Custom style for Zeus flying function */
-        .flying-zeus {
-            transition: transform 1s ease-out, opacity 1s ease-out;
-            will-change: transform, opacity;
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col">
-
-    <div id="loading-overlay" class="fixed inset-0 loading-overlay z-50">
-        <div class="text-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-metro-primary mx-auto"></div>
-            <p class="mt-4 text-gray-700 font-semibold">Initializing Zeus Hub Security...</p>
-        </div>
-    </div>
-
-    <header class="bg-metro-primary text-white shadow-lg z-30">
-        <div class="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-            <h1 class="text-2xl font-extrabold tracking-wider">SNTLMO Hub</h1>
-            <div class="flex items-center space-x-4">
-                <div class="hidden sm:flex items-center space-x-3 text-sm font-medium">
-                    <span id="user-status-display" class="text-white">Logged Out</span>
-                    <span class="bg-indigo-500 py-1 px-3 rounded-full hidden sm:block">ID: <span id="user-id-display" class="font-mono text-xs"></span></span>
-                </div>
-                <button id="header-auth-btn" onclick="toggleLoginModal(true)" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Login/Register</button>
-                <button id="account-btn" onclick="toggleAccountModal(true)" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Account</button>
-                <button id="admin-btn" onclick="toggleAdminModal(true)" class="bg-yellow-400 text-gray-900 hover:bg-yellow-500 px-3 py-1 rounded-full text-sm font-bold transition hidden">Admin</button>
-            </div>
-        </div>
-    </header>
-
-    <svg id="zeus-avatar-svg" class="w-10 h-10 fixed right-4 bottom-4 z-40 text-yellow-500 shadow-xl" viewBox="0 0 24 24" fill="currentColor" style="opacity: 0;">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4.5H8.5l3.5-7v4.5H15l-3.5 7z"/>
-        <path fill="none" d="M0 0h24v24H0z"/>
-    </svg>
-
-    <div id="paywall-content" class="flex-grow flex items-center justify-center p-8 hidden">
-        <div class="max-w-xl text-center bg-white p-10 rounded-xl shadow-2xl border-t-4 border-metro-accent">
-            <h2 class="text-3xl font-extrabold text-gray-800 mb-4">Access Denied: PRO MEMBERS ONLY</h2>
-            <p class="text-lg text-gray-600 mb-6">You need to be a **PRO MEMBER** to access the live data feeds, chat, and locker room.</p>
-            <button onclick="toggleCashAppModal(true)" class="bg-metro-accent text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-metro-accent/80 transition duration-300">
-                Upgrade to PRO Membership ($10.00 / Year)
-            </button>
-            <p class="text-sm text-gray-500 mt-4">Already a member? Use the Login/Register button in the header.</p>
-        </div>
-    </div>
-    
-    <main id="main-content" class="flex-grow max-w-7xl mx-auto py-8 sm:px-6 lg:px-8 w-full hidden">
-        <div class="px-4 py-6 sm:px-0">
-            
-            <div id="status-message-container" class="mb-4 hidden">
-                <p id="status-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative font-medium"></p>
-            </div>
-            
-            <button id="narrator-launch-btn" onclick="startZeusNarratorTour()" class="fixed top-20 right-4 z-40 bg-yellow-400 text-gray-900 font-bold py-2 px-4 rounded-full shadow-xl hover:bg-yellow-500 hidden">
-                Launch Zeus Tour!
-            </button>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                
-                <div class="lg:col-span-2 space-y-8">
-                    
-                    <div class="bg-white shadow-xl rounded-xl p-6">
-                        <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
-                            Live Sports Data Feed
-                            <span id="latest-data" class="text-sm font-normal text-metro-primary">Awaiting data...</span>
-                        </h2>
-                        
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
-                            <h3 class="text-lg font-semibold text-gray-700">Broadcast Live Announcement (TTS)</h3>
-                            <textarea id="tts-input" rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:ring-metro-primary focus:border-metro-primary" placeholder="Enter message to broadcast, e.g., 'The Vashon game starts in 5 minutes!'"></textarea>
-                            <div class="flex justify-between items-center">
-                                <button id="tts-button" onclick="window.generateAndSpeak()" disabled>
-                                    Announce Now!
-                                </button>
-                                <div id="tts-status" class="text-xs font-medium text-gray-500">Status: Requires Gemini API Key</div>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 bg-indigo-50 p-6 rounded-lg border border-indigo-200">
-                            <p class="text-indigo-800 font-medium">Raw Data Stream:</p>
-                            <pre id="data-stream" class="text-sm text-indigo-700 mt-2 bg-indigo-100 p-3 rounded-md overflow-x-auto h-32">Awaiting real-time updates from Firestore...</pre>
-                        </div>
-                    </div>
-                    
-                    <div id="scoreboard-section" class="bg-white shadow-xl rounded-xl p-6">
-                        <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
-                            Community Scoreboard & Highlights
-                            <button onclick="toggleSportsDataModal(true)" class="bg-green-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-green-600 transition">
-                                + Submit Data
-                            </button>
-                        </h2>
-                        <div id="sports-data-display" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <p class="text-center text-gray-500 py-8 col-span-full">Loading sports data...</p>
-                        </div>
-                    </div>
-
-                    <div id="interview-section" class="bg-white shadow-xl rounded-xl p-6">
-                        <h2 id="interview-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4">Exclusive Interview Corner</h2>
-                        <p class="text-gray-600 mb-4">Submit your questions for our next featured St. Louis athlete!</p>
-                        <textarea rows="3" class="w-full p-3 border rounded-lg focus:ring-metro-accent focus:border-metro-accent" placeholder="I'd like to ask..."></textarea>
-                        <button class="mt-3 bg-metro-accent text-white font-bold py-2 px-5 rounded-full hover:bg-metro-accent/90 transition">
-                            Submit Question
-                        </button>
-                    </div>
-
-                    <div id="locker-room-section" class="bg-white shadow-xl rounded-xl p-6">
-                        <h2 id="locker-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
-                            Personal Media Locker
-                            <button id="locker-upload-btn" onclick="handleFileUpload()" class="bg-blue-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-blue-600 transition" disabled>
-                                Upload Media
-                            </button>
-                        </h2>
-                        <input type="file" id="media-file-input" class="hidden" onchange="handleFileUpload()">
-                        <p id="locker-upload-message" class="text-sm text-red-500 font-medium my-2 hidden">
-                            Limit reached! Upgrade to PRO for unlimited storage.
-                        </p>
-                        <p id="locker-status-text" class="text-sm text-orange-600 mb-4">Capacity: Loading...</p>
-                        <div id="locker-media-display" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            </div>
-                    </div>
-
-                    <div class="bg-gray-800 text-white rounded-xl p-6 shadow-xl">
-                        <h3 class="text-xl font-semibold border-b border-gray-600 pb-3 mb-4">System Health & Debug</h3>
-                        <ul class="space-y-3 text-sm">
-                            <li id="debug-firebase-config">Firebase Config: <span class="text-yellow-400">Checking...</span></li>
-                            <li id="debug-auth-token">Initial Auth Token: <span class="text-yellow-400">Checking...</span></li>
-                            <li id="debug-app-id">App ID: <span class="text-yellow-400">Checking...</span></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="lg:col-span-1 space-y-8">
-                    
-                    <div class="bg-white shadow-xl rounded-xl p-6">
-                        <h3 class="text-xl font-bold text-gray-800 border-b pb-3 mb-4">St. Louis Sports Birthdays</h3>
-                        <div id="birthday-tracker-display" class="space-y-3">
-                            </div>
-                    </div>
-
-                    <div class="card bg-green-50 p-6 rounded-xl shadow-lg border border-green-200">
-                        <h3 class="text-xl font-bold text-green-700 mb-4">System Activity</h3>
-                        <p class="text-gray-700">Last Database Ping:</p>
-                        <div id="last-activity" class="text-xl font-extrabold text-green-600 mt-1">N/A</div>
-                    </div>
-                    
-                    <div class="card bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-300 flex flex-col items-center">
-                        <h3 class="text-xl font-bold text-gray-700 mb-4">Quick Share Link (QR)</h3>
-                        <div id="qrcode-container" class="p-3 bg-white rounded-lg border border-gray-400">
-                            </div>
-                        <p class="text-xs text-gray-500 mt-3">Scan this code to immediately share the hub URL.</p>
-                    </div>
-
-                    <div class="bg-white shadow-xl rounded-xl p-6 h-96 flex flex-col">
-                        <div class="flex justify-around mb-4 border-b pb-2">
-                            <button id="mode-active-btn" onclick="toggleSidebarMode('ACTIVE')" class="text-sm font-bold p-2 rounded-lg bg-metro-primary text-white transition">Active Users</button>
-                            <button id="mode-leaderboard-btn" onclick="toggleSidebarMode('LEADERBOARD')" class="text-sm font-bold p-2 rounded-lg bg-gray-200 text-gray-700 transition">Leaderboard</button>
-                        </div>
-                        <div class="flex-grow overflow-y-auto">
-                            <div id="active-users-list" class="space-y-1">
-                                </div>
-                            <div id="leaderboard-list" class="space-y-1 hidden">
-                                </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <div id="chat-section" class="bg-white shadow-xl rounded-xl p-6 mt-8">
-                <h2 id="chat-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4">Team Chat</h2>
-                
-                <div id="chat-messages" class="h-64 overflow-y-auto p-4 mb-4 border border-gray-300 rounded-lg bg-gray-100 space-y-3">
-                    <p class="text-center text-gray-500">Loading chat history...</p>
-                </div>
-
-                <div class="flex space-x-3">
-                    <select id="chat-mode-toggle" onchange="toggleChatMode()" class="p-2 border rounded-lg text-sm bg-white">
-                        <option value="public">Public</option>
-                        <option value="private">Private (PM)</option>
-                    </select>
-                    <input type="text" id="recipient-id-input" placeholder="Recipient ID" class="hidden p-2 border rounded-lg text-sm w-1/4">
-                    <input type="text" id="message-input" placeholder="Send a message to the team..." class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-metro-primary focus:border-metro-primary">
-                    <button onclick="sendMessage('text')" class="bg-metro-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-metro-primary/80 transition">
-                        Send
-                    </button>
-                </div>
-                <div id="recipient-container" class="mt-2 text-sm text-gray-600 hidden">
-                    <span id="recipient-display"></span>
-                    <button id="video-call-btn" onclick="sendMessage('VIDEO_REQUEST', 'Video call request')" class="ml-3 bg-red-500 text-white text-xs font-bold py-1 px-2 rounded-full hover:bg-red-600 transition hidden">
-                        📹 Request Video Call
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <div id="login-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center">
-            <h3 class="text-2xl font-bold text-metro-primary mb-4">Hub Login</h3>
-            <p id="login-error" class="text-red-500 text-sm mb-3"></p>
-            <input type="email" id="login-email" placeholder="Email" class="w-full p-3 mb-3 border rounded-lg">
-            <input type="password" id="login-password" placeholder="Password (min 6 chars)" class="w-full p-3 mb-4 border rounded-lg">
-            
-            <button onclick="logIn()" class="w-full bg-metro-primary text-white font-bold py-3 rounded-lg hover:bg-metro-primary/80 transition mb-2">Login</button>
-            <button onclick="register()" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition mb-4">Register</button>
-            
-            <p class="text-xs text-gray-500 mb-3">--- OR USE QR LOGIN ---</p>
-            <div id="login-qrcode" class="mx-auto w-[100px] h-[100px] mb-3"></div>
-            <input type="text" id="login-qr-id-input" readonly class="w-full p-2 text-sm text-center border rounded-lg bg-gray-100 mb-2" onclick="copyQrCodeText()" title="Click to copy User ID">
-            <button onclick="copyQrCodeText()" class="text-xs text-metro-accent hover:underline">Copy User ID</button>
-
-            <button onclick="toggleLoginModal(false)" class="text-gray-500 hover:text-gray-700 mt-4 block mx-auto text-sm">Close</button>
-        </div>
-    </div>
-    
-    <div id="account-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full">
-            <h3 class="text-2xl font-bold text-metro-primary mb-4">Account Settings</h3>
-            <div class="space-y-4">
-                <p class="text-sm">UID: <span id="account-uid" class="font-mono text-xs bg-gray-100 p-1 rounded"></span></p>
-                <p class="text-sm">Premium Status: <span id="account-premium-status" class="font-bold"></span></p>
-                
-                <div>
-                    <label for="account-nickname" class="block text-sm font-medium text-gray-700">Nickname:</label>
-                    <div class="flex space-x-2 mt-1">
-                        <input type="text" id="account-nickname" class="flex-grow p-2 border rounded-lg">
-                        <button onclick="saveAccountNickname()" class="bg-metro-primary text-white text-sm font-bold px-3 rounded-lg hover:bg-metro-primary/80">Save</button>
-                    </div>
-                </div>
-                
-                <div class="pt-4 border-t border-gray-200">
-                    <label for="account-new-password" class="block text-sm font-medium text-gray-700">Change Password:</label>
-                    <input type="password" id="account-new-password" placeholder="New Password (min 6 chars)" class="w-full p-2 mt-1 border rounded-lg">
-                    <p id="account-password-error" class="text-red-500 text-xs mt-1"></p>
-                    <button onclick="updateUserPassword()" class="mt-3 bg-red-600 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">Update Password</button>
-                </div>
-                
-                <button onclick="logOut(); toggleAccountModal(false);" class="mt-4 bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Log Out</button>
-            </div>
-            <button onclick="toggleAccountModal(false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-        </div>
-    </div>
-
-    <div id="cashapp-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center">
-            <h3 class="text-2xl font-bold text-metro-primary mb-4">PRO MEMBERSHIP - $10.00</h3>
-            <p class="text-gray-700 mb-4">Please scan the QR code to complete payment via Cash App.</p>
-            <div id="cashapp-qrcode" class="mx-auto w-[180px] h-[180px] mb-4"></div>
-            <p class="text-lg font-bold text-green-600 mb-2">Cash Tag: $Mac100dime</p>
-            <p class="text-xs text-red-500 mb-4">After payment, click "Simulate Success" below for instant access.</p>
-            <button onclick="simulatePaymentSuccess()" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition mb-3">
-                Simulate Payment Success (Get Access Now)
-            </button>
-            <button onclick="toggleCashAppModal(false)" class="text-gray-500 hover:text-gray-700 text-sm">Cancel</button>
-        </div>
-    </div>
-    
-    <div id="sports-data-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-lg w-full">
-            <h3 class="text-2xl font-bold text-metro-primary mb-4">Submit Sports Data</h3>
-            <p class="text-red-500 text-sm mb-3">Contribution increases your standing on the Leaderboard!</p>
-            
-            <div class="space-y-3">
-                <select id="data-type" class="w-full p-3 border rounded-lg">
-                    <option value="SCORE">Live Score Update</option>
-                    <option value="HIGHLIGHT">Highlight Video/Clip</option>
-                    <option value="ACTIVITY">General Team Activity</option>
-                </select>
-                
-                <select id="data-school" class="w-full p-3 border rounded-lg">
-                    <option value="VASHON">VASHON - Wolverines 🐺</option>
-                    <option value="SUMNER">SUMNER - Bulldogs 🐶</option>
-                    <option value="SOLDAN">SOLDAN - Tigers 🐅</option>
-                    <option value="MCKINLEY">MCKINLEY - Goldbugs 🐞</option>
-                    <option value="ROOSEVELT">ROOSEVELT - Rough Riders 🐎</option>
-                    <option value="OTHER">Other STL Area School</option>
-                </select>
-                
-                <input type="text" id="data-title" placeholder="Title (e.g., Vashon 68 - Soldan 55)" class="w-full p-3 border rounded-lg">
-                <textarea id="data-details" rows="3" placeholder="Details (e.g., 4th quarter score difference)" class="w-full p-3 border rounded-lg"></textarea>
-                <input type="url" id="data-video-url" placeholder="Optional: YouTube/Highlight Video URL" class="w-full p-3 border rounded-lg">
-            </div>
-            
-            <button onclick="flyZeusAndClick('submit-data-btn', submitSportsData, 800)" id="submit-data-btn" class="w-full mt-6 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
-                Submit Data to Scoreboard
-            </button>
-            
-            <button onclick="toggleSportsDataModal(false)" class="mt-4 text-gray-500 hover:text-gray-700 text-sm block mx-auto">Cancel</button>
-            <button onclick="window.upgradeToPremiumForOneYear()" class="text-xs text-red-400 hover:text-red-600 block mx-auto mt-2">ADMIN: Test Upgrade</button>
-        </div>
-    </div>
-
-    <div id="admin-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-3xl w-full h-4/5 flex flex-col">
-            <h3 class="text-2xl font-bold text-red-600 mb-4 border-b pb-2">Admin Panel (User Management)</h3>
-            <p class="text-sm text-gray-600 mb-4">Admin UID: <span class="font-mono text-xs text-red-700">05806734626095127961</span></p>
-
-            <div class="grid grid-cols-5 gap-2 font-bold text-sm text-gray-700 mb-2 border-b-2 pb-2">
-                <div>Nickname</div>
-                <div>UID (Partial)</div>
-                <div>Status</div>
-                <div>Expires</div>
-                <div>Actions</div>
-            </div>
-            
-            <div id="admin-users-list" class="flex-grow overflow-y-auto space-y-1">
-                <p class="text-gray-500 text-center py-4">Loading user list...</p>
-            </div>
-
-            <button onclick="toggleAdminModal(false)" class="mt-4 bg-gray-500 text-white font-bold py-2 rounded-lg hover:bg-gray-600 transition">Close Admin Panel</button>
-        </div>
-    </div>
-
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-    <script type="module">
+<script type="module">
         // Firebase SDK imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -364,19 +6,15 @@
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Configuration and Initialization (MANDATORY GLOBALS)
-        // FIX 1: Read variables from the injected 'window' object, which Netlify creates.
         const appId = typeof window.__app_id !== 'undefined' ?
         window.__app_id : 'default-app-id';
 
-        // CORRECTED FIREBASE CONFIGURATION LINE (FIXES NETLIFY NAMING CONFLICT):
         const firebaseConfig = (typeof window.NETLIFY_FIREBASE_CONFIG !== 'undefined' ? window.NETLIFY_FIREBASE_CONFIG : window.__firebase_config) || null;
-        // -------------------------------------------------------------------------
-        // FIX 2: Corrected the ReferenceError (using window.__initialAuthToken)
         const initialAuthToken = typeof window.__initial_auth_token !== 'undefined' ? window.__initial_auth_token : null; 
 
         const GEMINI_API_KEY = typeof window.GEMINI_API_KEY !== 'undefined' ? window.GEMINI_API_KEY : '';
         
-        // --- ADMIN SECURITY CONFIGURATION (CRUCIAL) ---
+        // --- ADMIN SECURITY CONFIGURATION ---
         const ADMIN_USER_ID = "05806734626095127961";
         // --- END ADMIN CONFIG ---
 
@@ -440,7 +78,6 @@
                 try { thunderSource.stop(); } catch(e) {}
             }
             if (cheerSource) {
-                // Ramping down helps avoid hard clicks when stopping
                 if (cheerGain) {
                     cheerGain.gain.setValueAtTime(cheerGain.gain.value, audioContext.currentTime);
                     cheerGain.gain.linearRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
@@ -453,8 +90,195 @@
                 }
             }
         }
+        
+        // --- UTILITY: HIDES LOADING OVERLAY (CRASH FIX) ---
+        function hideLoadingScreen() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none'; // Corrected syntax
+            }
+        }
+        
+        // --- UTILITY: SETS UI FOR LOGGED OUT STATE ---
+        function displayLoggedOutState() {
+            window.isLoggedIn = false;
+            window.isPremium = false;
+            window.currentUserId = null;
+            
+            // Show the paywall and hide the main content
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('paywall-content').classList.remove('hidden');
+            
+            // Update header buttons (show Login/Register)
+            document.getElementById('header-auth-btn').classList.remove('hidden');
+            document.getElementById('account-btn').classList.add('hidden');
+            document.getElementById('admin-btn').classList.add('hidden');
+        }
+        
+        // --- UTILITY: INITIALIZES FEATURES AFTER AUTH ---
+        async function initializeUserFeatures(uid, email) {
+            // 1. Fetch user data (premium status, nickname, admin status)
+            const userDocRef = doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`);
+            const userDoc = await getDoc(userDocRef);
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                window.nickname = userData.nickname || email.split('@')[0];
+                window.isPremium = userData.isPremium || false;
+                window.isAdmin = userData.isAdmin || false; 
 
-        // --- Core Initialization Variables and Setup ---
+                // 2. Setup all real-time data listeners (chat, scoreboard, presence)
+                // PLACEHOLDERS: These functions are called here but must be defined later in the script
+                setupPresenceTracking(uid);
+                setupChatListener();
+                setupSportsDataListener();
+                setupLeaderboardListener();
+                
+                // 3. Show main content based on premium status
+                if (window.isPremium) {
+                    document.getElementById('main-content').classList.remove('hidden');
+                    document.getElementById('paywall-content').classList.add('hidden');
+                } else {
+                    document.getElementById('main-content').classList.add('hidden');
+                    document.getElementById('paywall-content').classList.remove('hidden');
+                }
+                
+            } else {
+                displayLoggedOutState();
+            }
+        }
+
+        // --- TTS API IMPLEMENTATION (CRITICAL FIX APPLIED HERE) ---
+        window.generateAndSpeak = async function(speechText) {
+            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const textInput = document.getElementById('tts-input');
+            const text = speechText || textInput.value.trim();
+            const btn = document.getElementById('tts-button');
+            const statusDisplay = document.getElementById('tts-status');
+            
+            if (!text) return;
+            if (!window.isPremium) {
+                 alert("TTS is a PRO MEMBER feature.");
+                 return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Connecting...';
+            statusDisplay.innerText = 'Status: Sending text to server...';
+
+            let thunderSource = null, cheerSource = null, cheerGain = null;
+            const startTime = audioContext.currentTime;
+            let audio = null;
+            let source = null;
+
+            try {
+                // 1. Start SFX
+                const thunderFX = createNoiseSource(0.02);
+                const cheerFX = createNoiseSource(0.01);
+                thunderSource = thunderFX.source;
+                cheerSource = cheerFX.source;
+                cheerGain = cheerFX.gainNode;
+                
+                cheerSource.connect(cheerGain).connect(audioContext.destination);
+                thunderSource.connect(audioContext.destination);
+                
+                thunderSource.start(startTime);
+                cheerSource.start(startTime);
+                
+                btn.innerText = 'Fetching Audio...';
+                statusDisplay.innerText = 'Status: Waiting for audio data...';
+
+                // 2. Fetch the audio from the deployed Netlify serverless function
+                const response = await fetch('/.netlify/functions/generate-tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Serverless Function Error: ${response.status} ${response.statusText}`);
+                }
+
+                // 3. Decode the audio buffer
+                const audioData = await response.arrayBuffer();
+                
+                statusDisplay.innerText = 'Status: Decoding and playing audio...';
+                btn.innerText = 'Speaking...';
+                
+                audio = await audioContext.decodeAudioData(audioData);
+
+                // 4. Create the source and play the audio
+                source = audioContext.createBufferSource();
+                source.buffer = audio;
+                source.connect(audioContext.destination);
+                const speechDuration = audio.duration;
+
+                const cleanupAndReset = () => {
+                    stopSFX(thunderSource, cheerSource, cheerGain);
+                    btn.disabled = false;
+                    btn.innerText = 'Announce Now!';
+                    statusDisplay.innerText = 'Status: Ready';
+                    if (textInput && speechText === undefined) textInput.value = '';
+                };
+
+                source.onended = cleanupAndReset; 
+
+                // 5. Start the TTS playback and handle SFX volume ramp
+                source.start(0);
+
+                const fadeDuration = 0.5;
+                cheerGain.gain.setValueAtTime(0.01, audioContext.currentTime);
+                cheerGain.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1); 
+                
+                if (speechDuration > fadeDuration) {
+                    cheerGain.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + speechDuration - fadeDuration);
+                    cheerGain.gain.linearRampToValueAtTime(0.01, audioContext.currentTime + speechDuration);
+                }
+                
+                if (thunderSource.stop) thunderSource.stop(audioContext.currentTime + 0.5); 
+
+            } catch (error) {
+                console.error("TTS GENERATION/DECODE ERROR:", error);
+                alert(`TTS failed: ${error.message}. Please check server logs and Google Cloud API status.`);
+
+                stopSFX(thunderSource, cheerSource, cheerGain); 
+                btn.disabled = false;
+                btn.innerText = 'Announce Now!';
+                statusDisplay.innerText = 'Status: Failed';
+            }
+        }
+        
+        // ------------------------------------------------------------------------
+        // PLACEHOLDER / STUB FUNCTIONS (Required by the main logic)
+        // ------------------------------------------------------------------------
+        
+        // Placeholder for real-time listeners
+        function setupPresenceTracking(uid) { console.log("LOG: setupPresenceTracking STUB."); }
+        function setupChatListener() { console.log("LOG: setupChatListener STUB."); }
+        function setupSportsDataListener() { console.log("LOG: setupSportsDataListener STUB."); }
+        function setupLeaderboardListener() { console.log("LOG: setupLeaderboardListener STUB."); }
+        
+        // Placeholder for helper functions
+        function logIn() { console.log("LOG: logIn STUB."); }
+        function register() { console.log("LOG: register STUB."); }
+        function logOut() { console.log("LOG: logOut STUB."); }
+        function saveAccountNickname() { console.log("LOG: saveAccountNickname STUB."); }
+        function updateUserPassword() { console.log("LOG: updateUserPassword STUB."); }
+        function handleFileUpload() { console.log("LOG: handleFileUpload STUB."); }
+        function submitSportsData() { console.log("LOG: submitSportsData STUB."); }
+        function toggleChatMode() { console.log("LOG: toggleChatMode STUB."); }
+        function toggleSidebarMode() { console.log("LOG: toggleSidebarMode STUB."); }
+        function startZeusNarratorTour() { console.log("LOG: startZeusNarratorTour STUB."); }
+        function flyZeusAndClick(buttonId, callback, duration) { if (typeof callback === 'function') callback(); }
+        function toggleAdminModal() { console.log("LOG: toggleAdminModal STUB."); }
+        function toggleCashAppModal() { console.log("LOG: toggleCashAppModal STUB."); }
+        function toggleSportsDataModal() { console.log("LOG: toggleSportsDataModal STUB."); }
+        
+        // ------------------------------------------------------------------------
+        
+        // --- FINAL APP STARTUP LOGIC ---
+        
+        // Core Initialization Variables and Setup
         window.app = null;
         window.db = null;
         window.auth = null;
@@ -465,11 +289,11 @@
         window.nickname = 'Guest';
         window.dbRef = {}; 
 
-        // --- MAIN APPLICATION INITIALIZATION LOGIC ---
         if (!firebaseConfig) { 
             console.error("Firebase config not found. The app will not function.");
             document.getElementById('debug-firebase-config').querySelector('span').classList.replace('text-yellow-400', 'text-red-500');
             document.getElementById('debug-firebase-config').querySelector('span').innerText = 'MISSING';
+            hideLoadingScreen(); // Hide spinner if config fails completely
         } else {
             setLogLevel('Debug');
             // 1. INITIALIZE FIREBASE APP AND SERVICES
@@ -478,28 +302,10 @@
             window.db = getFirestore(window.app);
             window.serverTimestamp = serverTimestamp;
 
-            // 2. DIAGNOSTIC: SKIPPING CUSTOM TOKEN LOGIN
-            // If the token is present, we skip trying to log in via custom token.
+            // 2. DIAGNOSTIC: SKIPPING CUSTOM TOKEN LOGIN (Logic is handled by onAuthStateChanged)
             if (initialAuthToken) {
                 console.warn('DIAGNOSTIC ACTIVE: Skipping automatic custom token login to check app startup.');
-                // Original logic commented out:
-                /*
-                signInWithCustomToken(auth, initialAuthToken)
-                    .then(() => {
-                        console.log("Initial user logged in successfully.");
-                    })
-                    .catch((error) => {
-                        console.error("Initial login failed:", error);
-                    });
-                */
-
-                // Update debug display for token check
-                document.getElementById('debug-auth-token').querySelector('span').classList.replace('text-yellow-400', 'text-green-500');
-                document.getElementById('debug-auth-token').querySelector('span').innerText = 'LOADED (Skipped Login)';
-            } else {
-                document.getElementById('debug-auth-token').querySelector('span').classList.replace('text-yellow-400', 'text-gray-400');
-                document.getElementById('debug-auth-token').querySelector('span').innerText = 'NOT PRESENT';
-            }
+            } 
             
             // Update debug display for config
             document.getElementById('debug-firebase-config').querySelector('span').classList.replace('text-yellow-400', 'text-green-500');
@@ -507,26 +313,17 @@
             document.getElementById('debug-app-id').querySelector('span').classList.replace('text-yellow-400', 'text-green-500');
             document.getElementById('debug-app-id').querySelector('span').innerText = appId;
             
-            // 3. ATTACH THE AUTH STATE OBSERVER (This will handle user state even without the initial login attempt)
-            onAuthStateChanged(window.auth, (user) => {
+            // 3. ATTACH THE AUTH STATE OBSERVER (This will handle user state and run the final hideLoadingScreen)
+            onAuthStateChanged(window.auth, async (user) => {
                 if (user) {
-                    console.log(`User state changed: Logged in as ${user.uid}`);
-                    window.isLoggedIn = true;
-                    window.currentUserId = user.uid;
-                    initializeUserFeatures(user.uid, user.email);
+                    await initializeUserFeatures(user.uid, user.email);
                     hideLoadingScreen();
                 } else {
-                    console.log("User state changed: Logged out.");
-                    window.isLoggedIn = false;
-                    window.currentUserId = null;
                     displayLoggedOutState();
                     hideLoadingScreen();
                 }
             });
-
-            // ... [All other functions, like logIn, register, submitSportsData, onSnapshot listeners, etc. must go here] ...
-            
-        } // End of main initialization IF block
+        }
     </script>
 </body>
 </html>
