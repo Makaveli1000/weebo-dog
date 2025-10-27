@@ -1,5 +1,4 @@
-<script type="module">
-        // Firebase SDK imports
+// Firebase SDK imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, addDoc, serverTimestamp, where, increment, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -51,7 +50,7 @@
             "ROCKHURST": "🦅", "HICKMAN": "🐉", "ROCKBRIDGE": "🐻", "KICKAPOO": "⚔️", "GLENDALE": "Falcon", "OTHER": "🏆"
         };
 
-        // --- WEB AUDIO API SETUP / TTS FUNCTIONALITY ---
+        // --- WEB AUDIO API SETUP / TTS FUNCTIONALITY (Helpers) ---
         let audioContext; 
 
         function createNoiseSource(volume) {
@@ -91,11 +90,11 @@
             }
         }
         
-        // --- UTILITY: HIDES LOADING OVERLAY (CRASH FIX) ---
+        // --- UTILITY: HIDES LOADING OVERLAY (FIXED CRASH) ---
         function hideLoadingScreen() {
             const loadingOverlay = document.getElementById('loading-overlay');
             if (loadingOverlay) {
-                loadingOverlay.style.display = 'none'; // Corrected syntax
+                loadingOverlay.style.display = 'none'; 
             }
         }
         
@@ -105,11 +104,9 @@
             window.isPremium = false;
             window.currentUserId = null;
             
-            // Show the paywall and hide the main content
             document.getElementById('main-content').classList.add('hidden');
             document.getElementById('paywall-content').classList.remove('hidden');
             
-            // Update header buttons (show Login/Register)
             document.getElementById('header-auth-btn').classList.remove('hidden');
             document.getElementById('account-btn').classList.add('hidden');
             document.getElementById('admin-btn').classList.add('hidden');
@@ -117,7 +114,6 @@
         
         // --- UTILITY: INITIALIZES FEATURES AFTER AUTH ---
         async function initializeUserFeatures(uid, email) {
-            // 1. Fetch user data (premium status, nickname, admin status)
             const userDocRef = doc(window.db, `artifacts/${appId}/users/${uid}/profile/info`);
             const userDoc = await getDoc(userDocRef);
             
@@ -127,14 +123,12 @@
                 window.isPremium = userData.isPremium || false;
                 window.isAdmin = userData.isAdmin || false; 
 
-                // 2. Setup all real-time data listeners (chat, scoreboard, presence)
-                // PLACEHOLDERS: These functions are called here but must be defined later in the script
+                // PLACEHOLDER: Setup all real-time data listeners 
                 setupPresenceTracking(uid);
                 setupChatListener();
                 setupSportsDataListener();
                 setupLeaderboardListener();
                 
-                // 3. Show main content based on premium status
                 if (window.isPremium) {
                     document.getElementById('main-content').classList.remove('hidden');
                     document.getElementById('paywall-content').classList.add('hidden');
@@ -252,13 +246,10 @@
         // PLACEHOLDER / STUB FUNCTIONS (Required by the main logic)
         // ------------------------------------------------------------------------
         
-        // Placeholder for real-time listeners
         function setupPresenceTracking(uid) { console.log("LOG: setupPresenceTracking STUB."); }
         function setupChatListener() { console.log("LOG: setupChatListener STUB."); }
         function setupSportsDataListener() { console.log("LOG: setupSportsDataListener STUB."); }
         function setupLeaderboardListener() { console.log("LOG: setupLeaderboardListener STUB."); }
-        
-        // Placeholder for helper functions
         function logIn() { console.log("LOG: logIn STUB."); }
         function register() { console.log("LOG: register STUB."); }
         function logOut() { console.log("LOG: logOut STUB."); }
@@ -293,7 +284,7 @@
             console.error("Firebase config not found. The app will not function.");
             document.getElementById('debug-firebase-config').querySelector('span').classList.replace('text-yellow-400', 'text-red-500');
             document.getElementById('debug-firebase-config').querySelector('span').innerText = 'MISSING';
-            hideLoadingScreen(); // Hide spinner if config fails completely
+            hideLoadingScreen(); 
         } else {
             setLogLevel('Debug');
             // 1. INITIALIZE FIREBASE APP AND SERVICES
@@ -325,5 +316,3 @@
             });
         }
     </script>
-</body>
-</html>
