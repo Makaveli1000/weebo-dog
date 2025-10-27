@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 # Define the structure of the firebase config object
@@ -27,3 +26,4 @@ window.__app_id = \"$FIREBASE_APP_ID\";
 " > ./env-config.js
 
 echo "Successfully generated env-config.js"
+
