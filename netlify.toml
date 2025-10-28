@@ -2,7 +2,6 @@
 
 [build]
   # CRITICAL: Executes the script to create env-config.js and then installs dependencies.
-  # The '&& npm install' is crucial for installing the Node.js functions dependency.
   command = "./create-config.sh && npm install" 
   
   # Directory where Netlify finds the deploy-ready files (index.html is here).
