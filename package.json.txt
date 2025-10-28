@@ -1,8 +1,15 @@
-{
-  "name": "project-functions",
-  "version": "1.0.0",
-  "description": "Dependencies for Netlify Functions.",
-  "dependencies": {
-    "@google-cloud/text-to-speech": "^5.3.0"
-  }
-}
+# netlify.toml
+
+[build]
+  # CRITICAL: Executes secure config script from root, 
+  # then moves all subsequent commands into the '/frontend' directory.
+  command = "bash ./create-config.sh && npm install --prefix frontend && npm run build --prefix frontend"
+  
+  # The publish directory MUST point to where the 'npm run build' command
+  # in the 'frontend' directory puts the final files.
+  publish = "frontend/dist" 
+  
+  # Directory where Netlify finds serverless function code (assuming it's still in the root).
+  functions = "netlify/functions" 
+
+# ... (The rest of your netlify.toml, including [[redirects]] and [build.environment], remains below)
