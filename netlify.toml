@@ -1,14 +1,11 @@
 # netlify.toml
 
 [build]
-  command = "./create-config.sh && npm install" 
+  # CRITICAL FIX: Explicitly call bash to run the script.
+  # This fixes the "Permission denied" error (Exit Code 126).
+  command = "bash ./create-config.sh && npm install" 
+  
   publish = "/" 
   functions = "netlify/functions"
-
-[build.environment]
-  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  
+# ... (rest of your configuration should remain as previously corrected)
