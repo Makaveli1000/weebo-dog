@@ -1,31 +1,14 @@
 # netlify.toml
-# This configuration is now structurally sound and ready for deployment.
 
 [build]
-  # Line 8 is likely here, where the command must be a single, correctly closed string.
   command = "./create-config.sh && npm install" 
-  
-  # Directory where Netlify finds the deploy-ready files (index.html is here).
   publish = "/" 
-  
-  # Directory where Netlify finds serverless function code.
   functions = "netlify/functions"
 
-# ---------------------------------------------------------------------------------
-# SECURITY: ENVIRONMENT VARIABLES (Must be defined under a dedicated sub-table)
-# This addresses the line 8 (or near line 8) parsing error.
-# ---------------------------------------------------------------------------------
-
 [build.environment]
-  # This variable must be defined directly under [build.environment].
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
-# ---------------------------------------------------------------------------------
-# SINGLE PAGE APPLICATION (SPA) REDIRECTS (Crucial for client-side routing)
-# ---------------------------------------------------------------------------------
-
 [[redirects]]
-  # This rule ensures that any request not matching a static file is served index.html.
   from = "/*"
   to = "/index.html"
   status = 200
