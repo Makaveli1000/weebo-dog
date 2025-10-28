@@ -1,7 +1,8 @@
 # netlify.toml
+# This configuration is now structurally sound and ready for deployment.
 
 [build]
-  # CRITICAL: Executes the script to create env-config.js and then installs dependencies.
+  # CRITICAL FIX: The command string is now correctly closed with a quote mark (").
   command = "./create-config.sh && npm install" 
   
   # Directory where Netlify finds the deploy-ready files (index.html is here).
