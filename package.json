@@ -1,0 +1,25 @@
+{
+  "name": "projectsports",
+  "version": "1.0.0",
+  "description": "",
+  "main": "env-config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Makaveli1000/weebo-dog.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Makaveli1000/weebo-dog/issues"
+  },
+  "homepage": "https://github.com/Makaveli1000/weebo-dog#readme",
+  "dependencies": {
+    "firebase": "^12.4.0",
+    "qrcode.js": "^0.0.1"
+  }
+}
