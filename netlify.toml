@@ -6,6 +6,5 @@
   command = "bash ./create-config.sh && npm install" 
   
   publish = "/" 
-  functions = "netlify/functions"
   
-# ... (rest of your configuration should remain as previously corrected)
+  # ... (rest of your configuration should remain as previously corrected)
