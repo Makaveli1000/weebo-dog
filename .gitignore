@@ -1,0 +1,5 @@
+# Other ignores (like node_modules, .env, etc.)
+node_modules/
+.env
+env-config.js # <--- Add this line!
+git rm --cached env-config.js
