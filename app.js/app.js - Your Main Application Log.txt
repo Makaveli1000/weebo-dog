@@ -47,7 +47,7 @@ let ttsButton, ttsStatus, ttsInput;
 let lockerUploadBtn, mediaFileInput, lockerMediaDisplay, lockerStatusText;
 let loginQrIdInput, qrcodeContainer, zeusAvatar;
 let boxingSection, nextFightDetails, boxingNewsFeed, boxingDataSubmit; 
-let cheerSquadDisplay, cheerleaderUploadModal; 
+let cheerSquadDisplay, cheerleaderUploadModal; // New Cheerleader Elements
 
 // Function to safely get elements after DOM is loaded
 function cacheDOMElements() {
@@ -79,6 +79,8 @@ function cacheDOMElements() {
     nextFightDetails = document.getElementById('next-fight-details');
     boxingNewsFeed = document.getElementById('boxing-news-feed');
     boxingDataSubmit = document.getElementById('boxing-data-submit');
+    
+    // NEW: Cheerleader Elements
     cheerSquadDisplay = document.getElementById('cheer-squad-display');
     cheerleaderUploadModal = document.getElementById('cheerleader-upload-modal');
 }
@@ -87,7 +89,7 @@ function cacheDOMElements() {
 // --- 6. Core Application Functions ---
 
 function hideLoadingOverlayAndShowContent() {
-    if (!mainContent) cacheDOMElements(); 
+    if (!mainContent) cacheDOMElements(); // Ensure elements are cached
     
     // Hides the spinning screen
     if (loadingOverlay) {
@@ -110,11 +112,11 @@ function hideLoadingOverlayAndShowContent() {
 window.toggleLoginModal = (show) => { if (!loginModal) cacheDOMElements(); if (loginModal) loginModal.classList.toggle('hidden', !show); };
 window.toggleAccountModal = (show) => { if (!accountModal) cacheDOMElements(); if (accountModal) accountModal.classList.toggle('hidden', !show); };
 
-window.logIn = async () => { /* Logic here */ };
-window.register = async () => { /* Logic here */ };
-window.logOut = async () => { /* Logic here */ };
-window.saveAccountNickname = async () => { /* Logic here */ };
-window.updateUserPassword = async () => { /* Logic here */ };
+window.logIn = async () => { /* Implement logIn logic */ };
+window.register = async () => { /* Implement register logic */ };
+window.logOut = async () => { /* Implement logOut logic */ };
+window.saveAccountNickname = async () => { /* Implement saveAccountNickname logic */ };
+window.updateUserPassword = async () => { /* Implement updateUserPassword logic */ };
 window.toggleAdminModal = (show) => { if (isAdmin) console.log('Admin modal functionality stub.'); else alert('Admin privileges required.'); };
 
 // ✅ PRO MEMBERSHIP / CASHPAPP MODAL LOGIC (Full Implementation)
@@ -126,7 +128,6 @@ window.toggleCashAppModal = (show) => {
     }
     const modalEl = document.getElementById('cashapp-modal');
     
-    // Use clear class removal/addition for control flow robustness
     if (show) {
         modalEl.classList.remove('hidden');
     } else {
@@ -189,10 +190,14 @@ window.simulatePaymentSuccess = async () => {
 
 window.startZeusNarratorTour = () => { console.log('Zeus Narrator Tour stub.'); };
 window.toggleSportsDataModal = (show) => { console.log('Sports Data modal stub.'); };
+// ✅ FIX: toggleCheerleaderUploadModal (Function was missing and causing a crash)
 window.toggleCheerleaderUploadModal = (show) => { 
+    console.log('🔄 toggleCheerleaderUploadModal called with show:', show);
     if (!cheerleaderUploadModal) cacheDOMElements();
     if (cheerleaderUploadModal) cheerleaderUploadModal.classList.toggle('hidden', !show);
+    else console.error('❌ Cheerleader upload modal not found in DOM');
 };
+
 window.copyQrCodeText = () => {
     if (loginQrIdInput && loginQrIdInput.value) {
         navigator.clipboard.writeText(loginQrIdInput.value)
@@ -229,7 +234,7 @@ window.submitCheerleaderContent = async () => {
 
     try {
         // 1. Upload File to Firebase Storage
-        const uploadTask = await uploadBytes(fileRef, file);
+        await uploadBytes(fileRef, file);
         const fileURL = await getDownloadURL(fileRef);
 
         // 2. Save metadata to Firestore
@@ -260,9 +265,6 @@ window.submitCheerleaderContent = async () => {
         alert(`Upload failed: ${error.message}`);
     }
 };
-
-
-// --- Real-time Listeners and Data Loading ---
 
 // 📣 NEW: CHEERLEADER SQUADS LEADERBOARD (Fan/Cheerleader Board)
 function loadCheerleaderSquads() {
@@ -319,6 +321,19 @@ function loadUserMedia() { console.log('User Media load stub.'); }
 document.addEventListener('DOMContentLoaded', () => {
     cacheDOMElements(); 
 
+    // ✅ NEW FIX: Aggressive 500ms timeout for Firebase Auth state (Layer 2 Failsafe)
+    setTimeout(() => {
+        if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
+            console.warn("⚠️ app.js Failsafe: Firebase Auth took too long (>500ms). Forcing content display...");
+            hideLoadingOverlayAndShowContent();
+            
+            if (headerAuthBtn) {
+                headerAuthBtn.classList.remove('hidden');
+                console.log('✅ Login button made visible by failsafe.');
+            }
+        }
+    }, 500);
+
     // Initial check for Gemini API Key to enable TTS button
     if (ttsButton && ttsStatus) {
         if (geminiApiKey && geminiApiKey !== '') {
@@ -332,14 +347,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Placeholder for window.generateAndSpeak function (TTS logic)
     window.generateAndSpeak = async () => { /* TTS Logic Stub */ alert("TTS functionality placeholder."); };
-    
-    // Start animation loop (commented out for stability)
-    // animateZeusAvatar(); 
 });
 
 
 // Final Auth State Observer
 onAuthStateChanged(auth, async (user) => {
+    console.log('🔄 Auth State Changed:', user ? 'Logged In' : 'Logged Out');
     cacheDOMElements(); 
 
     currentUser = user; 
@@ -380,3 +393,16 @@ onAuthStateChanged(auth, async (user) => {
     if (accountBtn) accountBtn.classList.toggle('hidden', !user);
     if (adminBtn) adminBtn.classList.toggle('hidden', !isAdmin);
 });
+```
+
+---
+
+## 🚀 Final Step: Commit and Push
+
+1.  **Save** both your `index.html` and `app.js` files locally.
+2.  **Commit the final fix:**
+    ```bash
+    git add .
+    git commit -m "fix: Implemented final aggressive failsafe and resolved all button/function references."
+    git push
+    
