@@ -1,6 +1,6 @@
 // app.js - Your Main Application Logic (Integration of Final Fixes)
 
-// --- 1. Firebase SDK Imports (Using modular imports - requires app.js to be type="module") ---
+// --- 1. Firebase SDK Imports (Using modular imports) ---
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updatePassword as authUpdatePassword } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, increment } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -47,7 +47,7 @@ let ttsButton, ttsStatus, ttsInput;
 let lockerUploadBtn, mediaFileInput, lockerMediaDisplay, lockerStatusText;
 let loginQrIdInput, qrcodeContainer, zeusAvatar;
 let boxingSection, nextFightDetails, boxingNewsFeed, boxingDataSubmit; 
-let cheerSquadDisplay, cheerleaderUploadModal; // New Cheerleader Elements
+let cheerSquadDisplay, cheerleaderUploadModal; 
 
 // Function to safely get elements after DOM is loaded
 function cacheDOMElements() {
@@ -74,13 +74,11 @@ function cacheDOMElements() {
     qrcodeContainer = document.getElementById('qrcode-container');
     zeusAvatar = document.getElementById('zeus-avatar-svg'); 
     
-    // Boxing Section Elements
+    // Feature Section Elements
     boxingSection = document.getElementById('boxing-section');
     nextFightDetails = document.getElementById('next-fight-details');
     boxingNewsFeed = document.getElementById('boxing-news-feed');
     boxingDataSubmit = document.getElementById('boxing-data-submit');
-    
-    // NEW: Cheerleader Elements
     cheerSquadDisplay = document.getElementById('cheer-squad-display');
     cheerleaderUploadModal = document.getElementById('cheerleader-upload-modal');
 }
@@ -89,7 +87,7 @@ function cacheDOMElements() {
 // --- 6. Core Application Functions ---
 
 function hideLoadingOverlayAndShowContent() {
-    if (!mainContent) cacheDOMElements(); // Ensure elements are cached
+    if (!mainContent) cacheDOMElements(); 
     
     // Hides the spinning screen
     if (loadingOverlay) {
@@ -108,18 +106,93 @@ function hideLoadingOverlayAndShowContent() {
     }
 }
 
-// --- Modal and Auth Functions (Stubs for brevity, assuming they are complete) ---
+// --- Modal and Auth Functions ---
 window.toggleLoginModal = (show) => { if (!loginModal) cacheDOMElements(); if (loginModal) loginModal.classList.toggle('hidden', !show); };
 window.toggleAccountModal = (show) => { if (!accountModal) cacheDOMElements(); if (accountModal) accountModal.classList.toggle('hidden', !show); };
+
 window.logIn = async () => { /* Logic here */ };
 window.register = async () => { /* Logic here */ };
 window.logOut = async () => { /* Logic here */ };
 window.saveAccountNickname = async () => { /* Logic here */ };
 window.updateUserPassword = async () => { /* Logic here */ };
 window.toggleAdminModal = (show) => { if (isAdmin) console.log('Admin modal functionality stub.'); else alert('Admin privileges required.'); };
-window.toggleCashAppModal = (show) => { if (show) console.log('Showing cash app modal'); };
+
+// ✅ PRO MEMBERSHIP / CASHPAPP MODAL LOGIC (Full Implementation)
+window.toggleCashAppModal = (show) => { 
+    console.log(`[🔄 Modal]: Toggling CashApp Modal to ${show}`);
+    if (!document.getElementById('cashapp-modal')) {
+        console.error("[❌ Modal]: CashApp Modal element not found.");
+        return;
+    }
+    const modalEl = document.getElementById('cashapp-modal');
+    
+    // Use clear class removal/addition for control flow robustness
+    if (show) {
+        modalEl.classList.remove('hidden');
+    } else {
+        modalEl.classList.add('hidden');
+    }
+
+    // Generate QR code if showing the modal
+    if (show) {
+        if (!cashappQrcodeEl) cacheDOMElements();
+        if (cashappQrcodeEl && typeof QRCode !== 'undefined') {
+            cashappQrcodeEl.innerHTML = ''; // Clear previous QR
+            new QRCode(cashappQrcodeEl, {
+                text: "cash.app/$Mac100dime", // The cash tag address
+                width: 180,
+                height: 180,
+                colorDark : "#0047AB", 
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            console.log("✅ QR Code generated for $Mac100dime.");
+        } else {
+             console.error("[❌ QR]: QRCode library (qrcodejs) not loaded or element missing.");
+        }
+    }
+};
+
+// ✅ PRO MEMBERSHIP SIMULATION LOGIC
+window.simulatePaymentSuccess = async () => {
+    if (!currentUserID || !db) {
+        alert("You must be logged in to claim the PRO Membership.");
+        return;
+    }
+    
+    window.toggleCashAppModal(false); 
+
+    try {
+        const userDocRef = doc(db, "users", currentUserID);
+        
+        // Update user profile to set PRO status for 1 year
+        const oneYearFromNow = new Date();
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+        await updateDoc(userDocRef, {
+            isPro: true,
+            premiumExpires: oneYearFromNow,
+            score: increment(10) // Small bonus for upgrading
+        });
+        
+        console.log("✅ SUCCESS: PRO Membership granted.");
+        alert("PRO Membership Activated! Enjoy the full Hub experience.");
+        // Force the app state to refresh by checking the auth state again
+        onAuthStateChanged(auth, currentUser); 
+
+    } catch (error) {
+        console.error("Payment Simulation Error:", error);
+        alert("Failed to activate premium status. Check console.");
+    }
+};
+
+
 window.startZeusNarratorTour = () => { console.log('Zeus Narrator Tour stub.'); };
 window.toggleSportsDataModal = (show) => { console.log('Sports Data modal stub.'); };
+window.toggleCheerleaderUploadModal = (show) => { 
+    if (!cheerleaderUploadModal) cacheDOMElements();
+    if (cheerleaderUploadModal) cheerleaderUploadModal.classList.toggle('hidden', !show);
+};
 window.copyQrCodeText = () => {
     if (loginQrIdInput && loginQrIdInput.value) {
         navigator.clipboard.writeText(loginQrIdInput.value)
@@ -132,13 +205,6 @@ window.toggleChatMode = () => { /* Logic here */ };
 window.handleFileUpload = async () => { /* Logic here */ };
 window.generateAndSpeak = async () => { /* TTS Logic Stub */ alert("TTS functionality placeholder."); };
 window.toggleSidebarMode = () => { /* Logic here */ };
-
-
-// 📣 NEW: CHEERLEADER MODAL TOGGLE
-window.toggleCheerleaderUploadModal = (show) => { 
-    if (!cheerleaderUploadModal) cacheDOMElements();
-    if (cheerleaderUploadModal) cheerleaderUploadModal.classList.toggle('hidden', !show);
-};
 
 
 // 📣 NEW: CHEERLEADER CONTENT SUBMISSION (Includes Storage and Firestore Count Update)
@@ -247,7 +313,6 @@ function loadLiveFeed() { console.log('Live Feed data load stub.'); }
 function loadChatMessages() { console.log('Chat Messages data load stub.'); }
 function loadCommunityScoreboard() { console.log('Community Scoreboard data load stub.'); }
 function loadUserMedia() { console.log('User Media load stub.'); }
-window.generateAndSpeak = async () => { /* TTS Logic Stub */ alert("TTS functionality placeholder."); };
 
 
 // --- FINAL APP STARTUP LOGIC ---
