@@ -109,7 +109,11 @@ function hideLoadingOverlayAndShowContent() {
 }
 
 // --- Modal and Auth Functions ---
-window.toggleLoginModal = (show) => { if (!loginModal) cacheDOMElements(); if (loginModal) loginModal.classList.toggle('hidden', !show); };
+window.toggleLoginModal = (show) => { 
+    console.log('[DIAGNOSTIC] ➡️ Login Modal Clicked'); // <--- ADDED DIAGNOSTIC
+    if (!loginModal) cacheDOMElements(); 
+    if (loginModal) loginModal.classList.toggle('hidden', !show); 
+};
 window.toggleAccountModal = (show) => { if (!accountModal) cacheDOMElements(); if (accountModal) accountModal.classList.toggle('hidden', !show); };
 
 window.logIn = async () => { /* Implement logIn logic */ };
@@ -121,6 +125,7 @@ window.toggleAdminModal = (show) => { if (isAdmin) console.log('Admin modal func
 
 // ✅ PRO MEMBERSHIP / CASHPAPP MODAL LOGIC (Full Implementation)
 window.toggleCashAppModal = (show) => { 
+    console.log('[DIAGNOSTIC] ➡️ Upgrade Button Clicked'); // <--- ADDED DIAGNOSTIC
     console.log(`[🔄 Modal]: Toggling CashApp Modal to ${show}`);
     if (!document.getElementById('cashapp-modal')) {
         console.error("[❌ Modal]: CashApp Modal element not found.");
@@ -393,16 +398,3 @@ onAuthStateChanged(auth, async (user) => {
     if (accountBtn) accountBtn.classList.toggle('hidden', !user);
     if (adminBtn) adminBtn.classList.toggle('hidden', !isAdmin);
 });
-```
-
----
-
-## 🚀 Final Step: Commit and Push
-
-1.  **Save** both your `index.html` and `app.js` files locally.
-2.  **Commit the final fix:**
-    ```bash
-    git add .
-    git commit -m "fix: Implemented final aggressive failsafe and resolved all button/function references."
-    git push
-    
