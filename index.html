@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snt.L.Mo. Exclusive Sports Hub</title>
     
     <!-- 1. Configuration (MUST LOAD FIRST) -->
@@ -88,9 +88,14 @@
         <div class="max-w-xl text-center bg-white p-10 rounded-xl shadow-2xl border-t-4 border-metro-accent">
             <h2 class="text-3xl font-extrabold text-gray-800 mb-4">Access Denied: PRO MEMBERS ONLY</h2>
             <p class="text-lg text-gray-600 mb-6">You need to be a **PRO MEMBER** to access the live data feeds, chat, and locker room.</p>
-            <button onclick="toggleCashAppModal(true)" class="bg-metro-accent text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-metro-accent/80 transition duration-300">
+            
+            <!-- ✅ FIX: ADDED ID, cursor-pointer, position/z-index for clickability -->
+            <button id="upgrade-btn" onclick="toggleCashAppModal(true)" 
+                    class="bg-metro-accent text-white font-bold py-3 px-8 rounded-full shadow-lg 
+                           hover:bg-red-700 transition duration-300 cursor-pointer relative z-10">
                 Upgrade to PRO Membership ($10.00 / Year)
             </button>
+            
             <p class="text-sm text-gray-500 mt-4">Already a member? Use the Login/Register button in the header.</p>
         </div>
     </div>
@@ -285,7 +290,6 @@
         </div>
     </main>
 
-    <!-- MODALS -->
     <div id="login-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center">
             <h3 class="text-2xl font-bold text-metro-primary mb-4">Hub Login</h3>
