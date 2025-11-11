@@ -416,16 +416,26 @@
     <!-- FINAL SCRIPT BLOCK (Loads QR Code Library and Application Logic) -->
     <!-- CRITICAL: ADDED INLINE FAILSAFE SCRIPT TO PREVENT INDEFINITE SPINNING -->
     <script>
-        // FORCES THE LOADING SCREEN TO HIDE AFTER 2 SECONDS IF app.js MODULE CRASHES OR FAILS TO LOAD
+        // FORCES THE LOADING SCREEN TO HIDE AFTER 800ms
         setTimeout(() => {
             const overlay = document.getElementById('loading-overlay');
-            const main = document.getElementById('paywall-content');
+            const paywall = document.getElementById('paywall-content');
+            const authBtn = document.getElementById('header-auth-btn'); 
+
             if (overlay && !overlay.classList.contains('hidden')) {
-                console.warn('SECONDARY FAILSAFE: Hiding loading overlay after 2 seconds due to possible app.js module load failure.');
+                console.warn('SECONDARY FAILSAFE: Hiding loading overlay after 800ms.');
                 overlay.classList.add('hidden');
-                if (main) main.classList.remove('hidden'); // Show paywall as fallback
+                
+                // Show Paywall Content
+                if (paywall) paywall.classList.remove('hidden'); 
+                
+                // CRUCIAL: Force the Login/Register button to be visible
+                if (authBtn) {
+                    authBtn.classList.remove('hidden'); 
+                    console.warn('✅ Failsafe forced Login/Register button visibility.');
+                }
             }
-        }, 2000);
+        }, 800); // 800ms timer
     </script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
