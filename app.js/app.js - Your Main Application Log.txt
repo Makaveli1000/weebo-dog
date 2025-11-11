@@ -326,10 +326,10 @@ function loadUserMedia() { console.log('User Media load stub.'); }
 document.addEventListener('DOMContentLoaded', () => {
     cacheDOMElements(); 
 
-    // ✅ NEW FIX: Aggressive 500ms timeout for Firebase Auth state (Layer 2 Failsafe)
+    // ✅ NEW FIX: Aggressive 200ms timeout for Firebase Auth state (Layer 2 Failsafe)
     setTimeout(() => {
         if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
-            console.warn("⚠️ app.js Failsafe: Firebase Auth took too long (>500ms). Forcing content display...");
+            console.warn("⚠️ app.js Failsafe: Firebase Auth took too long (>200ms). Forcing content display...");
             hideLoadingOverlayAndShowContent();
             
             if (headerAuthBtn) {
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('✅ Login button made visible by failsafe.');
             }
         }
-    }, 500);
+    }, 200);
 
     // Initial check for Gemini API Key to enable TTS button
     if (ttsButton && ttsStatus) {
