@@ -72,11 +72,9 @@
                     <span id="user-status-display" class="text-white">Logged Out</span>
                     <span id="user-id-display" class="font-mono text-xs hidden sm:block"></span>
                 </div>
-                <!-- ❌ REMOVED onclick="toggleLoginModal(true)" -->
+                <!-- ❌ Handlers will be attached in app.js -->
                 <button id="header-auth-btn" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Login/Register</button>
-                <!-- ❌ REMOVED onclick="toggleAccountModal(true)" -->
                 <button id="account-btn" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Account</button>
-                <!-- ❌ REMOVED onclick="toggleAdminModal(true)" -->
                 <button id="admin-btn" class="bg-yellow-400 text-gray-900 hover:bg-yellow-500 px-3 py-1 rounded-full text-sm font-bold transition hidden">Admin</button>
             </div>
         </div>
@@ -92,7 +90,7 @@
             <h2 class="text-3xl font-extrabold text-gray-800 mb-4">Access Denied: PRO MEMBERS ONLY</h2>
             <p class="text-lg text-gray-600 mb-6">You need to be a **PRO MEMBER** to access the live data feeds, chat, and locker room.</p>
             
-            <!-- ✅ BUTTON FIX: Added ID for JS targeting -->
+            <!-- Removed onclick, added ID for listener attachment -->
             <button id="upgrade-btn" 
                     class="bg-metro-accent text-white font-bold py-3 px-8 rounded-full shadow-lg 
                            hover:bg-red-700 transition duration-300 cursor-pointer relative z-10">
@@ -110,7 +108,7 @@
                 <p id="status-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative font-medium"></p>
             </div>
             
-            <!-- ❌ REMOVED onclick="startZeusNarratorTour()" -->
+            <!-- Removed onclick -->
             <button id="narrator-launch-btn" class="fixed top-20 right-4 z-40 bg-yellow-400 text-gray-900 font-bold py-2 px-4 rounded-full shadow-xl hover:bg-yellow-500 hidden">
                 Launch Zeus Tour!
             </button>
@@ -129,7 +127,7 @@
                             <h3 class="text-lg font-semibold text-gray-700">Broadcast Live Announcement (TTS)</h3>
                             <textarea id="tts-input" rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:ring-metro-primary focus:border-metro-primary" placeholder="Enter message to broadcast, e.g., 'The Vashon game starts in 5 minutes!'"></textarea>
                             <div class="flex justify-between items-center">
-                                <!-- ❌ REMOVED onclick="window.generateAndSpeak()" -->
+                                <!-- Removed onclick -->
                                 <button id="tts-button" disabled>
                                     Announce Now!
                                 </button>
@@ -144,9 +142,9 @@
                     </div>
                     
                     <div id="scoreboard-section" class="bg-white shadow-xl rounded-xl p-6">
-                        <h2 class="2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Community Scoreboard & Highlights
-                            <!-- ❌ REMOVED onclick="toggleSportsDataModal(true)" -->
+                            <!-- Removed onclick -->
                             <button id="submit-data-modal-btn" class="bg-green-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-green-600 transition">
                                 + Submit Data
                             </button>
@@ -160,7 +158,8 @@
                         <h2 id="interview-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4">Exclusive Interview Corner</h2>
                         <p class="text-gray-600 mb-4">Submit your questions for our next featured St. Louis athlete!</p>
                         <textarea rows="3" class="w-full p-3 border rounded-lg focus:ring-metro-accent focus:border-metro-accent" placeholder="I'd like to ask..."></textarea>
-                        <button class="mt-3 bg-metro-accent text-white font-bold py-2 px-5 rounded-full hover:bg-metro-accent/90 transition">
+                        <!-- Removed onclick -->
+                        <button id="submit-interview-btn" class="mt-3 bg-metro-accent text-white font-bold py-2 px-5 rounded-full hover:bg-metro-accent/90 transition">
                             Submit Question
                         </button>
                     </div>
@@ -183,7 +182,7 @@
                                 <p>Loading recent fight reports...</p>
                             </div>
                             
-                            <!-- ❌ REMOVED onclick="toggleSportsDataModal(true)" -->
+                            <!-- Removed onclick -->
                             <button id="boxing-data-submit" class="bg-yellow-500 text-gray-900 font-bold py-2 px-5 rounded-full hover:bg-yellow-600 transition">
                                 Submit Local Fight Data
                             </button>
@@ -194,7 +193,7 @@
                     <div id="cheerleader-section" class="bg-white shadow-xl rounded-xl p-6 border-l-4 border-metro-accent">
                         <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Cheerleader Squads
-                            <!-- ❌ REMOVED onclick="toggleCheerleaderUploadModal(true)" -->
+                            <!-- Removed onclick -->
                             <button id="cheerleader-upload-btn-trigger" class="bg-pink-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-pink-600 transition">
                                 + Become a Cheerleader
                             </button>
@@ -209,7 +208,6 @@
                     <div id="locker-room-section" class="bg-white shadow-xl rounded-xl p-6">
                         <h2 id="locker-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Personal Media Locker
-                            <!-- ❌ REMOVED onclick="handleFileUpload()" -->
                             <button id="locker-upload-btn" class="bg-blue-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-blue-600 transition" disabled>
                                 Upload Media
                             </button>
@@ -301,7 +299,6 @@
         </div>
     </main>
 
-    <!-- MODALS -->
     <div id="login-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center">
             <h3 class="text-2xl font-bold text-metro-primary mb-4">Hub Login</h3>
@@ -355,7 +352,7 @@
 
     <div id="cashapp-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center">
-            <h3 class="2xl font-bold text-metro-primary mb-4">PRO MEMBERSHIP - $10.00</h3>
+            <h3 class="text-2xl font-bold text-metro-primary mb-4">PRO MEMBERSHIP - $10.00</h3>
             <p class="text-gray-700 mb-4">Please scan the QR code to complete payment via Cash App.</p>
             
             <div id="cashapp-qrcode" class="mx-auto w-[180px] h-[180px] mb-4"></div>
@@ -423,6 +420,7 @@
             <button id="close-admin-modal-btn" class="mt-4 bg-gray-500 text-white font-bold py-2 rounded-lg hover:bg-gray-600 transition">Close Admin Panel</button>
         </div>
     </div>
+
 
     <!-- 📣 NEW: CHEERLEADER UPLOAD MODAL -->
     <div id="cheerleader-upload-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
