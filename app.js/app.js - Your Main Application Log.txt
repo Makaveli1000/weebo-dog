@@ -1,401 +1,73 @@
-// app.js - Your Main Application Logic (Integration of Final Fixes)
+// --- ATTACH EVENT LISTENERS (Final Fix for Dead Buttons) ---
+function attachEventListeners() {
+    if (!document.body) return; // Wait for the body to exist
 
-// --- 1. Firebase SDK Imports (Using modular imports) ---
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updatePassword as authUpdatePassword } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, query, orderBy, limit, updateDoc, increment } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, listAll } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js';
-import { setLogLevel } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-
-// --- 2. Retrieve Firebase Config from env-config.js (Global Scope) ---
-const firebaseConfig = window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config;
-const geminiApiKey = window.GEMINI_API_KEY;
-
-// --- 3. Initial Configuration Check ---
-if (!firebaseConfig || !firebaseConfig.apiKey) {
-    console.error("🔥 Error: Firebase configuration not found or incomplete. Check env-config.js and Netlify build process.");
-    // This logic ensures the error is visible and execution stops
-    document.addEventListener('DOMContentLoaded', () => {
-        const loadingOverlay = document.getElementById('loading-overlay');
-        if (loadingOverlay) {
-            loadingOverlay.innerHTML = `<div class="text-center text-red-700"> <p class="text-xl font-bold mb-2">Configuration Error!</p> <p>Firebase setup is incomplete. Check browser console for details.</p> </div>`;
-            loadingOverlay.style.backgroundColor = 'rgba(255, 0, 0, 0.9)'; 
-        }
-    });
-    throw new Error("Firebase configuration is missing or malformed. Cannot initialize app.");
-}
-
-// --- 4. Initialize Firebase App and Services ---
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-// Global State Variables
-let currentUser = null;
-let currentUserID = null;
-let userIsPro = false;
-let isAdmin = false;
-
-console.log("✅ Firebase app initialized successfully!");
-
-// --- 5. UI Element References (Caching for performance) ---
-let loadingOverlay, mainContent, paywallContent, loginModal, accountModal;
-let headerAuthBtn, accountBtn, adminBtn;
-let userStatusDisplay, userIdDisplay, accountUID, accountPremiumStatus;
-let ttsButton, ttsStatus, ttsInput;
-let lockerUploadBtn, mediaFileInput, lockerMediaDisplay, lockerStatusText;
-let loginQrIdInput, qrcodeContainer, zeusAvatar;
-let boxingSection, nextFightDetails, boxingNewsFeed, boxingDataSubmit; 
-let cheerSquadDisplay, cheerleaderUploadModal, cashappQrcodeEl;
-
-// Function to safely get elements after DOM is loaded
-function cacheDOMElements() {
-    loadingOverlay = document.getElementById('loading-overlay');
-    mainContent = document.getElementById('main-content');
-    paywallContent = document.getElementById('paywall-content');
-    loginModal = document.getElementById('login-modal');
-    accountModal = document.getElementById('account-modal');
-    headerAuthBtn = document.getElementById('header-auth-btn');
-    accountBtn = document.getElementById('account-btn');
-    adminBtn = document.getElementById('admin-btn');
-    userStatusDisplay = document.getElementById('user-status-display');
-    userIdDisplay = document.getElementById('user-id-display');
-    accountUID = document.getElementById('account-uid');
-    accountPremiumStatus = document.getElementById('account-premium-status');
-    ttsButton = document.getElementById('tts-button');
-    ttsStatus = document.getElementById('tts-status');
-    ttsInput = document.getElementById('tts-input');
-    lockerUploadBtn = document.getElementById('locker-upload-btn');
-    mediaFileInput = document.getElementById('media-file-input');
-    lockerMediaDisplay = document.getElementById('locker-media-display');
-    lockerStatusText = document.getElementById('locker-status-text');
-    loginQrIdInput = document.getElementById('login-qr-id-input');
-    qrcodeContainer = document.getElementById('qrcode-container');
-    zeusAvatar = document.getElementById('zeus-avatar-svg'); 
-    
-    // Feature Section Elements
-    boxingSection = document.getElementById('boxing-section');
-    nextFightDetails = document.getElementById('next-fight-details');
-    boxingNewsFeed = document.getElementById('boxing-news-feed');
-    boxingDataSubmit = document.getElementById('boxing-data-submit');
-    
-    // NEW: Cheerleader Elements
-    cheerSquadDisplay = document.getElementById('cheer-squad-display');
-    cheerleaderUploadModal = document.getElementById('cheerleader-upload-modal');
-    cashappQrcodeEl = document.getElementById('cashapp-qrcode'); // Added CashApp QR element
-}
-
-
-// --- 6. Core Application Functions ---
-
-function hideLoadingOverlayAndShowContent() {
-    if (!mainContent) cacheDOMElements(); // Ensure elements are cached
-    
-    // Hides the spinning screen
-    if (loadingOverlay) {
-        loadingOverlay.classList.add('hidden');
-    }
-
-    // Logic to show main content or paywall
-    if (currentUser && userIsPro) {
-        mainContent.classList.remove('hidden');
-        paywallContent.classList.add('hidden');
-        if (ttsButton) ttsButton.disabled = !(geminiApiKey && geminiApiKey !== ''); // Enable TTS for Pro users
-    } else { 
-        mainContent.classList.add('hidden');
-        paywallContent.classList.remove('hidden');
-        if (ttsButton) ttsButton.disabled = true;
-    }
-}
-
-// --- Modal and Auth Functions ---
-window.toggleLoginModal = (show) => { 
-    console.log('[DIAGNOSTIC] ➡️ Login Modal Clicked'); // <--- ADDED DIAGNOSTIC
-    if (!loginModal) cacheDOMElements(); 
-    if (loginModal) loginModal.classList.toggle('hidden', !show); 
-};
-window.toggleAccountModal = (show) => { if (!accountModal) cacheDOMElements(); if (accountModal) accountModal.classList.toggle('hidden', !show); };
-
-window.logIn = async () => { /* Implement logIn logic */ };
-window.register = async () => { /* Implement register logic */ };
-window.logOut = async () => { /* Implement logOut logic */ };
-window.saveAccountNickname = async () => { /* Implement saveAccountNickname logic */ };
-window.updateUserPassword = async () => { /* Implement updateUserPassword logic */ };
-window.toggleAdminModal = (show) => { if (isAdmin) console.log('Admin modal functionality stub.'); else alert('Admin privileges required.'); };
-
-// ✅ PRO MEMBERSHIP / CASHPAPP MODAL LOGIC (Full Implementation)
-window.toggleCashAppModal = (show) => { 
-    console.log('[DIAGNOSTIC] ➡️ Upgrade Button Clicked'); // <--- ADDED DIAGNOSTIC
-    console.log(`[🔄 Modal]: Toggling CashApp Modal to ${show}`);
-    if (!document.getElementById('cashapp-modal')) {
-        console.error("[❌ Modal]: CashApp Modal element not found.");
-        return;
-    }
-    const modalEl = document.getElementById('cashapp-modal');
-    
-    if (show) {
-        modalEl.classList.remove('hidden');
-    } else {
-        modalEl.classList.add('hidden');
-    }
-
-    // Generate QR code if showing the modal
-    if (show) {
-        if (!cashappQrcodeEl) cacheDOMElements();
-        if (cashappQrcodeEl && typeof QRCode !== 'undefined') {
-            cashappQrcodeEl.innerHTML = ''; // Clear previous QR
-            new QRCode(cashappQrcodeEl, {
-                text: "cash.app/$Mac100dime", // The cash tag address
-                width: 180,
-                height: 180,
-                colorDark : "#0047AB", 
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-            console.log("✅ QR Code generated for $Mac100dime.");
+    // Helper function for listener attachment
+    const attach = (id, handler) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', handler);
+            // Console logging removed for cleaner production code
         } else {
-             console.error("[❌ QR]: QRCode library (qrcodejs) not loaded or element missing.");
+             // Console logging for missing elements removed for cleaner production code
         }
-    }
-};
-
-// ✅ PRO MEMBERSHIP SIMULATION LOGIC
-window.simulatePaymentSuccess = async () => {
-    if (!currentUserID || !db) {
-        alert("You must be logged in to claim the PRO Membership.");
-        return;
-    }
+    };
     
-    window.toggleCashAppModal(false); 
-
-    try {
-        const userDocRef = doc(db, "users", currentUserID);
-        
-        // Update user profile to set PRO status for 1 year
-        const oneYearFromNow = new Date();
-        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-
-        await updateDoc(userDocRef, {
-            isPro: true,
-            premiumExpires: oneYearFromNow,
-            score: increment(10) // Small bonus for upgrading
-        });
-        
-        console.log("✅ SUCCESS: PRO Membership granted.");
-        alert("PRO Membership Activated! Enjoy the full Hub experience.");
-        // Force the app state to refresh by checking the auth state again
-        onAuthStateChanged(auth, currentUser); 
-
-    } catch (error) {
-        console.error("Payment Simulation Error:", error);
-        alert("Failed to activate premium status. Check console.");
-    }
-};
-
-
-window.startZeusNarratorTour = () => { console.log('Zeus Narrator Tour stub.'); };
-window.toggleSportsDataModal = (show) => { console.log('Sports Data modal stub.'); };
-// ✅ FIX: toggleCheerleaderUploadModal (Function was missing and causing a crash)
-window.toggleCheerleaderUploadModal = (show) => { 
-    console.log('🔄 toggleCheerleaderUploadModal called with show:', show);
-    if (!cheerleaderUploadModal) cacheDOMElements();
-    if (cheerleaderUploadModal) cheerleaderUploadModal.classList.toggle('hidden', !show);
-    else console.error('❌ Cheerleader upload modal not found in DOM');
-};
-
-window.copyQrCodeText = () => {
-    if (loginQrIdInput && loginQrIdInput.value) {
-        navigator.clipboard.writeText(loginQrIdInput.value)
-            .then(() => { alert('User ID copied to clipboard!'); })
-            .catch(err => { console.error('Failed to copy text: ', err); });
-    }
-};
-window.sendMessage = async (type, content) => { /* Logic here */ };
-window.toggleChatMode = () => { /* Logic here */ };
-window.handleFileUpload = async () => { /* Logic here */ };
-window.generateAndSpeak = async () => { /* TTS Logic Stub */ alert("TTS functionality placeholder."); };
-window.toggleSidebarMode = () => { /* Logic here */ };
-
-
-// 📣 NEW: CHEERLEADER CONTENT SUBMISSION (Includes Storage and Firestore Count Update)
-window.submitCheerleaderContent = async () => {
-    if (!currentUser || !storage) {
-        alert("You must be logged in to become a cheerleader.");
-        return;
-    }
-
-    const playerName = document.getElementById('cheer-player-name').value.trim();
-    const cheerMediaInput = document.getElementById('cheer-media-input');
-    const caption = document.getElementById('cheer-caption').value.trim();
+    // 1. Header Buttons
+    attach('header-auth-btn', () => window.toggleLoginModal(true));
+    attach('account-btn', () => window.toggleAccountModal(true));
+    attach('admin-btn', () => window.toggleAdminModal(true));
     
-    if (!playerName || !cheerMediaInput.files.length) {
-        alert("Please specify a player/team and select a video or photo.");
-        return;
-    }
+    // 2. Paywall/Upgrade
+    attach('upgrade-btn', () => window.toggleCashAppModal(true));
     
-    const file = cheerMediaInput.files[0];
-    const filePath = `cheer_media/${currentUser.uid}/${Date.now()}_${file.name}`;
-    const fileRef = storageRef(storage, filePath);
-
-    try {
-        // 1. Upload File to Firebase Storage
-        await uploadBytes(fileRef, file);
-        const fileURL = await getDownloadURL(fileRef);
-
-        // 2. Save metadata to Firestore
-        await addDoc(collection(db, "cheerMedia"), {
-            uid: currentUser.uid,
-            nickname: currentUser.nickname || "Fan",
-            playerName: playerName,
-            caption: caption,
-            url: fileURL,
-            type: file.type,
-            uploadedAt: serverTimestamp()
-        });
-
-        // 3. Update the user's Cheerleader Media Count (Crucial for the leaderboard)
-        const userDocRef = doc(db, "users", currentUser.uid);
-        await updateDoc(userDocRef, { 
-            cheerleaderMediaCount: increment(1),
-            // Ensure nickname is saved on the user document if not present
-            nickname: currentUser.nickname || "Fan"
-        });
-
-        alert(`Cheer for ${playerName} uploaded successfully!`);
-        window.toggleCheerleaderUploadModal(false);
-        loadCheerleaderSquads(); // Refresh the leaderboard
-        
-    } catch (error) {
-        console.error("Cheerleader upload failed:", error);
-        alert(`Upload failed: ${error.message}`);
-    }
-};
-
-// 📣 NEW: CHEERLEADER SQUADS LEADERBOARD (Fan/Cheerleader Board)
-function loadCheerleaderSquads() {
-    const cheerSquadDisplay = document.getElementById('cheer-squad-display');
-    if (!cheerSquadDisplay) return;
-
-    // Fetch users who have submitted media, ordered by their count
-    const q = query(collection(db, "users"), orderBy("cheerleaderMediaCount", "desc"), limit(10));
+    // 3. Login/Register Modal
+    attach('login-auth-btn', window.logIn);
+    attach('register-auth-btn', window.register);
+    attach('close-login-modal-btn', () => window.toggleLoginModal(false));
     
-    onSnapshot(q, (snapshot) => {
-        cheerSquadDisplay.innerHTML = '';
-        if (snapshot.empty) {
-            cheerSquadDisplay.innerHTML = '<p class="text-center text-gray-500 py-8 col-span-full">No Cheerleaders have submitted content yet!</p>';
-            return;
-        }
+    // 4. Account Modal
+    attach('logout-btn', window.logOut);
+    attach('save-nickname-btn', window.saveAccountNickname);
+    attach('update-password-btn', window.updateUserPassword);
+    attach('close-account-modal-btn', () => window.toggleAccountModal(false));
 
-        let html = '<h3 class="text-lg font-bold text-gray-800 border-b pb-2 mb-3">Cheerleader/Fan Board</h3>';
-        let rank = 1;
-        
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const count = data.cheerleaderMediaCount || 0;
-            if (count > 0) { // Only show users who have uploaded something
-                const rankIcon = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : `#${rank}`));
-                
-                html += `
-                    <div class="cheer-card bg-white p-3 shadow-md flex justify-between items-center border-l-4 border-pink-400">
-                        <span class="font-bold text-pink-600">${rankIcon} ${data.nickname || 'Fan'}</span>
-                        <span class="text-sm text-gray-700">${count} Submissions</span>
-                    </div>
-                `;
-                rank++;
-            }
-        });
-        cheerSquadDisplay.innerHTML = html;
-        console.log("Cheerleader leaderboard loaded.");
-        
-    }, (error) => {
-        console.error("Error loading cheerleader board:", error);
-        cheerSquadDisplay.innerHTML = '<p class="text-center text-red-500 py-4 col-span-full">Error loading cheerleader data.</p>';
-    });
+    // 5. CashApp Modal
+    attach('simulate-payment-btn', window.simulatePaymentSuccess);
+    attach('close-cashapp-modal-btn', () => window.toggleCashAppModal(false));
+    
+    // 6. Data Submission Modals
+    attach('submit-data-modal-btn', () => window.toggleSportsDataModal(true));
+    attach('close-sports-data-modal-btn', () => window.toggleSportsDataModal(false));
+    
+    // 7. Cheerleader Feature
+    attach('cheerleader-upload-btn-trigger', () => window.toggleCheerleaderUploadModal(true));
+    attach('submit-cheer-btn', window.submitCheerleaderContent);
+    attach('close-cheerleader-upload-modal-btn', () => window.toggleCheerleaderUploadModal(false));
+
+    // 8. Locker Room
+    attach('locker-upload-btn', window.handleFileUpload);
+    // Note: media-file-input uses onchange="handleFileUpload()" in HTML
+    
+    // 9. Sidebar Toggles
+    attach('mode-active-btn', () => window.toggleSidebarMode('ACTIVE'));
+    attach('mode-leaderboard-btn', () => window.toggleSidebarMode('LEADERBOARD'));
+    
+    // 10. Chat/Data Buttons
+    attach('send-message-btn', () => window.sendMessage('text'));
+    attach('video-call-btn', () => window.sendMessage('VIDEO_REQUEST', 'Video call request'));
+    
+    // 11. Copy/Zeus
+    attach('copy-qr-btn', window.copyQrCodeText);
+    attach('narrator-launch-btn', window.startZeusNarratorTour);
 }
 
 
-// --- Remaining Listener Stubs ---
-function loadActiveUsers() { console.log('Active Users data load stub.'); }
-function loadLiveFeed() { console.log('Live Feed data load stub.'); }
-function loadChatMessages() { console.log('Chat Messages data load stub.'); }
-function loadCommunityScoreboard() { console.log('Community Scoreboard data load stub.'); }
-function loadUserMedia() { console.log('User Media load stub.'); }
+// --- RUN SEQUENCE ---
 
-
-// --- FINAL APP STARTUP LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
-    cacheDOMElements(); 
-
-    // ✅ NEW FIX: Aggressive 200ms timeout for Firebase Auth state (Layer 2 Failsafe)
-    setTimeout(() => {
-        if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
-            console.warn("⚠️ app.js Failsafe: Firebase Auth took too long (>200ms). Forcing content display...");
-            hideLoadingOverlayAndShowContent();
-            
-            if (headerAuthBtn) {
-                headerAuthBtn.classList.remove('hidden');
-                console.log('✅ Login button made visible by failsafe.');
-            }
-        }
-    }, 200);
-
-    // Initial check for Gemini API Key to enable TTS button
-    if (ttsButton && ttsStatus) {
-        if (geminiApiKey && geminiApiKey !== '') {
-            ttsButton.disabled = false;
-            ttsStatus.textContent = 'Status: Ready for Announcement';
-        } else {
-            ttsButton.disabled = true;
-            ttsStatus.textContent = 'Status: Gemini API Key missing';
-        }
-    }
-    
-    // Placeholder for window.generateAndSpeak function (TTS logic)
-    window.generateAndSpeak = async () => { /* TTS Logic Stub */ alert("TTS functionality placeholder."); };
-});
-
-
-// Final Auth State Observer
-onAuthStateChanged(auth, async (user) => {
-    console.log('🔄 Auth State Changed:', user ? 'Logged In' : 'Logged Out');
     cacheDOMElements(); 
+    attachEventListeners(); // <-- CRITICAL: The function is called here!
 
-    currentUser = user; 
-    currentUserID = user ? user.uid : null;
-
-    if (user) {
-        // Logged In: Fetch user profile data to determine PRO status
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        
-        if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            userIsPro = userData.isPro || false; 
-            isAdmin = userData.isAdmin || false; 
-        }
-
-        // Start real-time data listeners
-        loadActiveUsers(); 
-        loadLiveFeed(); 
-        loadChatMessages(); 
-        loadCommunityScoreboard();
-        loadUserMedia();
-        loadCheerleaderSquads(); // START NEW LEADERBOARD LOAD
-        
-    } else {
-        // Logged Out State
-        userIsPro = false;
-        isAdmin = false;
-    }
-
-    // After all checks are done, hide the loading screen
-    hideLoadingOverlayAndShowContent();
-    
-    // Final UI cleanup based on logged state
-    if (userStatusDisplay) userStatusDisplay.textContent = user ? 'Logged In' : 'Logged Out';
-    if (userIdDisplay) userIdDisplay.textContent = user ? user.uid.substring(0, 8) : '';
-    if (headerAuthBtn) headerAuthBtn.classList.toggle('hidden', !!user);
-    if (accountBtn) accountBtn.classList.toggle('hidden', !user);
-    if (adminBtn) adminBtn.classList.toggle('hidden', !isAdmin);
+    // ... (Rest of DOMContentLoaded logic)
 });

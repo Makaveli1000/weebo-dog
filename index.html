@@ -72,9 +72,11 @@
                     <span id="user-status-display" class="text-white">Logged Out</span>
                     <span id="user-id-display" class="font-mono text-xs hidden sm:block"></span>
                 </div>
-                <!-- ❌ Handlers will be attached in app.js -->
+                <!-- ID required for JS listener -->
                 <button id="header-auth-btn" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Login/Register</button>
+                <!-- ID required for JS listener -->
                 <button id="account-btn" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Account</button>
+                <!-- ID required for JS listener -->
                 <button id="admin-btn" class="bg-yellow-400 text-gray-900 hover:bg-yellow-500 px-3 py-1 rounded-full text-sm font-bold transition hidden">Admin</button>
             </div>
         </div>
@@ -90,7 +92,7 @@
             <h2 class="text-3xl font-extrabold text-gray-800 mb-4">Access Denied: PRO MEMBERS ONLY</h2>
             <p class="text-lg text-gray-600 mb-6">You need to be a **PRO MEMBER** to access the live data feeds, chat, and locker room.</p>
             
-            <!-- Removed onclick, added ID for listener attachment -->
+            <!-- ID required for JS listener -->
             <button id="upgrade-btn" 
                     class="bg-metro-accent text-white font-bold py-3 px-8 rounded-full shadow-lg 
                            hover:bg-red-700 transition duration-300 cursor-pointer relative z-10">
@@ -108,7 +110,7 @@
                 <p id="status-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative font-medium"></p>
             </div>
             
-            <!-- Removed onclick -->
+            <!-- ID required for JS listener -->
             <button id="narrator-launch-btn" class="fixed top-20 right-4 z-40 bg-yellow-400 text-gray-900 font-bold py-2 px-4 rounded-full shadow-xl hover:bg-yellow-500 hidden">
                 Launch Zeus Tour!
             </button>
@@ -127,7 +129,7 @@
                             <h3 class="text-lg font-semibold text-gray-700">Broadcast Live Announcement (TTS)</h3>
                             <textarea id="tts-input" rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:ring-metro-primary focus:border-metro-primary" placeholder="Enter message to broadcast, e.g., 'The Vashon game starts in 5 minutes!'"></textarea>
                             <div class="flex justify-between items-center">
-                                <!-- Removed onclick -->
+                                <!-- ID required for JS listener -->
                                 <button id="tts-button" disabled>
                                     Announce Now!
                                 </button>
@@ -144,7 +146,7 @@
                     <div id="scoreboard-section" class="bg-white shadow-xl rounded-xl p-6">
                         <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Community Scoreboard & Highlights
-                            <!-- Removed onclick -->
+                            <!-- ID required for JS listener -->
                             <button id="submit-data-modal-btn" class="bg-green-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-green-600 transition">
                                 + Submit Data
                             </button>
@@ -157,8 +159,8 @@
                     <div id="interview-section" class="bg-white shadow-xl rounded-xl p-6">
                         <h2 id="interview-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4">Exclusive Interview Corner</h2>
                         <p class="text-gray-600 mb-4">Submit your questions for our next featured St. Louis athlete!</p>
-                        <textarea rows="3" class="w-full p-3 border rounded-lg focus:ring-metro-accent focus:border-metro-accent" placeholder="I'd like to ask..."></textarea>
-                        <!-- Removed onclick -->
+                        <textarea id="interview-question-input" rows="3" class="w-full p-3 border rounded-lg focus:ring-metro-accent focus:border-metro-accent" placeholder="I'd like to ask..."></textarea>
+                        <!-- ID required for JS listener (Fix for line 147) -->
                         <button id="submit-interview-btn" class="mt-3 bg-metro-accent text-white font-bold py-2 px-5 rounded-full hover:bg-metro-accent/90 transition">
                             Submit Question
                         </button>
@@ -182,7 +184,6 @@
                                 <p>Loading recent fight reports...</p>
                             </div>
                             
-                            <!-- Removed onclick -->
                             <button id="boxing-data-submit" class="bg-yellow-500 text-gray-900 font-bold py-2 px-5 rounded-full hover:bg-yellow-600 transition">
                                 Submit Local Fight Data
                             </button>
@@ -193,7 +194,7 @@
                     <div id="cheerleader-section" class="bg-white shadow-xl rounded-xl p-6 border-l-4 border-metro-accent">
                         <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Cheerleader Squads
-                            <!-- Removed onclick -->
+                            <!-- ID required for JS listener -->
                             <button id="cheerleader-upload-btn-trigger" class="bg-pink-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-pink-600 transition">
                                 + Become a Cheerleader
                             </button>
@@ -208,6 +209,7 @@
                     <div id="locker-room-section" class="bg-white shadow-xl rounded-xl p-6">
                         <h2 id="locker-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Personal Media Locker
+                            <!-- ID required for JS listener -->
                             <button id="locker-upload-btn" class="bg-blue-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-blue-600 transition" disabled>
                                 Upload Media
                             </button>
@@ -254,9 +256,9 @@
 
                     <div class="bg-white shadow-xl rounded-xl p-6 h-96 flex flex-col">
                         <div class="flex justify-around mb-4 border-b pb-2">
-                            <!-- ❌ REMOVED onclick="toggleSidebarMode('ACTIVE')" -->
+                            <!-- ID required for JS listener -->
                             <button id="mode-active-btn" class="text-sm font-bold p-2 rounded-lg bg-metro-primary text-white transition">Active Users</button>
-                            <!-- ❌ REMOVED onclick="toggleSidebarMode('LEADERBOARD')" -->
+                            <!-- ID required for JS listener -->
                             <button id="mode-leaderboard-btn" class="text-sm font-bold p-2 rounded-lg bg-gray-200 text-gray-700 transition">Leaderboard</button>
                         </div>
                         <div class="flex-grow overflow-y-auto">
