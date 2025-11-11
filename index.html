@@ -72,9 +72,12 @@
                     <span id="user-status-display" class="text-white">Logged Out</span>
                     <span id="user-id-display" class="font-mono text-xs hidden sm:block"></span>
                 </div>
-                <button id="header-auth-btn" onclick="toggleLoginModal(true)" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Login/Register</button>
-                <button id="account-btn" onclick="toggleAccountModal(true)" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Account</button>
-                <button id="admin-btn" onclick="toggleAdminModal(true)" class="bg-yellow-400 text-gray-900 hover:bg-yellow-500 px-3 py-1 rounded-full text-sm font-bold transition hidden">Admin</button>
+                <!-- ❌ REMOVED onclick="toggleLoginModal(true)" -->
+                <button id="header-auth-btn" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Login/Register</button>
+                <!-- ❌ REMOVED onclick="toggleAccountModal(true)" -->
+                <button id="account-btn" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Account</button>
+                <!-- ❌ REMOVED onclick="toggleAdminModal(true)" -->
+                <button id="admin-btn" class="bg-yellow-400 text-gray-900 hover:bg-yellow-500 px-3 py-1 rounded-full text-sm font-bold transition hidden">Admin</button>
             </div>
         </div>
     </header>
@@ -89,8 +92,8 @@
             <h2 class="text-3xl font-extrabold text-gray-800 mb-4">Access Denied: PRO MEMBERS ONLY</h2>
             <p class="text-lg text-gray-600 mb-6">You need to be a **PRO MEMBER** to access the live data feeds, chat, and locker room.</p>
             
-            <!-- ✅ BUTTON FIX: Added ID and explicit styling for clickability -->
-            <button id="upgrade-btn" onclick="toggleCashAppModal(true)" 
+            <!-- ✅ BUTTON FIX: Added ID for JS targeting -->
+            <button id="upgrade-btn" 
                     class="bg-metro-accent text-white font-bold py-3 px-8 rounded-full shadow-lg 
                            hover:bg-red-700 transition duration-300 cursor-pointer relative z-10">
                 Upgrade to PRO Membership ($10.00 / Year)
@@ -107,7 +110,8 @@
                 <p id="status-message" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative font-medium"></p>
             </div>
             
-            <button id="narrator-launch-btn" onclick="startZeusNarratorTour()" class="fixed top-20 right-4 z-40 bg-yellow-400 text-gray-900 font-bold py-2 px-4 rounded-full shadow-xl hover:bg-yellow-500 hidden">
+            <!-- ❌ REMOVED onclick="startZeusNarratorTour()" -->
+            <button id="narrator-launch-btn" class="fixed top-20 right-4 z-40 bg-yellow-400 text-gray-900 font-bold py-2 px-4 rounded-full shadow-xl hover:bg-yellow-500 hidden">
                 Launch Zeus Tour!
             </button>
             
@@ -125,7 +129,8 @@
                             <h3 class="text-lg font-semibold text-gray-700">Broadcast Live Announcement (TTS)</h3>
                             <textarea id="tts-input" rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:ring-metro-primary focus:border-metro-primary" placeholder="Enter message to broadcast, e.g., 'The Vashon game starts in 5 minutes!'"></textarea>
                             <div class="flex justify-between items-center">
-                                <button id="tts-button" onclick="window.generateAndSpeak()" disabled>
+                                <!-- ❌ REMOVED onclick="window.generateAndSpeak()" -->
+                                <button id="tts-button" disabled>
                                     Announce Now!
                                 </button>
                                 <div id="tts-status" class="text-xs font-medium text-gray-500">Status: Requires Gemini API Key</div>
@@ -139,9 +144,10 @@
                     </div>
                     
                     <div id="scoreboard-section" class="bg-white shadow-xl rounded-xl p-6">
-                        <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
+                        <h2 class="2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Community Scoreboard & Highlights
-                            <button onclick="toggleSportsDataModal(true)" class="bg-green-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-green-600 transition">
+                            <!-- ❌ REMOVED onclick="toggleSportsDataModal(true)" -->
+                            <button id="submit-data-modal-btn" class="bg-green-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-green-600 transition">
                                 + Submit Data
                             </button>
                         </h2>
@@ -177,7 +183,8 @@
                                 <p>Loading recent fight reports...</p>
                             </div>
                             
-                            <button id="boxing-data-submit" onclick="toggleSportsDataModal(true)" class="bg-yellow-500 text-gray-900 font-bold py-2 px-5 rounded-full hover:bg-yellow-600 transition">
+                            <!-- ❌ REMOVED onclick="toggleSportsDataModal(true)" -->
+                            <button id="boxing-data-submit" class="bg-yellow-500 text-gray-900 font-bold py-2 px-5 rounded-full hover:bg-yellow-600 transition">
                                 Submit Local Fight Data
                             </button>
                         </div>
@@ -187,7 +194,8 @@
                     <div id="cheerleader-section" class="bg-white shadow-xl rounded-xl p-6 border-l-4 border-metro-accent">
                         <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Cheerleader Squads
-                            <button onclick="toggleCheerleaderUploadModal(true)" class="bg-pink-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-pink-600 transition">
+                            <!-- ❌ REMOVED onclick="toggleCheerleaderUploadModal(true)" -->
+                            <button id="cheerleader-upload-btn-trigger" class="bg-pink-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-pink-600 transition">
                                 + Become a Cheerleader
                             </button>
                         </h2>
@@ -201,7 +209,8 @@
                     <div id="locker-room-section" class="bg-white shadow-xl rounded-xl p-6">
                         <h2 id="locker-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex justify-between items-center">
                             Personal Media Locker
-                            <button id="locker-upload-btn" onclick="handleFileUpload()" class="bg-blue-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-blue-600 transition" disabled>
+                            <!-- ❌ REMOVED onclick="handleFileUpload()" -->
+                            <button id="locker-upload-btn" class="bg-blue-500 text-white font-bold py-1 px-3 rounded-full text-sm hover:bg-blue-600 transition" disabled>
                                 Upload Media
                             </button>
                         </h2>
@@ -247,8 +256,10 @@
 
                     <div class="bg-white shadow-xl rounded-xl p-6 h-96 flex flex-col">
                         <div class="flex justify-around mb-4 border-b pb-2">
-                            <button id="mode-active-btn" onclick="toggleSidebarMode('ACTIVE')" class="text-sm font-bold p-2 rounded-lg bg-metro-primary text-white transition">Active Users</button>
-                            <button id="mode-leaderboard-btn" onclick="toggleSidebarMode('LEADERBOARD')" class="text-sm font-bold p-2 rounded-lg bg-gray-200 text-gray-700 transition">Leaderboard</button>
+                            <!-- ❌ REMOVED onclick="toggleSidebarMode('ACTIVE')" -->
+                            <button id="mode-active-btn" class="text-sm font-bold p-2 rounded-lg bg-metro-primary text-white transition">Active Users</button>
+                            <!-- ❌ REMOVED onclick="toggleSidebarMode('LEADERBOARD')" -->
+                            <button id="mode-leaderboard-btn" class="text-sm font-bold p-2 rounded-lg bg-gray-200 text-gray-700 transition">Leaderboard</button>
                         </div>
                         <div class="flex-grow overflow-y-auto">
                             <div id="active-users-list" class="space-y-1">
@@ -275,13 +286,13 @@
                     </select>
                     <input type="text" id="recipient-id-input" placeholder="Recipient ID" class="hidden p-2 border rounded-lg text-sm w-1/4">
                     <input type="text" id="message-input" placeholder="Send a message to the team..." class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-metro-primary focus:border-metro-primary">
-                    <button onclick="sendMessage('text')" class="bg-metro-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-metro-primary/80 transition">
+                    <button id="send-message-btn" class="bg-metro-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-metro-primary/80 transition">
                         Send
                     </button>
                 </div>
                 <div id="recipient-container" class="mt-2 text-sm text-gray-600 hidden">
                     <span id="recipient-display"></span>
-                    <button id="video-call-btn" onclick="sendMessage('VIDEO_REQUEST', 'Video call request')" class="ml-3 bg-red-500 text-white text-xs font-bold py-1 px-2 rounded-full hover:bg-red-600 transition hidden">
+                    <button id="video-call-btn" class="ml-3 bg-red-500 text-white text-xs font-bold py-1 px-2 rounded-full hover:bg-red-600 transition hidden">
                         📹 Request Video Call
                     </button>
                 </div>
@@ -290,6 +301,7 @@
         </div>
     </main>
 
+    <!-- MODALS -->
     <div id="login-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center">
             <h3 class="text-2xl font-bold text-metro-primary mb-4">Hub Login</h3>
@@ -297,15 +309,15 @@
             <input type="email" id="login-email" placeholder="Email" class="w-full p-3 mb-3 border rounded-lg">
             <input type="password" id="login-password" placeholder="Password (min 6 chars)" class="w-full p-3 mb-4 border rounded-lg">
             
-            <button onclick="logIn()" class="w-full bg-metro-primary text-white font-bold py-3 rounded-lg hover:bg-metro-primary/80 transition mb-2">Login</button>
-            <button onclick="register()" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition mb-4">Register</button>
+            <button id="login-auth-btn" class="w-full bg-metro-primary text-white font-bold py-3 rounded-lg hover:bg-metro-primary/80 transition mb-2">Login</button>
+            <button id="register-auth-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition mb-4">Register</button>
             
             <p class="text-xs text-gray-500 mb-3">--- OR USE QR LOGIN ---</p>
             <div id="login-qrcode" class="mx-auto w-[100px] h-[100px] mb-3"></div>
-            <input type="text" id="login-qr-id-input" readonly class="w-full p-2 text-sm text-center border rounded-lg bg-gray-100 mb-2" onclick="copyQrCodeText()" title="Click to copy User ID">
-            <button onclick="copyQrCodeText()" class="text-xs text-metro-accent hover:underline">Copy User ID</button>
+            <input type="text" id="login-qr-id-input" readonly class="w-full p-2 text-sm text-center border rounded-lg bg-gray-100 mb-2" title="Click to copy User ID">
+            <button id="copy-qr-btn" class="text-xs text-metro-accent hover:underline">Copy User ID</button>
 
-            <button onclick="toggleLoginModal(false)" class="text-gray-500 hover:text-gray-700 mt-4 block mx-auto text-sm">Close</button>
+            <button id="close-login-modal-btn" class="text-gray-500 hover:text-gray-700 mt-4 block mx-auto text-sm">Close</button>
         </div>
     </div>
     
@@ -320,7 +332,7 @@
                     <label for="account-nickname" class="block text-sm font-medium text-gray-700">Nickname:</label>
                     <div class="flex space-x-2 mt-1">
                         <input type="text" id="account-nickname" class="flex-grow p-2 border rounded-lg">
-                        <button onclick="saveAccountNickname()" class="bg-metro-primary text-white text-sm font-bold px-3 rounded-lg hover:bg-metro-primary/80">Save</button>
+                        <button id="save-nickname-btn" class="bg-metro-primary text-white text-sm font-bold px-3 rounded-lg hover:bg-metro-primary/80">Save</button>
                     </div>
                 </div>
                 
@@ -328,12 +340,12 @@
                     <label for="account-new-password" class="block text-sm font-medium text-gray-700">Change Password:</label>
                     <input type="password" id="account-new-password" placeholder="New Password (min 6 chars)" class="w-full p-2 mt-1 border rounded-lg">
                     <p id="account-password-error" class="text-red-500 text-xs mt-1"></p>
-                    <button onclick="updateUserPassword()" class="mt-3 bg-red-600 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">Update Password</button>
+                    <button id="update-password-btn" class="mt-3 bg-red-600 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-red-700 transition">Update Password</button>
                 </div>
                 
-                <button onclick="logOut(); toggleAccountModal(false);" class="mt-4 bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Log Out</button>
+                <button id="logout-btn" class="mt-4 bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Log Out</button>
             </div>
-            <button onclick="toggleAccountModal(false)" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <button id="close-account-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -349,10 +361,10 @@
             <div id="cashapp-qrcode" class="mx-auto w-[180px] h-[180px] mb-4"></div>
             <p class="lg font-bold text-green-600 mb-2">Cash Tag: $Mac100dime</p>
             <p class="text-xs text-red-500 mb-4">After payment, click "Simulate Success" below for instant access.</p>
-            <button onclick="simulatePaymentSuccess()" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition mb-3">
+            <button id="simulate-payment-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition mb-3">
                 Simulate Payment Success (Get Access Now)
             </button>
-            <button onclick="toggleCashAppModal(false)" class="text-gray-500 hover:text-gray-700 text-sm">Cancel</button>
+            <button id="close-cashapp-modal-btn" class="text-gray-500 hover:text-gray-700 text-sm">Cancel</button>
         </div>
     </div>
     
@@ -382,11 +394,11 @@
                 <input type="url" id="data-video-url" placeholder="Optional: YouTube/Highlight Video URL" class="w-full p-3 border rounded-lg">
             </div>
             
-            <button onclick="flyZeusAndClick('submit-data-btn', submitSportsData, 800)" id="submit-data-btn" class="w-full mt-6 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
+            <button id="submit-data-btn" class="w-full mt-6 bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition">
                 Submit Data to Scoreboard
             </button>
             
-            <button onclick="toggleSportsDataModal(false)" class="mt-4 text-gray-500 hover:text-gray-700 text-sm block mx-auto">Cancel</button>
+            <button id="close-sports-data-modal-btn" class="mt-4 text-gray-500 hover:text-gray-700 text-sm block mx-auto">Cancel</button>
             <button onclick="window.upgradeToPremiumForOneYear()" class="text-xs text-red-400 hover:text-red-600 block mx-auto mt-2">ADMIN: Test Upgrade</button>
         </div>
     </div>
@@ -394,7 +406,7 @@
     <div id="admin-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-3xl w-full h-4/5 flex flex-col">
             <h3 class="text-2xl font-bold text-red-600 mb-4 border-b pb-2">Admin Panel (User Management)</h3>
-            <p class="text-sm text-gray-600 mb-4">Admin UID: <span class="font-mono text-xs text-red-700">05806734626095127961</span></p>
+            <p class="sm text-gray-600 mb-4">Admin UID: <span class="font-mono text-xs text-red-700">05806734626095127961</span></p>
 
             <div class="grid grid-cols-5 gap-2 font-bold text-sm text-gray-700 mb-2 border-b-2 pb-2">
                 <div>Nickname</div>
@@ -408,22 +420,42 @@
                 <p class="text-gray-500 text-center py-4">Loading user list...</p>
             </div>
 
-            <button onclick="toggleAdminModal(false)" class="mt-4 bg-gray-500 text-white font-bold py-2 rounded-lg hover:bg-gray-600 transition">Close Admin Panel</button>
+            <button id="close-admin-modal-btn" class="mt-4 bg-gray-500 text-white font-bold py-2 rounded-lg hover:bg-gray-600 transition">Close Admin Panel</button>
         </div>
     </div>
+
+    <!-- 📣 NEW: CHEERLEADER UPLOAD MODAL -->
+    <div id="cheerleader-upload-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-lg w-full">
+            <h3 class="text-2xl font-bold text-pink-600 mb-4">Become a Cheerleader</h3>
+            <p class="text-gray-700 mb-4">Upload your video/photo cheer and support your favorite player!</p>
+            
+            <div class="space-y-3">
+                <input type="text" id="cheer-player-name" placeholder="Player/Team Name You Are Cheering For" class="w-full p-3 border rounded-lg">
+                <input type="file" id="cheer-media-input" accept="image/*, video/*" class="w-full p-3 border rounded-lg">
+                <textarea id="cheer-caption" rows="2" placeholder="Caption/Message (e.g., Go Vashon Wolverines!)" class="w-full p-3 border rounded-lg"></textarea>
+            </div>
+
+            <button id="submit-cheer-btn" class="w-full mt-6 bg-pink-500 text-white font-bold py-3 rounded-lg hover:bg-pink-600 transition">
+                Upload & Cheer Now!
+            </button>
+            <button id="close-cheerleader-upload-modal-btn" class="mt-4 text-gray-500 hover:text-gray-700 text-sm block mx-auto">Cancel</button>
+        </div>
+    </div>
+    <!-- 📣 END NEW MODAL -->
 
 
     <!-- FINAL SCRIPT BLOCK (Loads QR Code Library and Application Logic) -->
     <!-- CRITICAL: ADDED INLINE FAILSAFE SCRIPT TO PREVENT INDEFINITE SPINNING -->
     <script>
-        // FORCES THE LOADING SCREEN TO HIDE AFTER 800ms
+        // FORCES THE LOADING SCREEN TO HIDE AFTER 300ms IF app.js MODULE CRASHES OR FAILS TO LOAD
         setTimeout(() => {
             const overlay = document.getElementById('loading-overlay');
             const paywall = document.getElementById('paywall-content');
             const authBtn = document.getElementById('header-auth-btn'); 
 
             if (overlay && !overlay.classList.contains('hidden')) {
-                console.warn('SECONDARY FAILSAFE: Hiding loading overlay after 800ms due to possible app.js module load failure.');
+                console.warn('SECONDARY FAILSAFE: Hiding loading overlay after 300ms due to possible app.js module load failure.');
                 overlay.classList.add('hidden');
                 
                 // Show Paywall Content
@@ -435,7 +467,7 @@
                     console.warn('✅ Failsafe forced Login/Register button visibility.');
                 }
             }
-        }, 800); // 800ms timer
+        }, 300); // 300ms timer
     </script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

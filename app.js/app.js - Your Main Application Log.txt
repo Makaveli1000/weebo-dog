@@ -47,7 +47,7 @@ let ttsButton, ttsStatus, ttsInput;
 let lockerUploadBtn, mediaFileInput, lockerMediaDisplay, lockerStatusText;
 let loginQrIdInput, qrcodeContainer, zeusAvatar;
 let boxingSection, nextFightDetails, boxingNewsFeed, boxingDataSubmit; 
-let cheerSquadDisplay, cheerleaderUploadModal; // New Cheerleader Elements
+let cheerSquadDisplay, cheerleaderUploadModal, cashappQrcodeEl;
 
 // Function to safely get elements after DOM is loaded
 function cacheDOMElements() {
@@ -83,6 +83,7 @@ function cacheDOMElements() {
     // NEW: Cheerleader Elements
     cheerSquadDisplay = document.getElementById('cheer-squad-display');
     cheerleaderUploadModal = document.getElementById('cheerleader-upload-modal');
+    cashappQrcodeEl = document.getElementById('cashapp-qrcode'); // Added CashApp QR element
 }
 
 
