@@ -383,6 +383,20 @@
 
 
     <!-- FINAL SCRIPT BLOCK (Loads QR Code Library and Application Logic) -->
+    <!-- CRITICAL: ADDED INLINE FAILSAFE SCRIPT TO PREVENT INDEFINITE SPINNING -->
+    <script>
+        // FORCES THE LOADING SCREEN TO HIDE AFTER 2 SECONDS IF app.js MODULE CRASHES OR FAILS TO LOAD
+        setTimeout(() => {
+            const overlay = document.getElementById('loading-overlay');
+            const main = document.getElementById('paywall-content');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                console.warn('SECONDARY FAILSAFE: Hiding loading overlay after 2 seconds due to possible app.js module load failure.');
+                overlay.classList.add('hidden');
+                if (main) main.classList.remove('hidden'); // Show paywall as fallback
+            }
+        }, 2000);
+    </script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <!-- CRITICAL: Loads the main application module -->
@@ -390,3 +404,4 @@
 
 </body>
 </html>
+```
