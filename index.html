@@ -78,11 +78,11 @@
                     <span id="user-status-display" class="text-white">Logged Out</span>
                     <span id="user-id-display" class="font-mono text-xs hidden sm:block"></span>
                 </div>
-                <!-- ID required for JS listener -->
+                <!-- ID required for JS listener (No inline onclick) -->
                 <button id="header-auth-btn" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Login/Register</button>
-                <!-- ID required for JS listener -->
+                <!-- ID required for JS listener (No inline onclick) -->
                 <button id="account-btn" class="bg-white text-metro-primary hover:bg-gray-200 px-3 py-1 rounded-full text-sm font-semibold transition hidden">Account</button>
-                <!-- ID required for JS listener -->
+                <!-- ID required for JS listener (No inline onclick) -->
                 <button id="admin-btn" class="bg-yellow-400 text-gray-900 hover:bg-yellow-500 px-3 py-1 rounded-full text-sm font-bold transition hidden">Admin</button>
             </div>
         </div>
@@ -349,7 +349,7 @@
                 </div>
                 
                 <button id="logout-btn" class="mt-4 bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Log Out</button>
-            </div >
+            </div>
             <button id="close-account-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -454,26 +454,23 @@
     <!-- FINAL SCRIPT BLOCK (Loads QR Code Library and Application Logic) -->
     <!-- CRITICAL: ADDED INLINE FAILSAFE SCRIPT TO PREVENT INDEFINITE SPINNING -->
     <script>
-        // FORCES THE LOADING SCREEN TO HIDE AFTER 300ms IF app.js MODULE CRASHES OR FAILS TO LOAD
+        // FORCES THE LOADING SCREEN TO HIDE AFTER 150ms IF app.js MODULE CRASHES OR FAILS TO LOAD
         setTimeout(() => {
             const overlay = document.getElementById('loading-overlay');
             const paywall = document.getElementById('paywall-content');
             const authBtn = document.getElementById('header-auth-btn'); 
 
             if (overlay && !overlay.classList.contains('hidden')) {
-                console.warn('SECONDARY FAILSAFE: Hiding loading overlay after 300ms due to possible app.js module load failure.');
-                overlay.classList.add('hidden');
+                console.warn('SECONDARY FAILSAFE: Hiding loading overlay after 150ms due to possible app.js module load failure.');
                 
-                // Show Paywall Content
-                if (paywall) paywall.classList.remove('hidden'); 
+                // Directly manipulate styles to ensure visibility changes (Layer 3)
+                if (overlay) overlay.style.display = 'none'; 
+                if (paywall) paywall.style.display = 'flex'; 
+                if (authBtn) authBtn.style.display = 'initial'; // Show login button
                 
-                // CRUCIAL: Force the Login/Register button to be visible
-                if (authBtn) {
-                    authBtn.classList.remove('hidden'); 
-                    console.warn('✅ Failsafe forced Login/Register button visibility.');
-                }
+                console.log('✅ Failsafe forced content visibility.');
             }
-        }, 300); // 300ms timer
+        }, 150); // 150ms timer
     </script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
