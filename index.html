@@ -23,6 +23,12 @@
         .card { transition: transform 0.2s, box-shadow 0.2s; }
         .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); }
         .loading-overlay { display: flex; justify-content: center; align-items: center; background-color: rgba(255, 255, 255, 0.8); z-index: 100; }
+        
+        /* ✅ FIX: Ensure loading overlay hides absolutely when class is added */
+        #loading-overlay.hidden { 
+            display: none !important; 
+        }
+
         #tts-button {
             background-color: #ef4444; 
             color: white;
@@ -160,7 +166,7 @@
                         <h2 id="interview-heading" class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4">Exclusive Interview Corner</h2>
                         <p class="text-gray-600 mb-4">Submit your questions for our next featured St. Louis athlete!</p>
                         <textarea id="interview-question-input" rows="3" class="w-full p-3 border rounded-lg focus:ring-metro-accent focus:border-metro-accent" placeholder="I'd like to ask..."></textarea>
-                        <!-- ID required for JS listener (Fix for line 147) -->
+                        <!-- ID required for JS listener -->
                         <button id="submit-interview-btn" class="mt-3 bg-metro-accent text-white font-bold py-2 px-5 rounded-full hover:bg-metro-accent/90 transition">
                             Submit Question
                         </button>
@@ -343,7 +349,7 @@
                 </div>
                 
                 <button id="logout-btn" class="mt-4 bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition">Log Out</button>
-            </div>
+            </div >
             <button id="close-account-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
