@@ -129,12 +129,11 @@ window.toggleAdminModal = (show) => { if (isAdmin) console.log('Admin modal func
 window.toggleCashAppModal = (show) => { 
     console.log('[DIAGNOSTIC] ➡️ Upgrade Button Clicked'); // Added Diagnostic
     console.log(`[🔄 Modal]: Toggling CashApp Modal to ${show}`);
-    
-    const modalEl = document.getElementById('cashapp-modal');
-    if (!modalEl) {
+    if (!document.getElementById('cashapp-modal')) {
         console.error("[❌ Modal]: CashApp Modal element not found. Check index.html structure.");
         return;
     }
+    const modalEl = document.getElementById('cashapp-modal');
     
     if (show) {
         modalEl.classList.remove('hidden');
