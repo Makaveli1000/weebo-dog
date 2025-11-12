@@ -23,6 +23,7 @@ if (!firebaseConfig || !firebaseConfig.apiKey) {
             loadingOverlay.style.backgroundColor = 'rgba(255, 0, 0, 0.9)'; 
         }
     });
+    // This line is crucial: It throws an error and stops all subsequent Firebase initialization
     throw new Error("Firebase configuration is missing or malformed. Cannot initialize app.");
 }
 
