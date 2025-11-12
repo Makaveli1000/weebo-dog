@@ -18,6 +18,7 @@ if (!firebaseConfig || !firebaseConfig.apiKey) {
     document.addEventListener('DOMContentLoaded', () => {
         const loadingOverlay = document.getElementById('loading-overlay');
         if (loadingOverlay) {
+            // FIX: Corrected syntax to use backticks (`) for the multi-line HTML template string
             loadingOverlay.innerHTML = `<div class="text-center text-red-700"> <p class="text-xl font-bold mb-2">Configuration Error!</p> <p>Firebase setup is incomplete. Check browser console for details.</p> </div>`;
             loadingOverlay.style.backgroundColor = 'rgba(255, 0, 0, 0.9)'; 
         }
@@ -111,7 +112,7 @@ function hideLoadingOverlayAndShowContent() {
 
 // --- Modal and Auth Functions ---
 window.toggleLoginModal = (show) => { 
-    console.log('[DIAGNOSTIC] ➡️ Login Modal Clicked'); // <--- ADDED DIAGNOSTIC
+    console.log('[DIAGNOSTIC] ➡️ Login Modal Clicked'); // Added Diagnostic
     if (!loginModal) cacheDOMElements(); 
     if (loginModal) loginModal.classList.toggle('hidden', !show); 
 };
@@ -121,22 +122,19 @@ window.logIn = async () => { /* Implement logIn logic */ };
 window.register = async () => { /* Implement register logic */ };
 window.logOut = async () => { /* Implement logOut logic */ };
 window.saveAccountNickname = async () => { /* Implement saveAccountNickname logic */ };
-window.logIn = async () => { /* Implement logIn logic */ };
-window.register = async () => { /* Implement register logic */ };
-window.logOut = async () => { /* Implement logOut logic */ };
-window.saveAccountNickname = async () => { /* Implement saveAccountNickname logic */ };
 window.updateUserPassword = async () => { /* Implement updateUserPassword logic */ };
 window.toggleAdminModal = (show) => { if (isAdmin) console.log('Admin modal functionality stub.'); else alert('Admin privileges required.'); };
 
 // ✅ PRO MEMBERSHIP / CASHPAPP MODAL LOGIC (Full Implementation)
 window.toggleCashAppModal = (show) => { 
-    console.log('[DIAGNOSTIC] ➡️ Upgrade Button Clicked'); // <--- ADDED DIAGNOSTIC
+    console.log('[DIAGNOSTIC] ➡️ Upgrade Button Clicked'); // Added Diagnostic
     console.log(`[🔄 Modal]: Toggling CashApp Modal to ${show}`);
-    if (!document.getElementById('cashapp-modal')) {
-        console.error("[❌ Modal]: CashApp Modal element not found.");
+    
+    const modalEl = document.getElementById('cashapp-modal');
+    if (!modalEl) {
+        console.error("[❌ Modal]: CashApp Modal element not found. Check index.html structure.");
         return;
     }
-    const modalEl = document.getElementById('cashapp-modal');
     
     if (show) {
         modalEl.classList.remove('hidden');
@@ -203,7 +201,7 @@ window.toggleSportsDataModal = (show) => { console.log('Sports Data modal stub.'
 // ✅ FIX: toggleCheerleaderUploadModal (Function was missing and causing a crash)
 window.toggleCheerleaderUploadModal = (show) => { 
     console.log('🔄 toggleCheerleaderUploadModal called with show:', show);
-    if (!cheerleaderUploadModal) cacheDOMElements();
+    if (!cheerleaderUploadModal) cacheDOMElements(); // Ensure caching runs if needed
     if (cheerleaderUploadModal) cheerleaderUploadModal.classList.toggle('hidden', !show);
     else console.error('❌ Cheerleader upload modal not found in DOM');
 };
