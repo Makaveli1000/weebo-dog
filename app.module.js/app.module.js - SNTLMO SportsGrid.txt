@@ -7,10 +7,11 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, q
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
 // --- CONFIGURATION AND GLOBALS (Read from window injected by env-config.js) ---
-const appId = window.__app_id || 'default-app-id';
+const appId = window.__project_id || 'default-app-id'; // Changed to __project_id for semantic clarity
 
-// 🔥 CRITICAL FIX 3: Type check and fallback pattern to prevent JSON.parse() errors.
-const rawFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config;
+// 🔥 CRITICAL FIX: Type check and fallback pattern to prevent JSON.parse() errors.
+// Assumes env-config.js now primarily uses window.__firebase_config
+const rawFirebaseConfig = window.__firebase_config;
 
 let firebaseConfig = null;
 if (rawFirebaseConfig) {
@@ -23,12 +24,20 @@ if (rawFirebaseConfig) {
             // On parse failure, config remains null.
         }
     } else {
-        // If it's already an object, use it directly.
+        // If it's already an object (e.g., in a local development setup without env-config.js), use it directly.
         firebaseConfig = rawFirebaseConfig;
     }
 }
 
-const initialAuthToken = window.__initial_auth_token || null; 
+// SECURITY WARNING: If this is a user's session token or refresh token, it should
+// be handled by the Firebase client SDK and NOT exposed in static files.
+// If it's a service account key for server-side use, it MUST NOT be exposed to the client.
+const initialAuthToken = window.__initial_auth_token || null;
+
+// SECURITY WARNING: If this key grants access to sensitive data or has broad permissions,
+// consider proxying requests through a server-side function (e.g., a Netlify Function)
+// to protect the key. If client-side use is unavoidable, ensure it's heavily restricted
+// (e.g., HTTP referrer restrictions in Google Cloud Console).
 const GEMINI_API_KEY = window.GEMINI_API_KEY || '';
 
 // --- ADMIN SECURITY CONFIGURATION (CRUCIAL) ---
@@ -92,17 +101,20 @@ window.currentUserId = null;
 window.isLoggedIn = false;
 window.isPremium = false; 
 window.nickname = 'Guest';
-window.lockerMediaCount = 0;
+window.lockerMediaCount = 0; // This will be updated by Firestore later
 window.dbRef = {}; 
 
-// 🔥 CRITICAL FIX 4: Validate that essential configuration fields have non-empty values.
+// 🔥 CRITICAL FIX: Validate that essential configuration fields have non-empty values.
 const isValidConfig = firebaseConfig && 
                       firebaseConfig.apiKey && firebaseConfig.apiKey.length > 5 &&
                       firebaseConfig.projectId && firebaseConfig.projectId.length > 0;
 
 if (isValidConfig) { 
     try {
-        setLogLevel('Debug');
+        // Only set debug logging in development environment
+        if (process.env.NODE_ENV !== 'production') {
+            setLogLevel('Debug');
+        }
         app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         auth = getAuth(app);
@@ -255,7 +267,8 @@ async function fetchUsersForAdmin() {
 // --- MODAL UTILITIES (Simplified/Unified for listeners) ---
 // We keep the main toggleModal function separate and use the constant toggleModal reference for the rest of the app.
 const originalToggleModal = toggleModal;
-toggleModal = function(element, show) {
+// Reassign the global toggleModal function to include admin modal-specific logic
+window.toggleModal = function(element, show) { // Changed 'toggleModal' to 'window.toggleModal' for global access
     originalToggleModal(element, show);
     if (element === adminModal && show) {
         // Only run fetch if the user opening the modal is the admin
@@ -293,8 +306,8 @@ function generateLoginQR() {
 async function authenticate() {
     // 🔥 If DB is null (because config failed), skip auth and show paywall
     if (!db) {
-        toggleModal(loadingOverlay, false);
-        toggleModal(paywallContent, true);
+        window.toggleModal(loadingOverlay, false);
+        window.toggleModal(paywallContent, true);
         return;
     }
     
@@ -306,36 +319,37 @@ async function authenticate() {
         }
     } catch (error) {
         console.error("Authentication failed during auto-sign-in:", error);
-        toggleModal(loadingOverlay, false);
-        toggleModal(paywallContent, true);
+        window.toggleModal(loadingOverlay, false);
+        window.toggleModal(paywallContent, true);
     }
 }
 
-// 🔥 CRITICAL FIX 2: Only register the listener if the 'auth' object was successfully initialized.
+// 🔥 CRITICAL FIX: Only register the listener if the 'auth' object was successfully initialized.
 if (auth) {
     onAuthStateChanged(auth, (user) => {
         // Hide the loader as soon as auth state is known
-        toggleModal(loadingOverlay, false); 
+        window.toggleModal(loadingOverlay, false); 
 
         if (user) {
             window.currentUserId = user.uid;
             window.isLoggedIn = true;
             
-            toggleModal(loginModal, false);
-            toggleModal(headerAuthBtn, false);
-            toggleModal(accountBtn, true); 
-            toggleModal(adminBtn, user.uid === ADMIN_USER_ID);
+            window.toggleModal(loginModal, false);
+            window.toggleModal(headerAuthBtn, false);
+            window.toggleModal(accountBtn, true); 
+            window.toggleModal(adminBtn, user.uid === ADMIN_USER_ID);
             
             if (db) { 
                 window.dbRef = {
                     users: (uid) => doc(db, `artifacts/${appId}/users/${uid}/profile/info`),
                     allUsersCollection: collection(db, `artifacts/${appId}/users`), 
+                    // Adjusted collection paths to match rules with /artifacts/{appId}/public/data/
                     publicMessages: collection(db, `artifacts/${appId}/public/data/messages`),
                     activeUsersCollection: collection(db, `artifacts/${appId}/public/data/active_users`),
-                    sportsData: collection(db, `artifacts/${appId}/public/data/sports_data`),
+                    sportsData: collection(db, `artifacts/${appId}/public/data/sports_data`), // Renamed from sportsData to sports_data in rules
                     leaderboard: collection(db, `artifacts/${appId}/public/data/leaderboard`),
-                    mediaLocker: (uid) => collection(db, `artifacts/${appId}/users/${uid}/media_locker`),
-                    cheerSquad: collection(db, `artifacts/${appId}/public/data/cheerleader_squads`), 
+                    mediaLocker: (uid) => collection(db, `artifacts/${appId}/users/${uid}/media_locker`), // This is a specific user subcollection, ensure rules exist if needed.
+                    cheerSquad: collection(db, `artifacts/${appId}/public/data/cheerleader_squads`), // Renamed from cheerMedia to cheerleader_squads in rules
                 };
             }
             
@@ -345,12 +359,12 @@ if (auth) {
             window.currentUserId = null;
             window.isLoggedIn = false;
             window.isPremium = false;
-            toggleModal(mainContent, false); 
-            toggleModal(paywallContent, true); 
+            window.toggleModal(mainContent, false); 
+            window.toggleModal(paywallContent, true); 
             
-            toggleModal(headerAuthBtn, true); 
-            toggleModal(accountBtn, false); 
-            toggleModal(adminBtn, false);
+            window.toggleModal(headerAuthBtn, true); 
+            window.toggleModal(accountBtn, false); 
+            window.toggleModal(adminBtn, false);
 
             generateLoginQR(); 
             renderUserStatus({});
@@ -359,9 +373,9 @@ if (auth) {
 } else {
     // If Firebase initialization failed completely (auth is null), 
     // we must manually clear the loading screen and show the paywall/login prompt.
-    toggleModal(loadingOverlay, false);
-    toggleModal(paywallContent, true); 
-    toggleModal(headerAuthBtn, true); 
+    window.toggleModal(loadingOverlay, false);
+    window.toggleModal(paywallContent, true); 
+    window.toggleModal(headerAuthBtn, true); 
     generateLoginQR();
 }
 
@@ -369,11 +383,13 @@ async function loadUserStatusAndContent() {
     let isExpired = false;
 
     try {
-        if (db && window.dbRef.users) { 
+        if (db && window.dbRef.users && window.currentUserId) { // Ensure window.currentUserId is available
             const docSnap = await getDoc(doc(db, `artifacts/${appId}/users/${window.currentUserId}/profile/info`));
             if (docSnap.exists()) {
                 const userData = docSnap.data();
                 window.nickname = userData.nickname || 'Guest';
+                // 🔥 FIX: Initialize lockerMediaCount from Firestore
+                window.lockerMediaCount = userData.cheerleaderMediaCount || 0;
                 
                 if (userData.premiumExpires?.toDate) {
                     const expirationDate = userData.premiumExpires.toDate();
@@ -387,8 +403,8 @@ async function loadUserStatusAndContent() {
                 renderUserStatus(userData); 
 
                 if (window.isPremium) {
-                    toggleModal(mainContent, true);
-                    toggleModal(paywallContent, false);
+                    window.toggleModal(mainContent, true);
+                    window.toggleModal(paywallContent, false);
                     
                     // Initialize Data Listeners for PRO content
                     startPresenceTracking(window.currentUserId);
@@ -399,15 +415,15 @@ async function loadUserStatusAndContent() {
                     setupCheerleaderListener(); 
                     
                     if (!userData.tourCompleted) {
-                        toggleModal(document.getElementById('narrator-launch-btn'), true);
+                        window.toggleModal(document.getElementById('narrator-launch-btn'), true);
                     } else {
-                        toggleModal(document.getElementById('narrator-launch-btn'), false);
+                        window.toggleModal(document.getElementById('narrator-launch-btn'), false);
                         startIdleNarrator();
                     }
 
                 } else {
-                    toggleModal(mainContent, false);
-                    toggleModal(paywallContent, true);
+                    window.toggleModal(mainContent, false);
+                    window.toggleModal(paywallContent, true);
                     setupLockerRoomListener(); 
                 }
             } else {
@@ -417,6 +433,7 @@ async function loadUserStatusAndContent() {
                        nickname: 'NewUser',
                        isPremium: false,
                        tourCompleted: false,
+                       cheerleaderMediaCount: 0, // Initialize this field for new users
                        createdAt: serverTimestamp()
                    });
                    // Recursive call to reload with new profile data
@@ -657,8 +674,8 @@ function setupLeaderboardListener() {
 function setupCheerleaderListener() { console.log('Cheerleader Listener Setup.'); } 
 
 function setupLockerRoomListener() { 
-    // Simplified logic for media count/limit
-    window.lockerMediaCount = 5; // Example count
+    // 🔥 FIX: window.lockerMediaCount is now set from Firestore in loadUserStatusAndContent
+    // This function now only updates the UI based on the already loaded count.
     const limit = window.isPremium ? 9999 : 10;
     document.getElementById('locker-status-text').textContent = `Capacity: ${window.lockerMediaCount}/${limit} (${window.isPremium ? 'PRO' : 'STANDARD'})`;
     document.getElementById('locker-upload-btn').disabled = window.lockerMediaCount >= limit;
@@ -677,7 +694,7 @@ window.simulatePaymentSuccess = async function() {
             isPremium: true,
             premiumExpires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year from now
         });
-        toggleModal(cashappModal, false);
+        window.toggleModal(cashappModal, false);
         await loadUserStatusAndContent(); 
     } catch(e) {
         console.error("Error simulating payment:", e);
@@ -695,11 +712,26 @@ window.handleFileUpload = async function() {
         return;
     }
     
-    // Placeholder upload logic
     console.log(`Uploading file: ${file.name} to locker...`);
     
-    window.lockerMediaCount++;
-    setupLockerRoomListener();
+    window.lockerMediaCount++; // Increment local count
+    
+    // 🔥 FIX: Update the count in Firestore after local increment
+    if (db && window.dbRef.users && window.currentUserId) {
+        const userProfileRef = doc(db, `artifacts/${appId}/users/${window.currentUserId}/profile/info`);
+        try {
+            await updateDoc(userProfileRef, {
+                cheerleaderMediaCount: window.lockerMediaCount // Update the count in Firestore
+            });
+            console.log("Updated cheerleaderMediaCount in Firestore.");
+        } catch (e) {
+            console.error("Error updating cheerleaderMediaCount in Firestore:", e);
+            // Optionally, revert local count or show an error to the user
+            window.lockerMediaCount--; // Revert local count if Firestore update fails
+        }
+    }
+
+    setupLockerRoomListener(); // Update UI after Firestore sync attempt
     alert(`Locker: Upload successful! Capacity is now ${window.lockerMediaCount}.`);
 };
 
@@ -732,7 +764,7 @@ async function submitCheerleaderData() {
         });
 
         alert("Cheer submitted successfully!");
-        toggleModal(cheerleaderModal, false);
+        window.toggleModal(cheerleaderModal, false);
     } catch (e) {
         console.error("Error submitting cheer data:", e);
         alert("Failed to submit cheer. Check console.");
@@ -787,7 +819,7 @@ function submitSportsData() {
     
     console.log('Submitting general sports data.');
     // In a real application, the data would be submitted to Firestore here.
-    toggleModal(sportsDataModal, false);
+    window.toggleModal(sportsDataModal, false);
     alert("Data Submitted! +10 Points!");
 }
 
@@ -831,47 +863,52 @@ function updateUserPassword() {
 
 // HANDLER: Admin Functions (MOCK)
 window.upgradeToPremiumForOneYear = window.simulatePaymentSuccess; 
-window.startZeusNarratorTour = () => { 
+window.startZeusNarratorTour = async () => { // Added async keyword
     generateAndSpeak(LONG_MOTIVATIONAL_SPEECH);
-    updateDoc(doc(db, `artifacts/${appId}/users/${window.currentUserId}/profile/info`), { tourCompleted: true });
-    toggleModal(document.getElementById('narrator-launch-btn'), false);
+    // Ensure the update has a proper path, matching your dbRef.users for profile/info
+    if (db && window.currentUserId) {
+        await updateDoc(doc(db, `artifacts/${appId}/users/${window.currentUserId}/profile/info`), { tourCompleted: true });
+        window.toggleModal(document.getElementById('narrator-launch-btn'), false);
+    } else {
+        console.error("Firebase DB or current user not available for tour completion update.");
+    }
 };
 
 // --- EVENT LISTENERS (Attaching JS functions to HTML IDs) ---
 document.addEventListener('DOMContentLoaded', () => {
     // Auth & Account Modals
-    document.getElementById('header-auth-btn').addEventListener('click', () => { toggleModal(loginModal, true); generateLoginQR(); });
-    document.getElementById('account-btn').addEventListener('click', () => toggleModal(accountModal, true));
+    document.getElementById('header-auth-btn').addEventListener('click', () => { window.toggleModal(loginModal, true); generateLoginQR(); });
+    document.getElementById('account-btn').addEventListener('click', () => window.toggleModal(accountModal, true));
     document.getElementById('login-auth-btn').addEventListener('click', logIn);
     document.getElementById('register-auth-btn').addEventListener('click', register);
-    document.getElementById('close-login-modal-btn').addEventListener('click', () => toggleModal(loginModal, false));
+    document.getElementById('close-login-modal-btn').addEventListener('click', () => window.toggleModal(loginModal, false));
     document.getElementById('logout-btn').addEventListener('click', logOut);
-    document.getElementById('close-account-modal-btn').addEventListener('click', () => toggleModal(accountModal, false));
+    document.getElementById('close-account-modal-btn').addEventListener('click', () => window.toggleModal(accountModal, false));
     document.getElementById('save-nickname-btn').addEventListener('click', saveAccountNickname);
     document.getElementById('update-password-btn').addEventListener('click', updateUserPassword);
 
     // Admin
-    document.getElementById('admin-btn').addEventListener('click', () => toggleModal(adminModal, true));
-    document.getElementById('close-admin-modal-btn').addEventListener('click', () => toggleModal(adminModal, false));
+    document.getElementById('admin-btn').addEventListener('click', () => window.toggleModal(adminModal, true));
+    document.getElementById('close-admin-modal-btn').addEventListener('click', () => window.toggleModal(adminModal, false));
     
     // Paywall & CashApp
-    document.getElementById('upgrade-btn').addEventListener('click', () => { toggleModal(cashappModal, true); generateCashAppQR(); });
+    document.getElementById('upgrade-btn').addEventListener('click', () => { window.toggleModal(cashappModal, true); generateCashAppQR(); });
     document.getElementById('simulate-payment-btn').addEventListener('click', window.simulatePaymentSuccess);
-    document.getElementById('close-cashapp-modal-btn').addEventListener('click', () => toggleModal(cashappModal, false));
+    document.getElementById('close-cashapp-modal-btn').addEventListener('click', () => window.toggleModal(cashappModal, false));
     
     // Data Submission
-    document.getElementById('submit-data-modal-btn').addEventListener('click', () => toggleModal(sportsDataModal, true));
-    document.getElementById('close-sports-data-modal-btn').addEventListener('click', () => toggleModal(sportsDataModal, false));
+    document.getElementById('submit-data-modal-btn').addEventListener('click', () => window.toggleModal(sportsDataModal, true));
+    document.getElementById('close-sports-data-modal-btn').addEventListener('click', () => window.toggleModal(sportsDataModal, false));
     document.getElementById('submit-data-btn').addEventListener('click', () => flyZeusAndClick('submit-data-btn', submitSportsData));
-    document.getElementById('send-message-btn').addEventListener('click', sendMessage); // 👈 NEW CHAT LISTENER
+    document.getElementById('send-message-btn').addEventListener('click', sendMessage); 
 
     // Narrator/TTS
     document.getElementById('tts-button').addEventListener('click', () => flyZeusAndClick('tts-button', () => generateAndSpeak(document.getElementById('tts-input').value)));
     document.getElementById('narrator-launch-btn').addEventListener('click', window.startZeusNarratorTour);
 
-    // Cheerleader (NEW)
-    document.getElementById('cheerleader-upload-btn-trigger').addEventListener('click', () => toggleModal(cheerleaderModal, true));
-    document.getElementById('close-cheerleader-upload-modal-btn').addEventListener('click', () => toggleModal(cheerleaderModal, false));
+    // Cheerleader 
+    document.getElementById('cheerleader-upload-btn-trigger').addEventListener('click', () => window.toggleModal(cheerleaderModal, true));
+    document.getElementById('close-cheerleader-upload-modal-btn').addEventListener('click', () => window.toggleModal(cheerleaderModal, false));
     document.getElementById('submit-cheer-btn').addEventListener('click', () => flyZeusAndClick('submit-cheer-btn', submitCheerleaderData));
 
     // Start App & Status Check
