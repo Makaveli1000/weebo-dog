@@ -1,10 +1,16 @@
 # netlify.toml
 
 [build]
-  # CRITICAL FIX: Explicitly call bash to run the script.
-  # This fixes the "Permission denied" error (Exit Code 126).
+  # CRITICAL FIX: Explicitly calls bash to run the config script.
+  # This ensures the script executes and injects your secret keys.
   command = "bash ./create-config.sh && npm install" 
   
+  # Sets the root directory as the deployment source.
   publish = "/" 
-  
-  # ... (rest of your configuration should remain as previously corrected)
+
+[[redirects]]
+  # This rule ensures that all routes (e.g., /account, /dashboard) are 
+  # served by index.html, which is essential for a Single Page Application (SPA).
+  from = "/*"
+  to = "/index.html"
+  status = 200
