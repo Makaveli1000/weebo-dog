@@ -95,9 +95,12 @@ window.nickname = 'Guest';
 window.lockerMediaCount = 0;
 window.dbRef = {}; 
 
-// 🔥 CRITICAL FIX: The app previously failed here if firebaseConfig was undefined.
-// Now, it only attempts initialization if it successfully found the config object/string.
-if (firebaseConfig && Object.keys(firebaseConfig).length > 0) { 
+// 🔥 CRITICAL FIX 4: Validate that essential configuration fields have non-empty values.
+const isValidConfig = firebaseConfig && 
+                      firebaseConfig.apiKey && firebaseConfig.apiKey.length > 5 &&
+                      firebaseConfig.projectId && firebaseConfig.projectId.length > 0;
+
+if (isValidConfig) { 
     try {
         setLogLevel('Debug');
         app = initializeApp(firebaseConfig);
@@ -107,12 +110,11 @@ if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
         window.serverTimestamp = serverTimestamp; 
     } catch (e) {
         console.error("Error initializing Firebase:", e);
-        // If Firebase fails to initialize, db is set to null, 
-        // leading to the paywall and preventing an infinite spin.
+        // If Firebase fails to initialize, db is set to null.
         db = null;
     }
 } else {
-    console.error("Firebase config not found or empty. App requires manual login.");
+    console.error("Firebase config is invalid or missing critical fields (apiKey/projectId).");
     db = null;
 }
 // --- END CORE FIREBASE/GLOBAL SETUP ---
