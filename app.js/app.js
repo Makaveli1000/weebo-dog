@@ -12,9 +12,6 @@ const appId = window.__app_id || 'default-app-id';
 // 🔥 CRITICAL FIX: Use fallback pattern to find Firebase Config
 const rawFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config;
 const firebaseConfig = rawFirebaseConfig ? JSON.parse(rawFirebaseConfig) : null; 
-// The rawFirebaseConfig can be a JSON string from the old __firebase_config format, or an object from NETLIFY_FIREBASE_CONFIG.
-// We'll rely on the JSON.parse error handling or adjust the config script later if needed, 
-// but for now, we prioritize finding *any* data.
 
 const initialAuthToken = window.__initial_auth_token || null; 
 const GEMINI_API_KEY = window.GEMINI_API_KEY || '';
@@ -171,49 +168,59 @@ async function authenticate() {
     }
 }
 
-onAuthStateChanged(auth, (user) => {
-    // Hide the loader as soon as auth state is known
-    toggleModal(loadingOverlay, false); 
+// 🔥 CRITICAL FIX: Only register the listener if the 'auth' object was successfully initialized.
+if (auth) {
+    onAuthStateChanged(auth, (user) => {
+        // Hide the loader as soon as auth state is known
+        toggleModal(loadingOverlay, false); 
 
-    if (user) {
-        window.currentUserId = user.uid;
-        window.isLoggedIn = true;
-        
-        toggleModal(loginModal, false);
-        toggleModal(headerAuthBtn, false);
-        toggleModal(accountBtn, true); 
-        toggleModal(adminBtn, user.uid === ADMIN_USER_ID);
-        
-        if (db) { 
-            window.dbRef = {
-                users: (uid) => doc(db, `artifacts/${appId}/users/${uid}/profile/info`),
-                allUsersCollection: collection(db, `artifacts/${appId}/users`), 
-                publicMessages: collection(db, `artifacts/${appId}/public/data/messages`),
-                activeUsersCollection: collection(db, `artifacts/${appId}/public/data/active_users`),
-                sportsData: collection(db, `artifacts/${appId}/public/data/sports_data`),
-                leaderboard: collection(db, `artifacts/${appId}/public/data/leaderboard`),
-                mediaLocker: (uid) => collection(db, `artifacts/${appId}/users/${uid}/media_locker`),
-                cheerSquad: collection(db, `artifacts/${appId}/public/data/cheerleader_squads`), 
-            };
+        if (user) {
+            window.currentUserId = user.uid;
+            window.isLoggedIn = true;
+            
+            toggleModal(loginModal, false);
+            toggleModal(headerAuthBtn, false);
+            toggleModal(accountBtn, true); 
+            toggleModal(adminBtn, user.uid === ADMIN_USER_ID);
+            
+            if (db) { 
+                window.dbRef = {
+                    users: (uid) => doc(db, `artifacts/${appId}/users/${uid}/profile/info`),
+                    allUsersCollection: collection(db, `artifacts/${appId}/users`), 
+                    publicMessages: collection(db, `artifacts/${appId}/public/data/messages`),
+                    activeUsersCollection: collection(db, `artifacts/${appId}/public/data/active_users`),
+                    sportsData: collection(db, `artifacts/${appId}/public/data/sports_data`),
+                    leaderboard: collection(db, `artifacts/${appId}/public/data/leaderboard`),
+                    mediaLocker: (uid) => collection(db, `artifacts/${appId}/users/${uid}/media_locker`),
+                    cheerSquad: collection(db, `artifacts/${appId}/public/data/cheerleader_squads`), 
+                };
+            }
+            
+            loadUserStatusAndContent(); 
+
+        } else {
+            window.currentUserId = null;
+            window.isLoggedIn = false;
+            window.isPremium = false;
+            toggleModal(mainContent, false); 
+            toggleModal(paywallContent, true); 
+            
+            toggleModal(headerAuthBtn, true); 
+            toggleModal(accountBtn, false); 
+            toggleModal(adminBtn, false);
+
+            generateLoginQR(); 
+            renderUserStatus({});
         }
-        
-        loadUserStatusAndContent(); 
-
-    } else {
-        window.currentUserId = null;
-        window.isLoggedIn = false;
-        window.isPremium = false;
-        toggleModal(mainContent, false); 
-        toggleModal(paywallContent, true); 
-        
-        toggleModal(headerAuthBtn, true); 
-        toggleModal(accountBtn, false); 
-        toggleModal(adminBtn, false);
-
-        generateLoginQR(); 
-        renderUserStatus({});
-    }
-});
+    });
+} else {
+    // If Firebase initialization failed completely (auth is null), 
+    // we must manually clear the loading screen and show the paywall/login prompt.
+    toggleModal(loadingOverlay, false);
+    toggleModal(paywallContent, true); 
+    toggleModal(headerAuthBtn, true); 
+    generateLoginQR();
+}
 
 async function loadUserStatusAndContent() {
     let isExpired = false;
