@@ -9,9 +9,24 @@ import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "http
 // --- CONFIGURATION AND GLOBALS (Read from window injected by env-config.js) ---
 const appId = window.__app_id || 'default-app-id';
 
-// 🔥 CRITICAL FIX: Use fallback pattern to find Firebase Config
+// 🔥 CRITICAL FIX 3: Type check and fallback pattern to prevent JSON.parse() errors.
 const rawFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config;
-const firebaseConfig = rawFirebaseConfig ? JSON.parse(rawFirebaseConfig) : null; 
+
+let firebaseConfig = null;
+if (rawFirebaseConfig) {
+    if (typeof rawFirebaseConfig === 'string') {
+        // If it's a string (standard output from our shell script), parse it.
+        try {
+            firebaseConfig = JSON.parse(rawFirebaseConfig);
+        } catch (e) {
+            console.error("Error parsing Firebase config string:", e);
+            // On parse failure, config remains null.
+        }
+    } else {
+        // If it's already an object, use it directly.
+        firebaseConfig = rawFirebaseConfig;
+    }
+}
 
 const initialAuthToken = window.__initial_auth_token || null; 
 const GEMINI_API_KEY = window.GEMINI_API_KEY || '';
@@ -168,7 +183,7 @@ async function authenticate() {
     }
 }
 
-// 🔥 CRITICAL FIX: Only register the listener if the 'auth' object was successfully initialized.
+// 🔥 CRITICAL FIX 2: Only register the listener if the 'auth' object was successfully initialized.
 if (auth) {
     onAuthStateChanged(auth, (user) => {
         // Hide the loader as soon as auth state is known
