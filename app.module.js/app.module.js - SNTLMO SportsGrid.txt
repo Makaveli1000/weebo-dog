@@ -1,4 +1,4 @@
-// app.module.js - SNTLMO SportsGrid Main Application Logic
+// app.module.js/app.js - SNTLMO SportsGrid Main Application Logic
 
 // Firebase SDK imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -7,27 +7,12 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, q
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
 // --- CONFIGURATION AND GLOBALS (Read from window injected by env-config.js) ---
-const appId = window.__project_id || 'default-app-id'; // Changed to __project_id for semantic clarity
+// 🔥 FIX: Updated appId initialization to check for both window.__project_id and window.__app_id
+// The resolution implies __project_id is primary, with __app_id as fallback from older config.
+const appId = window.__project_id || window.__app_id || 'default-app-id';
 
-// 🔥 CRITICAL FIX: Type check and fallback pattern to prevent JSON.parse() errors.
-// Assumes env-config.js now primarily uses window.__firebase_config
-const rawFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config; // Use the most reliable source first
-
-let firebaseConfig = null;
-if (rawFirebaseConfig) {
-    if (typeof rawFirebaseConfig === 'string') {
-        // If it's a string (standard output from our shell script), parse it.
-        try {
-            firebaseConfig = JSON.parse(rawFirebaseConfig);
-        } catch (e) {
-            console.error("Error parsing Firebase config string:", e);
-            // On parse failure, config remains null.
-        }
-    } else {
-        // If it's already an object (e.g., from local env-config.js), use it directly.
-        firebaseConfig = rawFirebaseConfig;
-    }
-}
+// 🔥 FIX: Firebase config is now directly an object from create-config.sh, no JSON.parse needed.
+const firebaseConfig = window.__firebase_config || null;
 
 // SECURITY WARNING: If this is a user's session token or refresh token, it should
 // be handled by the Firebase client SDK and NOT exposed in static files.
@@ -105,8 +90,9 @@ window.lockerMediaCount = 0; // This will be updated by Firestore later
 window.dbRef = {}; 
 
 // 🔥 CRITICAL FIX: Validate that essential configuration fields have non-empty values.
+// Now checks if firebaseConfig is an object and has projectId, which implies other fields are present.
 const isValidConfig = firebaseConfig && 
-                      firebaseConfig.apiKey && firebaseConfig.apiKey.length > 5 &&
+                      typeof firebaseConfig === 'object' && 
                       firebaseConfig.projectId && firebaseConfig.projectId.length > 0;
 
 if (isValidConfig) { 
@@ -126,7 +112,7 @@ if (isValidConfig) {
         db = null;
     }
 } else {
-    console.error("Firebase config is invalid or missing critical fields (apiKey/projectId).");
+    console.error("Firebase config is invalid or missing critical fields (projectId).");
     db = null;
 }
 // --- END CORE FIREBASE/GLOBAL SETUP ---
@@ -265,7 +251,6 @@ async function fetchUsersForAdmin() {
 
 
 // --- MODAL UTILITIES (Simplified/Unified for listeners) ---
-// We keep the main toggleModal function separate and use the constant toggleModal reference for the rest of the app.
 const originalToggleModal = toggleModal;
 // Reassign the global toggleModal function to include admin modal-specific logic
 window.toggleModal = function(element, show) { 
@@ -273,7 +258,7 @@ window.toggleModal = function(element, show) {
     if (element === adminModal && show) {
         // Only run fetch if the user opening the modal is the admin
         if (window.currentUserId === ADMIN_USER_ID) {
-            fetchUsersForAdmin(); // Assuming fetchUsersForAdmin is defined later
+            fetchUsersForAdmin(); 
         } else {
             document.getElementById('admin-users-list').innerHTML = '<p class="text-red-500 text-center py-4">Admin privileges required.</p>';
         }
@@ -370,10 +355,10 @@ if (auth) {
                     // Adjusted collection paths to match rules with /artifacts/{appId}/public/data/
                     publicMessages: collection(db, `artifacts/${appId}/public/data/messages`),
                     activeUsersCollection: collection(db, `artifacts/${appId}/public/data/active_users`),
-                    sportsData: collection(db, `artifacts/${appId}/public/data/sports_data`), // Renamed from sportsData to sports_data in rules
+                    sportsData: collection(db, `artifacts/${appId}/public/data/sports_data`), 
                     leaderboard: collection(db, `artifacts/${appId}/public/data/leaderboard`),
-                    mediaLocker: (uid) => collection(db, `artifacts/${appId}/users/${uid}/media_locker`), // This is a specific user subcollection, ensure rules exist if needed.
-                    cheerSquad: collection(db, `artifacts/${appId}/public/data/cheerleader_squads`), // Renamed from cheerMedia to cheerleader_squads in rules
+                    mediaLocker: (uid) => collection(db, `artifacts/${appId}/users/${uid}/media_locker`), 
+                    cheerSquad: collection(db, `artifacts/${appId}/public/data/cheerleader_squads`), 
                 };
             }
             

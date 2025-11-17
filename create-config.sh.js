@@ -3,9 +3,15 @@
 
 # Function to strip extraneous quotes and commas from environment variables
 strip_quotes() {
-    # Uses sed to remove leading/trailing quotes (") and commas (,) from the value
-    # and also trailing commas that might come from some environment variable systems.
-    echo "$1" | sed -e 's/^"//' -e 's/"$//' -e 's/,$//' -e "s/^'//" -e "s/'$//"
+    local val="$1"
+    # Remove leading/trailing double quotes, and then single quotes
+    val="${val%\"}" # Remove trailing " if present
+    val="${val#\"}" # Remove leading " if present
+    val="${val%\'}" # Remove trailing ' if present
+    val="${val#\'}" # Remove leading ' if present
+    # Remove trailing comma if present
+    val="${val%,}"
+    echo "$val"
 }
 
 echo "Creating env-config.js with configuration variables..."
@@ -32,19 +38,18 @@ APP_ID_CLEAN=$(strip_quotes "$FIREBASE_APP_ID")
 AUTH_TOKEN_CLEAN=$(strip_quotes "$AUTH_TOKEN")
 GEMINI_API_KEY_CLEAN=$(strip_quotes "$GEMINI_API_KEY")
 
-# 2. Create the Firebase configuration JSON string.
-# We use 'jq -n ... | jq -RToJson' to robustly create and then escape the JSON
-# so it can be safely embedded as a JavaScript string literal.
+# 2. Create the Firebase configuration JSON object using 'jq -n -c'.
+# This directly outputs a compact JSON object, ready to be embedded.
 # This prevents issues if any config values contain special characters (like quotes).
 # NOTE: This requires 'jq' to be available in the build environment. Netlify usually includes it.
-FIREBASE_CONFIG_JSON_ESCAPED=$(jq -n \
+FIREBASE_CONFIG_JSON=$(jq -n -c \
   --arg apiKey "$API_KEY_CLEAN" \
   --arg authDomain "$AUTH_DOMAIN_CLEAN" \
   --arg projectId "$PROJECT_ID_CLEAN" \
   --arg storageBucket "$STORAGE_BUCKET_CLEAN" \
   --arg messagingSenderId "$MESSAGING_SENDER_ID_CLEAN" \
   --arg appId "$APP_ID_CLEAN" \
-  '{apiKey: $apiKey, authDomain: $authDomain, projectId: $projectId, storageBucket: $storageBucket, messagingSenderId: $messagingSenderId, appId: $appId}' | jq -RToJson)
+  '{apiKey: $apiKey, authDomain: $authDomain, projectId: $projectId, storageBucket: $storageBucket, messagingSenderId: $messagingSenderId, appId: $appId}')
 
 # 3. Write all required variables to the env-config.js file
 # This file will be generated in your project's root directory.
@@ -65,9 +70,9 @@ window.__initial_auth_token = '$AUTH_TOKEN_CLEAN';
 // SECURITY WARNING: If this key is highly privileged, consider proxying via server-side functions.
 window.GEMINI_API_KEY = '$GEMINI_API_KEY_CLEAN';
 
-// The full Firebase object, now properly JSON-escaped for robust handling in app.js.
-// Your client-side JavaScript can parse this using JSON.parse(window.__firebase_config);
-window.__firebase_config = $FIREBASE_CONFIG_JSON_ESCAPED;
+// The full Firebase object, directly assigned as a JavaScript object.
+// app.module.js no longer needs to JSON.parse this.
+window.__firebase_config = $FIREBASE_CONFIG_JSON;
 
 EOF
 
