@@ -1,4 +1,4 @@
-// app.js - SNTLMO SportsGrid Main Application Logic
+// app.module.js - SNTLMO SportsGrid Main Application Logic
 
 // Firebase SDK imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -60,7 +60,7 @@ let cheerSource = null;
 let cheerGain = null;
 
 function createNoiseSource(volume) {
-    // ... (Noise Source Generation Logic - Placeholder for detailed implementation)
+    // This logic is designed to simulate thunder/cheering sound effects
     const bufferSize = 2 * (audioContext?.sampleRate || 44100);
     const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
     const output = noiseBuffer.getChannelData(0);
