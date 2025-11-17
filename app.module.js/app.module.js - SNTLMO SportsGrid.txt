@@ -530,7 +530,58 @@ function flyZeusAndClick(btnId, callback, duration = 800) {
 
 // --- CORE DATA LISTENERS (Placeholders for real Firestore listeners) ---
 function startPresenceTracking() { console.log('Presence Tracking Started.'); }
-function setupChatListener() { console.log('Chat Listener Setup.'); }
+// --- CHAT LOGIC (NEW) ---
+function renderMessage(data, isSelf) {
+    const time = data.timestamp && data.timestamp.toDate ? data.timestamp.toDate().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+    
+    const selfClass = isSelf ? 'justify-end' : 'justify-start';
+    const messageClass = isSelf ? 'bg-metro-primary text-white rounded-bl-xl' : 'bg-white text-gray-800 rounded-br-xl';
+    
+    return `
+        <div class="flex ${selfClass} space-x-2">
+            <div class="max-w-[80%] px-4 py-2 shadow-md ${messageClass} rounded-t-xl text-sm">
+                <span class="font-bold text-xs ${isSelf ? 'text-indigo-200' : 'text-metro-primary'}">${data.nickname}</span>
+                <p class="mt-1">${data.text}</p>
+                <span class="text-[10px] block text-right ${isSelf ? 'text-indigo-200' : 'text-gray-500'}">${time}</span>
+            </div>
+        </div>
+    `;
+}
+
+function setupChatListener() { 
+    if (!db) return;
+    
+    const chatMessagesElement = document.getElementById('chat-messages');
+    chatMessagesElement.innerHTML = '<p class="text-center text-gray-500">Connecting to chat...</p>';
+
+    // Query for the latest 100 public messages, ordered by timestamp
+    const chatQuery = query(window.dbRef.publicMessages, orderBy('timestamp', 'desc'), limit(100));
+    
+    onSnapshot(chatQuery, (snapshot) => {
+        let html = '';
+        const messages = [];
+
+        // Reverse the order so the oldest message is at the top (standard chat view)
+        snapshot.docs.reverse().forEach((doc) => {
+            messages.push(doc.data());
+        });
+
+        messages.forEach(data => {
+            const isSelf = data.senderId === window.currentUserId;
+            html += renderMessage(data, isSelf);
+        });
+
+        chatMessagesElement.innerHTML = html;
+        // Scroll to the bottom of the chat box
+        chatMessagesElement.scrollTop = chatMessagesElement.scrollHeight;
+        
+    }, (error) => {
+        console.error("Chat listener failed:", error);
+        chatMessagesElement.innerHTML = '<p class="text-center text-red-500">Failed to load chat history.</p>';
+    });
+}
+// --- END CHAT LOGIC ---
+
 function setupSportsDataListener() { console.log('Sports Data Listener Setup.'); }
 // --- LEADERBOARD LOGIC (NEW) ---
 async function updateLeaderboardPoints() {
@@ -688,6 +739,48 @@ async function submitCheerleaderData() {
     }
 }
 
+// --- MESSAGE SENDING LOGIC (NEW) ---
+function sendMessage() {
+    const messageInput = document.getElementById('message-input');
+    const messageText = messageInput.value.trim();
+    const mode = document.getElementById('chat-mode-toggle').value;
+    const recipientId = document.getElementById('recipient-id-input').value.trim();
+
+    if (!messageText || !window.isLoggedIn || !db) return;
+
+    if (mode === 'private') {
+        if (!recipientId) {
+            alert("Please enter a Recipient ID for a Private Message.");
+            return;
+        }
+        // Placeholder for complex PM logic
+        console.log(`PM Attempt: To ${recipientId} from ${window.nickname}: ${messageText}`);
+        alert(`PM sent to ${recipientId.substring(0, 8)}... (Simulated)`);
+        messageInput.value = '';
+        return;
+    }
+
+    // PUBLIC CHAT
+    try {
+        addDoc(window.dbRef.publicMessages, {
+            senderId: window.currentUserId,
+            nickname: window.nickname,
+            text: messageText,
+            timestamp: serverTimestamp(),
+            type: 'text'
+        });
+        // Award points for chatting
+        updateLeaderboardPoints(); 
+
+        messageInput.value = '';
+        messageInput.focus();
+    } catch (e) {
+        console.error("Error sending public message:", e);
+        alert("Failed to send message. Check console.");
+    }
+}
+
+
 function submitSportsData() {
     // 💥 NEW: Update Leaderboard Points on successful submission
     updateLeaderboardPoints(); 
@@ -770,6 +863,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('submit-data-modal-btn').addEventListener('click', () => toggleModal(sportsDataModal, true));
     document.getElementById('close-sports-data-modal-btn').addEventListener('click', () => toggleModal(sportsDataModal, false));
     document.getElementById('submit-data-btn').addEventListener('click', () => flyZeusAndClick('submit-data-btn', submitSportsData));
+    document.getElementById('send-message-btn').addEventListener('click', sendMessage); // 👈 NEW CHAT LISTENER
 
     // Narrator/TTS
     document.getElementById('tts-button').addEventListener('click', () => flyZeusAndClick('tts-button', () => generateAndSpeak(document.getElementById('tts-input').value)));
