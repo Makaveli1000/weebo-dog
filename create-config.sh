@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # This script reads environment variables set in Netlify and generates the
-# JavaScript configuration file (******) required by index.html.
+# JavaScript configuration file (env-config.js) required by index.html.
 
-echo "Generating ****** from Netlify Environment Variables..."
+echo "Generating env-config.js from Netlify Environment Variables..."
 
 # Strip any surrounding quotes and commas from environment variables
 strip_quotes() {
@@ -22,7 +22,7 @@ APP_ID=$(strip_quotes "$FIREBASE_APP_ID")
 GEMINI_KEY=$(strip_quotes "$GEMINI_API_KEY")
 
 # Build the JavaScript config file content
-cat > ./****** << EOF
+cat > ./env-config.js << EOF
 window.NETLIFY_FIREBASE_CONFIG = {
   "apiKey": "${API_KEY}",
   "authDomain": "${PROJECT_ID}.firebaseapp.com",
@@ -36,9 +36,6 @@ window.__project_id = "${APP_ID}";
 window.GEMINI_API_KEY = "${GEMINI_KEY}";
 EOF
 
-echo "✅ Successfully generated ******"
-echo "Config preview:"
-head -5 ./******
-Did you find this helpful? Your feedback helps improve this feature.
+echo "✅ Successfully generated env-config.js"
 
 
