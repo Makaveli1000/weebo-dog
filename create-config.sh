@@ -5,24 +5,39 @@
 
 echo "Generating env-config.js from Netlify Environment Variables..."
 
-# 1. Start defining the content of the config file
-CONFIG_CONTENT="window.NETLIFY_FIREBASE_CONFIG = {"
-CONFIG_CONTENT="${CONFIG_CONTENT}\"apiKey\": \"${FIREBASE_API_KEY}\","
-CONFIG_CONTENT="${CONFIG_CONTENT}\"authDomain\": \"${FIREBASE_PROJECT_ID}.firebaseapp.com\","
-CONFIG_CONTENT="${CONFIG_CONTENT}\"projectId\": \"${FIREBASE_PROJECT_ID}\","
-CONFIG_CONTENT="${CONFIG_CONTENT}\"storageBucket\": \"${FIREBASE_STORAGE_BUCKET}\","
-CONFIG_CONTENT="${CONFIG_CONTENT}\"messagingSenderId\": \"${FIREBASE_MESSAGING_SENDER_ID}\","
-CONFIG_CONTENT="${CONFIG_CONTENT}\"appId\": \"${FIREBASE_APP_ID}\""
-CONFIG_CONTENT="${CONFIG_CONTENT}};"
+# Strip any surrounding quotes and commas from environment variables
+strip_quotes() {
+    local var="$1"
+    # Remove all quotes and trailing commas
+    var="${var//\"/}"
+    var="${var%,}"
+    echo "$var"
+}
 
-# 2. Add other necessary global variables
-CONFIG_CONTENT="${CONFIG_CONTENT}window.__project_id = \"${FIREBASE_APP_ID}\";"
-CONFIG_CONTENT="${CONFIG_CONTENT}window.GEMINI_API_KEY = \"${GEMINI_API_KEY}\";"
+API_KEY=$(strip_quotes "$FIREBASE_API_KEY")
+PROJECT_ID=$(strip_quotes "$FIREBASE_PROJECT_ID")
+STORAGE_BUCKET=$(strip_quotes "$FIREBASE_STORAGE_BUCKET")
+MESSAGING_SENDER_ID=$(strip_quotes "$FIREBASE_MESSAGING_SENDER_ID")
+APP_ID=$(strip_quotes "$FIREBASE_APP_ID")
+GEMINI_KEY=$(strip_quotes "$GEMINI_API_KEY")
 
-# 3. Write the content to the final file
-echo "${CONFIG_CONTENT}" > ./env-config.js
+# Build the JavaScript config file content
+# NOTE: The redirect operator '< EOF' uses the correct file name here
+cat > ./env-config.js << EOF
+window.NETLIFY_FIREBASE_CONFIG = {
+  "apiKey": "${API_KEY}",
+  "authDomain": "${PROJECT_ID}.firebaseapp.com",
+  "projectId": "${PROJECT_ID}",
+  "storageBucket": "${STORAGE_BUCKET}",
+  "messagingSenderId": "${MESSAGING_SENDER_ID}",
+  "appId": "${APP_ID}"
+};
+window.__app_id = "${APP_ID}";
+window.__project_id = "${APP_ID}";
+window.GEMINI_API_KEY = "${GEMINI_KEY}";
+EOF
 
-echo "✅ Successfully generated env-config.js with secrets."
-
-# NOTE: You must ensure all variables (FIREBASE_API_KEY, FIREBASE_APP_ID, etc.) 
-# are correctly set in your Netlify site settings.
+echo "✅ Successfully generated env-config.js"
+echo "Config preview:"
+head -5 ./env-config.js
+# The diagnostics lines below were removed as they are no longer necessary for deployment.
