@@ -6,6 +6,8 @@
 echo "Generating env-config.js from Netlify Environment Variables..."
 
 # 1. Start defining the content of the config file
+# FIX: Escape quotes around all shell variables ($FIREBASE_API_KEY, etc.) to ensure
+# they appear as JavaScript strings in the final output.
 CONFIG_CONTENT="window.NETLIFY_FIREBASE_CONFIG = {"
 CONFIG_CONTENT="${CONFIG_CONTENT}\"apiKey\": \"${FIREBASE_API_KEY}\","
 CONFIG_CONTENT="${CONFIG_CONTENT}\"authDomain\": \"${FIREBASE_PROJECT_ID}.firebaseapp.com\","
@@ -16,6 +18,7 @@ CONFIG_CONTENT="${CONFIG_CONTENT}\"appId\": \"${FIREBASE_APP_ID}\""
 CONFIG_CONTENT="${CONFIG_CONTENT}};"
 
 # 2. Add other necessary global variables
+# FIX: Added quotation marks around the variables to make them valid JavaScript strings.
 CONFIG_CONTENT="${CONFIG_CONTENT}window.__project_id = \"${FIREBASE_APP_ID}\";"
 CONFIG_CONTENT="${CONFIG_CONTENT}window.GEMINI_API_KEY = \"${GEMINI_API_KEY}\";"
 
