@@ -1,12 +1,14 @@
 # netlify.toml
 
 [build]
-  # CRITICAL FIX: Explicitly calls bash to run the config script.
-  # This ensures the script executes and injects your secret keys.
-  command = "bash ./create-config.sh && npm install" 
+  # CRITICAL FIX: This command will first install dependencies, then execute
+  # your web app's 'build' script which handles all compilation,
+  # including running build-env.sh, esbuild, tailwind, and copying files.
+  command = "npm install && npm run build"
   
-  # Sets the root directory as the deployment source.
-  publish = "/" 
+  # CRITICAL FIX: Your 'npm run build' script places all final assets
+  # into the 'dist' folder. Netlify must publish from this directory.
+  publish = "dist" 
 
 [[redirects]]
   # This rule ensures that all routes (e.g., /account, /dashboard) are 
