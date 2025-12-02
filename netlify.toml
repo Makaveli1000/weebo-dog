@@ -1,12 +1,13 @@
 # netlify.toml
 
 [build]
-  # Combined command to first run the config script,
-  # and THEN copy all necessary static assets to the publish directory (which is '.')
-  command = "chmod +x create-config.sh && ./create-config.sh && cp index.html . && cp app.module.js . && cp create-config.sh ."
+  # CRITICAL FIX: Simplified command.
+  # Now it ONLY makes create-config.sh executable and runs it.
+  # All other static files (index.html, app.module.js) are assumed to be
+  # already in the root directory and will be published by Netlify.
+  command = "chmod +x create-config.sh && ./create-config.sh"
   
   # Publish directly from the root of the repository.
-  # This implies index.html, app.module.js, env-config.js, etc., will be here.
   publish = "." 
 
 [[redirects]]
