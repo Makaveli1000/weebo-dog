@@ -1,14 +1,13 @@
 # netlify.toml
 
 [build]
-  # CRITICAL FIX: Simplified command.
-  # Now it ONLY makes create-config.sh executable and runs it.
-  # All other static files (index.html, app.module.js) are assumed to be
-  # already in the root directory and will be published by Netlify.
-  command = "chmod +x create-config.sh && ./create-config.sh"
+  # CRITICAL FIX: Create a 'dist' directory first.
+  # Then run the config script to place env-config.js into 'dist'.
+  # Then copy all other static assets (index.html, app.module.js) into 'dist'.
+  command = "mkdir -p dist && chmod +x create-config.sh && ./create-config.sh && cp index.html dist/index.html && cp app.module.js dist/app.module.js"
   
-  # Publish directly from the root of the repository.
-  publish = "." 
+  # CRITICAL FIX: Publish from the newly created 'dist' directory.
+  publish = "dist" 
 
 [[redirects]]
   # This rule ensures that all routes (e.g., /account, /dashboard) are 
