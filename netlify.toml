@@ -1,14 +1,16 @@
 # netlify.toml
 
 [build]
-  # CRITICAL FIX: This command will first install dependencies, then execute
-  # your web app's 'build' script which handles all compilation,
-  # including running build-env.sh, esbuild, tailwind, and copying files.
-  command = "npm install && npm run build"
+  # CRITICAL FIX: Changed build command.
+  # This now ONLY makes your 'create-config.sh' script executable and then runs it.
+  # This script generates env-config.js with your Firebase/Gemini keys.
+  # No 'npm install' or 'npm run build' is needed for the web app's assets.
+  command = "chmod +x create-config.sh && ./create-config.sh"
   
-  # CRITICAL FIX: Your 'npm run build' script places all final assets
-  # into the 'dist' folder. Netlify must publish from this directory.
-  publish = "dist" 
+  # CRITICAL FIX: Changed publish directory.
+  # All your static assets (index.html, app.module.js, env-config.js)
+  # are now expected to be directly in the root of the repository.
+  publish = "." 
 
 [[redirects]]
   # This rule ensures that all routes (e.g., /account, /dashboard) are 
