@@ -1,0 +1,11 @@
+/* src/input.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    background-color: #f0f0f0; /* A light gray background */
+    font-family: sans-serif; /* A simple, common font */
+}
+
+/* You can add your own custom CSS styles below this if you wish! */

@@ -1,5 +1,27 @@
-# Other ignores (like node_modules, .env, etc.)
+# Node.js dependencies
 node_modules/
-.env
-env-config.js # <--- Add this line!
-git rm --cached env-config.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store/
+
+# Environment variables and generated config
+.env                     # Local environment variables
+.env.local               # Local environment variables
+env-config.js            # Generated Firebase configuration (contains secrets)
+# The set-admin-claim.js script's private key
+sntlmoexclusivesportsgrid-firebase-adminsdk-*.json
+
+# Build artifacts and generated output
+/dist/                   # Your compiled output for hosting
+
+# Firebase-specific ignore files
+.firebase/               # Local Firebase emulator data
+firebase-debug.log       # Firebase CLI debug log
+.firebaserc.local        # Local Firebase project overrides (optional)
+
+# Other common build tool/IDE ignores
+.vscode/                 # VS Code settings
+*.log                    # Any log files
+*.temp                   # Temporary files
+.DS_Store                # macOS specific system file

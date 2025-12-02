@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- ADMIN SECURITY CHECK (Defined Globally) ---
+    function isAdmin() {
+      // Matches the ADMIN_USER_ID in your JS code
+      return request.auth != null && request.auth.uid == "05806734626095127961";
+    }
+
+    // --- Dynamic App ID Prefix ---
+    // All data is nested under /artifacts/{appId}/...
+    match /artifacts/{appId} {
+
+      // ----------------------------------------------------------------------
+      // 1. USER PROFILE DATA (Nested Path: /artifacts/{appId}/users/{userId}/profile/info)
+      //    Allows users to manage their own profile information.
+      // ----------------------------------------------------------------------
+      match /users/{userId} {
+        match /profile/info {
+          // Allows a user to create their own profile info document,
+          // ensuring the document ID and data UID match the authenticated user.
+          allow create: if request.auth != null && request.auth.uid == userId
+                        && request.resource.data.uid == userId;
+
+          // Allows a user to read their own profile info document.
+          allow read: if request.auth != null && request.auth.uid == userId;
+
+          // Allows a user to update specific fields in their own profile info document.
+          // IMPORTANT: Ensure ALL fields the user can change are listed here
+          allow update: if request.auth != null && request.auth.uid == userId
+                        && request.resource.data.keys().hasOnly(['cheerleaderMediaCount', 'nickname', 'isPro', 'premiumExpires', 'score', 'email', 'createdAt', 'uid', 'tourCompleted']);
+          // 'tourCompleted' is included as it's updated in startZeusNarratorTour
+          // 'cheerleaderMediaCount' is now included for your file upload logic
+        }
+      }
+
+      // ----------------------------------------------------------------------
+      // 2. PUBLIC/COMMUNITY COLLECTIONS (Nested under /artifacts/{appId}/public/data/...)
+      // ----------------------------------------------------------------------
+      match /public/data {
+
+        // --- LIVE FEED ---
+        match /liveFeed/{document} {
+          allow read: if request.auth != null;
+          allow write: if isAdmin();
+        }
+
+        // --- SPORTS DATA ---
+        match /sports_data/{document} { // Matches `artifacts/{appId}/public/data/sports_data`
+          allow read, create: if request.auth != null;
+        }
+
+        // --- CHAT MESSAGES ---
+        match /messages/{document} { // Matches `artifacts/{appId}/public/data/messages`
+          allow read, create: if request.auth != null;
+        }
+
+        // --- CHEER MEDIA ---
+        match /cheerleader_squads/{document} { // Matches `artifacts/{appId}/public/data/cheerleader_squads`
+          allow read, create: if request.auth != null;
+        }
+
+        // --- PRESENCE (Active Users List) ---
+        match /active_users/{userId} { // Matches `artifacts/{appId}/public/data/active_users`
+          allow read: if request.auth != null;
+          allow write: if request.auth != null && request.auth.uid == userId;
+        }
+
+        // --- LEADERBOARD ---
+        match /leaderboard/{userId} { // Matches `artifacts/{appId}/public/data/leaderboard`
+          allow read: if request.auth != null;
+          allow update: if request.auth != null && request.auth.uid == userId;
+          allow create: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+    }
+
+    // ----------------------------------------------------------------------
+    // --- DEFAULT: DENY ALL OTHERS ---
+    //    This is the secure default. Any document or operation not
+    //    explicitly allowed by a specific 'match' rule above will be denied.
+    // ----------------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

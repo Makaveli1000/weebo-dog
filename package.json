@@ -1,9 +1,13 @@
 {
   "name": "projectsports",
   "version": "1.0.0",
-  "description": "",
+  "description": "SNTLMO Exclusive Sports Grid web application",
   "main": "env-config.js",
   "scripts": {
+    "build": "bash -c 'rm -rf dist; mkdir -p dist; sh ./build-env.sh; node esbuild.config.js; npm run tailwind:build; cp index.html dist/index.html'",
+    "start:dev": "npm run build && firebase emulators:start --only hosting",
+    "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
+    "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,5 +25,9 @@
   "dependencies": {
     "firebase": "^12.4.0",
     "qrcode.js": "^0.0.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.0",
+    "tailwindcss": "^3.0.0"
   }
 }
