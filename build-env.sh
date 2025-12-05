@@ -5,23 +5,25 @@
 
 echo "Generating env-config.js from Netlify Environment Variables..."
 
-# --- CRITICAL FIX: Ensure variables read from Netlify Environment Variables ---
-# The previous hardcoded values (like AIzaSyCVDpWCX1Ntu7Obepe9fQRsDZCVHxDI4I)
-# MUST BE REMOVED from the script file itself. They should only exist
-# in Netlify's Environment Variables settings.
+# Strip any surrounding quotes and commas from environment variables
+strip_quotes() {
+    local var="$1"
+    # Remove all quotes and trailing commas
+    var="${var//\"/}"
+    var="${var%,}"
+    echo "$var"
+}
 
-# These variables will be populated by Netlify's environment variables during build
-API_KEY="${FIREBASE_API_KEY}" # This now truly reads from Netlify Env Var
-PROJECT_ID="${FIREBASE_PROJECT_ID}" # This now truly reads from Netlify Env Var
-STORAGE_BUCKET="${FIREBASE_STORAGE_BUCKET}" # This now truly reads from Netlify Env Var
-MESSAGING_SENDER_ID="${FIREBASE_MESSAGING_SENDER_ID}" # This now truly reads from Netlify Env Var
-APP_ID="${FIREBASE_APP_ID}" # This now truly reads from Netlify Env Var
-GEMINI_KEY="${GEMINI_API_KEY}" # This now truly reads from Netlify Env Var
-# --- END CRITICAL FIX ---
+API_KEY=$(strip_quotes "$FIREBASE_API_KEY")
+PROJECT_ID=$(strip_quotes "$FIREBASE_PROJECT_ID")
+STORAGE_BUCKET=$(strip_quotes "$FIREBASE_STORAGE_BUCKET")
+MESSAGING_SENDER_ID=$(strip_quotes "$FIREBASE_MESSAGING_SENDER_ID")
+APP_ID=$(strip_quotes "$FIREBASE_APP_ID")
+GEMINI_KEY=$(strip_quotes "$GEMINI_API_KEY")
 
 # Build the JavaScript config file content
-# Output to ./env-config.js (directly in the root)
-cat > ./env-config.js << EOF
+# 🔥 CRITICAL FIX: Output to ./dist/env-config.js to match the 'dist' publishing strategy.
+cat > ./dist/env-config.js << EOF
 window.NETLIFY_FIREBASE_CONFIG = {
   "apiKey": "${API_KEY}",
   "authDomain": "${PROJECT_ID}.firebaseapp.com",
@@ -31,10 +33,10 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "appId": "${APP_ID}"
 };
 window.__app_id = "${APP_ID}";
-window.__project_id = "${PROJECT_ID}";
+window.__project_id = "${PROJECT_ID}"; # 🔥 CRITICAL FIX: Ensure this is PROJECT_ID, not APP_ID
 window.GEMINI_API_KEY = "${GEMINI_KEY}";
 EOF
 
-echo "✅ Successfully generated env-config.js with secrets."
+echo "✅ Successfully generated env-config.js in dist/."
 echo "Config preview:"
-head -5 ./env-config.js # Now showing the head of the file in the root
+head -5 ./dist/env-config.js
