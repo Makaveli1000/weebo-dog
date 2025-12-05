@@ -1,113 +1,153 @@
-// app.module.js - SNTLMO SportsGrid Main Application Logic
+// app.module.js (or your main application JavaScript file before bundling)
 
-// Firebase SDK imports
-import { initializeApp } from "firebase/app";
-// ... (rest of your Firebase imports) ...
+// =======================================================================
+// --- START: DEBUGGING CONSOLE LOGS INTEGRATED INTO YOUR APP LOGIC ---
+// =======================================================================
 
-// --- CONFIGURATION AND GLOBALS (Read from window injected by env-config.js) ---
-// CRITICAL FIX: Ensure these are ONLY read from the window object set by env-config.js
-const appId = window.__app_id; // No more '|| default-app-id', it must come from env-config.js
-console.log("appId (from window.__app_id):", appId); // DEBUG LOG
+// --- General App Flow Logging ---
+console.log("APP START: app.module.js is running.");
 
-const rawFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG; // This is the single source of truth
-console.log("rawFirebaseConfig (from window):", rawFirebaseConfig); // DEBUG LOG
+// --- Firebase Configuration Loading (from window.NETLIFY_FIREBASE_CONFIG and window.GEMINI_API_KEY) ---
+// These variables (D, h, Rn, Xt) are inferred from your bundle.js structure
+const Xt = window.__app_id; // Your app ID from env-config.js
+const D = window.NETLIFY_FIREBASE_CONFIG; // Your Firebase config object from env-config.js
+let h = null; // Variable to hold the parsed Firebase config
+const Rn = window.GEMINI_API_KEY; // Your Gemini API Key from env-config.js
 
-let firebaseConfig = null;
-if (rawFirebaseConfig) {
-    // CRITICAL FIX: Assuming env-config.js directly creates an object,
-    // so no JSON.parse needed here if it's always an object.
-    // However, keeping the JSON.parse check is safer if the script output might vary.
-    if (typeof rawFirebaseConfig === 'string') {
+console.log("appId (from window.__app_id):", Xt);
+console.log("rawFirebaseConfig (from window):", D);
+
+// Attempt to parse the Firebase config if it's a string
+if (D) {
+    if (typeof D === "string") {
         try {
-            firebaseConfig = JSON.parse(rawFirebaseConfig);
-        } catch (e) {
-            console.error("Error parsing Firebase config string:", e);
+            h = JSON.parse(D);
+            console.log("Firebase config string successfully parsed.");
+        } catch (t) {
+            console.error("Error parsing Firebase config string:", t);
+            // This error would be caught by the outer try-catch for Firebase init
         }
     } else {
-        firebaseConfig = rawFirebaseConfig; // Use directly if it's already an object
+        h = D; // Config is already an object
     }
 }
-// CRITICAL FIX: Gemini API Key also comes from window
-const GEMINI_API_KEY = window.GEMINI_API_KEY;
+console.log("Parsed firebaseConfig (h):", h);
+console.log("Gemini API Key (Rn):", Rn);
 
-console.log("Parsed firebaseConfig:", firebaseConfig); // DEBUG LOG
-
-// ... (rest of your app.module.js code) ...
-
-// --- CORE FIREBASE/GLOBAL SETUP (Updated with Error Visibility) ---
-let app = null;
-let db = null;
-let auth = null;
-let storage = null;
-let remoteConfig = null;
+// --- Global Window Variable Assignments (from your bundle.js structure) ---
 window.currentUserId = null;
 window.isLoggedIn = false;
 window.isPremium = false;
-window.nickname = 'Guest';
+window.nickname = "Guest";
 window.lockerMediaCount = 0;
-window.dbRef = {};
+window.dbRef = {}; // This is probably a placeholder for your Firestore reference
 
-const errorDisplay = document.getElementById('firebase-init-error-display');
-const errorText = document.getElementById('firebase-init-error-text');
+// --- DOM Elements for Error Display ---
+const Ln = document.getElementById("firebase-init-error-display");
+const kn = document.getElementById("firebase-init-error-text");
 
-// 🔥 CRITICAL FIX: Validate that essential configuration fields have non-empty values.
-// If config is missing, this should now be a clear error path.
-const isValidConfig = firebaseConfig &&
-                        firebaseConfig.apiKey && firebaseConfig.apiKey.length > 5 &&
-                        firebaseConfig.projectId && firebaseConfig.projectId.length > 0;
+// --- Firebase Configuration Validation ---
+// 'Be' checks if essential Firebase config properties exist and are valid
+const Be = h && h.apiKey && h.apiKey.length > 5 && h.projectId && h.projectId.length > 0;
+console.log("isValidConfig result (Be):", Be);
 
-console.log("isValidConfig result:", isValidConfig); // DEBUG LOG
 
-if (isValidConfig) {
+// --- Firebase Initialization Block ---
+let I, Qt, en, tn, nn; // Variables for Firebase App and service instances
+let serverTimestamp; // For Firestore serverTimestamp
+
+if (Be) {
+    console.log("Firebase config is valid. Attempting to initialize Firebase app and services...");
     try {
-        // ... (rest of your Firebase initialization logic) ...
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        auth = getAuth(app);
-        storage = getStorage(app);
-        remoteConfig = getRemoteConfig(app);
-        // ... (Remote Config defaults and fetch/activate logic) ...
-        window.serverTimestamp = serverTimestamp;
-    } catch (e) {
-        // ... (Error handling) ...
+        // Initialize Firebase App (using Ae as per your bundle.js structure)
+        // If your original code uses 'initializeApp' directly, replace 'Ae(h)' with 'initializeApp(h)'
+        I = Ae(h);
+        console.log("Firebase app initialized successfully (I).");
+
+        // Initialize Firebase Services
+        Qt = getFirestore(I);
+        console.log("Firestore initialized (Qt).");
+        en = getAuth(I);
+        console.log("Auth initialized (en).");
+        tn = getStorage(I);
+        console.log("Storage initialized (tn).");
+        nn = getRemoteConfig(I);
+        console.log("Remote Config initialized (nn).");
+
+        // Assign serverTimestamp (assuming it's imported or globally available)
+        // Make sure 'serverTimestamp' is properly imported/defined in your original code
+        window.serverTimestamp = serverTimestamp; 
+        console.log("window.serverTimestamp assigned.");
+
+        console.log("All Firebase services appear to be initialized.");
+
+        // --- LOADING OVERLAY MANAGEMENT ---
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+            console.log("Attempting to hide loading overlay...");
+            // YOUR ACTUAL CODE TO HIDE THE LOADING OVERLAY GOES HERE
+            // Example: loadingOverlay.classList.add('hidden');
+            // Or: loadingOverlay.style.display = 'none';
+            loadingOverlay.classList.add('hidden'); // Assuming this is your method
+            console.log("Loading overlay hide attempt completed.");
+        } else {
+            console.warn("Loading overlay element with ID 'loading-overlay' not found. Cannot hide it.");
+        }
+        // --- END LOADING OVERLAY MANAGEMENT ---
+
+        // --- Optional: Debugging Firebase Auth State Changes ---
+        // This is a very common place for an app to "start" displaying content.
+        // If your app displays content based on user login status, ensure you log inside this.
+        /*
+        // Assuming 'onAuthStateChanged' is imported/available
+        onAuthStateChanged(en, (user) => {
+            console.log("Auth state changed:", user ? user.uid : "Logged out");
+            // If your main content is revealed here, add a log
+            // const mainContent = document.getElementById('main-content');
+            // if (mainContent && user) { // Example: only show main content if logged in
+            //    mainContent.classList.remove('hidden');
+            //    console.log("Main content displayed after auth state change.");
+            // }
+            // If there's any other loading indicator that gets hidden here, log it too.
+        });
+        */
+
+    } catch (t) {
+        console.error("Firebase initialization failed with error:", t);
+        if (kn && Ln) {
+            kn.textContent = t.message;
+            Ln.classList.remove('hidden'); // Show the Firebase init error message
+        }
+        console.log("Displayed Firebase initialization error message.");
+
+        // IMPORTANT: If Firebase init fails, ensure the loading overlay is still hidden
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+            console.log("Hiding loading overlay after Firebase init error.");
+            loadingOverlay.classList.add('hidden');
+        }
     }
 } else {
-    // ... (Error handling for missing config) ...
-}
-
-// ... (rest of app.module.js) ...
-
-// --- TTS API IMPLEMENTATION ---
-function checkTtsStatus() {
-    const btn = document.getElementById('tts-button');
-    const statusDiv = document.getElementById('tts-status');
-
-    if (!btn || !statusDiv) {
-        console.warn("TTS button or status display not found.");
-        return;
+    // --- Invalid Firebase Config Error Handling ---
+    console.error("Invalid Firebase configuration. Displaying error message.");
+    if (kn && Ln) {
+        kn.textContent = "Invalid Firebase configuration. Please check your environment variables.";
+        Ln.classList.remove('hidden'); // Show config validation error message
     }
-
-    // CRITICAL FIX: Check if GEMINI_API_KEY is available
-    if (!GEMINI_API_KEY) {
-        btn.disabled = true;
-        btn.innerText = 'API Key Missing!';
-        statusDiv.classList.remove('text-gray-500');
-        statusDiv.classList.add('text-red-500', 'font-bold');
-        statusDiv.textContent = 'Status: FATAL - GEMINI_API_KEY not found';
-    } else {
-        btn.disabled = false;
-        btn.innerText = 'Announce Now!';
-        statusDiv.classList.remove('text-red-500', 'font-bold');
-        statusDiv.classList.add('text-green-600');
-        statusDiv.textContent = 'Status: READY';
+    // IMPORTANT: If config is invalid, ensure the loading overlay is hidden
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        console.log("Hiding loading overlay due to invalid Firebase config.");
+        loadingOverlay.classList.add('hidden');
     }
 }
-async function generateAndSpeak(speechText) {
-    console.log("TTS function called with:", speechText);
-    if (!GEMINI_API_KEY) {
-        alert("TTS Error: Gemini API Key is missing.");
-        return;
-    }
-    if (speechText) alert(`[TTS SIMULATED]: ${speechText}`);
-}
-// ... (rest of app.module.js) ...
+
+console.log("APP END: app.module.js execution finished.");
+
+// =======================================================================
+// --- END: DEBUGGING CONSOLE LOGS INTEGRATED INTO YOUR APP LOGIC ---
+// =======================================================================
+
+
+// --- The rest of your app.module.js logic (event listeners, functions, etc.) would follow here ---
+// ... (your existing application logic) ...
