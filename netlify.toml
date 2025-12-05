@@ -1,17 +1,13 @@
 # netlify.toml
 
 [build]
-  # CRITICAL FIX: Create a 'dist' directory first.
-  # Then run the config script to place env-config.js into 'dist'.
-  # Then copy all other static assets (index.html, app.module.js) into 'dist'.
-  command = "mkdir -p dist && chmod +x create-config.sh && ./create-config.sh && cp index.html dist/index.html && cp app.module.js dist/app.module.js"
+  # CRITICAL FIX: Simply run npm install and your comprehensive npm run build script.
+  command = "npm install && npm run build"
   
-  # CRITICAL FIX: Publish from the newly created 'dist' directory.
+  # Publish from the dist directory, which your npm run build script populates.
   publish = "dist" 
 
 [[redirects]]
-  # This rule ensures that all routes (e.g., /account, /dashboard) are 
-  # served by index.html, which is essential for a Single Page Application (SPA).
   from = "/*"
   to = "/index.html"
   status = 200

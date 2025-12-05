@@ -1,4 +1,4 @@
-// esbuild.config.js
+//	 esbuild.config.js
 const esbuild = require('esbuild');
 
 esbuild.build({

@@ -22,8 +22,8 @@ APP_ID=$(strip_quotes "$FIREBASE_APP_ID")
 GEMINI_KEY=$(strip_quotes "$GEMINI_API_KEY")
 
 # Build the JavaScript config file content
-# NOTE: The redirect operator '< EOF' uses the correct file name here
-cat > ./env-config.js << EOF
+# 🔥 CRITICAL FIX: Output to ./dist/env-config.js to match the 'dist' publishing strategy.
+cat > ./dist/env-config.js << EOF
 window.NETLIFY_FIREBASE_CONFIG = {
   "apiKey": "${API_KEY}",
   "authDomain": "${PROJECT_ID}.firebaseapp.com",
@@ -33,11 +33,10 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "appId": "${APP_ID}"
 };
 window.__app_id = "${APP_ID}";
-window.__project_id = "${APP_ID}";
+window.__project_id = "${PROJECT_ID}"; # 🔥 CRITICAL FIX: Ensure this is PROJECT_ID, not APP_ID
 window.GEMINI_API_KEY = "${GEMINI_KEY}";
 EOF
 
-echo "✅ Successfully generated env-config.js"
+echo "✅ Successfully generated env-config.js in dist/."
 echo "Config preview:"
-head -5 ./env-config.js
-# The diagnostics lines below were removed as they are no longer necessary for deployment.
+head -5 ./dist/env-config.js # 🔥 CRITICAL FIX: Preview from dist/
