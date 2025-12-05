@@ -1,6 +1,15 @@
 // app.module.js (or your main application JavaScript file before bundling)
 
 // =======================================================================
+// --- ADD ALL IMPORTS HERE AT THE VERY TOP OF THE FILE ---
+// =======================================================================
+import { initializeApp } from 'firebase/app'; // <--- THIS GOES HERE!
+import { getFirestore } from 'firebase/firestore'; // You'll likely need this one too
+import { getAuth } from 'firebase/auth';           // And this one
+import { getStorage } from 'firebase/storage';     // And this one
+import { getRemoteConfig } from 'firebase/remote-config'; // And this one
+
+// =======================================================================
 // --- START: DEBUGGING CONSOLE LOGS INTEGRATED INTO YOUR APP LOGIC ---
 // =======================================================================
 
@@ -61,7 +70,8 @@ if (Be) {
     try {
         // Initialize Firebase App (using Ae as per your bundle.js structure)
         // If your original code uses 'initializeApp' directly, replace 'Ae(h)' with 'initializeApp(h)'
-        I = Ae(h);
+        // IMPORTANT: Now you will use the actual function name: initializeApp(h);
+        I = initializeApp(h); // <--- CHANGE THIS LINE
         console.log("Firebase app initialized successfully (I).");
 
         // Initialize Firebase Services
