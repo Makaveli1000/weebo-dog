@@ -4,7 +4,7 @@
   "description": "SNTLMO Exclusive Sports Grid web application",
   "main": "env-config.js",
   "scripts": {
-  "build": "bash -c 'echo \"--- DEBUG: Environment Variables before build-env.sh --- \"; echo FIREBASE_API_KEY_VAL=$FIREBASE_API_KEY; echo FIREBASE_PROJECT_ID_VAL=$FIREBASE_PROJECT_ID; echo FIREBASE_STORAGE_BUCKET_VAL=$FIREBASE_STORAGE_BUCKET; echo FIREBASE_MESSAGING_SENDER_ID_VAL=$FIREBASE_MESSAGING_SENDER_ID; echo FIREBASE_APP_ID_VAL=$FIREBASE_APP_ID; echo GEMINI_API_KEY_VAL=$GEMINI_API_KEY; echo \"------------------------------------------------------\"; rm -rf dist; mkdir -p dist; sh ./build-env.sh; node esbuild.config.js; npm run tailwind:build; cp index.html dist/index.html; cp _redirects dist/_redirects'",
+  "build": "bash -c 'echo \"--- DEBUG: Environment Variables before build-env.sh --- \"; echo FIREBASE_API_KEY_VAL=$FIREBASE_API_KEY; echo FIREBASE_PROJECT_ID_VAL=$FIREBASE_PROJECT_ID; echo FIREBASE_STORAGE_BUCKET_VAL=$FIREBASE_STORAGE_BUCKET; echo FIREBASE_MESSAGING_SENDER_ID_VAL=$FIREBASE_MESSAGING_SENDER_ID; echo FIREBASE_APP_ID_VAL=$FIREBASE_APP_ID; echo GEMINI_API_KEY_VAL=$GEMINI_API_KEY; echo \"------------------------------------------------------\"; rm -rf dist; mkdir -p dist; ./build-env.sh; node esbuild.config.js; npm run tailwind:build; cp index.html dist/index.html; cp _redirects dist/_redirects'",
   "start:dev": "npm run build && firebase emulators:start --only hosting",
   "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
   "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
