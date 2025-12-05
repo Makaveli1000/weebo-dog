@@ -4,12 +4,13 @@
   "description": "SNTLMO Exclusive Sports Grid web application",
   "main": "env-config.js",
   "scripts": {
-  "build": "bash -c 'rm -rf dist; mkdir -p dist; sh ./build-env.sh; node esbuild.config.js; npm run tailwind:build; cp index.html dist/index.html; cp _redirects dist/_redirects'", // <--- ADDED THIS PART!
+  "build": "bash -c 'rm -rf dist; mkdir -p dist; sh ./build-env.sh; node esbuild.config.js; npm run tailwind:build; cp index.html dist/index.html; cp _redirects dist/_redirects'",
   "start:dev": "npm run build && firebase emulators:start --only hosting",
   "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
   "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
   "test": "echo \"Error: no test specified\" && exit 1"
 },
+
 
   "repository": {
     "type": "git",
