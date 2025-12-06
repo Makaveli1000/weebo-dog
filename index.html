@@ -307,11 +307,18 @@
         <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center">
             <h3 class="text-2xl font-bold text-metro-primary mb-4">Hub Login</h3>
             <p id="login-error" class="text-red-500 text-sm mb-3"></p>
-            <input type="email" id="login-email" placeholder="Email" class="w-full p-3 mb-3 border rounded-lg">
-            <input type="password" id="login-password" placeholder="Password (min 6 chars)" class="w-full p-3 mb-4 border rounded-lg">
 
-            <button id="login-auth-btn" class="w-full bg-metro-primary text-white font-bold py-3 rounded-lg hover:bg-metro-primary/80 transition mb-2">Login</button>
-            <button id="register-auth-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition mb-4">Register</button>
+            <!-- START: Added <form> tag here -->
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="Email" class="w-full p-3 mb-3 border rounded-lg">
+                <input type="password" id="login-password" placeholder="Password (min 6 chars)" class="w-full p-3 mb-4 border rounded-lg">
+
+                <!-- THIS IS THE KEY CHANGE: type="submit" -->
+                <button type="submit" id="login-auth-btn" class="w-full bg-metro-primary text-white font-bold py-3 rounded-lg hover:bg-metro-primary/80 transition mb-2">Login</button>
+                <!-- And for contrast, type="button" for Register -->
+                <button type="button" id="register-auth-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition mb-4">Register</button>
+            </form>
+            <!-- END: Added <form> tag here -->
 
             <p class="text-xs text-gray-500 mb-3">--- OR USE QR LOGIN ---</p>
             <div id="login-qrcode" class="mx-auto w-[100px] h-[100px] mb-3"></div>

@@ -8,7 +8,8 @@ import { initializeApp } from 'firebase/app';
 // I've aliased 'serverTimestamp' as 'firestoreServerTimestamp' to avoid any potential naming conflicts
 // with a local variable you might have intended named 'serverTimestamp' previously.
 import { getFirestore, serverTimestamp as firestoreServerTimestamp } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+// Import signInWithEmailAndPassword and onAuthStateChanged for authentication
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'; // Added signInWithEmailAndPassword and onAuthStateChanged
 import { getStorage } from 'firebase/storage';
 import { getRemoteConfig } from 'firebase/remote-config';
 
@@ -54,6 +55,14 @@ window.nickname = "Guest";
 window.lockerMediaCount = 0;
 window.dbRef = {}; // This is probably a placeholder for your Firestore reference
 
+// --- Declare Firebase service instances at a higher scope for accessibility ---
+let I; // Firebase App instance
+let Qt; // Firestore instance
+let en; // Auth instance
+let tn; // Storage instance
+let nn; // Remote Config instance
+// Removed 'let serverTimestamp;' as it will now be imported and used directly.
+
 // --- DOM Elements for Error Display ---
 const Ln = document.getElementById("firebase-init-error-display");
 const kn = document.getElementById("firebase-init-error-text");
@@ -65,9 +74,6 @@ console.log("isValidConfig result (Be):", Be);
 
 
 // --- Firebase Initialization Block ---
-let I, Qt, en, tn, nn; // Variables for Firebase App and service instances
-// Removed 'let serverTimestamp;' as it will now be imported and used directly.
-
 if (Be) {
     console.log("Firebase config is valid. Attempting to initialize Firebase app and services...");
     try {
@@ -78,7 +84,7 @@ if (Be) {
         // Initialize Firebase Services
         Qt = getFirestore(I); // Firestore is initialized here!
         console.log("Firestore initialized (Qt).");
-        
+
         // =======================================================================
         // --- THIS IS WHERE YOU SHOULD PLACE THE window.serverTimestamp ASSIGNMENT ---
         // It must be *after* getFirestore(I) has been called.
@@ -111,7 +117,6 @@ if (Be) {
         // This is a very common place for an app to "start" displaying content.
         // If your app displays content based on user login status, ensure you log inside this.
         /*
-        // Assuming 'onAuthStateChanged' is imported/available
         onAuthStateChanged(en, (user) => {
             console.log("Auth state changed:", user ? user.uid : "Logged out");
             // If your main content is revealed here, add a log
@@ -162,4 +167,101 @@ console.log("APP END: app.module.js execution finished.");
 
 
 // --- The rest of your app.module.js logic (event listeners, functions, etc.) would follow here ---
-// ... (your existing application logic) ...
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('login-form');
+    // It's also good practice to get the email and password inputs here
+    const loginEmailInput = document.getElementById('login-email');
+    const loginPasswordInput = document.getElementById('login-password');
+    const loginErrorDisplay = document.getElementById('login-error'); // Assuming you want to display errors here
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (event) => { // Use async for Firebase calls
+            event.preventDefault(); // IMPORTANT: This stops the page from reloading!
+            console.log("Login form submitted via JavaScript, default browser action prevented.");
+
+            // Clear previous errors
+            if (loginErrorDisplay) {
+                loginErrorDisplay.textContent = '';
+            }
+
+            const email = loginEmailInput.value;
+            const password = loginPasswordInput.value;
+
+            // Basic validation (you might have more robust validation elsewhere)
+            if (!email || !password) {
+                if (loginErrorDisplay) {
+                    loginErrorDisplay.textContent = 'Please enter both email and password.';
+                }
+                return;
+            }
+
+            // Your Firebase Authentication login logic
+            try {
+                // Use the 'en' instance (Firebase Auth) directly with signInWithEmailAndPassword
+                const userCredential = await signInWithEmailAndPassword(en, email, password);
+                const user = userCredential.user;
+                console.log("User logged in:", user.uid);
+                // Handle successful login: Close modal, update UI, redirect, etc.
+                const loginModal = document.getElementById('login-modal');
+                if (loginModal) loginModal.classList.add('hidden'); // Hide the modal
+                // Update header status, main content visibility, etc.
+                window.isLoggedIn = true; // Update global state
+                window.currentUserId = user.uid; // Update global state
+                // Potentially trigger a UI update function if you have one
+                // updateUIForAuthState(user);
+            } catch (error) {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.error("Login failed:", errorCode, errorMessage);
+                if (loginErrorDisplay) {
+                    loginErrorDisplay.textContent = `Login failed: ${errorMessage}`;
+                }
+            }
+        });
+    }
+
+    // You might still have a click listener for the 'header-auth-btn'
+    // that simply *opens* the login modal, but the actual login action
+    // would be handled by the form's submit listener.
+    const headerAuthBtn = document.getElementById('header-auth-btn');
+    if (headerAuthBtn) {
+        headerAuthBtn.addEventListener('click', () => {
+            const loginModal = document.getElementById('login-modal');
+            if (loginModal) loginModal.classList.remove('hidden'); // Show the modal
+            // Ensure email/password fields are clear when opening the modal
+            if (loginEmailInput) loginEmailInput.value = '';
+            if (loginPasswordInput) loginPasswordInput.value = '';
+            if (loginErrorDisplay) loginErrorDisplay.textContent = ''; // Clear previous errors
+        });
+    }
+
+    // And a click listener for the register button (since it's type="button")
+    const registerAuthBtn = document.getElementById('register-auth-btn');
+    if (registerAuthBtn) {
+        registerAuthBtn.addEventListener('click', () => {
+            // Your Firebase Registration logic here, e.g.,
+            // Maybe you open a different registration modal or handle it directly
+            console.log("Register button clicked. Initiating registration process.");
+            // You could potentially create a createUserWithEmailAndPassword flow here
+            // or show a dedicated registration modal.
+        });
+    }
+
+    // Your existing close button listener
+    const closeLoginModalBtn = document.getElementById('close-login-modal-btn');
+    if (closeLoginModalBtn) {
+        closeLoginModalBtn.addEventListener('click', () => {
+            const loginModal = document.getElementById('login-modal');
+            if (loginModal) loginModal.classList.add('hidden');
+            // Clear any error messages when closing
+            if (loginErrorDisplay) {
+                loginErrorDisplay.textContent = '';
+            }
+            // Clear input fields for next time
+            if (loginEmailInput) loginEmailInput.value = '';
+            if (loginPasswordInput) loginPasswordInput.value = '';
+        });
+    }
+
+    // ... any other event listeners or application logic that needs to run after DOM is ready
+});
