@@ -3,11 +3,14 @@
 // =======================================================================
 // --- ADD ALL IMPORTS HERE AT THE VERY TOP OF THE FILE ---
 // =======================================================================
-import { initializeApp } from 'firebase/app'; // <--- THIS GOES HERE!
-import { getFirestore } from 'firebase/firestore'; // You'll likely need this one too
-import { getAuth } from 'firebase/auth';           // And this one
-import { getStorage } from 'firebase/storage';     // And this one
-import { getRemoteConfig } from 'firebase/remote-config'; // And this one
+import { initializeApp } from 'firebase/app';
+// IMPORTANT: Import 'getFirestore' and 'serverTimestamp' from 'firebase/firestore'
+// I've aliased 'serverTimestamp' as 'firestoreServerTimestamp' to avoid any potential naming conflicts
+// with a local variable you might have intended named 'serverTimestamp' previously.
+import { getFirestore, serverTimestamp as firestoreServerTimestamp } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { getStorage } from 'firebase/storage';
+import { getRemoteConfig } from 'firebase/remote-config';
 
 // =======================================================================
 // --- START: DEBUGGING CONSOLE LOGS INTEGRATED INTO YOUR APP LOGIC ---
@@ -63,20 +66,27 @@ console.log("isValidConfig result (Be):", Be);
 
 // --- Firebase Initialization Block ---
 let I, Qt, en, tn, nn; // Variables for Firebase App and service instances
-let serverTimestamp; // For Firestore serverTimestamp
+// Removed 'let serverTimestamp;' as it will now be imported and used directly.
 
 if (Be) {
     console.log("Firebase config is valid. Attempting to initialize Firebase app and services...");
     try {
-        // Initialize Firebase App (using Ae as per your bundle.js structure)
-        // If your original code uses 'initializeApp' directly, replace 'Ae(h)' with 'initializeApp(h)'
-        // IMPORTANT: Now you will use the actual function name: initializeApp(h);
-        I = initializeApp(h); // <--- CHANGE THIS LINE
+        // Initialize Firebase App
+        I = initializeApp(h); // This is correct, assuming 'h' holds your Firebase config
         console.log("Firebase app initialized successfully (I).");
 
         // Initialize Firebase Services
-        Qt = getFirestore(I);
+        Qt = getFirestore(I); // Firestore is initialized here!
         console.log("Firestore initialized (Qt).");
+        
+        // =======================================================================
+        // --- THIS IS WHERE YOU SHOULD PLACE THE window.serverTimestamp ASSIGNMENT ---
+        // It must be *after* getFirestore(I) has been called.
+        // =======================================================================
+        window.serverTimestamp = firestoreServerTimestamp; // Assign the *imported serverTimestamp function itself*
+        console.log("window.serverTimestamp assigned.");
+        // =======================================================================
+
         en = getAuth(I);
         console.log("Auth initialized (en).");
         tn = getStorage(I);
@@ -84,20 +94,12 @@ if (Be) {
         nn = getRemoteConfig(I);
         console.log("Remote Config initialized (nn).");
 
-        // Assign serverTimestamp (assuming it's imported or globally available)
-        // Make sure 'serverTimestamp' is properly imported/defined in your original code
-        window.serverTimestamp = serverTimestamp; 
-        console.log("window.serverTimestamp assigned.");
-
         console.log("All Firebase services appear to be initialized.");
 
         // --- LOADING OVERLAY MANAGEMENT ---
         const loadingOverlay = document.getElementById('loading-overlay');
         if (loadingOverlay) {
             console.log("Attempting to hide loading overlay...");
-            // YOUR ACTUAL CODE TO HIDE THE LOADING OVERLAY GOES HERE
-            // Example: loadingOverlay.classList.add('hidden');
-            // Or: loadingOverlay.style.display = 'none';
             loadingOverlay.classList.add('hidden'); // Assuming this is your method
             console.log("Loading overlay hide attempt completed.");
         } else {
