@@ -40,7 +40,7 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "storageBucket": "${STORAGE_BUCKET}",
   "messagingSenderId": "${MESSAGING_SENDER_ID}",
   "appId": "${APP_ID}",
-  "measurementId": "${MEASUREMENT_ID}" # <--- NEW LINE
+  "measurementId": "${MEASUREMENT_ID}"
 };
 window.__app_id = "${APP_ID}";
 window.__project_id = "${PROJECT_ID}";
