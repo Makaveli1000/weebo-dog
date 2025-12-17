@@ -17,6 +17,7 @@ PROJECT_ID=$(strip_quotes "$FIREBASE_PROJECT_ID")
 STORAGE_BUCKET=$(strip_quotes "$FIREBASE_STORAGE_BUCKET")
 MESSAGING_SENDER_ID=$(strip_quotes "$FIREBASE_MESSAGING_SENDER_ID")
 APP_ID=$(strip_quotes "$FIREBASE_APP_ID")
+MEASUREMENT_ID=$(strip_quotes "$FIREBASE_MEASUREMENT_ID") # <--- NEW LINE
 GEMINI_KEY=$(strip_quotes "$GEMINI_API_KEY")
 
 echo "--- Debugging env-config.js variable values ---"
@@ -25,7 +26,8 @@ echo "PROJECT_ID=$PROJECT_ID"
 echo "STORAGE_BUCKET=$STORAGE_BUCKET"
 echo "MESSAGING_SENDER_ID=$MESSAGING_SENDER_ID"
 echo "APP_ID=$APP_ID"
-echo "GEMINI_KEY=$GEMINI_KEY" # This is the variable suspected to cause the issue
+echo "MEASUREMENT_ID=$MEASUREMENT_ID" # <--- NEW LINE
+echo "GEMINI_KEY=$GEMINI_KEY"
 echo "----------------------------------------------"
 
 # Build the JavaScript config file content
@@ -37,7 +39,8 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "projectId": "${PROJECT_ID}",
   "storageBucket": "${STORAGE_BUCKET}",
   "messagingSenderId": "${MESSAGING_SENDER_ID}",
-  "appId": "${APP_ID}"
+  "appId": "${APP_ID}",
+  "measurementId": "${MEASUREMENT_ID}" # <--- NEW LINE
 };
 window.__app_id = "${APP_ID}";
 window.__project_id = "${PROJECT_ID}";
