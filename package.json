@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "bash -c 'set -e; rm -rf dist; mkdir -p dist; ./build-env.sh; echo \"--- DEBUG: Contents of dist/ after env-config.js generation ---\"; ls -la dist/; node esbuild.config.js; echo \"--- DEBUG: Contents of dist/ after esbuild.config.js execution ---\"; ls -la dist/; echo \"--- DEBUG: First 10 lines of bundle.js (if it exists) ---\"; if [ -f dist/bundle.js ]; then head -n 10 dist/bundle.js; else echo \"dist/bundle.js not found!\"; fi; npm run tailwind:build; cp index.html dist/index.html; cp _redirects dist/_redirects'",
-    "start:dev": "npm run build && firebase emulators:start --only hosting",
-    "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
+    "build": "bash -c 'set -e; rm -rf dist; mkdir -p dist; ./build-env.sh; node esbuild.config.js; npm run tailwind:build; cp index.html dist/index.html; cp _redirects dist/_redirects'",
+    "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify"
+  },
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
