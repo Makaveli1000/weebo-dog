@@ -10,16 +10,14 @@
   # --- START DIAGNOSTIC: TEMPORARY ENVIRONMENT VARIABLES ---
   # THIS SECTION IS FOR DIAGNOSIS ONLY.
   # If your repository is PUBLIC, REMOVE THESE AFTER DIAGNOSIS.
-  environment = {
-    FIREBASE_API_KEY = "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
-    FIREBASE_APP_ID = "1:735791748207:web:74fd6412684db238b6e99a",
-    FIREBASE_AUTH_DOMAIN = "sntlmoexclusivesportsgrid.firebaseapp.com",
-    FIREBASE_MEASUREMENT_ID = "G-T8RJPDPL4G",
-    FIREBASE_MESSAGING_SENDER_ID = "735791748207",
-    FIREBASE_PROJECT_ID = "sntlmoexclusivesportsgrid",
-    FIREBASE_STORAGE_BUCKET = "sntlmoexclusivesportsgrid.firebasestorage.app",
-    GEMINI_API_KEY = "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs" # Ensure this is your correct Gemini key
-  }
+  FIREBASE_API_KEY = "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs"
+  FIREBASE_APP_ID = "1:735791748207:web:74fd6412684db238b6e99a"
+  FIREBASE_AUTH_DOMAIN = "sntlmoexclusivesportsgrid.firebaseapp.com"
+  FIREBASE_MEASUREMENT_ID = "G-T8RJPDPL4G"
+  FIREBASE_MESSAGING_SENDER_ID = "735791748207"
+  FIREBASE_PROJECT_ID = "sntlmoexclusivesportsgrid"
+  FIREBASE_STORAGE_BUCKET = "sntlmoexclusivesportsgrid.firebasestorage.app"
+  GEMINI_API_KEY = "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs" # Ensure this is your correct Gemini key
   # --- END DIAGNOSTIC: TEMPORARY ENVIRONMENT VARIABLES ---
 
 [[redirects]]
