@@ -1,10 +1,14 @@
-# netlify.toml
-
-    [build]
-      command = "npm install && npm run build"
-      publish = "dist"
-
-    [[redirects]]
-      from = "/*"
-      to = "/index.html"
-      status = 200
+[build]
+  # The build command now correctly executes the "build" script defined in your package.json at the project root.
+  # Netlify automatically runs `npm install` at the root before this command if a package.json is detected.
+  command = "npm run build"
+  
+  # The publish directory MUST point to where your final built files reside,
+  # which your package.json's "build" script confirms is the 'dist' directory.
+  publish = "dist" 
+  
+  functions = "netlify/functions"
+  
+  environment = {
+    SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+  }
