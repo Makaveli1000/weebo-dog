@@ -438,35 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Other initializations (e.g., QR Code generation) ---
-    // Make sure qrcode.js library is loaded and QR code generation happens after DOMContentLoaded
-    if (typeof QRCode !== 'undefined') {
-        const loginQrcodeContainer = document.getElementById('login-qrcode');
-        if (loginQrcodeContainer) {
-            new QRCode(loginQrcodeContainer, {
-                text: "https://your-app-domain.com/login-redirect?qr=true", // Replace with your actual QR login URL
-                width: 100,
-                height: 100,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-        }
-        const cashappQrcodeContainer = document.getElementById('cashapp-qrcode');
-        if (cashappQrcodeContainer) {
-            new QRCode(cashappQrcodeContainer, {
-                text: "$Mac100dime",
-                width: 180,
-                height: 180,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-        }
-    } else {
-        console.warn("DEBUG: qrcode.js library not loaded. QR code generation will not work.");
-    }
-
+    
     // Initialize any other UI components that don't depend on auth state
     const mainContent = document.getElementById('main-content');
     const paywallContent = document.getElementById('paywall-content');
