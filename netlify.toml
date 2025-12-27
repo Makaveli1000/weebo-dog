@@ -1,18 +1,13 @@
 # netlify.toml
 
-    [build]
-      command = "npm install && npm run build" # Clean command again
-      publish = "dist"
+[build]
+  # Inject environment variables directly into the command for this build.
+  # This should bypass Netlify's build.environment redaction/issue and ensure config.
+  command = "FIREBASE_API_KEY='AIzaSyCmw-PBDUuktgyW7vZHEfsHYVzcoKIBkGk' FIREBASE_APP_ID='1:735791748207:web:74fd6412684db238b6e99a' FIREBASE_AUTH_DOMAIN='sntlmoexclusivesportsgrid.firebaseapp.com' FIREBASE_MEASUREMENT_ID='G-T8RJPDPL4G' FIREBASE_MESSAGING_SENDER_ID='735791748207' FIREBASE_PROJECT_ID='sntlmoexclusivesportsgrid' FIREBASE_STORAGE_BUCKET='sntlmoexclusivesportsgrid.firebasestorage.app' GEMINI_API_KEY='AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs' npm install && npm run build"
+  
+  publish = "dist" 
 
-      # This section is now the proper place for environment variables,
-      # whether sensitive or not.
-      # Netlify UI environment variables usually take precedence over this,
-      # but we'll try to ensure they are available to your script via the UI.
-      # We will rely on the Netlify UI variables to be set correctly.
-      # If this still doesn't work, we'll need to use [build.environment] to override Netlify UI.
-
-    [[redirects]]
-      from = "/*"
-      to = "/index.html"
-      status = 200
-   
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
