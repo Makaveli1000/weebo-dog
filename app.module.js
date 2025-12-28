@@ -3,10 +3,10 @@
 // =======================================================================
 // --- ADD ALL IMPORTS HERE AT THE VERY TOP OF THE FILE ---
 // =======================================================================
-// Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
-import { getFirestore, serverTimestamp as firestoreServerTimestamp, doc, getDoc } from 'firebase/firestore';
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, validatePassword, createUserWithEmailAndPassword, updatePassword, signOut } from 'firebase/auth';
+// Ensure setDoc is imported for creating user profiles
+import { getFirestore, serverTimestamp, doc, getDoc, setDoc } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, createUserWithEmailAndPassword, updatePassword, signOut } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import { getRemoteConfig } from 'firebase/remote-config';
 
@@ -37,6 +37,12 @@ let app;
 let auth;
 let db;
 
+// Define your Admin User ID - MUST match the UID in your Firebase Authentication and Firestore rules.
+// Be careful not to expose this in client-side code if it needs to be highly secret,
+// but for checking a specific UID, it's commonly used this way.
+const ADMIN_USER_ID = "05806734626095127961";
+
+
 // Function to hide the loading overlay (declared early for accessibility)
 function hideLoadingOverlay() {
     const loadingOverlay = document.getElementById('loading-overlay');
@@ -44,6 +50,51 @@ function hideLoadingOverlay() {
         loadingOverlay.classList.add('hidden');
     }
 }
+
+// Helper function to update UI based on user profile data
+async function showContentBasedOnProfile(profileData, uid) {
+    const accountPremiumStatusSpan = document.getElementById('account-premium-status');
+    const accountNicknameInput = document.getElementById('account-nickname');
+    const mainContent = document.getElementById('main-content');
+    const paywallContent = document.getElementById('paywall-content');
+
+    let hasAccess = false;
+
+    if (profileData.isPro) {
+        hasAccess = true;
+        console.log("DEBUG: User is PRO member.");
+    } else if (profileData.freeAccessGranted && profileData.freeAccessStartTime) {
+        // Check if free access time has not expired (10 minutes)
+        const tenMinutesInMillis = 10 * 60 * 1000;
+        // Handle Firestore Timestamp or Date.getTime() or Date objects
+        const freeAccessStartTimeMillis = profileData.freeAccessStartTime.toMillis ? profileData.freeAccessStartTime.toMillis() : profileData.freeAccessStartTime;
+        const freeAccessEndTime = freeAccessStartTimeMillis + tenMinutesInMillis;
+        
+        if (Date.now() < freeAccessEndTime) {
+            hasAccess = true;
+            console.log("DEBUG: User has free access remaining.");
+        } else {
+            console.log("DEBUG: Free access period expired for UID:", uid);
+        }
+    }
+
+    if (hasAccess) {
+        if (paywallContent) paywallContent.classList.add('hidden');
+        if (mainContent) mainContent.classList.remove('hidden');
+    } else {
+        if (paywallContent) paywallContent.classList.remove('hidden');
+        if (mainContent) mainContent.classList.add('hidden');
+    }
+
+    // Update Account Modal UI if elements exist
+    if (accountPremiumStatusSpan) {
+        accountPremiumStatusSpan.textContent = profileData.isPro ? 'PRO MEMBER' : 'STANDARD';
+        if (profileData.isPro) accountPremiumStatusSpan.classList.add('text-green-600');
+        else accountPremiumStatusSpan.classList.remove('text-green-600');
+    }
+    if (accountNicknameInput) accountNicknameInput.value = profileData.nickname || '';
+}
+
 
 // Check if firebaseConfig is valid before initializing
 if (!firebaseConfig || Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
@@ -95,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accountPasswordError = document.getElementById('account-password-error');
     const updatePasswordBtn = document.getElementById('update-password-btn');
     const loginModal = document.getElementById('login-modal');
-    const showSignupBtn = document.getElementById('show-signup'); // NEW: Get the "Sign Up" button
+    const showSignupBtn = document.getElementById('show-signup'); // Get the "Sign Up" button
 
 
     // Set initial window properties
@@ -140,27 +191,54 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (db) { // Ensure db is initialized before using
                     try {
                         // Using firebaseConfig.appId as the 'artifacts' sub-collection ID
-                        // The `firebaseConfig` object will be available here due to hoisting/scope
                         const userProfileDocRef = doc(db, 'artifacts', firebaseConfig.appId, 'users', user.uid, 'profile', 'info');
                         const userProfileSnap = await getDoc(userProfileDocRef);
-                        const accountPremiumStatusSpan = document.getElementById('account-premium-status');
-                        const accountNicknameInput = document.getElementById('account-nickname');
 
-                        if (userProfileSnap.exists()) {
+                        // Determine if the current user is the admin
+                        const isAdminUser = (user.uid === ADMIN_USER_ID);
+
+                        if (!userProfileSnap.exists()) {
+                            console.log("DEBUG: User profile document not found. Creating default profile for UID:", user.uid);
+                            
+                            // Create a default profile document if it doesn't exist
+                            await setDoc(userProfileDocRef, {
+                                uid: user.uid,
+                                email: user.email,
+                                nickname: 'New User',
+                                isPro: isAdminUser, // Set isPro based on admin check
+                                tourCompleted: false,
+                                freeAccessGranted: !isAdminUser, // Grant free access if NOT admin
+                                freeAccessStartTime: isAdminUser ? null : serverTimestamp(), // Set start time only for non-admins
+                                createdAt: serverTimestamp()
+                            });
+
+                            // Create a local representation of the profile data for immediate use
+                            // Use Date.now() for freeAccessStartTime if not admin, for client-side comparison
+                            const defaultProfileData = {
+                                uid: user.uid,
+                                email: user.email,
+                                nickname: 'New User',
+                                isPro: isAdminUser,
+                                tourCompleted: false,
+                                freeAccessGranted: !isAdminUser,
+                                freeAccessStartTime: isAdminUser ? null : Date.now(),
+                                createdAt: Date.now()
+                            };
+                            await showContentBasedOnProfile(defaultProfileData, user.uid); // Call helper function
+                            console.log(`DEBUG: Default user profile created. Is Admin: ${isAdminUser}, Is Pro: ${isAdminUser}, Free Access Granted: ${!isAdminUser}.`);
+
+                        } else {
+                            // EXISTING CODE: Profile exists, fetch and use it
                             const profileData = userProfileSnap.data();
                             console.log("DEBUG: User profile data from Firestore:", profileData);
-                            if (accountPremiumStatusSpan) {
-                                accountPremiumStatusSpan.textContent = profileData.isPro ? 'PRO MEMBER' : 'STANDARD';
-                                if (profileData.isPro) accountPremiumStatusSpan.classList.add('text-green-600');
-                                else accountPremiumStatusSpan.classList.remove('text-green-600');
-                            }
-                            if (accountNicknameInput) accountNicknameInput.value = profileData.nickname || '';
-                        } else {
-                             if (accountPremiumStatusSpan) accountPremiumStatusSpan.textContent = 'STANDARD';
-                             console.log("DEBUG: User profile document not found in Firestore for UID:", user.uid);
+                            await showContentBasedOnProfile(profileData, user.uid); // Call helper function
                         }
+
                     } catch (error) {
-                        console.error("DEBUG: Error fetching user profile from Firestore:", error);
+                        console.error("DEBUG: Error fetching or creating user profile from Firestore:", error);
+                        // If there's an error, assume no access and show paywall
+                        if (paywallContent) paywallContent.classList.remove('hidden');
+                        if (mainContent) mainContent.classList.add('hidden');
                     }
                 }
 
@@ -173,6 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (loginModal) loginModal.classList.add('hidden');
                 if (accountModal) accountModal.classList.add('hidden');
+
+                // If user is signed out, show paywall
+                const mainContent = document.getElementById('main-content'); // Ensure these are defined here too
+                const paywallContent = document.getElementById('paywall-content'); // in case they were not globally accessible
+                if (paywallContent) paywallContent.classList.remove('hidden');
+                if (mainContent) mainContent.classList.add('hidden');
             }
             hideLoadingOverlay(); // Hide the loading overlay once auth state is determined
         });
@@ -192,6 +276,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // If auth was not initialized, hide overlay anyway
         console.warn("DEBUG: Firebase Auth not initialized, onAuthStateChanged listener skipped.");
         hideLoadingOverlay();
+        // Also show paywall if auth not initialized
+        const mainContent = document.getElementById('main-content');
+        const paywallContent = document.getElementById('paywall-content');
+        if (paywallContent) paywallContent.classList.remove('hidden');
+        if (mainContent) mainContent.classList.add('hidden');
     }
 
 
@@ -331,7 +420,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- "Sign Up" Link Listener --- (NEWLY ADDED BLOCK)
+    // --- "Sign Up" Link Listener ---
     if (showSignupBtn) { // Only set up if the button element actually exists
         showSignupBtn.addEventListener('click', () => {
             // Clear any previous login errors
@@ -431,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (error.code === 'auth/requires-recent-login') {
                          accountPasswordError.textContent = 'This is a security-sensitive operation. Please log out and log back in, then try changing your password again.';
                     } else {
-                        accountPasswordError.textContent = `Error updating password: ${e.message}`;
+                        accountPasswordError.textContent = `Error updating password: ${error.message}`;
                     }
                 }
             } else {
