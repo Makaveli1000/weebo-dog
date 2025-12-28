@@ -6,7 +6,6 @@
     <title>Snt.L.Mo. Exclusive Sports Hub</title>
 
     <!-- Load Firebase configuration from environment variables -->
-    <!-- This MUST be loaded BEFORE your main application bundle (bundle.js) -->
     <script src="env-config.js"></script>
 
     <!-- Tailwind CSS output -->
@@ -135,8 +134,12 @@
         <section id="tts-section" class="mb-12">
             <h2 class="text-2xl font-bold text-metro-primary mb-6">Zeus Voice</h2>
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <textarea id="tts-input" class="w-full border border-gray-300 rounded-lg p-4 mb-4 resize-none" rows="4" placeholder="Enter text for Zeus to speak..."></textarea>
-                <button id="tts-button" disabled>Speak</button>
+                <!-- Text area pre-filled with the message -->
+                <textarea id="tts-input" class="w-full border border-gray-300 rounded-lg p-4 mb-4 resize-none" rows="4">Good day everyone and welcome athletes coaches supporters and sports fans from around the world Today, we are proud to welcome you to SNT L MO EXCLUSIVE SPORTS GRID  a place built for passion talent and opportunity This is more than just a platform its a global sports community where dedication meets visibility and dreams begin to take shape Inside youll find differet categories of sports bringing together athletes from all backgrounds and skill levels No matter what sport you play and love there is a space here for you This is where your hard work discipline and commitment finally get the spotlight they deserve Here you can upload your highlight share your achievements showcase your journey You can connect communicate and have real conversations with other athletes fans and professionals who share the same passion for sports Learn from each other support one another and grow together as a community Most importantly this platform gives you worldwide exposure Your talent can be seen by recruiteres professionals high schools colleges and organizations across the globe Whether youre chasing a scholarship a professional opportunity or simply aiming to be recognized this is your stage Every great journy starts with a single step Today that step is right here So log in explore the grid share your story and let the world see what youre capable of </textarea>
+                <!-- TTS button is no longer disabled by default -->
+                <button id="tts-button">Speak</button>
+                <!-- Add an audio element for background sound -->
+                <audio id="thunder-audio" src="/audio/thunder.mp3" loop preload="auto" volume="0.5"></audio>
             </div>
         </section>
     </main>
@@ -209,7 +212,6 @@
     </div>
 
     <!-- This script tag will load your bundled JavaScript -->
-    <!-- It must be loaded AFTER env-config.js for Firebase config to be available -->
     <script src="/bundle.js"></script>
 </body>
 </html>
