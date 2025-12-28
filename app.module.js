@@ -3,6 +3,7 @@
 // =======================================================================
 // --- ADD ALL IMPORTS HERE AT THE VERY TOP OF THE FILE ---
 // =======================================================================
+// Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
 import { getFirestore, serverTimestamp as firestoreServerTimestamp, doc, getDoc } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, validatePassword, createUserWithEmailAndPassword, updatePassword, signOut } from 'firebase/auth';
@@ -94,6 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const accountPasswordError = document.getElementById('account-password-error');
     const updatePasswordBtn = document.getElementById('update-password-btn');
     const loginModal = document.getElementById('login-modal');
+    const showSignupBtn = document.getElementById('show-signup'); // NEW: Get the "Sign Up" button
+
 
     // Set initial window properties
     window.isLoggedIn = false;
@@ -328,6 +331,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- "Sign Up" Link Listener --- (NEWLY ADDED BLOCK)
+    if (showSignupBtn) { // Only set up if the button element actually exists
+        showSignupBtn.addEventListener('click', () => {
+            // Clear any previous login errors
+            if (loginErrorDisplay) {
+                loginErrorDisplay.textContent = 'Enter your email and a new password, then click "Register" to create an account.';
+                // Change error text color to green for a helpful message
+                loginErrorDisplay.classList.remove('text-red-500');
+                loginErrorDisplay.classList.add('text-green-500');
+            }
+
+            // Clear email and password fields for a fresh registration attempt
+            if (loginEmailInput) {
+                loginEmailInput.value = '';
+                loginEmailInput.focus(); // Immediately focus on the email input for user convenience
+            }
+            if (loginPasswordInput) {
+                loginPasswordInput.value = '';
+            }
+            // Ensure the login modal is visible in case it was hidden for some reason
+            if (loginModal) {
+                loginModal.classList.remove('hidden');
+            }
+        });
+    }
+
+
     // *** Account button event listener ***
     if (accountBtn) {
         accountBtn.addEventListener('click', () => {
@@ -401,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else if (error.code === 'auth/requires-recent-login') {
                          accountPasswordError.textContent = 'This is a security-sensitive operation. Please log out and log back in, then try changing your password again.';
                     } else {
-                        accountPasswordError.textContent = `Error updating password: ${error.message}`;
+                        accountPasswordError.textContent = `Error updating password: ${e.message}`;
                     }
                 }
             } else {
