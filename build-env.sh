@@ -78,8 +78,8 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "appId": "${APP_ID}",
   "measurementId": "${MEASUREMENT_ID}"
 };
-window.__app_id = "${APP_ID}"; # Exposing for potential global access if needed
-window.__project_id = "${PROJECT_ID}"; # Exposing for potential global access if needed
+window.__app_id = "${APP_ID}";
+window.__project_id = "${PROJECT_ID}";
 window.GEMINI_API_KEY = "${GEMINI_KEY}";
 EOF
 
