@@ -1,11 +1,7 @@
 [build]
-  # The build command now correctly executes the "build" script defined in your package.json at the project root.
-  # Netlify automatically runs `npm install` at the root before this command if a package.json is detected.
-  command = "npm run build" # <<<--- NOW WITH DOUBLE QUOTES!
-  
-  # The publish directory MUST point to where your final built files reside,
-  # which your package.json's "build" script confirms is the 'dist' directory.
-  publish = "dist" # <<<--- NOW WITH DOUBLE QUOTES!
+  # CRITICAL: These values MUST be enclosed in double quotes for valid TOML syntax.
+  command = "npm run build"
+  publish = "dist" 
   
   functions = "netlify/functions"
   
