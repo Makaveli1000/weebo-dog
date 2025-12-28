@@ -40,7 +40,7 @@ let db;
 // Define your Admin User ID - MUST match the UID in your Firebase Authentication and Firestore rules.
 // Be careful not to expose this in client-side code if it needs to be highly secret,
 // but for checking a specific UID, it's commonly used this way.
-const ADMIN_USER_ID = "05806734626095127961";
+const ADMIN_USER_ID = "cEQQHNVXPQfXFhOzO1xBXW";
 
 
 // Function to hide the loading overlay (declared early for accessibility)
