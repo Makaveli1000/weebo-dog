@@ -1,11 +1,33 @@
 [build]
-  # CRITICAL: These values MUST be enclosed in double quotes for valid TOML syntax.
-  command = "npm run build"
-  publish = "dist" 
-  
-  # FIX: The value for 'functions' must also be a quoted string.
-  functions = "netlify/functions" # <<<--- THIS IS THE FIX
-  
-  environment = {
-    SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
-  }
+      # The command that Netlify will run to build your project.
+      # This executes the "build" script defined in your package.json at the project root.
+      # Netlify automatically runs `npm install` at the root before this command if a package.json is detected.
+      command = "npm run build"
+      
+      # The directory containing your final, built static assets that Netlify should publish.
+      # Your package.json's "build" script confirms this is the 'dist' directory.
+      publish = "dist" 
+      
+      # The directory where your Netlify Functions are located.
+      functions = "netlify/functions"
+
+    # This defines environment variables specifically for the build process.
+    # This is the correct TOML syntax for a sub-table within the [build] section.
+    [build.environment]
+      SECRETS_SCAN_SMART_DETECTION_ENABLED = "false" # Example environment variable for the build
+      # You can add other build-specific environment variables here if needed.
+
+    # You can add global environment variables that are available to both the build and functions here.
+    # [context.production.environment]
+    #   MY_GLOBAL_VAR = "production_value"
+
+    # If you need redirects, they would be defined outside the [build] section, for example:
+    # [[redirects]]
+    #   from = "/*"
+    #   to = "/index.html"
+    #   status = 200
+
+    # Other contexts (like deploy previews or branches) can be defined here if needed:
+    # [context.deploy-preview]
+    #   command = "npm run build:preview"
+    #   publish = "dist"
