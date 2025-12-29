@@ -148,6 +148,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginModal = document.getElementById('login-modal');
     const showSignupBtn = document.getElementById('show-signup'); // Get the "Sign Up" button
 
+// <<< NEW TTS/AUDIO CODE HERE >>>
+    // NEW: Get elements for TTS and Audio
+    const ttsInput = document.getElementById('tts-input');
+    const ttsButton = document.getElementById('tts-button');
+    const thunderAudio = document.getElementById('thunder-audio');
+
+    // Initialize SpeechSynthesis API
+    const synth = window.speechSynthesis;
+    let zeusVoice = null; // To store the selected voice for Zeus
+
+    // Function to set Zeus's voice
+    function setZeusVoice() {
+        if (!synth) {
+            console.warn("DEBUG: SpeechSynthesis API not supported in this browser.");
+            if (ttsButton) ttsButton.disabled = true; // Disable button if not supported
+            return;
+        }
+
+        const voices = synth.getVoices();
+        if (voices.length === 0) {
+            console.log("DEBUG: No voices available yet, waiting for onvoiceschanged.");
+            return;
+        }
+
+        // Try to find a deep, powerful-sounding male voice.
+        zeusVoice = voices.find(voice => 
+            voice.lang.startsWith('en') && 
+            (voice.name.includes('Google US English') || voice.name.includes('Alex') || voice.name.includes('Daniel') || voice.name.includes('Zira') || voice.name.includes('पुरुष') ) &&
+            (voice.name.toLowerCase().includes('male') || !voice.name.toLowerCase().includes('female'))
+        );
+
+        // Fallback to a default English voice if a specific "Zeus" voice isn't found
+        if (!zeusVoice) {
+            zeusVoice = voices.find(voice => voice.lang === 'en-US' || voice.lang === 'en-GB') || voices[0];
+        }
+        
+        if (zeusVoice) {
+            console.log("DEBUG: Zeus Voice set to:", zeusVoice.name);
+            if (ttsButton) ttsButton.disabled = false; // Enable button once voice is set
+        } else {
+            console.warn("DEBUG: Could not find a suitable Zeus voice. Speech synthesis might not work.");
+            if (ttsButton) ttsButton.disabled = true;
+        }
+    }
+
+    // Load voices after they are available (they load asynchronously)
+    if (synth) {
+        synth.onvoiceschanged = setZeusVoice;
+        // Call setZeusVoice immediately. If voices aren't loaded, it will return early and
+        // onvoiceschanged will call it again when they are ready.
+        setZeusVoice(); 
+    } else {
+        console.warn("DEBUG: SpeechSynthesis API not available.");
+        if (ttsButton) ttsButton.disabled = true;
+    }
+    // <<< END NEW TTS/AUDIO CODE >>>
+
 
     // Set initial window properties
     window.isLoggedIn = false;
