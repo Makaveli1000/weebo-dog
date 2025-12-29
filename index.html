@@ -149,13 +149,12 @@
         <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4 relative">
             <h2 class="text-2xl font-bold text-metro-primary mb-6 text-center">Login to Zeus Hub</h2>
             <form id="login-form">
-                <input type="email" id="login-email" class="w-full border border-gray-300 rounded-lg p-3 mb-4" placeholder="Email" required>
-                <input type="password" id="login-password" class="w-full border border-gray-300 rounded-lg p-3 mb-4" placeholder="Password" required>
+                <input type="email" id="login-email" class="w-full border border-gray-300 rounded-lg p-3 mb-4" placeholder="Email" required autocomplete="username">
+                <input type="password" id="login-password" class="w-full border border-gray-300 rounded-lg p-3 mb-4" placeholder="Password" required autocomplete="current-password">
                 <p id="login-error" class="text-red-500 text-sm mb-4"></p>
                 <button type="submit" class="w-full bg-metro-primary text-white py-3 rounded-lg font-semibold hover:bg-blue-800 transition mb-3">Login</button>
                 <button type="button" id="register-auth-btn" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">Register</button>
-            </form>
-            <p class="text-center text-gray-500 mt-4">Don't have an account? <button id="show-signup" class="text-metro-primary underline">Sign Up</button></p>
+            </form>            <p class="text-center text-gray-500 mt-4">Don't have an account? <button id="show-signup" class="text-metro-primary underline">Sign Up</button></p>
             <button id="close-login-modal-btn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
         </div>
     </div>
