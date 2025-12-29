@@ -524,8 +524,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // *** Change Password functionality ***
-    if (updatePasswordBtn && auth) { // Ensure auth is initialized before attaching listener
-        updatePasswordBtn.addEventListener('click', async (event) => {
+    // (This is the block you're looking for, now updated to listen to the form's submit event)
+    const updatePasswordForm = document.getElementById('update-password-form'); // This line was added
+    if (updatePasswordForm && auth) { // Changed from updatePasswordBtn to updatePasswordForm
+        updatePasswordForm.addEventListener('submit', async (event) => { // Changed from 'click' to 'submit'
             event.preventDefault();
 
             accountPasswordError.textContent = '';
@@ -585,7 +587,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
     // *** Close Account Modal button listener ***
     const closeAccountModalBtn = document.getElementById('close-account-modal-btn');
     if (closeAccountModalBtn) {
