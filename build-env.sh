@@ -77,7 +77,9 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "messagingSenderId": "${MESSAGING_SENDER_ID}",
   "appId": "${APP_ID}",
   "measurementId": "${MEASUREMENT_ID}"
-};
+}; 
+EOF
+
 window.__app_id = "${APP_ID}";
 window.__project_id = "${PROJECT_ID}";
 window.GEMINI_API_KEY = "${GEMINI_KEY}";
