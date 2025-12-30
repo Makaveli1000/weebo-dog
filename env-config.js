@@ -78,10 +78,16 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "appId": "${APP_ID}",
   "measurementId": "${MEASUREMENT_ID}"
 };
-window.__app_id = "${APP_ID}"; # Exposing for potential global access if needed
-window.__project_id = "${PROJECT_ID}"; # Exposing for potential global access if needed
-window.GEMINI_API_KEY = "${GEMINI_KEY}";
-EOF
+window.NETLIFY_FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+  measurementId: ""
+};
+window.GEMINI_API_KEY = "";
 
 echo "✅ Successfully generated env-config.js in dist/."
 # You can optionally print the content of the generated file to the build logs
