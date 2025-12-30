@@ -142,10 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const accountModal = document.getElementById('account-modal');
     const accountNewPasswordInput = document.getElementById('account-new-password'); // This ID is now correct in index.html
     const accountPasswordError = document.getElementById('account-password-error');
-    // const updatePasswordBtn = document.getElementById('update-password-btn'); // REMOVED: No longer used directly for event listener
-    const loginModal = document.getElementById('login-modal');
-    const showSignupBtn = document.getElementById('show-signup'); // Get the "Sign Up" button
-    const updatePasswordForm = document.getElementById('update-password-form'); // NEW: Get the form element
+        const loginModal = document.getElementById('login-modal');
+    const showSignupBtn = document.getElementById('show-signup'); // Get the "Sign Up" button // This is the FIRST declaration of updatePasswordForm, which is correct
+        const updatePasswordForm = document.getElementById('update-password-form'); //  NEW: Get the form element
     const accountEmailForPasswordChange = document.getElementById('account-email-for-password-change'); // NEW: For password form
 
 
@@ -540,11 +539,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // *** Change Password functionality ***
     // (This block has been updated to use the new form structure)
-    // First, ensure you fetch the new form element
-    const updatePasswordForm = document.getElementById('update-password-form'); // <--- NEW LINE: Get the form element
-
-    if (updatePasswordForm && auth) { // <--- CHANGED: Condition now checks for the form
-        updatePasswordForm.addEventListener('submit', async (event) => { // <--- CHANGED: Listen to the 'submit' event of the form
+    // updatePasswordForm is already declared at the top of DOMContentLoaded where other elements are fetched.
+    
+    if (updatePasswordForm && auth) { // Condition now checks for the form
+        updatePasswordForm.addEventListener('submit', async (event) => { // Listen to the 'submit' event of the form
             event.preventDefault(); // Prevent default form submission behavior
 
             accountPasswordError.textContent = '';
