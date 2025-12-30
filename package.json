@@ -1,10 +1,13 @@
 {
   "name": "projectsports",
   "version": "1.0.0",
-  "description": "",
+  "description": "Zeus Portal Sports App",
   "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
   "scripts": {
-    "build": "mkdir -p dist/audio && node esbuild.config.js && npm run tailwind:build && cp -f index.html dist/index.html && cp -f _redirects dist/_redirects && cp -f favicon.ico dist/favicon.ico && cp -f thunder.mp3 dist/audio/thunder.mp3 && cp -f ambient.mp3 dist/audio/ambient.mp3",
+    "build": "chmod +x build-env.sh && ./build-env.sh && node esbuild.config.js && npm run tailwind:build && mkdir -p dist/audio && cp -f index.html dist/index.html && cp -f _redirects dist/_redirects && cp -f favicon.ico dist/favicon.ico && cp -f thunder.mp3 dist/audio/thunder.mp3 && cp -f ambient.mp3 dist/audio/ambient.mp3",
     "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,10 +16,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "firebase": "^10.12.2"
+    "firebase": "^11.1.0"
   },
   "devDependencies": {
-    "esbuild": "^0.21.5",
-    "tailwindcss": "^3.4.4"
+    "esbuild": "^0.24.0",
+    "tailwindcss": "^3.4.17"
   }
 }
