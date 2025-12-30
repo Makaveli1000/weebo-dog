@@ -67,19 +67,16 @@ fi
 mkdir -p ./dist
 
 # Build the JavaScript config file content
-# This uses a "here document" (<< EOF) to write the content directly to the file.
 cat > ./dist/env-config.js << EOF
 window.NETLIFY_FIREBASE_CONFIG = {
   "apiKey": "${API_KEY}",
   "authDomain": "${AUTH_DOMAIN}",
   "projectId": "${PROJECT_ID}",
   "storageBucket": "${STORAGE_BUCKET}",
-  "messagingSenderId": "${MESSAGING_SENDER_ID}",
+  "messagingSenderId":, "${MESSAGING_SENDER_ID}",
   "appId": "${APP_ID}",
   "measurementId": "${MEASUREMENT_ID}"
 };
-window.__app_id = "${APP_ID}"; # Exposing for potential global access if needed
-window.__project_id = "${PROJECT_ID}"; # Exposing for potential global access if needed
 window.GEMINI_API_KEY = "${GEMINI_KEY}";
 EOF
 
