@@ -1,19 +1,17 @@
 [build]
-  # 1. Give permission, 2. Create the config file, 3. Build the JS bundle
+  # 1. Generate keys, 2. Build the app
   command = "chmod +x build-env.sh && ./build-env.sh && npm run build"
   
-  # The folder Netlify serves to the public
+  # This MUST be dist because that's where your audio and HTML are
   publish = "dist"
   
-  # The folder where your backend functions live
+  # Point this to the folder that caused the JSON error
   functions = "functions"
 
 [build.environment]
-  # Keeps the build logs cleaner
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 [[redirects]]
-  # This ensures that if a user refreshes the page, they don't get a 404
   from = "/*"
   to = "/index.html"
   status = 200
