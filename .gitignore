@@ -8,12 +8,12 @@ yarn-error.log*
 # Environment variables and generated config
 .env                     # Local environment variables
 .env.local               # Local environment variables
-env-config.js            # Generated Firebase configuration (contains secrets)
+# env-config.js            # Generated Firebase configuration (contains secrets)
 # The set-admin-claim.js script's private key
 sntlmoexclusivesportsgrid-firebase-adminsdk-*.json
 
 # Build artifacts and generated output
-/dist/                   # Your compiled output for hosting
+# /dist/                   # Your compiled output for hosting
 
 # Firebase-specific ignore files
 .firebase/               # Local Firebase emulator data
