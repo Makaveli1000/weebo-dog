@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf dist && mkdir -p dist/audio && node esbuild.config.js && npm run tailwind:build && cp index.html dist/index.html && cp _redirects dist/_redirects && cp favicon.ico dist/favicon.ico && cp env-config.js dist/env-config.js && cp thunder.mp3 dist/audio/thunder.mp3 && cp ambient.mp3 dist/audio/ambient.mp3",
+    "build": "mkdir -p dist/audio && node esbuild.config.js && npm run tailwind:build && cp index.html dist/index.html && cp _redirects dist/_redirects && cp favicon.ico dist/favicon.ico && cp env-config.js dist/env-config.js && cp thunder.mp3 dist/audio/thunder.mp3 && cp ambient.mp3 dist/audio/ambient.mp3",
     "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
