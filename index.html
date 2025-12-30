@@ -139,14 +139,13 @@
         </div>
     </div>
 
-    <audio id="ambient-thunder" loop crossorigin="anonymous">
-        <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_2486985012.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="summon-sound" crossorigin="anonymous">
-        <source src="https://cdn.pixabay.com/audio/2022/01/18/audio_8238f88e63.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="thunder-sound" preload="auto">
+    <source src="audio/thunder.mp3" type="audio/mpeg">
+</audio>
 
-    <script src="env-config.js"></script>
+<audio id="ambient-sound" loop preload="auto">
+    <source src="audio/ambient.mp3" type="audio/mpeg">
+</audio>    <script src="env-config.js"></script>
     <script type="module" src="bundle.js"></script>
 </body>
 </html>
