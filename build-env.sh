@@ -1,11 +1,8 @@
 #!/bin/bash
-
-# 1. Create the dist folder if it doesn't exist
 mkdir -p ./dist
 
-# 2. Write the config file
-# Using quotes around 'EOF' prevents the shell from trying to execute the contents
-cat > ./dist/env-config.js << 'EOF'
+# No quotes around EOF allows variable injection
+cat > ./dist/env-config.js << EOF
 window.NETLIFY_FIREBASE_CONFIG = {
   "apiKey": "${FIREBASE_API_KEY}",
   "authDomain": "${FIREBASE_AUTH_DOMAIN}",
@@ -17,4 +14,4 @@ window.NETLIFY_FIREBASE_CONFIG = {
 };
 EOF
 
-echo "✅ Successfully generated env-config.js in dist/"
+echo "✅ Generated env-config.js with FIREBASE_ prefix variables."
