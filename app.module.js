@@ -37,10 +37,8 @@ let app;
 let auth;
 let db;
 
-// Define your Admin User ID - MUST match the UID in your Firebase Authentication and Firestore rules.
-// Be careful not to expose this in client-side code if it needs to be highly secret,
-// but for checking a specific UID, it's commonly used this way.
-const ADMIN_USER_ID = "cEQQHNVXPQfXFhOzO1xBXW";
+// IMPORTANT: The hardcoded ADMIN_USER_ID constant IS REMOVED.
+// Admin status is now determined by custom claims in the user's ID token.
 
 
 // Function to hide the loading overlay (declared early for accessibility)
@@ -142,14 +140,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const zeusAvatarSvg = document.getElementById('zeus-avatar-svg');
     const logoutBtn = document.getElementById('logout-btn');
     const accountModal = document.getElementById('account-modal');
-    const accountNewPasswordInput = document.getElementById('account-new-password');
+    const accountNewPasswordInput = document.getElementById('account-new-password'); // This ID is now correct in index.html
     const accountPasswordError = document.getElementById('account-password-error');
-    const updatePasswordBtn = document.getElementById('update-password-btn');
+    // const updatePasswordBtn = document.getElementById('update-password-btn'); // REMOVED: No longer used directly for event listener
     const loginModal = document.getElementById('login-modal');
     const showSignupBtn = document.getElementById('show-signup'); // Get the "Sign Up" button
+    const updatePasswordForm = document.getElementById('update-password-form'); // NEW: Get the form element
+    const accountEmailForPasswordChange = document.getElementById('account-email-for-password-change'); // NEW: For password form
 
-// <<< NEW TTS/AUDIO CODE HERE >>>
-    // NEW: Get elements for TTS and Audio
+
+    // Get elements for TTS and Audio
     const ttsInput = document.getElementById('tts-input');
     const ttsButton = document.getElementById('tts-button');
     const thunderAudio = document.getElementById('thunder-audio');
@@ -203,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("DEBUG: SpeechSynthesis API not available.");
         if (ttsButton) ttsButton.disabled = true;
     }
-    // <<< END NEW TTS/AUDIO CODE >>>
 
 
     // Set initial window properties
@@ -228,6 +227,18 @@ document.addEventListener('DOMContentLoaded', () => {
         onAuthStateChanged(auth, async (user) => {
             console.log("Authentication state changed. User:", user ? user.uid : "No user");
 
+            // Force a refresh of the ID token to get the latest custom claims
+            let isAdminUser = false;
+            if (user) {
+                try {
+                    const idTokenResult = await user.getIdTokenResult(true); // forceRefresh = true
+                    isAdminUser = idTokenResult.claims.admin === true;
+                    console.log(`DEBUG: User ${user.uid} claims: admin=${isAdminUser}`);
+                } catch (error) {
+                    console.error("DEBUG: Error getting ID token result:", error);
+                }
+            }
+            
             // Update global state
             window.isLoggedIn = !!user;
             window.currentUserId = user ? user.uid : null;
@@ -243,6 +254,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Example of populating account details from user object directly
                 const accountUidSpan = document.getElementById('account-uid');
                 if (accountUidSpan) accountUidSpan.textContent = user.uid;
+                // NEW: Pre-fill email for password change form if it exists
+                if (accountEmailForPasswordChange) accountEmailForPasswordChange.value = user.email;
+
 
                 // Optionally fetch user profile data from Firestore here if needed for UI
                 if (db) { // Ensure db is initialized before using
@@ -251,8 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         const userProfileDocRef = doc(db, 'artifacts', firebaseConfig.appId, 'users', user.uid, 'profile', 'info');
                         const userProfileSnap = await getDoc(userProfileDocRef);
 
-                        // Determine if the current user is the admin
-                        const isAdminUser = (user.uid === ADMIN_USER_ID);
+                        // Determine if the current user is the admin based on custom claims
+                        // This 'isAdminUser' is now from the ID token claims, not a hardcoded UID comparison
 
                         if (!userProfileSnap.exists()) {
                             console.log("DEBUG: User profile document not found. Creating default profile for UID:", user.uid);
@@ -262,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 uid: user.uid,
                                 email: user.email,
                                 nickname: 'New User',
-                                isPro: isAdminUser, // Set isPro based on admin check
+                                isPro: isAdminUser, // Set isPro based on custom claim
                                 tourCompleted: false,
                                 freeAccessGranted: !isAdminUser, // Grant free access if NOT admin
                                 freeAccessStartTime: isAdminUser ? null : serverTimestamp(), // Set start time only for non-admins
@@ -270,7 +284,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
 
                             // Create a local representation of the profile data for immediate use
-                            // Use Date.now() for freeAccessStartTime if not admin, for client-side comparison
                             const defaultProfileData = {
                                 uid: user.uid,
                                 email: user.email,
@@ -287,6 +300,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         } else {
                             // EXISTING CODE: Profile exists, fetch and use it
                             const profileData = userProfileSnap.data();
+                            // Override isPro from Firestore with the claims value for immediate UI update
+                            profileData.isPro = isAdminUser; 
                             console.log("DEBUG: User profile data from Firestore:", profileData);
                             await showContentBasedOnProfile(profileData, user.uid); // Call helper function
                         }
@@ -524,16 +539,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // *** Change Password functionality ***
-    // (This is the block you're looking for, now updated to listen to the form's submit event)
-    const updatePasswordForm = document.getElementById('update-password-form'); // This line was added
-    if (updatePasswordForm && auth) { // Changed from updatePasswordBtn to updatePasswordForm
-        updatePasswordForm.addEventListener('submit', async (event) => { // Changed from 'click' to 'submit'
-            event.preventDefault();
+    // (This block has been updated to use the new form structure)
+    // First, ensure you fetch the new form element
+    const updatePasswordForm = document.getElementById('update-password-form'); // <--- NEW LINE: Get the form element
+
+    if (updatePasswordForm && auth) { // <--- CHANGED: Condition now checks for the form
+        updatePasswordForm.addEventListener('submit', async (event) => { // <--- CHANGED: Listen to the 'submit' event of the form
+            event.preventDefault(); // Prevent default form submission behavior
 
             accountPasswordError.textContent = '';
             accountPasswordError.classList.remove('text-green-500');
             accountPasswordError.classList.add('text-red-500');
 
+            // accountNewPasswordInput is already declared at the top of DOMContentLoaded
             const newPassword = accountNewPasswordInput.value;
             if (!newPassword) {
                 accountPasswordError.textContent = 'Please enter a new password.';
@@ -587,7 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    // *** Close Account Modal button listener ***
+            // *** Close Account Modal button listener ***
     const closeAccountModalBtn = document.getElementById('close-account-modal-btn');
     if (closeAccountModalBtn) {
         closeAccountModalBtn.addEventListener('click', () => {
