@@ -2,7 +2,7 @@
 const esbuild = require('esbuild');
 
 esbuild.build({
-  entryPoints: ['index.js'], // <--- CHANGE THIS LINE BACK!
+  entryPoints: ['src/index.js'], //
   outfile: 'dist/bundle.js',
   bundle: true,
   minify: true,
