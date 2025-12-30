@@ -1,33 +1,19 @@
 [build]
-      # The command that Netlify will run to build your project.
-      # This executes the "build" script defined in your package.json at the project root.
-      # Netlify automatically runs `npm install` at the root before this command if a package.json is detected.
-      command = "npm run build"
-      
-      # The directory containing your final, built static assets that Netlify should publish.
-      # Your package.json's "build" script confirms this is the 'dist' directory.
-      publish = "dist" 
-      
-      # The directory where your Netlify Functions are located.
-      functions = "netlify/functions"
+  # 1. Give permission, 2. Create the config file, 3. Build the JS bundle
+  command = "chmod +x build-env.sh && ./build-env.sh && npm run build"
+  
+  # The folder Netlify serves to the public
+  publish = "dist"
+  
+  # The folder where your backend functions live
+  functions = "functions"
 
-    # This defines environment variables specifically for the build process.
-    # This is the correct TOML syntax for a sub-table within the [build] section.
-    [build.environment]
-      SECRETS_SCAN_SMART_DETECTION_ENABLED = "false" # Example environment variable for the build
-      # You can add other build-specific environment variables here if needed.
+[build.environment]
+  # Keeps the build logs cleaner
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
-    # You can add global environment variables that are available to both the build and functions here.
-    # [context.production.environment]
-    #   MY_GLOBAL_VAR = "production_value"
-
-    # If you need redirects, they would be defined outside the [build] section, for example:
-    # [[redirects]]
-    #   from = "/*"
-    #   to = "/index.html"
-    #   status = 200
-
-    # Other contexts (like deploy previews or branches) can be defined here if needed:
-    # [context.deploy-preview]
-    #   command = "npm run build:preview"
-    #   publish = "dist"
+[[redirects]]
+  # This ensures that if a user refreshes the page, they don't get a 404
+  from = "/*"
+  to = "/index.html"
+  status = 200
