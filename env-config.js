@@ -68,16 +68,7 @@ mkdir -p ./dist
 
 # Build the JavaScript config file content
 cat > ./dist/env-config.js << EOF
-window.NETLIFY_FIREBASE_CONFIG = {
-  "apiKey": "${API_KEY}",
-  "authDomain": "${AUTH_DOMAIN}",
-  "projectId": "${PROJECT_ID}",
-  "storageBucket": "${STORAGE_BUCKET}",
-  "messagingSenderId":, "${MESSAGING_SENDER_ID}",
-  "appId": "${APP_ID}",
-  "measurementId": "${MEASUREMENT_ID}"
-};
-window.GEMINI_API_KEY = "${GEMINI_KEY}";
+window.NETLIFY_FIREBASE_CONFIG = { "apiKey": "${API_KEY}", "authDomain": "${AUTH_DOMAIN}", "projectId": "${PROJECT_ID}", "storageBucket": "${STORAGE_BUCKET}", "messagingSenderId": "${MESSAGING_SENDER_ID}", "appId": "${APP_ID}", "measurementId": "${MEASUREMENT_ID}" }; window.GEMINI_API_KEY = "${GEMINI_KEY}";
 EOF
 
 echo "✅ Successfully generated env-config.js in dist/."
