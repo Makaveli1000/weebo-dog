@@ -1,4 +1,19 @@
-// src/app.js - Final Merged Logic (Zeus + UI + Emergency Fixes)
+// --- 1. EMERGENCY LOADER KILL SWITCH ---
+// This runs first! If anything below crashes, the screen clears after 4 seconds.
+setTimeout(() => {
+    const loader = document.getElementById('loading-overlay');
+    if (loader && !loader.classList.contains('hidden')) {
+        console.warn("⚠️ Firebase/Script hang detected. Forcing entry.");
+        loader.style.opacity = '0';
+        setTimeout(() => loader.classList.add('hidden'), 500);
+        
+        // Ensure the UI is interactive even if scripts are slow
+        document.getElementById('paywall-content')?.classList.remove('hidden');
+        document.getElementById('header-auth-btn')?.classList.remove('hidden');
+    }
+}, 4000);
+
+// --- 2. IMPORTS ---
 import { 
     auth, db, appId, upgradeUser 
 } from './index.js'; 
@@ -11,24 +26,12 @@ import {
     doc, getDoc 
 } from 'firebase/firestore';
 
-// --- 1. EMERGENCY LOADER KILL SWITCH ---
-// If Firebase hangs, this forces the site to show after 4 seconds
-setTimeout(() => {
-    const loader = document.getElementById('loading-overlay');
-    if (loader && !loader.classList.contains('hidden')) {
-        console.warn("⚠️ Loader hung. Forcing entry.");
-        loader.classList.add('hidden');
-        document.getElementById('paywall-content')?.classList.remove('hidden');
-        document.getElementById('header-auth-btn')?.classList.remove('hidden');
-    }
-}, 4000);
-
+// --- 3. STATE VARIABLES ---
 let currentUser = null;
 let userIsPro = false;
 let mortalTimerInterval = null; 
 
-// --- 2. ZEUS NARRATION & TIMER LOGIC ---
-
+// --- 4. ZEUS NARRATION & TIMER LOGIC ---
 function triggerZeusNarration(isPro) {
     window.speechSynthesis.cancel(); 
     const mortalScript = `Mortal, you stand at the threshold of greatness. You have ten fleeting minutes. The clock of destiny is ticking. What is your move?`;
@@ -66,8 +69,7 @@ function startMortalTimer() {
     }, 1000);
 }
 
-// --- 3. AUTH STATE LOGIC ---
-
+// --- 5. AUTH STATE LOGIC ---
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const loader = document.getElementById('loading-overlay');
@@ -83,7 +85,6 @@ onAuthStateChanged(auth, async (user) => {
         loginBtn?.classList.add('hidden');
         accountBtn?.classList.remove('hidden');
         
-        // Fetch PRO Status from Firestore
         try {
             const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "info");
             const docSnap = await getDoc(userDocRef);
@@ -110,8 +111,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// --- 4. GLOBAL WINDOW FUNCTIONS ---
-
+// --- 6. GLOBAL WINDOW FUNCTIONS ---
 window.toggleLoginModal = (show) => {
     const modal = document.getElementById('login-modal');
     show ? modal?.classList.remove('hidden') : modal?.classList.add('hidden');
@@ -145,10 +145,8 @@ window.logOut = async () => {
     window.location.reload();
 };
 
-// --- 5. EVENT LISTENERS ---
-
+// --- 7. EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Form Listener for Enter Key
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
@@ -157,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Upgrade Button Listener
     const upgradeBtn = document.getElementById('btn-upgrade-pro');
     if (upgradeBtn) {
         upgradeBtn.addEventListener('click', async (e) => {
