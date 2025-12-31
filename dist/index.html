@@ -4,19 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Olympus Sports Grid</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-
     <style>
-        /* Ensures the loading screen actually disappears when JS triggers it */
-        .hidden {
-            display: none !important;
-        }
-        
-        /* Optional: Smooth fade out for the overlay */
-        #loading-overlay {
-            transition: opacity 0.5s ease;
-        }
+        .hidden { display: none !important; }
+        #loading-overlay { transition: opacity 0.5s ease; }
     </style>
 </head>
 <body class="bg-black text-white">
@@ -31,53 +22,28 @@
 
     <header class="p-4 border-b border-gray-800 flex justify-between items-center">
         <h1 class="text-xl font-bold text-yellow-500">OLYMPUS</h1>
-        <div>
-            <button id="header-auth-btn" onclick="toggleLoginModal(true)" class="bg-yellow-500 text-black px-4 py-2 rounded font-bold">LOGIN</button>
-            <button id="account-btn" onclick="toggleAccountModal(true)" class="hidden bg-gray-800 text-white px-4 py-2 rounded font-bold">ACCOUNT</button>
-        </div>
+        <button id="header-auth-btn" onclick="toggleLoginModal(true)" class="bg-yellow-500 text-black px-4 py-2 rounded font-bold">LOGIN</button>
+        <button id="account-btn" onclick="toggleAccountModal(true)" class="hidden bg-gray-800 text-white px-4 py-2 rounded font-bold">ACCOUNT</button>
     </header>
 
-    <main id="main-content" class="hidden p-6">
-        <h2 class="text-3xl mb-4">Welcome to the Grid</h2>
-        <p>Your premium sports data and tools are now active.</p>
-        
-        <button id="btn-upgrade-pro" class="mt-6 bg-yellow-500 text-black px-6 py-3 rounded-xl font-black">
-            UPGRADE TO PRO
-        </button>
+    <main id="main-content" class="hidden p-6 text-center">
+        <h2 class="text-3xl mb-4">GRID ACTIVE</h2>
+        <button id="btn-upgrade-pro" class="bg-yellow-500 text-black px-6 py-3 rounded-xl font-black">UPGRADE TO PRO</button>
     </main>
 
     <div id="paywall-content" class="p-10 text-center">
-        <h2 class="text-2xl text-gray-500">Access Restricted</h2>
-        <p class="mb-4">Please log in to enter the Olympus Sports Grid.</p>
-        <button onclick="toggleLoginModal(true)" class="text-yellow-500 underline">Login or Register Now</button>
+        <p>Please log in to enter.</p>
     </div>
 
     <div id="login-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div class="bg-gray-900 p-8 rounded-lg border border-yellow-500 w-80">
-            <h2 class="text-xl mb-4 text-yellow-500">Login</h2>
-            <input type="email" id="login-email" placeholder="Email" class="w-full p-2 mb-2 bg-black border border-gray-700 rounded text-white" autocomplete="username">
-            <input type="password" id="login-password" placeholder="Password" class="w-full p-2 mb-4 bg-black border border-gray-700 rounded text-white" autocomplete="current-password">
-            <button onclick="logIn()" class="w-full bg-yellow-500 text-black py-2 rounded font-bold mb-2">LOG IN</button>
-            <button onclick="register()" class="w-full border border-gray-600 py-2 rounded font-bold text-sm">REGISTER</button>
-            <button onclick="toggleLoginModal(false)" class="w-full text-gray-500 mt-4 text-sm">Close</button>
-            <p id="login-error" class="text-red-500 text-xs mt-2"></p>
+            <input type="email" id="login-email" placeholder="Email" class="w-full p-2 mb-2 bg-black border border-gray-700 text-white" autocomplete="username">
+            <input type="password" id="login-password" placeholder="Password" class="w-full p-2 mb-4 bg-black border border-gray-700 text-white" autocomplete="current-password">
+            <button onclick="logIn()" class="w-full bg-yellow-500 text-black py-2 rounded font-bold">LOG IN</button>
+            <button onclick="toggleLoginModal(false)" class="w-full text-gray-500 mt-2 text-sm">Cancel</button>
         </div>
     </div>
 
-    <div id="account-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="bg-gray-900 p-8 rounded-lg border border-gray-700 w-80">
-            <h2 class="text-xl mb-4">Your Account</h2>
-            <p class="text-sm text-gray-400">Status:</p>
-            <p id="account-premium-status" class="text-yellow-500 font-bold mb-4 italic">Checking...</p>
-            <p class="text-xs text-gray-500 mb-4">UID: <span id="account-uid"></span></p>
-            <button onclick="logOut()" class="w-full bg-red-600 text-white py-2 rounded font-bold">LOG OUT</button>
-            <button onclick="toggleAccountModal(false)" class="w-full text-gray-500 mt-4 text-sm">Close</button>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <script src="dist/bundle.js"></script>
-
+    <script src="bundle.js"></script>
 </body>
 </html>
