@@ -1,31 +1,24 @@
-# Node.js dependencies
+# 1. Standard Ignores
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-store/
-
-# Environment variables and generated config
-.env
-.env.local
-
-# THIS PROTECTS YOUR KEYS
-dist/env-config.js
-
-# The set-admin-claim.js script's private key
-sntlmoexclusivesportsgrid-firebase-adminsdk-*.json
-
-# Build artifacts and generated output
-# We ignore the dist folder because Netlify generates it during the build
-dist/
-
-# Firebase-specific ignore files
 .firebase/
-firebase-debug.log
-.firebaserc.local
-
-# Other common build tool/IDE ignores
 .vscode/
 *.log
-*.temp
 .DS_Store
+
+# 2. THE KEY PROTECTION (Global & Specific)
+# This ensures your keys are never tracked, no matter where they are
+env-config.js
+dist/env-config.js
+.env
+.env.local
+sntlmoexclusivesportsgrid-firebase-adminsdk-*.json
+
+# 3. THE DIST STRATEGY
+# First, tell git NOT to ignore the dist folder itself
+!dist/
+
+# Now, ignore the specific key file inside dist (redundant but safe)
+dist/env-config.js
+
+# Allow everything else in dist (like bundle.js, styles, etc.)
+!dist/*
