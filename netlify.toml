@@ -1,8 +1,8 @@
 [build]
   # 1. Give permissions, 2. Run your key script, 3. Install function deps, 4. Build the site
-  command = "chmod +x build-env.sh && ./build-env.sh && npm install --prefix functions && npm run build"
+  command = "chmod +x build-env.sh && ./build-env.sh && npm install --prefix functions && node esbuild.config.js"
   
-  # This is where your website files (HTML, JS, Audio) live
+  # This is where your website files (HTML, JS, Audio) live after building
   publish = "dist"
   
   # This points to your backend folder
@@ -12,7 +12,6 @@
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 [[plugins]]
-  # This is the "magic" line that fixes the dependency error you just saw
   package = "@netlify/plugin-functions-install-core"
 
 [[redirects]]

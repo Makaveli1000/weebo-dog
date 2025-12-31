@@ -1,7 +1,8 @@
 #!/bin/bash
-mkdir -p ./dist
+# 1. Create the dist folder
+mkdir -p dist
 
-# No quotes around EOF allows variable injection
+# 2. Inject Firebase Environment Variables
 cat > ./dist/env-config.js << EOF
 window.NETLIFY_FIREBASE_CONFIG = {
   "apiKey": "${FIREBASE_API_KEY}",
@@ -14,4 +15,14 @@ window.NETLIFY_FIREBASE_CONFIG = {
 };
 EOF
 
-echo "✅ Generated env-config.js with FIREBASE_ prefix variables."
+# 3. Copy files into dist (The build artifacts)
+if [ -f "index.html" ]; then
+  cp index.html dist/
+fi
+
+# 4. Copy other assets safely
+cp -r audio dist/ 2>/dev/null || true
+cp favicon.ico dist/ 2>/dev/null || true
+cp _redirects dist/ 2>/dev/null || true
+
+echo "✅ Build assets copied and env-config.js generated."
