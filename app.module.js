@@ -277,4 +277,13 @@ function pcmToWav(pcm16Data, sampleRate) {
     view.setUint32(40, pcm16Data.length * 2, true);
     for (let i = 0; i < pcm16Data.length; i++) view.setInt16(44 + i * 2, pcm16Data[i], true);
     return new Blob([buffer], { type: 'audio/wav' });
-}
+} // --- SAFETY KILL-SWITCH ---
+// If Firebase is taking too long (3 seconds), force the overlay to hide 
+// so the user can at least see the login buttons.
+setTimeout(() => {
+    const loader = document.getElementById('loading-overlay');
+    if (loader && !loader.classList.contains('hidden')) {
+        console.warn("Firebase observer slow - Triggering safety reveal.");
+        hideLoadingOverlay();
+    }
+}, 3000);
