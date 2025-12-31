@@ -53,29 +53,32 @@
     </div>
 
     <div id="login-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="bg-gray-900 p-8 rounded-lg border border-yellow-500 w-80">
-            <h2 class="text-xl mb-4 text-yellow-500">Login</h2>
-            <input type="email" id="login-email" placeholder="Email" class="w-full p-2 mb-2 bg-black border border-gray-700 rounded text-white" autocomplete="username">
-            <input type="password" id="login-password" placeholder="Password" class="w-full p-2 mb-4 bg-black border border-gray-700 rounded text-white" autocomplete="current-password">
-            <button onclick="logIn()" class="w-full bg-yellow-500 text-black py-2 rounded font-bold mb-2">LOG IN</button>
-            <button onclick="register()" class="w-full border border-gray-600 py-2 rounded font-bold text-sm">REGISTER</button>
-            <button onclick="toggleLoginModal(false)" class="w-full text-gray-500 mt-4 text-sm">Close</button>
-            <p id="login-error" class="text-red-500 text-xs mt-2"></p>
-        </div>
+    <div class="bg-gray-900 p-8 rounded-lg border border-yellow-500 w-80">
+        <h2 class="text-xl mb-4 text-yellow-500 font-bold">ACCESS OLYMPUS</h2>
+        
+        <input type="email" id="login-email" placeholder="Email" 
+            class="w-full p-2 mb-2 bg-black border border-gray-700 rounded text-white focus:border-yellow-500 outline-none" 
+            autocomplete="username" required>
+        
+        <input type="password" id="login-password" placeholder="Password" 
+            class="w-full p-2 mb-4 bg-black border border-gray-700 rounded text-white focus:border-yellow-500 outline-none" 
+            autocomplete="current-password" required>
+        
+        <button onclick="logIn()" class="w-full bg-yellow-500 text-black py-2 rounded font-bold mb-2 hover:bg-yellow-400 transition-colors">
+            LOG IN
+        </button>
+        
+        <button onclick="register()" class="w-full border border-gray-600 py-2 rounded font-bold text-sm text-gray-300 hover:text-white">
+            REGISTER
+        </button>
+        
+        <button onclick="toggleLoginModal(false)" class="w-full text-gray-500 mt-4 text-xs uppercase tracking-widest hover:text-gray-300">
+            Cancel
+        </button>
+        
+        <p id="login-error" class="text-red-500 text-xs mt-2 text-center"></p>
     </div>
-
-    <div id="account-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="bg-gray-900 p-8 rounded-lg border border-gray-700 w-80">
-            <h2 class="text-xl mb-4">Your Account</h2>
-            <p class="text-sm text-gray-400">Status:</p>
-            <p id="account-premium-status" class="text-yellow-500 font-bold mb-4 italic">Checking...</p>
-            <p class="text-xs text-gray-500 mb-4">UID: <span id="account-uid"></span></p>
-            <button onclick="logOut()" class="w-full bg-red-600 text-white py-2 rounded font-bold">LOG OUT</button>
-            <button onclick="toggleAccountModal(false)" class="w-full text-gray-500 mt-4 text-sm">Close</button>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</div>    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <script src="dist/bundle.js"></script>
 
