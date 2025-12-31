@@ -14,7 +14,7 @@ import {
 let currentUser = null;
 let currentUserID = null;
 let userIsPro = false;
-let mortalTimerInterval = null; // Track the timer to clear it if needed
+let mortalTimerInterval = null; 
 
 console.log("✅ App.js linked to initialized Firebase services.");
 
@@ -31,15 +31,18 @@ const accountPremiumStatus = document.getElementById('account-premium-status');
 // --- Zeus Narration Logic ---
 
 function triggerZeusNarration(isPro) {
-    if (isPro) return; // Zeus is silent for fellow Gods
-
     window.speechSynthesis.cancel(); // Stop any current speech
 
-    const fullScript = `Mortal, you stand at the threshold of greatness, yet you walk in shadow. You have entered the gates of Olympus, and for ten fleeting minutes, the grid shall reveal its secrets to you. But hear me well—your vision is currently limited, obscured by the mist of the uninitiated. Beyond those clouds lie the Divine Analytics, tools forged in the fires of the Titans to predict the tides of the arena with terrifying precision. Deep within the Locker of the Gods, your own legends can be stored, archived for eternity in high-definition glory. You currently see only the surface; but the PRO athlete sees the heartbeat of the game. The clock of destiny is ticking. What is your move?`;
+    // Script for Mortals
+    const mortalScript = `Mortal, you stand at the threshold of greatness, yet you walk in shadow. You have entered the gates of Olympus, and for ten fleeting minutes, the grid shall reveal its secrets to you. But hear me well—your vision is currently limited, obscured by the mist of the uninitiated. Beyond those clouds lie the Divine Analytics, tools forged in the fires of the Titans to predict the tides of the arena with terrifying precision. Deep within the Locker of the Gods, your own legends can be stored, archived for eternity in high-definition glory. You currently see only the surface; but the PRO athlete sees the heartbeat of the game. The clock of destiny is ticking. What is your move?`;
 
-    const msg = new SpeechSynthesisUtterance(fullScript);
+    // Script for PROs (The Grand Tour)
+    const proScript = `Behold! The clouds part for a true Champion. You have gained the Sight of the All-Father—our Live Grid, tracking every movement in the arena in real-time. Your Vault of Eternity, the Locker, is now open to store your legends forever. And the Oracle’s Whisper, our Analytics, will now predict the tides of battle for you. Olympus is yours.`;
+
+    const msg = new SpeechSynthesisUtterance(isPro ? proScript : mortalScript);
     const voices = window.speechSynthesis.getVoices();
-    // Try to find a deep male voice
+    
+    // Choose the authoritative voice
     msg.voice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Male')) || voices[0];
     msg.pitch = 0.5; 
     msg.rate = 0.85; 
@@ -66,7 +69,6 @@ function startMortalTimer() {
 
         if (timeLeft <= 0) {
             clearInterval(mortalTimerInterval);
-            // Force the paywall
             mainContent.classList.add('hidden');
             paywallContent.classList.remove('hidden');
             window.speechSynthesis.speak(new SpeechSynthesisUtterance("Your time has vanished, Mortal. Return to the shadows or ascend to PRO."));
@@ -88,7 +90,7 @@ function hideLoadingOverlayAndShowContent() {
     }
 }
 
-// Safety fallback
+// Safety fallback for loading screen
 setTimeout(() => {
     if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
         hideLoadingOverlayAndShowContent();
@@ -116,6 +118,7 @@ window.logIn = async () => {
 
 window.logOut = async () => {
     window.speechSynthesis.cancel();
+    if (mortalTimerInterval) clearInterval(mortalTimerInterval);
     await signOut(auth);
     window.location.reload();
 };
@@ -131,19 +134,22 @@ onAuthStateChanged(auth, async (user) => {
         accountBtn.classList.remove('hidden');
 
         try {
+            // Path: artifacts/olympus-grid-prod/users/{uid}/profile/info
             const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "info");
             const docSnap = await getDoc(userDocRef);
             
             if (docSnap.exists()) {
-                userIsPro = docSnap.data().isPremium || false;
+                const userData = docSnap.data();
+                userIsPro = userData.isPremium || userData.isPro || false;
                 if (accountPremiumStatus) {
                     accountPremiumStatus.textContent = userIsPro ? 'PRO Member' : 'Standard User';
                 }
             }
 
-            // TRIGGER ZEUS FOR MORTALS
+            // Always trigger Zeus on login to welcome/warn the user
+            triggerZeusNarration(userIsPro);
+            
             if (!userIsPro) {
-                triggerZeusNarration(false);
                 startMortalTimer();
             }
 
@@ -170,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             upgradeBtn.innerText = "Upgrading...";
             try {
                 await upgradeUser(); 
+                // Note: Page usually reloads or Auth listener triggers after upgrade
             } catch (err) {
                 upgradeBtn.disabled = false;
                 upgradeBtn.innerText = "Upgrade to PRO";
