@@ -31,16 +31,15 @@ const accountPremiumStatus = document.getElementById('account-premium-status');
 // --- Zeus Narration Logic ---
 
 function triggerZeusNarration(isPro) {
-    window.speechSynthesis.cancel(); // Stop any current speech
+    window.speechSynthesis.cancel(); 
 
-    const mortalScript = `Mortal, you stand at the threshold of greatness, yet you walk in shadow. You have entered the gates of Olympus, and for ten fleeting minutes, the grid shall reveal its secrets to you. But hear me well—your vision is currently limited, obscured by the mist of the uninitiated. Beyond those clouds lie the Divine Analytics, tools forged in the fires of the Titans to predict the tides of the arena with terrifying precision. Deep within the Locker of the Gods, your own legends can be stored, archived for eternity in high-definition glory. You currently see only the surface; but the PRO athlete sees the heartbeat of the game. The clock of destiny is ticking. What is your move?`;
+    const mortalScript = `Mortal, you stand at the threshold of greatness, yet you walk in shadow. You have entered the gates of Olympus, and for ten fleeting minutes, the grid shall reveal its secrets to you. Beyond those clouds lie the Divine Analytics, tools forged in the fires of the Titans to predict the tides of the arena with terrifying precision. Deep within the Locker of the Gods, your own legends can be stored, archived for eternity in high-definition glory. You currently see only the surface; but the PRO athlete sees the heartbeat of the game. The clock of destiny is ticking. What is your move?`;
 
     const proScript = `Behold! The clouds part for a true Champion. You have gained the Sight of the All-Father—our Live Grid, tracking every movement in the arena in real-time. Your Vault of Eternity, the Locker, is now open to store your legends forever. And the Oracle’s Whisper, our Analytics, will now predict the tides of battle for you. Olympus is yours.`;
 
     const msg = new SpeechSynthesisUtterance(isPro ? proScript : mortalScript);
     const voices = window.speechSynthesis.getVoices();
     
-    // Choose an authoritative male voice if available
     msg.voice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Male')) || voices[0];
     msg.pitch = 0.5; 
     msg.rate = 0.85; 
@@ -51,7 +50,7 @@ function triggerZeusNarration(isPro) {
 function startMortalTimer() {
     if (mortalTimerInterval) clearInterval(mortalTimerInterval);
     
-    let timeLeft = 600; // 10 minutes
+    let timeLeft = 600; 
     const timerElement = document.getElementById('zeus-timer');
     const timerContainer = document.getElementById('mortal-timer-container');
 
@@ -88,14 +87,13 @@ function hideLoadingOverlayAndShowContent() {
     }
 }
 
-// Safety fallback for loading screen
 setTimeout(() => {
     if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
         hideLoadingOverlayAndShowContent();
     }
 }, 5000);
 
-// --- Window-Scoped Functions (Exposed to index.js listeners) ---
+// --- Window-Scoped Functions ---
 
 window.toggleLoginModal = (show) => {
     if (loginModal) {
@@ -141,7 +139,6 @@ onAuthStateChanged(auth, async (user) => {
         if (accountBtn) accountBtn.classList.remove('hidden');
 
         try {
-            // Path: artifacts/{appId}/users/{uid}/profile/info
             const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "info");
             const docSnap = await getDoc(userDocRef);
             
@@ -171,9 +168,31 @@ onAuthStateChanged(auth, async (user) => {
     hideLoadingOverlayAndShowContent();
 });
 
-// --- Button Listeners (Non-Global) ---
+// --- Button & Form Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 1. Handle Login Form (Enter Key Support)
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Stop page refresh
+            const submitBtn = document.getElementById('login-submit-btn');
+            
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "AUTHENTICATING...";
+            }
+
+            await window.logIn();
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "SIGN IN";
+            }
+        });
+    }
+
+    // 2. Handle Upgrade Button
     const upgradeBtn = document.getElementById('btn-upgrade-pro');
     if (upgradeBtn) {
         upgradeBtn.addEventListener('click', async (e) => {
