@@ -1,170 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
-<head> 
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zeus Portal</title>
-    <link href="output.css" rel="stylesheet"> 
+    <title>Olympus Sports Grid</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
-        .hidden { display: none; }
+        /* Ensures the loading screen actually disappears when JS triggers it */
+        .hidden {
+            display: none !important;
+        }
         
+        /* Optional: Smooth fade out for the overlay */
         #loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: black;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
-
-        /* --- DIVINE ANIMATIONS --- */
-        @keyframes gold-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(202, 138, 4, 0.6); }
-            70% { box-shadow: 0 0 0 20px rgba(202, 138, 4, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(202, 138, 4, 0); }
-        }
-
-        .divine-glow {
-            animation: gold-pulse 2s infinite;
-        }
-
-        /* Speed up the flash transition for lightning */
-        #lightning-flash.flash-active {
-            opacity: 0.8;
-            transition: none;
+            transition: opacity 0.5s ease;
         }
     </style>
 </head>
-<body class="bg-black text-white font-sans">
+<body class="bg-black text-white">
 
-    <div id="lightning-flash" class="fixed inset-0 bg-white opacity-0 pointer-events-none z-[10000] transition-opacity duration-300"></div>
-
-    <div id="loading-overlay">
-        <div class="text-yellow-500 text-2xl animate-pulse font-bold tracking-widest">⚡ CONNECTING TO OLYMPUS...</div>
+    <div id="loading-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black">
+        <div class="text-center">
+            <div class="text-yellow-500 text-2xl animate-pulse font-bold tracking-widest">
+                ⚡ CONNECTING TO OLYMPUS...
+            </div>
+        </div>
     </div>
 
-    <header class="p-4 border-b border-gray-800 flex justify-between items-center bg-black sticky top-0 z-40">
-        <h1 class="text-xl font-extrabold text-yellow-500 tracking-tighter">ZEUS PORTAL</h1>
-        <div class="flex items-center space-x-4">
-            <button id="header-auth-btn" class="bg-yellow-600 px-4 py-2 rounded text-black font-bold hover:bg-yellow-500 transition-colors">Login</button>
-            <button id="account-btn" class="hidden border border-yellow-500 px-4 py-2 rounded hover:bg-yellow-900/30 transition-colors">Account</button>
-            <button id="logout-btn" class="hidden text-gray-400 text-sm hover:text-white">Sign Out</button>
+    <header class="p-4 border-b border-gray-800 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-yellow-500">OLYMPUS</h1>
+        <div>
+            <button id="header-auth-btn" onclick="toggleLoginModal(true)" class="bg-yellow-500 text-black px-4 py-2 rounded font-bold">LOGIN</button>
+            <button id="account-btn" onclick="toggleAccountModal(true)" class="hidden bg-gray-800 text-white px-4 py-2 rounded font-bold">ACCOUNT</button>
         </div>
     </header>
 
-    <main class="p-6">
-        <section id="paywall-content" class="text-center py-20">
-            <h2 class="text-4xl font-bold mb-4">Access Restricted</h2>
-            <p class="text-gray-400 mb-8">You must be logged in to hear the voice of Zeus.</p>
-        </section>
-
-        <section id="main-content" class="hidden max-w-2xl mx-auto">
-            
-            <div class="bg-gray-900 p-8 rounded-lg border border-yellow-900 shadow-2xl relative overflow-hidden">
-                <h2 class="text-2xl mb-6 text-center font-bold tracking-tight">Speak, Mortal</h2>
-                
-                <textarea id="tts-input" 
-                    class="w-full p-4 bg-black border border-gray-700 rounded-lg mb-4 h-32 focus:border-yellow-500 outline-none transition-colors" 
-                    placeholder="Type what Zeus should say..."></textarea>
-                
-                <button id="tts-button" 
-                    class="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-extrabold py-4 rounded-lg text-xl transition-all divine-glow">
-                    SPEAK
-                </button>
-
-                <div class="mt-8 pt-8 border-t border-gray-800 text-center">
-                    <button id="add-cheerleader-btn" class="hidden bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold transition-all shadow-lg">
-                        + Add Cheerleader to Roster
-                    </button>
-                </div>
-            </div> 
-
-            <div class="mt-12">
-                <h3 class="text-xl font-bold text-yellow-500 mb-6 border-b border-yellow-900 pb-2 flex justify-between items-center">
-                    <span>THE ROSTER</span>
-                    <span class="text-xs text-yellow-800 font-normal">DIVINE SQUAD</span>
-                </h3>
-                <div id="cheerleader-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    </div>
-            </div>
-
-        </section> 
+    <main id="main-content" class="hidden p-6">
+        <h2 class="text-3xl mb-4">Welcome to the Grid</h2>
+        <p>Your premium sports data and tools are now active.</p>
+        
+        <button id="btn-upgrade-pro" class="mt-6 bg-yellow-500 text-black px-6 py-3 rounded-xl font-black">
+            UPGRADE TO PRO
+        </button>
     </main>
 
-    <div id="login-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-        <div class="bg-gray-900 p-8 rounded-lg border border-gray-700 max-w-md w-full shadow-2xl">
-            <h2 class="text-2xl font-bold mb-4 text-white">Authentication</h2>
-            <form id="login-form">
-                <input type="email" id="login-email" placeholder="Email" class="w-full p-2 mb-4 bg-black border border-gray-700 rounded text-white" required>
-                <input type="password" id="login-password" placeholder="Password" class="w-full p-2 mb-4 bg-black border border-gray-700 rounded text-white" required>
-                <div id="login-error" class="text-red-500 text-sm mb-4"></div>
-                <button type="submit" class="w-full bg-yellow-600 py-2 rounded text-black font-bold mb-2">Login</button>
-                <button type="button" id="register-auth-btn" class="w-full border border-gray-700 py-2 rounded text-white">Register</button>
-            </form>
-            <button id="close-login-btn" class="w-full mt-4 text-gray-500 text-sm underline">Close</button>
+    <div id="paywall-content" class="p-10 text-center">
+        <h2 class="text-2xl text-gray-500">Access Restricted</h2>
+        <p class="mb-4">Please log in to enter the Olympus Sports Grid.</p>
+        <button onclick="toggleLoginModal(true)" class="text-yellow-500 underline">Login or Register Now</button>
+    </div>
+
+    <div id="login-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="bg-gray-900 p-8 rounded-lg border border-yellow-500 w-80">
+            <h2 class="text-xl mb-4 text-yellow-500">Login</h2>
+            <input type="email" id="login-email" placeholder="Email" class="w-full p-2 mb-2 bg-black border border-gray-700 rounded text-white" autocomplete="username">
+            <input type="password" id="login-password" placeholder="Password" class="w-full p-2 mb-4 bg-black border border-gray-700 rounded text-white" autocomplete="current-password">
+            <button onclick="logIn()" class="w-full bg-yellow-500 text-black py-2 rounded font-bold mb-2">LOG IN</button>
+            <button onclick="register()" class="w-full border border-gray-600 py-2 rounded font-bold text-sm">REGISTER</button>
+            <button onclick="toggleLoginModal(false)" class="w-full text-gray-500 mt-4 text-sm">Close</button>
+            <p id="login-error" class="text-red-500 text-xs mt-2"></p>
         </div>
     </div>
 
-    <div id="account-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50">
-    <div class="bg-gray-900 p-8 rounded-lg border border-gray-700 max-w-md w-full shadow-2xl">
-        <h2 class="text-2xl font-bold mb-4 text-yellow-500">Account</h2>
-        <p class="text-sm text-gray-400">UID: <span id="account-uid" class="text-white"></span></p>
-        <p class="text-sm text-gray-400 mb-6">Status: <span id="account-premium-status" class="font-bold text-yellow-600"></span></p>
-        
-        <form id="update-password-form" class="space-y-4">
-            <label class="block text-gray-400 text-xs uppercase mb-1">Update Password</label>
-            <div class="relative w-full">
-                <input 
-                    type="password" 
-                    id="account-new-password" 
-                    placeholder="New Password" 
-                    class="w-full p-2 bg-black border border-gray-700 rounded pr-10 focus:border-yellow-500 outline-none transition-colors text-white"
-                >
-                <button 
-                    type="button" 
-                    id="toggle-password"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-yellow-500 transition-colors"
-                >
-                    <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.644m17.928.644a1.012 1.012 0 010-.644M12 18.75a6.75 6.75 0 110-13.5 6.75 6.75 0 010 13.5z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                </button>
-            </div>
-            <button type="submit" class="w-full bg-yellow-600 py-2 rounded text-black font-bold hover:bg-yellow-500 transition-colors">Update Password</button>
-        </form>
-        
-        <button id="close-account-modal-btn" class="w-full mt-4 text-gray-500 underline text-sm">Close</button>
-    </div>
-</div>
-    <div id="cheerleader-modal" class="hidden fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
-        <div class="bg-gray-900 border-2 border-yellow-500 p-6 rounded-lg max-w-md w-full shadow-[0_0_50px_rgba(202,138,4,0.3)]">
-            <h2 class="text-2xl font-bold text-yellow-500 mb-4">Add New Cheerleader</h2>
-            <form id="cheerleader-form" class="space-y-4">
-                <div>
-                    <label class="block text-gray-400 text-xs uppercase mb-1">Name</label>
-                    <input type="text" id="cl-name" class="w-full p-2 bg-gray-800 text-white border border-gray-700 rounded focus:border-yellow-500 outline-none" required>
-                </div>
-                <div>
-                    <label class="block text-gray-400 text-xs uppercase mb-1">Image File</label>
-                    <input type="file" id="cl-image" accept="image/*" class="w-full text-gray-400 text-sm">
-                </div>
-                <div class="flex space-x-2 pt-4">
-                    <button type="submit" id="save-cl-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-2 rounded transition-colors">⚡ SUMMON</button>
-                    <button type="button" id="close-cl-modal" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors">Cancel</button>
-                </div>
-            </form>
+    <div id="account-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="bg-gray-900 p-8 rounded-lg border border-gray-700 w-80">
+            <h2 class="text-xl mb-4">Your Account</h2>
+            <p class="text-sm text-gray-400">Status:</p>
+            <p id="account-premium-status" class="text-yellow-500 font-bold mb-4 italic">Checking...</p>
+            <p class="text-xs text-gray-500 mb-4">UID: <span id="account-uid"></span></p>
+            <button onclick="logOut()" class="w-full bg-red-600 text-white py-2 rounded font-bold">LOG OUT</button>
+            <button onclick="toggleAccountModal(false)" class="w-full text-gray-500 mt-4 text-sm">Close</button>
         </div>
     </div>
 
-    <audio id="thunder-sound" preload="auto">
-    <source src="audio/thunder.mp3" type="audio/mpeg">
-</audio>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="dist/bundle.js"></script>
 
-<audio id="ambient-sound" loop preload="auto">
-    <source src="audio/ambient.mp3" type="audio/mpeg">
-</audio>    <script src="env-config.js"></script>
-    <script type="module" src="bundle.js"></script>
 </body>
 </html>

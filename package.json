@@ -7,7 +7,7 @@
     "node": "22"
   },
   "scripts": {
-    "build": "chmod +x build-env.sh && ./build-env.sh && node esbuild.config.js && npm run tailwind:build && mkdir -p dist/audio && cp -f index.html dist/index.html && cp -f _redirects dist/_redirects && cp -f favicon.ico dist/favicon.ico && cp -f thunder.mp3 dist/audio/thunder.mp3 && cp -f ambient.mp3 dist/audio/ambient.mp3",
+    "build": "sh build-env.sh && node esbuild.config.js && npm run tailwind:build && mkdir -p dist/audio && cp -f index.html dist/index.html && cp -f _redirects dist/_redirects && cp -f favicon.ico dist/favicon.ico && cp -f thunder.mp3 dist/audio/thunder.mp3 && cp -f ambient.mp3 dist/audio/ambient.mp3",
     "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -7,4 +7,3 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "appId": "",
   "measurementId": ""
 };
-window.GEMINI_API_KEY = "";
