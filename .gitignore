@@ -6,22 +6,26 @@ yarn-error.log*
 .pnpm-store/
 
 # Environment variables and generated config
-.env                     # Local environment variables
-.env.local               # Local environment variables
-# env-config.js            # Generated Firebase configuration (contains secrets)
+.env
+.env.local
+
+# THIS PROTECTS YOUR KEYS
+dist/env-config.js
+
 # The set-admin-claim.js script's private key
 sntlmoexclusivesportsgrid-firebase-adminsdk-*.json
 
 # Build artifacts and generated output
-# /dist/                   # Your compiled output for hosting
+# We ignore the dist folder because Netlify generates it during the build
+dist/
 
 # Firebase-specific ignore files
-.firebase/               # Local Firebase emulator data
-firebase-debug.log       # Firebase CLI debug log
-.firebaserc.local        # Local Firebase project overrides (optional)
+.firebase/
+firebase-debug.log
+.firebaserc.local
 
 # Other common build tool/IDE ignores
-.vscode/                 # VS Code settings
-*.log                    # Any log files
-*.temp                   # Temporary files
-.DS_Store                # macOS specific system file
+.vscode/
+*.log
+*.temp
+.DS_Store
