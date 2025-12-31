@@ -33,16 +33,14 @@ const accountPremiumStatus = document.getElementById('account-premium-status');
 function triggerZeusNarration(isPro) {
     window.speechSynthesis.cancel(); // Stop any current speech
 
-    // Script for Mortals
     const mortalScript = `Mortal, you stand at the threshold of greatness, yet you walk in shadow. You have entered the gates of Olympus, and for ten fleeting minutes, the grid shall reveal its secrets to you. But hear me well—your vision is currently limited, obscured by the mist of the uninitiated. Beyond those clouds lie the Divine Analytics, tools forged in the fires of the Titans to predict the tides of the arena with terrifying precision. Deep within the Locker of the Gods, your own legends can be stored, archived for eternity in high-definition glory. You currently see only the surface; but the PRO athlete sees the heartbeat of the game. The clock of destiny is ticking. What is your move?`;
 
-    // Script for PROs (The Grand Tour)
     const proScript = `Behold! The clouds part for a true Champion. You have gained the Sight of the All-Father—our Live Grid, tracking every movement in the arena in real-time. Your Vault of Eternity, the Locker, is now open to store your legends forever. And the Oracle’s Whisper, our Analytics, will now predict the tides of battle for you. Olympus is yours.`;
 
     const msg = new SpeechSynthesisUtterance(isPro ? proScript : mortalScript);
     const voices = window.speechSynthesis.getVoices();
     
-    // Choose the authoritative voice
+    // Choose an authoritative male voice if available
     msg.voice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Male')) || voices[0];
     msg.pitch = 0.5; 
     msg.rate = 0.85; 
@@ -97,19 +95,28 @@ setTimeout(() => {
     }
 }, 5000);
 
+// --- Window-Scoped Functions (Exposed to index.js listeners) ---
+
 window.toggleLoginModal = (show) => {
-    if (loginModal) show ? loginModal.classList.remove('hidden') : loginModal.classList.add('hidden');
+    if (loginModal) {
+        show ? loginModal.classList.remove('hidden') : loginModal.classList.add('hidden');
+    }
 };
 
 window.toggleAccountModal = (show) => {
-    if (accountModal) show ? accountModal.classList.remove('hidden') : accountModal.classList.add('hidden');
+    if (accountModal) {
+        show ? accountModal.classList.remove('hidden') : accountModal.classList.add('hidden');
+    }
 };
 
 window.logIn = async () => {
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+    const emailField = document.getElementById('login-email');
+    const passwordField = document.getElementById('login-password');
+    
+    if (!emailField || !passwordField) return;
+
     try {
-        await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, emailField.value, passwordField.value);
         window.toggleLoginModal(false);
     } catch (error) {
         alert("Login failed: " + error.message);
@@ -130,11 +137,11 @@ onAuthStateChanged(auth, async (user) => {
     currentUserID = user ? user.uid : null;
 
     if (user) {
-        headerAuthBtn.classList.add('hidden');
-        accountBtn.classList.remove('hidden');
+        if (headerAuthBtn) headerAuthBtn.classList.add('hidden');
+        if (accountBtn) accountBtn.classList.remove('hidden');
 
         try {
-            // Path: artifacts/olympus-grid-prod/users/{uid}/profile/info
+            // Path: artifacts/{appId}/users/{uid}/profile/info
             const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "info");
             const docSnap = await getDoc(userDocRef);
             
@@ -146,7 +153,6 @@ onAuthStateChanged(auth, async (user) => {
                 }
             }
 
-            // Always trigger Zeus on login to welcome/warn the user
             triggerZeusNarration(userIsPro);
             
             if (!userIsPro) {
@@ -157,15 +163,15 @@ onAuthStateChanged(auth, async (user) => {
             console.error("Error fetching user profile:", e);
         }
     } else {
-        headerAuthBtn.classList.remove('hidden');
-        accountBtn.classList.add('hidden');
+        if (headerAuthBtn) headerAuthBtn.classList.remove('hidden');
+        if (accountBtn) accountBtn.classList.add('hidden');
         window.speechSynthesis.cancel();
     }
 
     hideLoadingOverlayAndShowContent();
 });
 
-// --- Button Listeners ---
+// --- Button Listeners (Non-Global) ---
 
 document.addEventListener('DOMContentLoaded', () => {
     const upgradeBtn = document.getElementById('btn-upgrade-pro');
@@ -176,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
             upgradeBtn.innerText = "Upgrading...";
             try {
                 await upgradeUser(); 
-                // Note: Page usually reloads or Auth listener triggers after upgrade
             } catch (err) {
                 upgradeBtn.disabled = false;
                 upgradeBtn.innerText = "Upgrade to PRO";
