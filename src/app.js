@@ -1,24 +1,20 @@
-// src/app.js - Final Master Logic
+// src/app.js - Final Master Logic with Zeus Narration
 import { 
     auth, db, storage, appId, upgradeUser 
 } from './index.js'; 
 
 import { 
-    onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut
+    onAuthStateChanged, signInWithEmailAndPassword, signOut
 } from 'firebase/auth';
 
 import { 
-    doc, getDoc, setDoc, onSnapshot, collection, addDoc, serverTimestamp, query, orderBy, limit 
+    doc, getDoc 
 } from 'firebase/firestore';
 
-import { 
-    ref as storageRef, uploadBytes, getDownloadURL 
-} from 'firebase/storage';
-
-const geminiApiKey = window.GEMINI_API_KEY;
 let currentUser = null;
 let currentUserID = null;
 let userIsPro = false;
+let mortalTimerInterval = null; // Track the timer to clear it if needed
 
 console.log("✅ App.js linked to initialized Firebase services.");
 
@@ -31,16 +27,57 @@ const accountModal = document.getElementById('account-modal');
 const headerAuthBtn = document.getElementById('header-auth-btn');
 const accountBtn = document.getElementById('account-btn');
 const accountPremiumStatus = document.getElementById('account-premium-status');
-const lockerMediaDisplay = document.getElementById('locker-media-display');
 
-// --- 5. Core Functions ---
+// --- Zeus Narration Logic ---
+
+function triggerZeusNarration(isPro) {
+    if (isPro) return; // Zeus is silent for fellow Gods
+
+    window.speechSynthesis.cancel(); // Stop any current speech
+
+    const fullScript = `Mortal, you stand at the threshold of greatness, yet you walk in shadow. You have entered the gates of Olympus, and for ten fleeting minutes, the grid shall reveal its secrets to you. But hear me well—your vision is currently limited, obscured by the mist of the uninitiated. Beyond those clouds lie the Divine Analytics, tools forged in the fires of the Titans to predict the tides of the arena with terrifying precision. Deep within the Locker of the Gods, your own legends can be stored, archived for eternity in high-definition glory. You currently see only the surface; but the PRO athlete sees the heartbeat of the game. The clock of destiny is ticking. What is your move?`;
+
+    const msg = new SpeechSynthesisUtterance(fullScript);
+    const voices = window.speechSynthesis.getVoices();
+    // Try to find a deep male voice
+    msg.voice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Male')) || voices[0];
+    msg.pitch = 0.5; 
+    msg.rate = 0.85; 
+
+    window.speechSynthesis.speak(msg);
+}
+
+function startMortalTimer() {
+    if (mortalTimerInterval) clearInterval(mortalTimerInterval);
+    
+    let timeLeft = 600; // 10 minutes
+    const timerElement = document.getElementById('zeus-timer');
+    const timerContainer = document.getElementById('mortal-timer-container');
+
+    if (timerContainer) timerContainer.classList.remove('hidden');
+
+    mortalTimerInterval = setInterval(() => {
+        timeLeft--;
+        if (timerElement) {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = (timeLeft % 60).toString().padStart(2, '0');
+            timerElement.innerText = `${mins}:${secs}`;
+        }
+
+        if (timeLeft <= 0) {
+            clearInterval(mortalTimerInterval);
+            // Force the paywall
+            mainContent.classList.add('hidden');
+            paywallContent.classList.remove('hidden');
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance("Your time has vanished, Mortal. Return to the shadows or ascend to PRO."));
+        }
+    }, 1000);
+}
+
+// --- Core UI Functions ---
 
 function hideLoadingOverlayAndShowContent() {
-    console.log("Attempting to hide loading overlay...");
-    if (loadingOverlay) {
-        loadingOverlay.classList.add('hidden');
-        console.log("Loading overlay hidden.");
-    }
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
     
     if (currentUser) {
         mainContent.classList.remove('hidden');
@@ -51,10 +88,9 @@ function hideLoadingOverlayAndShowContent() {
     }
 }
 
-// Safety fallback: If Firebase takes too long, hide the overlay anyway
+// Safety fallback
 setTimeout(() => {
     if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
-        console.warn("Firebase took too long. Forcing overlay hide.");
         hideLoadingOverlayAndShowContent();
     }
 }, 5000);
@@ -79,14 +115,14 @@ window.logIn = async () => {
 };
 
 window.logOut = async () => {
+    window.speechSynthesis.cancel();
     await signOut(auth);
     window.location.reload();
 };
 
-// --- 6. Auth Listener ---
+// --- Auth Listener ---
 
 onAuthStateChanged(auth, async (user) => {
-    console.log("Auth State Changed. User:", user ? user.uid : "Logged Out");
     currentUser = user;
     currentUserID = user ? user.uid : null;
 
@@ -97,25 +133,33 @@ onAuthStateChanged(auth, async (user) => {
         try {
             const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "info");
             const docSnap = await getDoc(userDocRef);
+            
             if (docSnap.exists()) {
                 userIsPro = docSnap.data().isPremium || false;
                 if (accountPremiumStatus) {
                     accountPremiumStatus.textContent = userIsPro ? 'PRO Member' : 'Standard User';
                 }
             }
+
+            // TRIGGER ZEUS FOR MORTALS
+            if (!userIsPro) {
+                triggerZeusNarration(false);
+                startMortalTimer();
+            }
+
         } catch (e) {
             console.error("Error fetching user profile:", e);
         }
     } else {
         headerAuthBtn.classList.remove('hidden');
         accountBtn.classList.add('hidden');
+        window.speechSynthesis.cancel();
     }
 
-    // Always hide the loading screen once we know the auth status
     hideLoadingOverlayAndShowContent();
 });
 
-// --- 7. DOM Content Loaded ---
+// --- Button Listeners ---
 
 document.addEventListener('DOMContentLoaded', () => {
     const upgradeBtn = document.getElementById('btn-upgrade-pro');
