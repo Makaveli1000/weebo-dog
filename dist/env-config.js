@@ -4,6 +4,6 @@ window.NETLIFY_FIREBASE_CONFIG = {
   "projectId": "",
   "storageBucket": "",
   "messagingSenderId": "",
-  "appId": "",
-  "measurementId": ""
+  "appId": ""
 };
+window.GEMINI_API_KEY = "";
