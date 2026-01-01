@@ -1537,3 +1537,18 @@ firebase/app/dist/esm/index.esm.js:
    *)
 */
 //# sourceMappingURL=bundle.js.map
+
+/* MANUAL REVEAL LOGIC */
+setTimeout(() => {
+    console.log('3-second timer finished. Attempting to reveal UI...');
+    const loader = document.getElementById('loading-overlay');
+    const main = document.getElementById('main-content');
+    const header = document.querySelector('header');
+    
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 500);
+    }
+    if (main) main.classList.remove('hidden');
+    if (header) header.classList.remove('hidden');
+}, 3000);
