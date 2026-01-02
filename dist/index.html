@@ -126,18 +126,36 @@
 
     <script src="bundle.js"></script>
     <script>
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const loader = document.getElementById('loading-overlay');
-                if(loader) loader.style.opacity = '0';
-                setTimeout(() => loader.classList.add('hidden'), 500);
-            }, 1000);
-        });
+        <script>
+    // 1. Loader Logic
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const loader = document.getElementById('loading-overlay');
+            if(loader) loader.style.opacity = '0';
+            setTimeout(() => loader.classList.add('hidden'), 500);
+        }, 1000);
+    });
 
-        window.toggleLoginModal = (show) => {
-            const modal = document.getElementById('login-modal');
-            if(modal) show ? modal.classList.remove('hidden') : modal.classList.add('hidden');
-        };
-    </script>
+    // 2. The Modal Toggle (Made Bulletproof)
+    window.toggleLoginModal = function(show) {
+        console.log("Modal Toggle Triggered:", show);
+        const modal = document.getElementById('login-modal');
+        if (modal) {
+            if (show) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+    };
+
+    // 3. Auto-link the Header Login Button
+    document.addEventListener('DOMContentLoaded', () => {
+        const headerBtn = document.getElementById('header-auth-btn');
+        if(headerBtn) {
+            headerBtn.addEventListener('click', () => window.toggleLoginModal(true));
+        }
+    });
+</script>    
 </body>
 </html>
