@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SntLMoExclusiveSportsGrid</title>
-    <link href="./dist/output.css" rel="stylesheet">
+    <link href="./output.css" rel="stylesheet">
     <style>
         .hidden { display: none !important; }
         #loading-overlay { transition: opacity 0.5s ease; }
@@ -15,8 +15,7 @@
         #chat-messages::-webkit-scrollbar { width: 4px; }
         #chat-messages::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
-
-    </head>
+</head>
 <body class="bg-black text-white overflow-x-hidden">
 
     <div id="loading-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black">
@@ -32,11 +31,8 @@
             <h1 class="text-xl font-black text-yellow-500 tracking-tighter uppercase">SNT LMO EXCLUSIVE SPORTS GRID</h1>
             <p id="user-status" class="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Status: Mortal Vision</p>
         </div>
-        
         <div class="flex gap-4 items-center">
-            <button id="radio-toggle-btn" onclick="window.toggleMusic()" class="text-yellow-500 hover:scale-110 transition p-2 bg-gray-900 rounded-full border border-gray-800">
-                ▶️
-            </button>
+            <button id="radio-toggle-btn" class="text-yellow-500 hover:scale-110 transition p-2 bg-gray-900 rounded-full border border-gray-800">▶️</button>
             <button id="header-auth-btn" class="bg-yellow-500 text-black px-4 py-1 rounded font-bold text-sm">LOGIN</button>
         </div>
     </header>
@@ -48,43 +44,19 @@
     </section>
 
     <main id="main-content" class="hidden p-6 max-w-6xl mx-auto">
-        
-        <div id="mortal-timer-container" class="hidden mb-8 zeus-border bg-yellow-500/5 p-4 rounded-xl flex justify-between items-center">
-            <div>
-                <p class="text-[10px] uppercase text-yellow-500 font-bold tracking-widest">Mortal Vision Remaining</p>
-                <p id="zeus-timer" class="text-3xl font-mono font-black">10:00</p>
-            </div>
-            <button onclick="console.log('Ascend Button Pushed'); window.toggleLoginModal(true)" class="bg-yellow-500 text-black px-10 py-4 rounded-full font-black text-lg hover:scale-105 transition-transform uppercase tracking-widest">
-    Ascend to Pro
-</button>        </div>
-
-        <section id="admin-panel" class="hidden mb-10 p-6 zeus-border bg-yellow-500/10 rounded-2xl">
-            <h3 class="text-yellow-500 font-black mb-4 uppercase text-sm tracking-widest">⚡ Zeus Command: Register New Titan</h3>
-            <form id="titan-entry-form" class="grid grid-cols-2 md:grid-cols-6 gap-2">
-                <input type="text" id="titan-name" placeholder="Name" class="grid-input md:col-span-2" required>
-                <input type="number" id="titan-q1" placeholder="Q1" class="grid-input" required>
-                <input type="number" id="titan-q2" placeholder="Q2" class="grid-input" required>
-                <input type="number" id="titan-q3" placeholder="Q3" class="grid-input" required>
-                <input type="number" id="titan-q4" placeholder="Q4" class="grid-input" required>
-                <button type="submit" class="md:col-span-6 mt-2 bg-yellow-500 text-black font-black py-2 rounded uppercase text-xs hover:bg-yellow-400">Push to Grid</button>
-            </form>
-        </section>
-
-        <section id="zeus-oracle" class="mb-6 p-4 zeus-border bg-black rounded-xl">
+        <div id="zeus-oracle" class="mb-6 p-4 zeus-border bg-black rounded-xl">
             <h4 class="text-yellow-500 font-black text-xs tracking-widest uppercase mb-2">⚡ Zeus Oracle Commentary</h4>
             <div id="zeus-voice-output" class="italic text-gray-300 text-sm">"Watching the grid... waiting for the titans to clash."</div>
-        </section>
+        </div>
 
         <section class="grid md:grid-cols-3 gap-6">
             <div class="md:col-span-1 zeus-border bg-gray-900/50 rounded-2xl flex flex-col h-[500px]">
-                <div class="p-4 border-b border-gray-800">
-                    <h3 class="text-yellow-500 font-bold uppercase text-xs tracking-widest">🏛️ The War Room</h3>
-                </div>
+                <div class="p-4 border-b border-gray-800"><h3 class="text-yellow-500 font-bold uppercase text-xs tracking-widest">🏛️ The War Room</h3></div>
                 <div id="chat-messages" class="flex-grow p-4 overflow-y-auto space-y-3 text-sm no-scrollbar"></div>
-                <div class="p-4 border-t border-gray-800 flex gap-2">
+                <form id="chat-form" class="p-4 border-t border-gray-800 flex gap-2">
                     <input type="text" id="chat-input" placeholder="Enter transmission..." class="grid-input flex-grow">
-                    <button id="send-chat" class="bg-yellow-500 text-black px-4 py-2 rounded font-bold text-xs uppercase">Send</button>
-                </div>
+                    <button type="submit" class="bg-yellow-500 text-black px-4 py-2 rounded font-bold text-xs uppercase">Send</button>
+                </form>
             </div>
 
             <div class="md:col-span-2 zeus-border bg-black rounded-2xl overflow-hidden overflow-x-auto">
@@ -100,9 +72,7 @@
                         </tr>
                     </thead>
                     <tbody id="match-grid-body" class="text-xs">
-                        <tr>
-                            <td colspan="6" class="p-10 text-center text-gray-500 italic animate-pulse">Syncing with Olympus...</td>
-                        </tr>
+                        <tr><td colspan="6" class="p-10 text-center text-gray-500 italic animate-pulse">Syncing with Olympus...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -118,9 +88,7 @@
                 <button type="submit" id="login-submit-btn" class="w-full bg-yellow-500 text-black font-black py-3 rounded-xl uppercase hover:bg-yellow-400 transition-all">Sign In</button>
             </form>
             <div class="mt-4 text-center">
-                <button id="toggle-auth-mode" onclick="window.toggleAuthMode()" type="button" class="text-[9px] text-gray-500 hover:text-yellow-500 font-bold uppercase tracking-widest">
-                    Switch to Sign Up
-                </button>
+                <button id="toggle-auth-mode" onclick="window.toggleAuthMode()" type="button" class="text-[9px] text-gray-500 hover:text-yellow-500 font-bold uppercase tracking-widest">Switch to Sign Up</button>
             </div>
             <button onclick="window.toggleLoginModal(false)" class="mt-4 w-full text-gray-700 text-[10px] font-bold uppercase hover:text-white">Close</button>
         </div>
@@ -128,50 +96,35 @@
 
     <script src="bundle.js"></script>
     <script>
-        // 1. Function to reveal the Grid (The "Ascension" UI change)
+        // 1. Reveal Grid Logic
         window.revealTitanGrid = function(userEmail) {
-            console.log("Revealing Grid for:", userEmail);
-            
-            // Hide the Paywall
-            const paywall = document.getElementById('paywall-content');
-            if(paywall) paywall.classList.add('hidden');
-            
-            // Show the Main Content (Grid & War Room)
-            const mainContent = document.getElementById('main-content');
-            if(mainContent) mainContent.classList.remove('hidden');
-            
-            // Update Status Text
+            console.log("Access Granted to:", userEmail);
+            document.getElementById('paywall-content').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
             const status = document.getElementById('user-status');
-            if(status) {
-                status.innerText = "Status: Titan Vision";
-                status.classList.remove('text-gray-500');
-                status.classList.add('text-yellow-500');
-            }
-            
-            // Close the modal
+            status.innerText = "Status: Titan Vision";
+            status.style.color = "#eab308";
             window.toggleLoginModal(false);
         };
 
-        // 2. Listener for Firebase Auth (Dispatched from bundle.js)
+        // 2. Auth Success Listener
         document.addEventListener('firebase-auth-ready', (event) => {
             if (event.detail && event.detail.user) {
                 window.revealTitanGrid(event.detail.user.email);
             }
         });
 
-        // 3. Modal Toggle Logic
+        // 3. Modal Toggles
         window.toggleLoginModal = (show) => {
             const modal = document.getElementById('login-modal');
             if(modal) show ? modal.classList.remove('hidden') : modal.classList.add('hidden');
         };
 
-        // 4. Auth Mode Toggle (Sign In vs Sign Up)
         window.toggleAuthMode = function() {
             const title = document.querySelector('#login-modal h2');
             const submitBtn = document.getElementById('login-submit-btn');
             const toggleBtn = document.getElementById('toggle-auth-mode');
-            
-            if (submitBtn.innerText.toUpperCase() === 'SIGN IN') {
+            if (submitBtn.innerText.includes('SIGN IN')) {
                 title.innerText = 'ASCENSION (SIGN UP)';
                 submitBtn.innerText = 'CREATE ACCOUNT';
                 toggleBtn.innerText = 'SWITCH TO SIGN IN';
@@ -182,24 +135,28 @@
             }
         };
 
-        // 5. Initial Loader Logic
+        // 4. THE JUMPSTART (Form Connection)
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            const mode = document.getElementById('login-submit-btn').innerText;
+            console.log("Attempting Auth with:", email, "Mode:", mode);
+            const authEvent = new CustomEvent('trigger-auth', {
+                detail: { email, pass, isSignUp: mode.includes('CREATE') }
+            });
+            document.dispatchEvent(authEvent);
+        });
+
+        // 5. General Listeners
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loader = document.getElementById('loading-overlay');
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.classList.add('hidden'), 500);
-                }
+                if(loader) { loader.style.opacity = '0'; setTimeout(() => loader.classList.add('hidden'), 500); }
             }, 1000);
         });
 
-        // 6. Header Login Link
-        document.addEventListener('DOMContentLoaded', () => {
-            const headerBtn = document.getElementById('header-auth-btn');
-            if(headerBtn) {
-                headerBtn.addEventListener('click', () => window.toggleLoginModal(true));
-            }
-        });
+        document.getElementById('header-auth-btn').onclick = () => window.toggleLoginModal(true);
     </script>
 </body>
 </html>
