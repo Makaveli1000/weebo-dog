@@ -1,10 +1,22 @@
 // --- 1. FIREBASE INITIALIZATION ---
 import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-import { getFirestore, collection, onSnapshot, addDoc, serverTimestamp, query, orderBy, limit } from "firebase/firestore";
-import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
-import { getRemoteConfig, fetchAndActivate } from "firebase/remote-config";
+import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword 
+} from "firebase/auth";
+import { 
+    getFirestore, 
+    collection, 
+    onSnapshot, 
+    query, 
+    orderBy 
+} from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getRemoteConfig } from "firebase/remote-config";
 
+// Configuration from your Netlify environment
 const netlifyFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG;
 const app = initializeApp(netlifyFirebaseConfig);
 const auth = getAuth(app);
@@ -12,11 +24,37 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const remoteConfig = getRemoteConfig(app);
 
-// --- 2. THE GRID & ADMIN LOGIC (Integrated) ---
-const gridBody = document.getElementById('match-grid-body');
-const adminPanel = document.getElementById('admin-panel');
+// --- 2. THE RECEIVER (The Bridge from HTML to Firebase) ---
+// This is what makes your "Thinking" button actually work!
+document.addEventListener('trigger-auth', async (event) => {
+    const { email, pass, isSignUp } = event.detail;
 
-// This function now uses the 'db' we just initialized above
+    try {
+        let userCredential;
+        if (isSignUp) {
+            // Logic for creating a new Titan account
+            userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        } else {
+            // Logic for signing in an existing Titan
+            userCredential = await signInWithEmailAndPassword(auth, email, pass);
+        }
+
+        // SUCCESS: Dispatch the signal back to HTML to show the grid
+        document.dispatchEvent(new CustomEvent('firebase-auth-ready', {
+            detail: { user: userCredential.user }
+        }));
+
+    } catch (error) {
+        // ERROR: Dispatch error to HTML to stop "Thinking" and show alert
+        document.dispatchEvent(new CustomEvent('auth-error', {
+            detail: { message: error.message }
+        }));
+    }
+});
+
+// --- 3. THE GRID SYNC LOGIC ---
+const gridBody = document.getElementById('match-grid-body');
+
 const syncGrid = () => {
     const q = query(collection(db, "athletes"), orderBy("score0", "desc"));
     onSnapshot(q, (snapshot) => {
@@ -39,20 +77,22 @@ const syncGrid = () => {
     });
 };
 
-// --- 3. AUTH OBSERVER ---
+// --- 4. AUTH OBSERVER ---
 onAuthStateChanged(auth, (user) => {
     const mainContent = document.getElementById('main-content');
     const paywall = document.getElementById('paywall-content');
+    const adminPanel = document.getElementById('admin-panel');
     
     if (user) {
         if (mainContent) mainContent.classList.remove('hidden');
         if (paywall) paywall.classList.add('hidden');
-        if (user.uid === "cEQQHNVXPQfXFhOzO1xBXWZcGy52") { // Your Admin UID
+        
+        // Admin Check (Using your specific UID)
+        if (user.uid === "cEQQHNVXPQfXFhOzO1xBXWZcGy52") {
              adminPanel?.classList.remove('hidden');
         }
         syncGrid();
     }
 });
 
-// Export everything for other files to use
-export { auth, db, storage, serverTimestamp };
+export { auth, db, storage };
