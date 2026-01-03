@@ -135,20 +135,28 @@
             }
         };
 
-        // 4. THE JUMPSTART (Form Connection)
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
-            const mode = document.getElementById('login-submit-btn').innerText;
-            console.log("Attempting Auth with:", email, "Mode:", mode);
-            const authEvent = new CustomEvent('trigger-auth', {
-                detail: { email, pass, isSignUp: mode.includes('CREATE') }
-            });
-            document.dispatchEvent(authEvent);
-        });
+        // 4. THE JUMPSTART (Direct Auth Trigger)
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    const submitBtn = document.getElementById('login-submit-btn');
+    const isSignUp = submitBtn.innerText.includes('CREATE');
 
-        // 5. General Listeners
+    console.log("🚀 Launching Auth...", { email, isSignUp });
+
+    // We try to call the function directly if it exists in bundle.js
+    if (window.firebaseAuth) {
+        window.firebaseAuth(email, pass, isSignUp);
+    } else {
+        // Fallback: Dispatch the event if the function isn't global
+        const authEvent = new CustomEvent('trigger-auth', {
+            detail: { email, pass, isSignUp }
+        });
+        document.dispatchEvent(authEvent);
+    }
+});        // 5. General Listeners
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loader = document.getElementById('loading-overlay');
