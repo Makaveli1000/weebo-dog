@@ -135,28 +135,35 @@
             }
         };
 
-        // 4. THE JUMPSTART (Direct Auth Trigger)
-document.getElementById('login-form').addEventListener('submit', async (e) => {
+        // 4. THE JUMPSTART (Direct Connection to Firebase)
+document.getElementById('login-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-password').value;
     const submitBtn = document.getElementById('login-submit-btn');
-    const isSignUp = submitBtn.innerText.includes('CREATE');
+    const isSignUp = submitBtn.innerText.toUpperCase().includes('CREATE');
 
-    console.log("🚀 Launching Auth...", { email, isSignUp });
+    console.log("🚀 Dispatching Auth Request:", { email, isSignUp });
 
-    // We try to call the function directly if it exists in bundle.js
-    if (window.firebaseAuth) {
-        window.firebaseAuth(email, pass, isSignUp);
-    } else {
-        // Fallback: Dispatch the event if the function isn't global
-        const authEvent = new CustomEvent('trigger-auth', {
-            detail: { email, pass, isSignUp }
-        });
-        document.dispatchEvent(authEvent);
-    }
-});        // 5. General Listeners
+    // This creates the custom event that bundle.js needs to hear
+    const authEvent = new CustomEvent('trigger-auth', {
+        detail: { 
+            email: email, 
+            pass: pass, 
+            isSignUp: isSignUp 
+        }
+    });
+    
+    // We dispatch it to the DOCUMENT so bundle.js can catch it
+    document.dispatchEvent(authEvent);
+});
+
+// ADD THIS: Error Listener so you know WHY it failed
+document.addEventListener('auth-error', (event) => {
+    console.error("Firebase Error:", event.detail);
+    alert("Ascension Failed: " + (event.detail.message || "Invalid Credentials"));
+});     // 5. General Listeners
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loader = document.getElementById('loading-overlay');
