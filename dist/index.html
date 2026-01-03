@@ -118,35 +118,51 @@
                 <button type="submit" id="login-submit-btn" class="w-full bg-yellow-500 text-black font-black py-3 rounded-xl uppercase hover:bg-yellow-400 transition-all">Sign In</button>
             </form>
             <div class="mt-4 text-center">
-                <button id="toggle-auth-mode" class="text-[9px] text-gray-500 hover:text-yellow-500 font-bold uppercase tracking-widest">Switch to Sign Up</button>
+                <button id="toggle-auth-mode" onclick="window.toggleAuthMode()" type="button" class="text-[9px] text-gray-500 hover:text-yellow-500 font-bold uppercase tracking-widest">
+                    Switch to Sign Up
+                </button>
             </div>
             <button onclick="window.toggleLoginModal(false)" class="mt-4 w-full text-gray-700 text-[10px] font-bold uppercase hover:text-white">Close</button>
         </div>
     </div>
 
-    <script src="./bundle.js"></script>
-
+    <script src="bundle.js"></script>
     <script>
-        // Loader Logic
+        // 1. Loading Overlay Logic
         window.addEventListener('load', () => {
-            const loader = document.getElementById('loading-overlay');
-            if(loader) {
-                setTimeout(() => {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.classList.add('hidden'), 500);
-                }, 1000);
-            }
+            setTimeout(() => {
+                const loader = document.getElementById('loading-overlay');
+                if(loader) loader.style.opacity = '0';
+                setTimeout(() => loader.classList.add('hidden'), 500);
+            }, 1000);
         });
 
-        // Modal Toggle
-        window.toggleLoginModal = function(show) {
+        // 2. Modal Toggle Logic
+        window.toggleLoginModal = (show) => {
             const modal = document.getElementById('login-modal');
-            if(modal) {
-                show ? modal.classList.remove('hidden') : modal.classList.add('hidden');
-            }
+            if(modal) show ? modal.classList.remove('hidden') : modal.classList.add('hidden');
         };
 
-        // Header Login Link
+        // 3. FIX: Auth Mode Toggle Logic (Sign In vs Sign Up)
+        window.toggleAuthMode = function() {
+            const title = document.querySelector('#login-modal h2');
+            const submitBtn = document.getElementById('login-submit-btn');
+            const toggleBtn = document.getElementById('toggle-auth-mode');
+            
+            // Using toUpperCase() to make the check bulletproof
+            if (submitBtn.innerText.toUpperCase() === 'SIGN IN') {
+                title.innerText = 'ASCENSION (SIGN UP)';
+                submitBtn.innerText = 'CREATE ACCOUNT';
+                toggleBtn.innerText = 'SWITCH TO SIGN IN';
+            } else {
+                title.innerText = 'ASCENSION';
+                submitBtn.innerText = 'SIGN IN';
+                toggleBtn.innerText = 'SWITCH TO SIGN UP';
+            }
+            console.log("Auth Mode Switched to: " + submitBtn.innerText);
+        };
+
+        // 4. Header Login Button Link
         document.addEventListener('DOMContentLoaded', () => {
             const headerBtn = document.getElementById('header-auth-btn');
             if(headerBtn) {
