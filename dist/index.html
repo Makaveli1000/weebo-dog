@@ -141,7 +141,7 @@
             }
         };
 
-        // 4. THE JUMPSTART (Direct Connection to Firebase)
+       // 4. THE JUMPSTART (Direct Connection to Firebase)
 document.getElementById('login-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -150,17 +150,27 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     const submitBtn = document.getElementById('login-submit-btn');
     const isSignUp = submitBtn.innerText.toUpperCase().includes('CREATE');
 
+    // VISUAL PROOF: Change the button so you know it pushed!
+    submitBtn.innerText = "THINKING..."; 
+    submitBtn.disabled = true;
+
     console.log("🚀 Dispatching Auth Request:", { email, isSignUp });
 
-    // This creates the custom event that bundle.js needs to hear
     const authEvent = new CustomEvent('trigger-auth', {
-        detail: { 
-            email: email, 
-            pass: pass, 
-            isSignUp: isSignUp 
-        }
+        detail: { email, pass, isSignUp }
     });
     
+    document.dispatchEvent(authEvent);
+    
+    // Reset the button after 5 seconds if nothing happens (Timeout)
+    setTimeout(() => {
+        if (submitBtn.innerText === "THINKING...") {
+            submitBtn.innerText = isSignUp ? "CREATE ACCOUNT" : "SIGN IN";
+            submitBtn.disabled = false;
+            console.log("⚠️ Firebase took too long to respond.");
+        }
+    }, 5000);
+});    
     // We dispatch it to the DOCUMENT so bundle.js can catch it
     document.dispatchEvent(authEvent);
 });
