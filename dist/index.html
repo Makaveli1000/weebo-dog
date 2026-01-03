@@ -128,28 +128,49 @@
 
     <script src="bundle.js"></script>
     <script>
-        // 1. Loading Overlay Logic
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const loader = document.getElementById('loading-overlay');
-                if(loader) loader.style.opacity = '0';
-                setTimeout(() => loader.classList.add('hidden'), 500);
-            }, 1000);
+        // 1. Function to reveal the Grid (The "Ascension" UI change)
+        window.revealTitanGrid = function(userEmail) {
+            console.log("Revealing Grid for:", userEmail);
+            
+            // Hide the Paywall
+            const paywall = document.getElementById('paywall-content');
+            if(paywall) paywall.classList.add('hidden');
+            
+            // Show the Main Content (Grid & War Room)
+            const mainContent = document.getElementById('main-content');
+            if(mainContent) mainContent.classList.remove('hidden');
+            
+            // Update Status Text
+            const status = document.getElementById('user-status');
+            if(status) {
+                status.innerText = "Status: Titan Vision";
+                status.classList.remove('text-gray-500');
+                status.classList.add('text-yellow-500');
+            }
+            
+            // Close the modal
+            window.toggleLoginModal(false);
+        };
+
+        // 2. Listener for Firebase Auth (Dispatched from bundle.js)
+        document.addEventListener('firebase-auth-ready', (event) => {
+            if (event.detail && event.detail.user) {
+                window.revealTitanGrid(event.detail.user.email);
+            }
         });
 
-        // 2. Modal Toggle Logic
+        // 3. Modal Toggle Logic
         window.toggleLoginModal = (show) => {
             const modal = document.getElementById('login-modal');
             if(modal) show ? modal.classList.remove('hidden') : modal.classList.add('hidden');
         };
 
-        // 3. FIX: Auth Mode Toggle Logic (Sign In vs Sign Up)
+        // 4. Auth Mode Toggle (Sign In vs Sign Up)
         window.toggleAuthMode = function() {
             const title = document.querySelector('#login-modal h2');
             const submitBtn = document.getElementById('login-submit-btn');
             const toggleBtn = document.getElementById('toggle-auth-mode');
             
-            // Using toUpperCase() to make the check bulletproof
             if (submitBtn.innerText.toUpperCase() === 'SIGN IN') {
                 title.innerText = 'ASCENSION (SIGN UP)';
                 submitBtn.innerText = 'CREATE ACCOUNT';
@@ -159,10 +180,20 @@
                 submitBtn.innerText = 'SIGN IN';
                 toggleBtn.innerText = 'SWITCH TO SIGN UP';
             }
-            console.log("Auth Mode Switched to: " + submitBtn.innerText);
         };
 
-        // 4. Header Login Button Link
+        // 5. Initial Loader Logic
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loading-overlay');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.classList.add('hidden'), 500);
+                }
+            }, 1000);
+        });
+
+        // 6. Header Login Link
         document.addEventListener('DOMContentLoaded', () => {
             const headerBtn = document.getElementById('header-auth-btn');
             if(headerBtn) {
