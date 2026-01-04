@@ -12,8 +12,6 @@
         .grid-input { background: #111; border: 1px solid #333; padding: 8px; border-radius: 4px; color: white; width: 100%; }
         .grid-input:focus { border-color: #eab308; outline: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        #chat-messages::-webkit-scrollbar { width: 4px; }
-        #chat-messages::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-black text-white overflow-x-hidden">
@@ -32,7 +30,6 @@
             <p id="user-status" class="text-[9px] uppercase tracking-widest text-gray-500 font-bold">Status: Mortal Vision</p>
         </div>
         <div class="flex gap-4 items-center">
-            <button id="radio-toggle-btn" class="text-yellow-500 hover:scale-110 transition p-2 bg-gray-900 rounded-full border border-gray-800">▶️</button>
             <button id="header-auth-btn" class="bg-yellow-500 text-black px-4 py-1 rounded font-bold text-sm">LOGIN</button>
         </div>
     </header>
@@ -48,123 +45,102 @@
             <h4 class="text-yellow-500 font-black text-xs tracking-widest uppercase mb-2">⚡ Zeus Oracle Commentary</h4>
             <div id="zeus-voice-output" class="italic text-gray-300 text-sm">"Watching the grid... waiting for the titans to clash."</div>
         </div>
-        </main>
+
+        <div id="admin-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl">
+            <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Add New Titan</h3>
+            <form id="add-athlete-form" class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                <input type="text" name="name" placeholder="NAME" class="grid-input md:col-span-1" required>
+                <input type="number" name="score0" placeholder="S0" class="grid-input" required>
+                <input type="number" name="score1" placeholder="S1" class="grid-input" required>
+                <input type="number" name="score2" placeholder="S2" class="grid-input" required>
+                <input type="number" name="score3" placeholder="S3" class="grid-input" required>
+                <input type="number" name="score4" placeholder="S4" class="grid-input" required>
+                <button type="submit" class="col-span-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition">Deploy Athlete</button>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-800">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-900 text-[10px] uppercase tracking-[0.2em] text-gray-500">
+                    <tr>
+                        <th class="p-3">Athlete</th>
+                        <th class="p-3 text-center">Score 0</th>
+                        <th class="p-3 text-center">Score 1</th>
+                        <th class="p-3 text-center">Score 2</th>
+                        <th class="p-3 text-center">Score 3</th>
+                        <th class="p-3 text-center">Score 4</th>
+                    </tr>
+                </thead>
+                <tbody id="match-grid-body" class="divide-y divide-gray-800">
+                    </tbody>
+            </table>
+        </div>
+    </main>
 
     <div id="login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
         <div class="bg-gray-900 border border-yellow-500/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl">
             <h2 class="text-2xl font-black text-yellow-500 mb-2 uppercase italic">Ascension</h2>
             <form id="login-form" class="space-y-4">
                 <input type="email" id="login-email" placeholder="EMAIL" class="grid-input" required>
-                <input type="password" id="login-password" placeholder="PASSWORD" class="grid-input" autocomplete="current-password" required>
+                <input type="password" id="login-password" placeholder="PASSWORD" class="grid-input" required>
                 <button type="submit" id="login-submit-btn" class="w-full bg-yellow-500 text-black font-black py-3 rounded-xl uppercase hover:bg-yellow-400 transition-all">Sign In</button>
             </form>
             <div class="mt-4 text-center">
-                <button id="toggle-auth-mode" onclick="window.toggleAuthMode()" type="button" class="text-[9px] text-gray-500 hover:text-yellow-500 font-bold uppercase tracking-widest">Switch to Sign Up</button>
+                <button onclick="window.toggleAuthMode()" id="toggle-auth-mode" class="text-[9px] text-gray-500 hover:text-yellow-500 font-bold uppercase tracking-widest">Switch to Sign Up</button>
             </div>
             <button onclick="window.toggleLoginModal(false)" class="mt-4 w-full text-gray-700 text-[10px] font-bold uppercase hover:text-white">Close</button>
         </div>
     </div>
 
-    <script src="bundle.js"></script>
-    <script>
-        // 1. Reveal Grid Logic
-        window.revealTitanGrid = function(userEmail) {
-            console.log("Access Granted to:", userEmail);
-            const paywall = document.getElementById('paywall-content');
-            const mainContent = document.getElementById('main-content');
-            const status = document.getElementById('user-status');
-            
-            if(paywall) paywall.classList.add('hidden');
-            if(mainContent) mainContent.classList.remove('hidden');
-            if(status) {
-                status.innerText = "Status: Titan Vision";
-                status.style.color = "#eab308";
-            }
-            window.toggleLoginModal(false);
+    <script src="bundle.js"></script> <script>
+        // Modal & Visual Logic
+        window.toggleLoginModal = (show) => {
+            document.getElementById('login-modal').classList.toggle('hidden', !show);
         };
 
-        // 2. Auth Success Listener (From Firebase)
-        document.addEventListener('firebase-auth-ready', (event) => {
-            if (event.detail && event.detail.user) {
-                window.revealTitanGrid(event.detail.user.email);
-            }
+        window.toggleAuthMode = () => {
+            const btn = document.getElementById('login-submit-btn');
+            const title = document.querySelector('#login-modal h2');
+            const toggle = document.getElementById('toggle-auth-mode');
+            const isLoggingIn = btn.innerText.includes('SIGN IN');
+            
+            btn.innerText = isLoggingIn ? 'CREATE ACCOUNT' : 'SIGN IN';
+            title.innerText = isLoggingIn ? 'ASCENSION (SIGN UP)' : 'ASCENSION';
+            toggle.innerText = isLoggingIn ? 'SWITCH TO SIGN IN' : 'SWITCH TO SIGN UP';
+        };
+
+        // Handle the login form submission
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-password').value;
+            const isSignUp = document.getElementById('login-submit-btn').innerText.includes('CREATE');
+            
+            document.getElementById('login-submit-btn').innerText = "THINKING...";
+            
+            // Sends signal to bundle.js
+            document.dispatchEvent(new CustomEvent('trigger-auth', {
+                detail: { email, pass, isSignUp }
+            }));
         });
 
-        // 3. Modal Toggles
-        window.toggleLoginModal = (show) => {
-            const modal = document.getElementById('login-modal');
-            if(modal) show ? modal.classList.remove('hidden') : modal.classList.add('hidden');
-        };
+        // Listen for Auth Success from Firebase
+        document.addEventListener('firebase-auth-ready', (event) => {
+            window.toggleLoginModal(false);
+            document.getElementById('paywall-content').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            const status = document.getElementById('user-status');
+            status.innerText = "Status: Titan Vision";
+            status.style.color = "#eab308";
+        });
 
-        window.toggleAuthMode = function() {
-            const title = document.querySelector('#login-modal h2');
-            const submitBtn = document.getElementById('login-submit-btn');
-            const toggleBtn = document.getElementById('toggle-auth-mode');
-            if (submitBtn.innerText.toUpperCase().includes('SIGN IN')) {
-                title.innerText = 'ASCENSION (SIGN UP)';
-                submitBtn.innerText = 'CREATE ACCOUNT';
-                toggleBtn.innerText = 'SWITCH TO SIGN IN';
-            } else {
-                title.innerText = 'ASCENSION';
-                submitBtn.innerText = 'SIGN IN';
-                toggleBtn.innerText = 'SWITCH TO SIGN UP';
-            }
-        };
-
-        // 4. THE JUMPSTART (Fixed & Cleaned)
-        const loginForm = document.getElementById('login-form');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const email = document.getElementById('login-email').value;
-                const pass = document.getElementById('login-password').value;
-                const submitBtn = document.getElementById('login-submit-btn');
-                const isSignUp = submitBtn.innerText.toUpperCase().includes('CREATE');
-
-                // Visual Feedback
-                const originalText = submitBtn.innerText;
-                submitBtn.innerText = "THINKING...";
-                submitBtn.disabled = true;
-
-                console.log("🚀 Dispatching Auth Request:", { email, isSignUp });
-
-                const authEvent = new CustomEvent('trigger-auth', {
-                    detail: { email, pass, isSignUp }
-                });
-                document.dispatchEvent(authEvent);
-
-                // Auto-reset button if no response within 5s
-                setTimeout(() => {
-                    if (submitBtn.innerText === "THINKING...") {
-                        submitBtn.innerText = originalText;
-                        submitBtn.disabled = false;
-                    }
-                }, 5000);
-            });
-        }
-
-        // 5. Loaders & Header
+        // Hide Loader on Start
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const loader = document.getElementById('loading-overlay');
-                if(loader) { 
-                    loader.style.opacity = '0'; 
-                    setTimeout(() => loader.classList.add('hidden'), 500); 
-                }
+                loader.style.opacity = '0';
+                setTimeout(() => loader.classList.add('hidden'), 500);
             }, 1000);
-        });
-
-        const headerBtn = document.getElementById('header-auth-btn');
-        if(headerBtn) headerBtn.onclick = () => window.toggleLoginModal(true);
-
-        // 6. Error Listener
-        document.addEventListener('auth-error', (event) => {
-            const submitBtn = document.getElementById('login-submit-btn');
-            if(submitBtn) {
-                submitBtn.innerText = submitBtn.innerText.includes('CREATE') ? 'CREATE ACCOUNT' : 'SIGN IN';
-                submitBtn.disabled = false;
-            }
-            alert("Ascension Failed: " + (event.detail.message || "Invalid Credentials"));
         });
     </script>
 </body>
