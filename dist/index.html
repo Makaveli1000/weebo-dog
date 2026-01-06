@@ -127,8 +127,16 @@
         });
 
         // Listen for Auth Success from Firebase
-        document.addEventListener('firebase-auth-ready', (event) => {
-            window.toggleLoginModal(false);
+document.addEventListener('firebase-auth-ready', (event) => {
+    console.log("Auth Success Signal Received!"); 
+    window.toggleLoginModal(false); // Close the box
+    
+    document.getElementById('paywall-content').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+    
+    // Reset the button text in case they log out and back in
+    document.getElementById('login-submit-btn').innerText = "SIGN IN";
+});
             document.getElementById('paywall-content').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
             const status = document.getElementById('user-status');

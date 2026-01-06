@@ -29,24 +29,34 @@ const remoteConfig = getRemoteConfig(app);
 // --- 2. THE RECEIVER (The Bridge from HTML to Firebase) ---
 document.addEventListener('trigger-auth', async (event) => {
     const { email, pass, isSignUp } = event.detail;
+
     try {
         let userCredential;
         if (isSignUp) {
+            // Logic for creating a new Titan account
             userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         } else {
+            // Logic for signing in an existing Titan
             userCredential = await signInWithEmailAndPassword(auth, email, pass);
         }
+
+        // SUCCESS: Dispatch the signal back to HTML to stop "Thinking" and show the grid
         document.dispatchEvent(new CustomEvent('firebase-auth-ready', {
             detail: { user: userCredential.user }
         }));
+
     } catch (error) {
+        // ERROR: Send signal to stop "Thinking" and show alert
+        console.error("Auth Error:", error.message);
+        
+        // This tells the HTML that something went wrong
         document.dispatchEvent(new CustomEvent('auth-error', {
             detail: { message: error.message }
         }));
+        
+        alert("Ascension Failed: " + error.message);
     }
-});
-
-// --- 3. THE GRID SYNC LOGIC ---
+});// --- 3. THE GRID SYNC LOGIC ---
 const gridBody = document.getElementById('match-grid-body');
 
 const syncGrid = () => {
