@@ -95,63 +95,57 @@
     </div>
 
     <script src="bundle.js"></script> <script>
-        // Modal & Visual Logic
-        window.toggleLoginModal = (show) => {
-            document.getElementById('login-modal').classList.toggle('hidden', !show);
-        };
+    // 1. Modal & Visual Logic
+    window.toggleLoginModal = (show) => {
+        const modal = document.getElementById('login-modal');
+        if (modal) modal.classList.toggle('hidden', !show);
+    };
 
-        window.toggleAuthMode = () => {
-            const btn = document.getElementById('login-submit-btn');
-            const title = document.querySelector('#login-modal h2');
-            const toggle = document.getElementById('toggle-auth-mode');
-            const isLoggingIn = btn.innerText.includes('SIGN IN');
-            
-            btn.innerText = isLoggingIn ? 'CREATE ACCOUNT' : 'SIGN IN';
-            title.innerText = isLoggingIn ? 'ASCENSION (SIGN UP)' : 'ASCENSION';
-            toggle.innerText = isLoggingIn ? 'SWITCH TO SIGN IN' : 'SWITCH TO SIGN UP';
-        };
+    window.toggleAuthMode = () => {
+        const btn = document.getElementById('login-submit-btn');
+        const title = document.querySelector('#login-modal h2');
+        const toggle = document.getElementById('toggle-auth-mode');
+        const isLoggingIn = btn.innerText.includes('SIGN IN');
+        
+        btn.innerText = isLoggingIn ? 'CREATE ACCOUNT' : 'SIGN IN';
+        title.innerText = isLoggingIn ? 'ASCENSION (SIGN UP)' : 'ASCENSION';
+        toggle.innerText = isLoggingIn ? 'SWITCH TO SIGN IN' : 'SWITCH TO SIGN UP';
+    };
 
-        // Handle the login form submission
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-password').value;
-            const isSignUp = document.getElementById('login-submit-btn').innerText.includes('CREATE');
-            
-            document.getElementById('login-submit-btn').innerText = "THINKING...";
-            
-            // Sends signal to bundle.js
-            document.dispatchEvent(new CustomEvent('trigger-auth', {
-                detail: { email, pass, isSignUp }
-            }));
-        });
+    // 2. Login Form Submission
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-password').value;
+        const btn = document.getElementById('login-submit-btn');
+        const isSignUp = btn.innerText.includes('CREATE');
+        
+        btn.innerText = "THINKING...";
+        
+        // Sends signal to bundle.js
+        document.dispatchEvent(new CustomEvent('trigger-auth', {
+            detail: { email, pass, isSignUp }
+        }));
+    });
 
-        // Listen for Auth Success from Firebase
-document.addEventListener('firebase-auth-ready', (event) => {
-    console.log("Auth Success Signal Received!"); 
-    window.toggleLoginModal(false); // Close the box
-    
-    document.getElementById('paywall-content').classList.add('hidden');
-    document.getElementById('main-content').classList.remove('hidden');
-    
-    // Reset the button text in case they log out and back in
-    document.getElementById('login-submit-btn').innerText = "SIGN IN";
-});
-            document.getElementById('paywall-content').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            const status = document.getElementById('user-status');
-            status.innerText = "Status: Titan Vision";
-            status.style.color = "#eab308";
-        });
+    // 3. Listen for Auth Success
+    document.addEventListener('firebase-auth-ready', (event) => {
+        window.toggleLoginModal(false);
+        document.getElementById('paywall-content').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+        // Reset button for future use
+        document.getElementById('login-submit-btn').innerText = "SIGN IN";
+    });
 
-        // Hide Loader on Start
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const loader = document.getElementById('loading-overlay');
+    // 4. Hide Loader on Start
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const loader = document.getElementById('loading-overlay');
+            if (loader) {
                 loader.style.opacity = '0';
                 setTimeout(() => loader.classList.add('hidden'), 500);
-            }, 1000);
-        });
-    </script>
-</body>
+            }
+        }, 1000);
+    });
+</script></body>
 </html>
