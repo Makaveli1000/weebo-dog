@@ -277,7 +277,18 @@ function toggleLoginModal(show) {
         modal.classList.add('hidden');
     }
 }
+function toggleLoginModal(show) {
+    const modal = document.getElementById("login-modal");
+    if (!modal) return;
+
+    if (show) {
+        modal.classList.remove("hidden");
+    } else {
+        modal.classList.add("hidden");
+    }
+}
 window.toggleLoginModal = toggleLoginModal;
+
 
 
 // ACCOUNT MODAL
