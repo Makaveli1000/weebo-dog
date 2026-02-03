@@ -266,17 +266,36 @@ onAuthStateChanged(auth, async (user) => {
 // ============================================================================
 // ⚡ MORTAL INTERFACE CONTROLS — MODALS + AUTH ACTIONS
 // ============================================================================
-window.toggleLoginModal = (show) => {
+// LOGIN MODAL
+function toggleLoginModal(show) {
     const modal = document.getElementById('login-modal');
-    show ? modal?.classList.remove('hidden') : modal?.classList.add('hidden');
-};
+    if (!modal) return;
 
-window.toggleAccountModal = (show) => {
+    if (show) {
+        modal.classList.remove('hidden');
+    } else {
+        modal.classList.add('hidden');
+    }
+}
+window.toggleLoginModal = toggleLoginModal;
+
+
+// ACCOUNT MODAL
+function toggleAccountModal(show) {
     const modal = document.getElementById('account-modal');
-    show ? modal?.classList.remove('hidden') : modal?.classList.add('hidden');
-};
+    if (!modal) return;
 
-window.logIn = async () => {
+    if (show) {
+        modal.classList.remove('hidden');
+    } else {
+        modal.classList.add('hidden');
+    }
+}
+window.toggleAccountModal = toggleAccountModal;
+
+
+// LOGIN
+async function logIn() {
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-password').value;
     const submitBtn = document.getElementById('login-submit-btn');
@@ -288,8 +307,7 @@ window.logIn = async () => {
         }
 
         await signInWithEmailAndPassword(auth, email, pass);
-
-        window.toggleLoginModal(false);
+        toggleLoginModal(false);
 
     } catch (e) {
         alert("Login Error: " + e.message);
@@ -299,19 +317,23 @@ window.logIn = async () => {
             submitBtn.innerText = "SIGN IN";
         }
     }
-};
+}
+window.logIn = logIn;
 
-window.logOut = async () => {
+
+// LOGOUT
+async function logOut() {
     zeusLog('LOGOUT');
 
     window.speechSynthesis.cancel();
     if (mortalTimerInterval) clearInterval(mortalTimerInterval);
 
-    window.toggleAccountModal(false);
+    toggleAccountModal(false);
 
     await signOut(auth);
     window.location.reload();
-};
+}
+window.logOut = logOut;
 
 
 // ============================================================================
@@ -322,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            window.logIn();
+            logIn();
         });
     }
 
