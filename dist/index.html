@@ -259,7 +259,26 @@
 
   <!-- APP BUNDLE -->
     <script>
-  // Defensive fallback: define modal toggle globals only if bundle hasn't set them
+      <script>
+      // Attach submit handler that defers to bundle's `logIn` when available
+      (function(){
+        const form = document.getElementById('login-form');
+        if (!form) return;
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          if (typeof window.logIn === 'function') {
+            try { window.logIn(); } catch (err) { alert('Login failed: ' + err.message); }
+            return;
+          }
+          const submitBtn = document.getElementById('login-submit-btn');
+          const prev = submitBtn ? submitBtn.innerText : null;
+          if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'LOADING...'; }
+          alert('The app bundle is not loaded. Full login requires the built bundle (bundle.js).');
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = prev; }
+        });
+      })();
+      </script>
+      <script type="module" src="./dist/bundle.js"></script>
   if (!window.toggleLoginModal) {
     window.toggleLoginModal = function(show) {
       const modal = document.getElementById('login-modal');

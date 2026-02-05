@@ -290,16 +290,13 @@ onAuthStateChanged(auth, async (user) => {
 // ============================================================================
 // ⚡ MORTAL INTERFACE CONTROLS — MODALS + AUTH ACTIONS
 // ============================================================================
+
 // LOGIN MODAL
 function toggleLoginModal(show) {
     const modal = document.getElementById('login-modal');
     if (!modal) return;
 
-    if (show) {
-        modal.classList.remove('hidden');
-    } else {
-        modal.classList.add('hidden');
-    }
+    modal.classList.toggle('hidden', !show);
 }
 window.toggleLoginModal = toggleLoginModal;
 
@@ -309,20 +306,21 @@ function toggleAccountModal(show) {
     const modal = document.getElementById('account-modal');
     if (!modal) return;
 
-    if (show) {
-        modal.classList.remove('hidden');
-    } else {
-        modal.classList.add('hidden');
-    }
+    modal.classList.toggle('hidden', !show);
 }
 window.toggleAccountModal = toggleAccountModal;
 
 
 // LOGIN
 async function logIn() {
-    const email = document.getElementById('login-email').value;
-    const pass = document.getElementById('login-password').value;
+    const email = document.getElementById('login-email')?.value;
+    const pass = document.getElementById('login-password')?.value;
     const submitBtn = document.getElementById('login-submit-btn');
+
+    if (!email || !pass) {
+        alert("Missing credentials.");
+        return;
+    }
 
     try {
         if (submitBtn) {
@@ -350,8 +348,11 @@ async function logOut() {
     zeusLog('LOGOUT');
 
     window.speechSynthesis.cancel();
-    if (mortalTimerInterval) clearInterval(mortalTimerInterval);
-    mortalTimerInterval = null; // ✅ keep timer state clean on logout
+
+    if (mortalTimerInterval) {
+        clearInterval(mortalTimerInterval);
+        mortalTimerInterval = null;
+    }
 
     toggleAccountModal(false);
 
@@ -365,6 +366,7 @@ window.logOut = logOut;
 // ⚡ WAR ROOM EVENT BINDINGS
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
+
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
@@ -377,17 +379,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (upgradeBtn) {
         upgradeBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+
             upgradeBtn.disabled = true;
             upgradeBtn.innerText = "ASCENDING...";
-
             zeusLog('UPGRADE_CLICKED');
 
             try {
                 await upgradeUser();
                 zeusLog('UPGRADE_SUCCESS');
 
-                // ✅ UX closure after success
-                upgradeBtn.disabled = false;
                 upgradeBtn.innerText = "PRO UNLOCKED";
                 upgradeBtn.classList.add('opacity-60', 'cursor-default');
 
@@ -402,16 +402,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const debugToggle = document.getElementById('zeus-debug-toggle');
     const logPanel = document.getElementById('zeus-log-panel');
+
     if (debugToggle && logPanel) {
         debugToggle.addEventListener('click', () => {
             const isHidden = logPanel.classList.contains('hidden-panel');
-            if (isHidden) {
-                logPanel.classList.remove('hidden-panel');
-                zeusLog('DEBUG_CONSOLE_OPENED');
-            } else {
-                logPanel.classList.add('hidden-panel');
-                zeusLog('DEBUG_CONSOLE_CLOSED');
-            }
+
+            logPanel.classList.toggle('hidden-panel', !isHidden);
+            zeusLog(isHidden ? 'DEBUG_CONSOLE_OPENED' : 'DEBUG_CONSOLE_CLOSED');
         });
     }
 });
