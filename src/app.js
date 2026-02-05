@@ -150,10 +150,20 @@ function triggerZeusNarration(isPro) {
     window.speechSynthesis.speak(msg);
 }
 
-function startMortalTimer() {
-    zeusLog('MORTAL_TIMER_STARTED');
+// ============================================================================
+// ⚡ VOICE ENGINE READINESS FAILSAFE
+// ============================================================================
+window.speechSynthesis.onvoiceschanged = () => {
+    if (currentUser !== null) {
+        triggerZeusNarration(userIsPro);
+        zeusLog('VOICE_ENGINE_READY');
+    }
+};
 
-    if (mortalTimerInterval) clearInterval(mortalTimerInterval);
+function startMortalTimer() {
+    if (mortalTimerInterval) return; // ✅ Double-start guard
+
+    zeusLog('MORTAL_TIMER_STARTED');
 
     let timeLeft = 600;
     const timerElement = document.getElementById('zeus-timer');
@@ -174,6 +184,7 @@ function startMortalTimer() {
             zeusLog('MORTAL_TIMER_EXPIRED');
 
             clearInterval(mortalTimerInterval);
+            mortalTimerInterval = null; // ✅ allow re-start after expiry if needed
             document.getElementById('main-content')?.classList.add('hidden');
             document.getElementById('paywall-content')?.classList.remove('hidden');
             window.speechSynthesis.speak(new SpeechSynthesisUtterance("Your time has vanished, Mortal."));
@@ -251,6 +262,16 @@ onAuthStateChanged(auth, async (user) => {
 
         } catch (e) {
             console.error("Profile Fetch Error:", e);
+
+            // ✅ Fail closed, not frozen
+            zeusLog('PROFILE_FETCH_FAILED', { error: e.message });
+
+            userIsPro = false;
+            triggerZeusNarration(false);
+            startMortalTimer();
+
+            main?.classList.remove('hidden');
+            paywall?.classList.add('hidden');
         }
 
     } else {
@@ -259,6 +280,9 @@ onAuthStateChanged(auth, async (user) => {
         main?.classList.add('hidden');
         paywall?.classList.remove('hidden');
         window.speechSynthesis.cancel();
+
+        if (mortalTimerInterval) clearInterval(mortalTimerInterval);
+        mortalTimerInterval = null; // ✅ keep timer state clean on logout
     }
 });
 
@@ -277,18 +301,7 @@ function toggleLoginModal(show) {
         modal.classList.add('hidden');
     }
 }
-function toggleLoginModal(show) {
-    const modal = document.getElementById("login-modal");
-    if (!modal) return;
-
-    if (show) {
-        modal.classList.remove("hidden");
-    } else {
-        modal.classList.add("hidden");
-    }
-}
 window.toggleLoginModal = toggleLoginModal;
-
 
 
 // ACCOUNT MODAL
@@ -338,6 +351,7 @@ async function logOut() {
 
     window.speechSynthesis.cancel();
     if (mortalTimerInterval) clearInterval(mortalTimerInterval);
+    mortalTimerInterval = null; // ✅ keep timer state clean on logout
 
     toggleAccountModal(false);
 
@@ -371,6 +385,12 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 await upgradeUser();
                 zeusLog('UPGRADE_SUCCESS');
+
+                // ✅ UX closure after success
+                upgradeBtn.disabled = false;
+                upgradeBtn.innerText = "PRO UNLOCKED";
+                upgradeBtn.classList.add('opacity-60', 'cursor-default');
+
             } catch (err) {
                 upgradeBtn.disabled = false;
                 upgradeBtn.innerText = "UPGRADE TO PRO";

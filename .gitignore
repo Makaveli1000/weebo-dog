@@ -21,4 +21,4 @@ sntlmoexclusivesportsgrid-firebase-adminsdk-*.json
 dist/env-config.js
 
 # Allow everything else in dist (like bundle.js, styles, etc.)
-!dist/*
+!dist/*src/app.copy.js

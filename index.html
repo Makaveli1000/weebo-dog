@@ -1,222 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SntLMoExclusiveSportsGrid</title>
-    <link href="./output.css" rel="stylesheet">
-    <style>
-        .hidden { display: none !important; }
-        #loading-overlay { transition: opacity 0.5s ease; }
-        .zeus-border { border: 1px solid #eab308; box-shadow: 0 0 15px rgba(234, 179, 8, 0.2); }
-        .grid-input { background: #111; border: 1px solid #333; padding: 8px; border-radius: 4px; color: white; width: 100%; }
-        .grid-input:focus { border-color: #eab308; outline: none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SntLMoExclusiveSportsGrid</title>
+
+  <link href="./output.css" rel="stylesheet" />
+
+  <style>
+    .hidden { display: none !important; }
+    .hidden-panel { display: none !important; }
+
+    #loading-overlay { transition: opacity 0.5s ease; }
+
+    .zeus-border {
+      border: 1px solid #eab308;
+      box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
+    }
+
+    .grid-input {
+      background: #111;
+      border: 1px solid #333;
+      padding: 8px;
+      border-radius: 4px;
+      color: white;
+      width: 100%;
+    }
+    .grid-input:focus { border-color: #eab308; outline: none; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+  </style>
 </head>
 
 <body class="bg-black text-white overflow-x-hidden">
 
-    <!-- LOADER -->
-<div id="loading-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black">
+  <!-- LOADER -->
+  <div id="loading-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black">
     <div class="text-center">
-        <div class="text-yellow-500 text-2xl animate-pulse font-bold tracking-widest italic">
-            ⚡ CONNECTING TO sntlmoexclusivesportsgrid...
-        </div>
+      <div class="text-yellow-500 text-2xl animate-pulse font-bold tracking-widest italic">
+        ⚡ CONNECTING TO sntlmoexclusivesportsgrid...
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- ⚡ ZEUS BOOT SEQUENCE -->
-<div id="zeus-boot" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black text-yellow-500 text-center opacity-100 pointer-events-auto transition-opacity duration-700">
+  <!-- ⚡ ZEUS BOOT SEQUENCE -->
+  <div
+    id="zeus-boot"
+    class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black text-yellow-500 text-center opacity-100 pointer-events-auto transition-opacity duration-700"
+  >
     <div id="boot-line-1" class="text-xs font-mono tracking-widest opacity-0">⚡ INITIALIZING OLYMPUS SYSTEMS...</div>
     <div id="boot-line-2" class="text-xs font-mono tracking-widest opacity-0 mt-2">⚡ SUMMONING ZEUS ORACLE...</div>
     <div id="boot-line-3" class="text-xs font-mono tracking-widest opacity-0 mt-2">⚡ ACCESS GRANTED, MORTAL.</div>
-</div>
+  </div>
 
-        <div class="text-center">
-            <div class="text-yellow-500 text-2xl animate-pulse font-bold tracking-widest italic">
-                ⚡ CONNECTING TO sntlmoexclusivesportsgrid...
-            </div>
-        </div>
+  <!-- FLOATING MORTAL TIMER -->
+  <div id="mortal-timer-container" class="hidden fixed top-4 right-4 z-50">
+    <div class="bg-yellow-500 text-black px-4 py-2 rounded-full text-xs font-black tracking-widest shadow-lg">
+      MORTAL ACCESS: <span id="zeus-timer">10:00</span>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="p-4 border-b border-gray-800 flex justify-between items-center bg-black/50 backdrop-blur-md sticky top-0 z-40">
+    <div>
+      <h1 class="text-xl font-black text-yellow-500 tracking-tighter uppercase">SNT LMO EXCLUSIVE SPORTS GRID</h1>
+      <p id="user-status" class="text-[9px] uppercase tracking-widest text-gray-500 font-bold">
+        Status: Mortal Vision
+      </p>
     </div>
 
-    <!-- FLOATING MORTAL TIMER -->
-    <div id="mortal-timer-container" class="hidden fixed top-4 right-4 z-50">
-        <div class="bg-yellow-500 text-black px-4 py-2 rounded-full text-xs font-black tracking-widest shadow-lg">
-            MORTAL ACCESS: <span id="zeus-timer">10:00</span>
-        </div>
+    <div class="flex gap-3 items-center">
+      <button
+        id="header-auth-btn"
+        onclick="window.toggleLoginModal(true)"
+        class="bg-yellow-500 text-black px-4 py-1 rounded font-bold text-sm uppercase tracking-widest"
+      >
+        LOGIN
+      </button>
+
+      <button
+        id="account-btn"
+        onclick="window.toggleAccountModal(true)"
+        class="hidden border border-yellow-500 text-yellow-500 px-4 py-1 rounded font-bold text-sm uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition"
+      >
+        My Grid
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO / PAYWALL -->
+  <section id="paywall-content" class="py-20 text-center px-6">
+    <h2 class="text-5xl font-black mb-4 tracking-tighter italic uppercase">The Grid Awaits.</h2>
+    <p class="text-gray-400 mb-8 max-w-md mx-auto uppercase text-xs tracking-widest font-bold">
+      Access real-time St. Louis statistics and the War Room.
+    </p>
+    <button
+      onclick="window.toggleLoginModal(true)"
+      class="bg-yellow-500 text-black px-10 py-4 rounded-full font-black text-lg hover:scale-105 transition-transform uppercase tracking-widest"
+    >
+      Ascend to Pro
+    </button>
+  </section>
+
+  <!-- MAIN CONTENT (WAR ROOM) -->
+  <main id="main-content" class="hidden p-6 max-w-6xl mx-auto">
+
+    <!-- ZEUS ORACLE -->
+    <div id="zeus-oracle" class="mb-6 p-4 zeus-border bg-black rounded-xl">
+      <h4 class="text-yellow-500 font-black text-xs tracking-widest uppercase mb-2">⚡ Zeus Oracle Commentary</h4>
+      <div id="zeus-voice-output" class="italic text-gray-300 text-sm">
+        "Watching the grid... waiting for the titans to clash."
+      </div>
     </div>
 
-    <!-- HEADER -->
-    <header class="p-4 border-b border-gray-800 flex justify-between items-center bg-black/50 backdrop-blur-md sticky top-0 z-40">
-        <div>
-            <h1 class="text-xl font-black text-yellow-500 tracking-tighter uppercase">SNT LMO EXCLUSIVE SPORTS GRID</h1>
-            <p id="user-status" class="text-[9px] uppercase tracking-widest text-gray-500 font-bold">
-                Status: Mortal Vision
-            </p>
-        </div>
-        <div class="flex gap-3 items-center">
-            <button id="header-auth-btn"
-                onclick="window.toggleLoginModal(true)"
-                class="bg-yellow-500 text-black px-4 py-1 rounded font-bold text-sm uppercase tracking-widest">
-                LOGIN
-            </button>
-            <button id="account-btn"
-                class="hidden border border-yellow-500 text-yellow-500 px-4 py-1 rounded font-bold text-sm uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition">
-                My Grid
-            </button>
-        </div>
-    </header>
+    <!-- ⚡ ZEUS DEBUG CONSOLE -->
+    <div class="mt-4 flex items-center justify-between gap-2">
+      <button
+        id="zeus-debug-toggle"
+        class="text-[10px] uppercase tracking-widest text-gray-500 hover:text-yellow-500 font-bold"
+      >
+        ⚡ Toggle Zeus Debug Console
+      </button>
+    </div>
 
-    <!-- HERO / PAYWALL -->
-    <section id="paywall-content" class="py-20 text-center px-6">
-        <h2 class="text-5xl font-black mb-4 tracking-tighter italic uppercase">The Grid Awaits.</h2>
-        <p class="text-gray-400 mb-8 max-w-md mx-auto uppercase text-xs tracking-widest font-bold">
-            Access real-time St. Louis statistics and the War Room.
-        </p>
-        <button onclick="window.toggleLoginModal(true)"
-            class="bg-yellow-500 text-black px-10 py-4 rounded-full font-black text-lg hover:scale-105 transition-transform uppercase tracking-widest">
-            Ascend to Pro
-        </button>
-    </section>
+    <div
+      id="zeus-log-panel"
+      class="mt-2 p-3 border border-gray-800 rounded-lg bg-black/70 max-h-40 overflow-y-auto hidden-panel"
+    >
+      <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1 font-bold">
+        Zeus Observatory
+      </div>
+      <div id="zeus-log-feed"></div>
+    </div>
 
-    <!-- MAIN CONTENT (WAR ROOM) -->
-    <main id="main-content" class="hidden p-6 max-w-6xl mx-auto">
+    <!-- ADMIN PANEL -->
+    <div id="admin-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Add New Titan</h3>
 
-        <!-- ZEUS ORACLE -->
-        <div id="zeus-oracle" class="mb-6 p-4 zeus-border bg-black rounded-xl">
-            <h4 class="text-yellow-500 font-black text-xs tracking-widest uppercase mb-2">⚡ Zeus Oracle Commentary</h4>
-            <div id="zeus-voice-output" class="italic text-gray-300 text-sm">
-                "Watching the grid... waiting for the titans to clash."
-            </div>
-        </div>
+      <form id="add-athlete-form" class="grid grid-cols-2 md:grid-cols-6 gap-3">
+        <input type="text" name="name" placeholder="NAME" class="grid-input md:col-span-1" required />
+        <input type="number" name="score0" placeholder="S0" class="grid-input" required />
+        <input type="number" name="score1" placeholder="S1" class="grid-input" required />
+        <input type="number" name="score2" placeholder="S2" class="grid-input" required />
+        <input type="number" name="score3" placeholder="S3" class="grid-input" required />
+        <input type="number" name="score4" placeholder="S4" class="grid-input" required />
 
-        <!-- ⚡ ZEUS DEBUG CONSOLE -->
-        <div class="mt-4 flex items-center justify-between gap-2">
-            <button id="zeus-debug-toggle"
-                class="text-[10px] uppercase tracking-widest text-gray-500 hover:text-yellow-500 font-bold">
-                ⚡ Toggle Zeus Debug Console
-            </button>
-        </div>
-
-        <div id="zeus-log-panel"
-            class="mt-2 p-3 border border-gray-800 rounded-lg bg-black/70 max-h-40 overflow-y-auto hidden-panel">
-            <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1 font-bold">
-                Zeus Observatory
-            </div>
-            <div id="zeus-log-feed"></div>
-        </div>
-
-        <!-- ADMIN PANEL -->
-        <div id="admin-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl">
-            <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Add New Titan</h3>
-            <form id="add-athlete-form" class="grid grid-cols-2 md:grid-cols-6 gap-3">
-                <input type="text" name="name" placeholder="NAME" class="grid-input md:col-span-1" required>
-                <input type="number" name="score0" placeholder="S0" class="grid-input" required>
-                <input type="number" name="score1" placeholder="S1" class="grid-input" required>
-                <input type="number" name="score2" placeholder="S2" class="grid-input" required>
-                <input type="number" name="score3" placeholder="S3" class="grid-input" required>
-                <input type="number" name="score4" placeholder="S4" class="grid-input" required>
-                <button type="submit" class="col-span-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition">
-                    Deploy Athlete
-                </button>
-            </form>
-        </div>
-
-        <!-- GRID TABLE -->
-        <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-800">
-            <table class="w-full text-left border-collapse">
-                <thead class="bg-gray-900 text-[10px] uppercase tracking-[0.2em] text-gray-500">
-                    <tr>
-                        <th class="p-3">Athlete</th>
-                        <th class="p-3 text-center">Score 0</th>
-                        <th class="p-3 text-center">Score 1</th>
-                        <th class="p-3 text-center">Score 2</th>
-                        <th class="p-3 text-center">Score 3</th>
-                        <th class="p-3 text-center">Score 4</th>
-                    </tr>
-                </thead>
-                <tbody id="match-grid-body" class="divide-y divide-gray-800"></tbody>
-            </table>
-        </div>
-    </main>
-
-    <!-- LOGIN MODAL -->
-<div id="login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
-    <div class="bg-gray-900 border border-yellow-500/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl">
-        <h2 class="text-2xl font-black text-yellow-500 mb-2 uppercase italic">Ascension</h2>
-
-        <form id="login-form" class="space-y-4">
-
-            <input 
-                type="email" 
-                id="login-email" 
-                placeholder="EMAIL" 
-                class="grid-input" 
-                required
-            >
-
-            <input 
-                type="password" 
-                id="login-password" 
-                placeholder="PASSWORD" 
-                class="grid-input" 
-                required 
-                autocomplete="current-password"
-            >
-
-            <button 
-                type="submit" 
-                id="login-submit-btn"
-                class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase tracking-widest hover:bg-yellow-600 transition"
-            >
-                SIGN IN
-            </button>
-        </form>
-
-        <button 
-            onclick="toggleLoginModal(false)" 
-            class="mt-4 w-full text-gray-400 hover:text-white text-sm uppercase tracking-widest"
+        <button
+          type="submit"
+          class="col-span-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition"
         >
-            Cancel
+          Deploy Athlete
         </button>
+      </form>
     </div>
-</div>
-    <!-- ACCOUNT MODAL -->
-    <div id="account-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
-        <div class="bg-gray-900 border border-yellow-500/40 p-8 rounded-3xl max-w-sm w-full shadow-2xl">
-            <h2 class="text-2xl font-black text-yellow-500 mb-4 uppercase italic">My Grid</h2>
-            <div class="bg-black/60 border border-gray-800 rounded-2xl p-4 text-sm space-y-2">
-                <div class="flex justify-between">
-                    <span class="text-gray-500 uppercase tracking-widest text-[10px] font-bold">Email:</span>
-                    <span id="account-email" class="text-gray-200 text-xs font-mono">—</span>
-                </div>
-                <div class="flex justify-between">
-                    <span class="text-gray-500 uppercase tracking-widest text-[10px] font-bold">Status:</span>
-                    <span id="account-premium-status" class="text-yellow-500 text-xs font-bold">Mortal</span>
-                </div>
-            </div>
 
-            <div class="mt-4 space-y-2">
-                <button id="btn-upgrade-pro"
-                    class="w-full bg-yellow-500 text-black font-black py-2 rounded-xl uppercase text-xs tracking-widest hover:bg-yellow-400 transition">
-                    UPGRADE TO PRO
-                </button>
-                <button id="logout-btn"
-                    class="w-full bg-gray-800 text-gray-200 font-bold py-2 rounded-xl uppercase text-[10px] tracking-widest hover:bg-gray-700 transition">
-                    LOG OUT
-                </button>
-            </div>
+    <!-- GRID TABLE -->
+    <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-800">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-900 text-[10px] uppercase tracking-[0.2em] text-gray-500">
+          <tr>
+            <th class="p-3">Athlete</th>
+            <th class="p-3 text-center">Score 0</th>
+            <th class="p-3 text-center">Score 1</th>
+            <th class="p-3 text-center">Score 2</th>
+            <th class="p-3 text-center">Score 3</th>
+            <th class="p-3 text-center">Score 4</th>
+          </tr>
+        </thead>
+        <tbody id="match-grid-body" class="divide-y divide-gray-800"></tbody>
+      </table>
+    </div>
+  </main>
 
-            <button onclick="window.toggleAccountModal(false)"
-                class="mt-4 w-full text-gray-700 text-[10px] font-bold uppercase hover:text-white">
-                Close
-            </button>
+  <!-- LOGIN MODAL -->
+  <div id="login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
+    <div class="bg-gray-900 border border-yellow-500/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl">
+      <h2 class="text-2xl font-black text-yellow-500 mb-2 uppercase italic">Ascension</h2>
+
+      <form id="login-form" class="space-y-4">
+        <input
+          type="email"
+          id="login-email"
+          placeholder="EMAIL"
+          autocomplete="username"
+          class="grid-input"
+          required
+        />
+
+        <input
+          type="password"
+          id="login-password"
+          placeholder="PASSWORD"
+          class="grid-input"
+          required
+          autocomplete="current-password"
+        />
+
+        <button
+          type="submit"
+          id="login-submit-btn"
+          class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase tracking-widest hover:bg-yellow-600 transition"
+        >
+          SIGN IN
+        </button>
+      </form>
+
+      <button
+        onclick="window.toggleLoginModal(false)"
+        class="mt-4 w-full text-gray-400 hover:text-white text-sm uppercase tracking-widest"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- ACCOUNT MODAL -->
+  <div id="account-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
+    <div class="bg-gray-900 border border-yellow-500/40 p-8 rounded-3xl max-w-sm w-full shadow-2xl">
+      <h2 class="text-2xl font-black text-yellow-500 mb-4 uppercase italic">My Grid</h2>
+
+      <div class="bg-black/60 border border-gray-800 rounded-2xl p-4 text-sm space-y-2">
+        <div class="flex justify-between">
+          <span class="text-gray-500 uppercase tracking-widest text-[10px] font-bold">Email:</span>
+          <span id="account-email" class="text-gray-200 text-xs font-mono">—</span>
         </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-500 uppercase tracking-widest text-[10px] font-bold">Status:</span>
+          <span id="account-premium-status" class="text-yellow-500 text-xs font-bold">Mortal</span>
+        </div>
+      </div>
+
+      <div class="mt-4 space-y-2">
+        <button
+          id="btn-upgrade-pro"
+          class="w-full bg-yellow-500 text-black font-black py-2 rounded-xl uppercase text-xs tracking-widest hover:bg-yellow-400 transition"
+        >
+          UPGRADE TO PRO
+        </button>
+
+        <button
+          id="logout-btn"
+          onclick="window.logOut()"
+          class="w-full bg-gray-800 text-gray-200 font-bold py-2 rounded-xl uppercase text-[10px] tracking-widest hover:bg-gray-700 transition"
+        >
+          LOG OUT
+        </button>
+      </div>
+
+      <button
+        onclick="window.toggleAccountModal(false)"
+        class="mt-4 w-full text-gray-700 text-[10px] font-bold uppercase hover:text-white"
+      >
+        Close
+      </button>
     </div>
+  </div>
 
- <script type="module" src="./bundle.js"></script>
-
-
+  <!-- APP BUNDLE -->
+  <script type="module" src="./bundle.js"></script>
 </body>
 </html>
