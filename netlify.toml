@@ -1,20 +1,17 @@
 [build]
-  # 1. Give permissions, 2. Run your key script, 3. Install function deps, 4. Build the site
   command = "chmod +x build-env.sh && ./build-env.sh && npm install --prefix functions && node esbuild.config.js"
-  
-  # This is where your website files (HTML, JS, Audio) live after building
   publish = "dist"
-  
-  # This points to your backend folder
   functions = "functions"
 
 [build.environment]
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
-[[plugins]]
-  package = "@netlify/plugin-functions-install-core"
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "application/javascript"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[[headers]]
+  for = "/*.map"
+  [headers.values]
+    Content-Type = "application/json"
