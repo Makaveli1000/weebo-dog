@@ -258,6 +258,23 @@
   </div>
 
   <!-- APP BUNDLE -->
-  <script type="module" src="./bundle.js"></script>
+    <script>
+  // Defensive fallback: define modal toggle globals only if bundle hasn't set them
+  if (!window.toggleLoginModal) {
+    window.toggleLoginModal = function(show) {
+      const modal = document.getElementById('login-modal');
+      if (!modal) return;
+      modal.classList.toggle('hidden', !show);
+    };
+  }
+  if (!window.toggleAccountModal) {
+    window.toggleAccountModal = function(show) {
+      const modal = document.getElementById('account-modal');
+      if (!modal) return;
+      modal.classList.toggle('hidden', !show);
+    };
+  }
+  </script>
+   <script type="module" src="/bundle.js"></script>
 </body>
 </html>
