@@ -1,5 +1,0 @@
-/bundle.js        /bundle.js        200
-/bundle.js.map   /bundle.js.map    200
-/env-config.js   /env-config.js    200
-/audio/*         /audio/:splat     200
-/*               /index.html       200
