@@ -51,7 +51,19 @@ import {
   deleteObject
 } from "firebase/storage";
 
-//  ============================================================================
+//  // ⚡ GLOBAL UI GATEWAY
+window.toggleLoginModal = (isOpen) => {
+  const modal = document.getElementById("login-modal");
+  if (!modal) return;
+  isOpen ? modal.classList.remove("hidden") : modal.classList.add("hidden");
+  zeusLog(isOpen ? "LOGIN_MODAL_OPENED" : "LOGIN_MODAL_CLOSED");
+};
+
+window.toggleAccountModal = (isOpen) => {
+  const modal = document.getElementById("account-modal");
+  if (!modal) return;
+  isOpen ? modal.classList.remove("hidden") : modal.classList.add("hidden");
+};============================================================================
 // ⚡ OLYMPUS PROTOCOL: EMERGENCY LOADER FAILSAFE
 // ============================================================================
 setTimeout(() => {

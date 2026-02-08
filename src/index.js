@@ -4,7 +4,12 @@
 // ============================================================================
 // import { handleTimerTick, resetTimerNarration } from "./zeus/timer.js";
 // import { speak } from "./zeus/speech.js";
+// At the top of src/index.js
+import { getAuth, onAuthStateChanged, ... } from "firebase/auth";
 
+// ... initialization logic ...
+
+export { auth, db, storage, appId, upgradeUser, onAuthStateChanged };
 
 // ============================================================================
 // 🔥 FIREBASE INITIALIZATION & EXPORTS
