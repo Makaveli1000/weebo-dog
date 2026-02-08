@@ -533,14 +533,14 @@
       modal.classList.toggle('hidden', !show);
     };
   }
-     <!-- APP BUNDLE -->
-  <!-- Load env-config.js first for Firebase configuration -->
+       <!-- APP BUNDLE -->
+  <!-- Load env-config.js first for Firebase configuration. Must be a regular script, not type="module" -->
   <script src="./env-config.js"></script>
 
+  <!-- All other UI-related JavaScript and module imports go here in a single type="module" script -->
   <script type="module">
     // Define window.toggleLoginModal and window.toggleAccountModal globally
-    // This script runs before bundle.js which might redefine them if needed,
-    // ensuring they are always available when the HTML buttons are parsed.
+    // This script runs before bundle.js is imported, ensuring they are available.
     if (!window.toggleLoginModal) {
       window.toggleLoginModal = function(show) {
         const modal = document.getElementById('login-modal');
@@ -556,32 +556,32 @@
       };
     }
 
-    // Attach submit handler that defers to bundle's `logIn` when available
-    // This inline script is *not* a module, so its contents are global.
-    const form = document.getElementById('login-form');
-    if (form) { // Check if form exists
-      form.addEventListener('submit', function(e){
+    // Attach submit handler for login form that defers to bundle's `logIn` when available
+    const loginFormElement = document.getElementById('login-form');
+    if (loginFormElement) {
+      loginFormElement.addEventListener('submit', function(e){
         e.preventDefault();
-        // Check if window.logIn exists (defined in bundle.js)
+        // Check if window.logIn exists (expected to be defined by bundle.js)
         if (typeof window.logIn === 'function') {
           try { window.logIn(); } catch (err) { alert('Login failed: ' + err.message); }
-          return;
+        } else {
+          // Fallback if bundle.js isn't fully loaded or `logIn` isn't exposed
+          const submitBtn = document.getElementById('login-submit-btn');
+          const prev = submitBtn ? submitBtn.innerText : null;
+          if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'LOADING...'; }
+          alert('The app bundle is not loaded or login function not found. Full login requires the built bundle (bundle.js).');
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = prev; }
         }
-        const submitBtn = document.getElementById('login-submit-btn');
-        const prev = submitBtn ? submitBtn.innerText : null;
-        if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'LOADING...'; }
-        alert('The app bundle is not loaded. Full login requires the built bundle (bundle.js).');
-        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = prev; }
       });
     }
 
     // Load your main bundle.js as a module
-    // This should now correctly import from the index.js that esbuild processes
+    // From the perspective of index.html in the 'dist' folder, bundle.js is a sibling.
     import './bundle.js';
   </script>
 
   <!-- ⚡ ZEUS ATMOSPHERIC FX -->
-  <audio id="zeus-thunder" src="/audio/thunder.mp3" preload="auto"></audio>
+  <audio id="zeus-thunder" src="/audio/thunder.mp3" preload="auto"></audio>a
   <div id="zeus-lightning"></div>
 
 </body>
