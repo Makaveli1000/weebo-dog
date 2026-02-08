@@ -1,20 +1,21 @@
-[build]
-  command = "chmod +x build-env.sh && ./build-env.sh && npm install --prefix functions && node esbuild.config.js"
-  publish = "dist"
-  functions = "functions"
+    [build]
+      command = "npm install && npm run build"
+      publish = "dist"
+      functions = "functions"
 
-[build.environment]
-  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+    [build.environment]
+      SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
-[[headers]]
-  for = "/*.js"
-  [headers.values]
-    Content-Type = "application/javascript"
+    [[headers]]
+      for = "/*.js"
+      [headers.values]
+        Content-Type = "application/javascript"
 
-[[headers]]
-  for = "/*.map"
-  [headers.values]
-    Content-Type = "application/json"
+    [[headers]]
+      for = "/*.map"
+      [headers.values]
+        Content-Type = "application/json"
 
-[context.production]
-  environment = { NETLIFY_USE_DIRECTORY_INDEX = "false" }
+    [context.production]
+      environment = { NETLIFY_USE_DIRECTORY_INDEX = "false" }
+    
