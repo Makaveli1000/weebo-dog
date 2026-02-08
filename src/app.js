@@ -475,7 +475,7 @@ function attachDeleteListeners() {
         console.error("Missing docId or storagePath for deletion.");
         zeusLog("MEDIA_DELETE_MISSING_DATA");
       }
-    };
+    });
   });
 }
 
@@ -1841,7 +1841,7 @@ onAuthStateChanged(auth, async (user) => {
     if (acknowledgedHighlightsList) acknowledgedHighlightsList.innerHTML = '<p class="col-span-full text-center text-gray-500">Loading acknowledged highlights...</p>';
     onSnapshot(qAcknowledged, (snapshot) => {
       displayAcknowledgedHighlights(snapshot);
-      zeusLog("ACKNOWLEDGED_HIGHLIGHTS_UPDATED", { count: acknowledgedHighlightsSnapshot.size });
+      zeusLog("ACKNOWLEDGED_HIGHLIGHTS_UPDATED", { count: snapshot.size }); acknowledgedHighlightsSnapshot.size });
     }, (error) => {
       console.error("Error listening to acknowledged highlights:", error);
       zeusLog("ACKNOWLEDGED_HIGHLIGHTS_LISTENER_ERROR", { error: error.message });
