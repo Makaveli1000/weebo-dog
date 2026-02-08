@@ -13,15 +13,15 @@
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
-  onAuthStateChanged, // Keep this here for the initial auth listener
+  onAuthStateChanged, 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut as firebaseSignOut // Rename signOut to avoid conflict with window.logOut
+  signOut as firebaseSignOut 
 } from "firebase/auth";
 import {
   getFirestore,
   collection,
-  onSnapshot, // Keep this for any initial global listener like admin panel setup
+  onSnapshot, 
   query,
   orderBy,
   addDoc,
@@ -36,13 +36,15 @@ import { getRemoteConfig } from "firebase/remote-config";
 // Firebase config from env-config.js (loaded in index.html)
 const netlifyFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG;
 const app = initializeApp(netlifyFirebaseConfig);
-export const auth = getAuth(app); // Export directly here
-export const db = getFirestore(app); // Export directly here
-export const storage = getStorage(app); // Export directly here
+
+// ⚡ These inline exports are sufficient; esbuild will use these.
+export const auth = getAuth(app); 
+export const db = getFirestore(app); 
+export const storage = getStorage(app); 
 export const remoteConfig = getRemoteConfig(app);
 
 // Define and export appId
-export const appId = '1:735791748207:web:74fd6412684db238b6e99a'; // Your Firebase Web App ID
+export const appId = '1:735791748207:web:74fd6412684db238b6e99a'; 
 
 // Define and export upgradeUser function
 export async function upgradeUser() {
@@ -53,7 +55,7 @@ export async function upgradeUser() {
     const userProfileRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}/profile/info`);
     await updateDoc(userProfileRef, {
       isPro: true,
-      isPremium: true // Also update isPremium as used in your checks
+      isPremium: true 
     });
     alert("Congratulations! You are now a PRO Member.");
   } catch (error) {
@@ -64,7 +66,6 @@ export async function upgradeUser() {
 
 // ============================================================================
 // 🔐 GLOBAL AUTH FUNCTIONS FOR HTML BUTTONS
-// These are exposed to the window object to be called directly from HTML onclick.
 // ============================================================================
 window.logIn = async () => {
   const emailInput = document.getElementById("login-email");
@@ -86,7 +87,6 @@ window.logIn = async () => {
   try {
     await signInWithEmailAndPassword(auth, email, password);
     alert("Signed in successfully!");
-    // Close modal if successful
     if (window.toggleLoginModal) window.toggleLoginModal(false);
   } catch (error) {
     console.error("Login Error:", error.message);
@@ -99,9 +99,8 @@ window.logIn = async () => {
 
 window.logOut = async () => {
   try {
-    await firebaseSignOut(auth); // Use the aliased signOut
+    await firebaseSignOut(auth); 
     alert("Signed out successfully!");
-    // Close account modal if open
     if (window.toggleAccountModal) window.toggleAccountModal(false);
   } catch (error) {
     console.error("Logout Error:", error.message);
@@ -109,46 +108,7 @@ window.logOut = async () => {
   }
 };
 
-
-// ============================================================================
-// ⚡ ZEUS BOOT CONFIRMATION (Removed from here, now in app.js where speak is used)
-// ============================================================================
-// window.addEventListener("DOMContentLoaded", () => {
-//   speak("Zeus is awake.");
-// });
-
-// ============================================================================
-// 🔐 AUTH RECEIVER (HTML → FIREBASE) (Removed from here, now in app.js)
-// ============================================================================
-// document.addEventListener("trigger-auth", async (event) => { /* ... */ });
-
-// ============================================================================
-// 📊 GRID SYNC LOGIC (Removed from here, now in app.js)
-// ============================================================================
-// const gridBody = document.getElementById("match-grid-body");
-// const syncGrid = () => { /* ... */ };
-
-// ============================================================================
-// 🛠 ADMIN DEPLOY ENGINE (Removed from here, now in app.js)
-// ============================================================================
-// const athleteForm = document.getElementById("add-athlete-form");
-// if (athleteForm) { /* ... */ }
-
-// ============================================================================
-// 👁 AUTH OBSERVER (Removed from here, now in app.js)
-// ============================================================================
-// onAuthStateChanged(auth, (user) => { /* ... */ });
-
-
-// ============================================================================
-// 📦 EXPORTS
-// ============================================================================
-// All core Firebase services and global functions needed by app.js or directly by HTML
-// are now explicitly exported or assigned to window.
-export { auth, db, storage, appId, upgradeUser };
-
 // ============================================================================
 // 🚀 MAIN APPLICATION ENTRY POINT
-// Import all main application logic from app.js
 // ============================================================================
-import './app.js'; // <--- CRITICAL ADDITION: Import your main app logic
+import './app.js';
