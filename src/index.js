@@ -209,4 +209,4 @@ onAuthStateChanged(auth, (user) => {
 // ============================================================================
 // 📦 EXPORTS
 // ============================================================================
-export { auth, db, storage, appId, upgradeUser }; // NEW: Export appId and upgradeUser
+export { auth, db, storage, appId, upgradeUser };
