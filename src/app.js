@@ -464,13 +464,14 @@ function attachDeleteListeners() {
     button.onclick = null; // Clear previous click handler
   });
 
-  document.querySelectorAll('.delete-media-btn').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const docId = e.currentTarget.dataset.docId;
-      const storagePath = e.currentTarget.dataset.storagePath; // Now getting storagePath from dataset
-      if (docId && storagePath) {
-        await deletePersonalMedia(docId, storagePath);
-      } else {
+      document.querySelectorAll('.delete-media-btn').forEach(button => {
+        button.addEventListener('click', async (e) => { // <--- ADD 'async' HERE
+            const docId = e.currentTarget.dataset.docId;
+            const storagePath = e.currentTarget.dataset.storagePath;
+            if (docId && storagePath) {
+                await deletePersonalMedia(docId, storagePath);
+            } else {
+   
         console.error("Missing docId or storagePath for deletion.");
         zeusLog("MEDIA_DELETE_MISSING_DATA");
       }
