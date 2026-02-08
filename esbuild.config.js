@@ -1,8 +1,8 @@
-//	 esbuild.config.js
+// esbuild.config.js
 const esbuild = require('esbuild');
 
 esbuild.build({
-  entryPoints: ['src/index.js'], //
+  entryPoints: ['src/index.js'], // <--- CHANGE THIS to src/index.js
   outfile: 'dist/bundle.js',
   bundle: true,
   minify: true,

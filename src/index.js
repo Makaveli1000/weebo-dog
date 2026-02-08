@@ -1,212 +1,188 @@
-// ============================================================================
-// ⚡ ZEUS SYSTEM IMPORTS
-// ============================================================================
-import { handleTimerTick, resetTimerNarration } from "./zeus/timer.js";
-import { speak } from "./zeus/speech.js";
+    // ============================================================================
+    // ⚡ ZEUS SYSTEM IMPORTS
+    // ============================================================================
+    import { handleTimerTick, resetTimerNarration } from "./zeus/timer.js";
+    import { speak } from "./zeus/speech.js";
 
-// ============================================================================
-// 🔥 FIREBASE INITIALIZATION & EXPORTS
-// ============================================================================
-import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
-} from "firebase/auth";
-import {
-  getFirestore,
-  collection,
-  onSnapshot,
-  query,
-  orderBy,
-  addDoc,
-  serverTimestamp,
-  doc, // NEW: Import doc for specific document references
-  getDoc, // NEW: Import getDoc for fetching user profile
-  updateDoc // NEW: Import updateDoc for updating user profile
-} from "firebase/firestore";
-import { getStorage } from "firebase/storage";
-import { getRemoteConfig } from "firebase/remote-config";
+    // ============================================================================
+    // 🔥 FIREBASE INITIALIZATION & EXPORTS
+    // ============================================================================
+    import { initializeApp } from "firebase/app";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword
+    } from "firebase/auth";
+    import {
+      getFirestore,
+      collection,
+      onSnapshot,
+      query,
+      orderBy,
+      addDoc,
+      serverTimestamp,
+      doc,
+      getDoc,
+      updateDoc
+    } from "firebase/firestore";
+    import { getStorage } from "firebase/storage";
+    import { getRemoteConfig } from "firebase/remote-config";
 
-// Firebase config from env-config.js (loaded in index.html)
-const netlifyFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG;
-const app = initializeApp(netlifyFirebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const remoteConfig = getRemoteConfig(app);
+    // Firebase config from env-config.js (loaded in index.html)
+    const netlifyFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG;
+    const app = initializeApp(netlifyFirebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const remoteConfig = getRemoteConfig(app);
 
-// NEW: Define and export appId
-// This appId is derived from your Firebase project's web app ID for specific Firestore paths.
-export const appId = '1:735791748207:web:74fd6412684db238b6e99a'; // YOUR_FIREBASE_WEB_APP_ID
+    // Define appId (NO export keyword here)
+    const appId = '1:735791748207:web:74fd6412684db238b6e99a'; // Your Firebase Web App ID
 
-// NEW: Define and export upgradeUser function
-// This function needs to be explicitly defined and exported from index.js
-// because it's imported by bundle.js (compiled from app.module.js).
-export async function upgradeUser() {
-  if (!auth.currentUser) {
-    throw new Error("User must be logged in to upgrade.");
-  }
-  try {
-    const userProfileRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}/profile/info`);
-    await updateDoc(userProfileRef, {
-      isPro: true,
-      isPremium: true // Also update isPremium as used in your checks
-    });
-    alert("Congratulations! You are now a PRO Member.");
-  } catch (error) {
-    console.error("Error upgrading user:", error);
-    throw new Error("Failed to upgrade to PRO: " + error.message);
-  }
-}
-
-
-// ============================================================================
-// ⚡ ZEUS BOOT CONFIRMATION
-// ============================================================================
-window.addEventListener("DOMContentLoaded", () => {
-  speak("Zeus is awake.");
-});
-
-// ============================================================================
-// 🔐 AUTH RECEIVER (HTML → FIREBASE)
-// ============================================================================
-document.addEventListener("trigger-auth", async (event) => {
-  const { email, pass, isSignUp } = event.detail;
-
-  try {
-    let userCredential;
-
-    if (isSignUp) {
-      userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      speak("A new mortal is forged.");
-    } else {
-      userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      speak("A mortal ascends. The grid awakens.");
+    // Define upgradeUser function (NO export keyword here)
+    async function upgradeUser() {
+      if (!auth.currentUser) {
+        throw new Error("User must be logged in to upgrade.");
+      }
+      try {
+        const userProfileRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}/profile/info`);
+        await updateDoc(userProfileRef, {
+          isPro: true,
+          isPremium: true
+        });
+        alert("Congratulations! You are now a PRO Member.");
+      } catch (error) {
+        console.error("Error upgrading user:", error);
+        throw new Error("Failed to upgrade to PRO: " + error.message);
+      }
     }
 
-    document.dispatchEvent(new CustomEvent("firebase-auth-ready", {
-      detail: { user: userCredential.user }
-    }));
 
-  } catch (error) {
-    console.error("Auth Error:", error.message);
-    speak("The gates remain closed.");
-
-    document.dispatchEvent(new CustomEvent("auth-error", {
-      detail: { message: error.message }
-    }));
-
-    alert("Ascension Failed: " + error.message);
-  }
-});
-
-// ============================================================================
-// 📊 GRID SYNC LOGIC
-// ============================================================================
-const gridBody = document.getElementById("match-grid-body");
-
-const syncGrid = () => {
-  const q = query(collection(db, "athletes"), orderBy("score0", "desc"));
-
-  onSnapshot(q, (snapshot) => {
-    if (!gridBody) return;
-
-    gridBody.innerHTML = "";
-    snapshot.forEach(doc => {
-      const athlete = doc.data();
-      const row = document.createElement("tr");
-      row.className = "hover:bg-yellow-500/5 border-b border-gray-800";
-
-      row.innerHTML = `
-        <td class="p-3 text-yellow-500 font-bold">${athlete.name}</td>
-        <td class="p-3 text-center font-mono">${athlete.score0}</td>
-        <td class="p-3 text-center text-gray-400">${athlete.score1}</td>
-        <td class="p-3 text-center text-gray-400">${athlete.score2}</td>
-        <td class="p-3 text-center text-gray-400">${athlete.score3}</td>
-        <td class="p-3 text-center text-gray-400">${athlete.score4}</td>
-      `;
-
-      gridBody.appendChild(row);
+    // ============================================================================
+    // ⚡ ZEUS BOOT CONFIRMATION
+    // ============================================================================
+    window.addEventListener("DOMContentLoaded", () => {
+      speak("Zeus is awake.");
     });
 
-    speak("The grid has been refreshed.", { interrupt: false });
-  });
-};
+    // ============================================================================
+    // 🔐 AUTH RECEIVER (HTML → FIREBASE)
+    // ============================================================================
+    document.addEventListener("trigger-auth", async (event) => {
+      const { email, pass, isSignUp } = event.detail;
 
-// ============================================================================
-// 🛠 ADMIN DEPLOY ENGINE
-// ============================================================================
-const athleteForm = document.getElementById("add-athlete-form");
+      try {
+        let userCredential;
 
-if (athleteForm) {
-  athleteForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const formData = new FormData(athleteForm);
+        if (isSignUp) {
+          userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+          speak("A new mortal is forged.");
+        } else {
+          userCredential = await signInWithEmailAndPassword(auth, email, pass);
+          speak("A mortal ascends. The grid awakens.");
+        }
 
-    try {
-      await addDoc(collection(db, "athletes"), {
-        name: formData.get("name"),
-        score0: Number(formData.get("score0")),
-        score1: Number(formData.get("score1")),
-        score2: Number(formData.get("score2")),
-        score3: Number(formData.get("score3")),
-        score4: Number(formData.get("score4")),
-        timestamp: serverTimestamp()
+        document.dispatchEvent(new CustomEvent("firebase-auth-ready", {
+          detail: { user: userCredential.user }
+        }));
+
+      } catch (error) {
+        console.error("Auth Error:", error.message);
+        speak("The gates remain closed.");
+
+        document.dispatchEvent(new CustomEvent("auth-error", {
+          detail: { message: error }
+        }));
+
+        alert("Ascension Failed: " + error.message);
+      }
+    });
+
+    // ============================================================================
+    // 📊 GRID SYNC LOGIC
+    // ============================================================================
+    const gridBody = document.getElementById("match-grid-body");
+
+    const syncGrid = () => {
+      const q = query(collection(db, "athletes"), orderBy("score0", "desc"));
+
+      onSnapshot(q, (snapshot) => {
+        if (!gridBody) return;
+
+        gridBody.innerHTML = "";
+        snapshot.forEach(doc => {
+          const athlete = doc.data();
+          const row = document.createElement("tr");
+          row.className = "hover:bg-yellow-500/5 border-b border-gray-800";
+
+          row.innerHTML = `
+            <td class="p-3 text-yellow-500 font-bold">${athlete.name}</td>
+            <td class="p-3 text-center font-mono">${athlete.score0}</td>
+            <td class="p-3 text-center text-gray-400">${athlete.score1}</td>
+            <td class="p-3 text-center text-gray-400">${athlete.score2}</td>
+            <td class="p-3 text-center text-gray-400">${athlete.score3}</td>
+            <td class="p-3 text-center text-gray-400">${athlete.score4}</td>
+          `;
+
+          gridBody.appendChild(row);
+        });
+
+        speak("The grid has been refreshed.", { interrupt: false });
       });
+    };
 
-      athleteForm.reset();
-      speak("Titan deployed successfully.");
+    // ============================================================================
+    // 🛠 ADMIN DEPLOY ENGINE
+    // ============================================================================
+    const athleteForm = document.getElementById("add-athlete-form");
 
-    } catch (error) {
-      console.error("Deploy failed:", error);
-      speak("Deployment failed.");
-      alert("Error: " + error.message);
+    if (athleteForm) {
+      athleteForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const formData = new FormData(athleteForm);
+
+        try {
+          await addDoc(collection(db, "athletes"), {
+            name: formData.get("name"),
+            score0: Number(formData.get("score0")),
+            score1: Number(formData.get("score1")),
+            score2: Number(formData.get("score2")),
+            score3: Number(formData.get("score3")),
+            score4: Number(formData.get("score4")),
+            timestamp: serverTimestamp()
+          });
+
+          athleteForm.reset();
+          speak("Titan deployed successfully.");
+
+        } catch (error) {
+          console.error("Deploy failed:", error);
+          speak("Deployment failed.");
+          alert("Error: " + error.message);
+        }
+      });
     }
-  });
-}
 
-// ============================================================================
-// 👁 AUTH OBSERVER
-// ============================================================================
-onAuthStateChanged(auth, (user) => {
-  const mainContent = document.getElementById("main-content");
-  const paywall = document.getElementById("paywall-content");
-  const adminPanel = document.getElementById("admin-panel");
-  const statusText = document.getElementById("user-status");
+    // ============================================================================
+    // 👁 AUTH OBSERVER
+    // ============================================================================
+    onAuthStateChanged(auth, (user) => {
+      const mainContent = document.getElementById("main-content");
+      const paywall = document.getElementById("paywall-content");
+      const adminPanel = document.getElementById("admin-panel");
+      const statusText = document.getElementById("user-status");
 
-  if (user) {
-    mainContent?.classList.remove("hidden");
-    paywall?.classList.add("hidden");
+      if (user) {
+        mainContent?.classList.remove("hidden");
+        paywall?.classList.add("hidden");
 
-    // This admin UID check is problematic if it's not the same as your actual appId doc ID
-    // Let's rely on the profile/info.isPro for consistency
-    // if (user.uid === "cEQQHNVXPQfXFhOzO1xBXWZcGy52") {
-    //   adminPanel?.classList.remove("hidden");
-    //   if (statusText) {
-    //     statusText.innerText = "Status: Titan Vision (Admin)";
-    //     statusText.className =
-    //       "text-[9px] uppercase tracking-widest text-yellow-500 font-bold";
-    //   }
-    //   speak("Titan Vision granted.");
-    // } else {
-    //   if (statusText) statusText.innerText = "Status: Pro Vision";
-    //   speak("Pro Vision granted.");
-    // }
+        syncGrid();
+      }
+    });
 
-    // Admin check will be done in bundle.js based on userIsPro flag now
-    // For the admin panel, you'll need a way to mark a user as admin,
-    // possibly via custom claims or a separate Firestore field
-    // For now, let's just make it visible if `userIsPro` is true (assuming admin is also Pro)
-    // A better admin check would be: if (user.uid === "YOUR_ADMIN_UID_HERE") adminPanel?.classList.remove("hidden");
+    // ============================================================================
+    // 📦 EXPORTS
+    // ============================================================================
+    export { auth, db, storage, appId, upgradeUser }; // Only one export statement
 
-
-    syncGrid();
-  }
-});
-
-// ============================================================================
-// 📦 EXPORTS
-// ============================================================================
-export { auth, db, storage, appId, upgradeUser };
