@@ -533,7 +533,10 @@
       modal.classList.toggle('hidden', !show);
     };
   }
-   <!-- APP BUNDLE -->
+     <!-- APP BUNDLE -->
+  <!-- Load env-config.js first for Firebase configuration -->
+  <script src="./env-config.js"></script>
+
   <script type="module">
     // Define window.toggleLoginModal and window.toggleAccountModal globally
     // This script runs before bundle.js which might redefine them if needed,
@@ -573,7 +576,8 @@
     }
 
     // Load your main bundle.js as a module
-    import './bundle.js'; // Adjust path if bundle.js is directly in project root or elsewhere
+    // This should now correctly import from the index.js that esbuild processes
+    import './bundle.js';
   </script>
 
   <!-- ⚡ ZEUS ATMOSPHERIC FX -->

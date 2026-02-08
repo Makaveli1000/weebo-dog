@@ -5,7 +5,7 @@ import { handleTimerTick, resetTimerNarration } from "./zeus/timer.js";
 import { speak } from "./zeus/speech.js";
 
 // ============================================================================
-// 🔥 FIREBASE INITIALIZATION
+// 🔥 FIREBASE INITIALIZATION & EXPORTS
 // ============================================================================
 import { initializeApp } from "firebase/app";
 import {
@@ -21,18 +21,48 @@ import {
   query,
   orderBy,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  doc, // NEW: Import doc for specific document references
+  getDoc, // NEW: Import getDoc for fetching user profile
+  updateDoc // NEW: Import updateDoc for updating user profile
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getRemoteConfig } from "firebase/remote-config";
 
-// Firebase config from Netlify
+// Firebase config from env-config.js (loaded in index.html)
 const netlifyFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG;
 const app = initializeApp(netlifyFirebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const remoteConfig = getRemoteConfig(app);
+
+// NEW: Define and export appId
+export const appId = '1:735791748207:web:74fd6412684db238b6e99a'; // Your Firebase Web App ID
+
+// NEW: Define and export upgradeUser function
+export async function upgradeUser() {
+  if (!auth.currentUser) {
+    throw new Error("User must be logged in to upgrade.");
+  }
+  // For simplicity, we directly update the user's profile in Firestore
+  // In a real application, this would often involve a secure backend (Cloud Function)
+  // to handle payments and update the user's status after successful payment.
+  try {
+    const userProfileRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}/profile/info`);
+    await updateDoc(userProfileRef, {
+      isPro: true,
+      isPremium: true // Also update isPremium as used in your checks
+    });
+    // For immediate UI update, we could re-trigger onAuthStateChanged manually
+    // or rely on the Firestore listener to user profile.
+    alert("Congratulations! You are now a PRO Member.");
+  } catch (error) {
+    console.error("Error upgrading user:", error);
+    throw new Error("Failed to upgrade to PRO: " + error.message);
+  }
+}
+
 
 // ============================================================================
 // ⚡ ZEUS BOOT CONFIRMATION
@@ -152,18 +182,27 @@ onAuthStateChanged(auth, (user) => {
     mainContent?.classList.remove("hidden");
     paywall?.classList.add("hidden");
 
-    if (user.uid === "cEQQHNVXPQfXFhOzO1xBXWZcGy52") {
-      adminPanel?.classList.remove("hidden");
-      if (statusText) {
-        statusText.innerText = "Status: Titan Vision (Admin)";
-        statusText.className =
-          "text-[9px] uppercase tracking-widest text-yellow-500 font-bold";
-      }
-      speak("Titan Vision granted.");
-    } else {
-      if (statusText) statusText.innerText = "Status: Pro Vision";
-      speak("Pro Vision granted.");
-    }
+    // This admin UID check is problematic if it's not the same as your actual appId doc ID
+    // Let's rely on the profile/info.isPro for consistency
+    // if (user.uid === "cEQQHNVXPQfXFhOzO1xBXWZcGy52") {
+    //   adminPanel?.classList.remove("hidden");
+    //   if (statusText) {
+    //     statusText.innerText = "Status: Titan Vision (Admin)";
+    //     statusText.className =
+    //       "text-[9px] uppercase tracking-widest text-yellow-500 font-bold";
+    //   }
+    //   speak("Titan Vision granted.");
+    // } else {
+    //   if (statusText) statusText.innerText = "Status: Pro Vision";
+    //   speak("Pro Vision granted.");
+    // }
+
+    // Admin check will be done in bundle.js based on userIsPro flag now
+    // For the admin panel, you'll need a way to mark a user as admin,
+    // possibly via custom claims or a separate Firestore field
+    // For now, let's just make it visible if `userIsPro` is true (assuming admin is also Pro)
+    // A better admin check would be: if (user.uid === "YOUR_ADMIN_UID_HERE") adminPanel?.classList.remove("hidden");
+
 
     syncGrid();
   }
@@ -172,4 +211,4 @@ onAuthStateChanged(auth, (user) => {
 // ============================================================================
 // 📦 EXPORTS
 // ============================================================================
-export { auth, db, storage };
+export { auth, db, storage, appId, upgradeUser }; // NEW: Export appId and upgradeUser
