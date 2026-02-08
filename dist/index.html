@@ -533,12 +533,52 @@
       modal.classList.toggle('hidden', !show);
     };
   }
- <!-- APP BUNDLE -->
-<script type="module" src="/bundle.js"></script>
-    <!-- ⚡ ZEUS ATMOSPHERIC FX -->
-    <audio id="zeus-thunder" src="/audio/thunder.mp3" preload="auto"></audio>
-    <div id="zeus-lightning"></div>
+   <!-- APP BUNDLE -->
+  <script type="module">
+    // Define window.toggleLoginModal and window.toggleAccountModal globally
+    // This script runs before bundle.js which might redefine them if needed,
+    // ensuring they are always available when the HTML buttons are parsed.
+    if (!window.toggleLoginModal) {
+      window.toggleLoginModal = function(show) {
+        const modal = document.getElementById('login-modal');
+        if (!modal) return;
+        modal.classList.toggle('hidden', !show);
+      };
+    }
+    if (!window.toggleAccountModal) {
+      window.toggleAccountModal = function(show) {
+        const modal = document.getElementById('account-modal');
+        if (!modal) return;
+        modal.classList.toggle('hidden', !show);
+      };
+    }
 
-    <script type="module" src="/bundle.js"></script>
+    // Attach submit handler that defers to bundle's `logIn` when available
+    // This inline script is *not* a module, so its contents are global.
+    const form = document.getElementById('login-form');
+    if (form) { // Check if form exists
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        // Check if window.logIn exists (defined in bundle.js)
+        if (typeof window.logIn === 'function') {
+          try { window.logIn(); } catch (err) { alert('Login failed: ' + err.message); }
+          return;
+        }
+        const submitBtn = document.getElementById('login-submit-btn');
+        const prev = submitBtn ? submitBtn.innerText : null;
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = 'LOADING...'; }
+        alert('The app bundle is not loaded. Full login requires the built bundle (bundle.js).');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = prev; }
+      });
+    }
+
+    // Load your main bundle.js as a module
+    import './dist/bundle.js'; // Adjust path if bundle.js is directly in project root or elsewhere
+  </script>
+
+  <!-- ⚡ ZEUS ATMOSPHERIC FX -->
+  <audio id="zeus-thunder" src="/audio/thunder.mp3" preload="auto"></audio>
+  <div id="zeus-lightning"></div>
+
 </body>
 </html>
