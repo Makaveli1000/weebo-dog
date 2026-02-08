@@ -38,24 +38,22 @@ const storage = getStorage(app);
 const remoteConfig = getRemoteConfig(app);
 
 // NEW: Define and export appId
-export const appId = '1:735791748207:web:74fd6412684db238b6e99a'; // Your Firebase Web App ID
+// This appId is derived from your Firebase project's web app ID for specific Firestore paths.
+export const appId = '1:735791748207:web:74fd6412684db238b6e99a'; // YOUR_FIREBASE_WEB_APP_ID
 
 // NEW: Define and export upgradeUser function
+// This function needs to be explicitly defined and exported from index.js
+// because it's imported by bundle.js (compiled from app.module.js).
 export async function upgradeUser() {
   if (!auth.currentUser) {
     throw new Error("User must be logged in to upgrade.");
   }
-  // For simplicity, we directly update the user's profile in Firestore
-  // In a real application, this would often involve a secure backend (Cloud Function)
-  // to handle payments and update the user's status after successful payment.
   try {
     const userProfileRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}/profile/info`);
     await updateDoc(userProfileRef, {
       isPro: true,
       isPremium: true // Also update isPremium as used in your checks
     });
-    // For immediate UI update, we could re-trigger onAuthStateChanged manually
-    // or rely on the Firestore listener to user profile.
     alert("Congratulations! You are now a PRO Member.");
   } catch (error) {
     console.error("Error upgrading user:", error);
