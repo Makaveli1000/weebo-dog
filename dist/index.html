@@ -29,6 +29,40 @@
     .grid-input:focus { border-color: #eab308; outline: none; }
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
+
+    /* For ascension animation (if not already in output.css) */
+    @keyframes ascend-pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 rgba(234, 179, 8, 0.7); }
+      50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(234, 179, 8, 0.9); }
+      100% { transform: scale(1); box-shadow: 0 0 0 rgba(234, 179, 8, 0.7); }
+    }
+    .ascend-pulse {
+      animation: ascend-pulse 1.5s ease-in-out infinite;
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+      background-color: #000;
+    }
+    .video-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .local-video-small {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 120px;
+      height: 90px;
+      object-fit: cover;
+      border: 2px solid #eab308;
+      z-index: 10;
+    }
   </style>
 </head>
 
@@ -154,6 +188,213 @@
       </form>
     </div>
 
+    <!-- HIGHLIGHTS UPLOAD -->
+    <div id="highlights-upload-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Pro Highlight Reel Contribution</h3>
+      <p class="text-gray-400 text-sm mb-4">Upload your best moments! Only Pro members can contribute.</p>
+
+      <div class="space-y-4">
+        <input type="file" id="highlight-file-input" accept="video/*" class="block w-full text-sm text-gray-500
+          file:mr-4 file:py-2 file:px-4
+          file:rounded-full file:border-0
+          file:text-sm file:font-semibold
+          file:bg-yellow-500 file:text-black
+          hover:file:bg-yellow-400"
+        />
+        <input type="text" id="highlight-title-input" placeholder="Highlight Title (e.g., 'Epic Dunk vs Rivals')" class="grid-input" />
+        <button
+          id="upload-highlight-btn"
+          class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition"
+        >
+          Upload Highlight
+        </button>
+
+        <div id="highlight-upload-progress" class="hidden w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700">
+          <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <p id="highlight-upload-status" class="text-xs text-gray-400 mt-2"></p>
+      </div>
+    </div>
+
+    <!-- HIGHLIGHTS DISPLAY (Shared for all authenticated users) -->
+    <div id="highlights-display-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Community Highlights</h3>
+      <div id="community-highlights-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Highlights will be dynamically inserted here -->
+        <p class="col-span-full text-center text-gray-500">Loading highlights...</p>
+      </div>
+    </div>
+
+    <!-- ST. LOUIS PLAYER HIGHLIGHTS -->
+    <div id="player-highlights-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">St. Louis Player Grid</h3>
+
+      <div class="flex flex-wrap gap-4 mb-6">
+        <div class="flex-grow">
+          <label for="player-level-filter" class="block text-gray-400 text-xs font-bold mb-1">Filter by Level:</label>
+          <select id="player-level-filter" class="grid-input">
+            <option value="All">All Levels</option>
+            <option value="Pro">Pro</option>
+            <option value="College">College</option>
+            <option value="High School">High School</option>
+          </select>
+        </div>
+        <div class="flex-grow">
+          <label for="player-sport-filter" class="block text-gray-400 text-xs font-bold mb-1">Filter by Sport:</label>
+          <select id="player-sport-filter" class="grid-input">
+            <option value="All">All Sports</option>
+            <option value="Basketball">Basketball</option>
+            <option value="Football">Football</option>
+            <option value="Soccer">Soccer</option>
+            <option value="Track">Track & Field</option>
+            <option value="Boxing">Boxing</option>
+            <!-- Add more sports as needed -->
+          </select>
+        </div>
+      </div>
+
+      <div id="st-louis-players-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Player cards will be dynamically inserted here by JavaScript -->
+        <p class="col-span-full text-center text-gray-500">Loading St. Louis players...</p>
+      </div>
+    </div>
+
+    <!-- PRO PLAYER PLATFORM (Post Creation - Pro Only) -->
+    <div id="pro-player-dashboard-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Pro Player Dashboard</h3>
+      <p class="text-gray-400 text-sm mb-4">Share your thoughts and exclusive content with your fans!</p>
+
+      <div class="space-y-4">
+        <input type="text" id="pro-post-title" placeholder="Post Title" class="grid-input" required />
+        <textarea id="pro-post-content" placeholder="Your exclusive message or content..." class="grid-input h-24" required></textarea>
+        <!-- For now, we'll keep it text-based. Media upload can be added later. -->
+        <button
+          id="post-pro-content-btn"
+          class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition"
+        >
+          Publish Post
+        </button>
+        <p id="pro-post-status" class="text-xs text-gray-400 mt-2"></p>
+      </div>
+    </div>
+
+    <!-- PRO PLAYER POSTS DISPLAY (Visible to all Authenticated) -->
+    <div id="pro-player-posts-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Pro Player Updates</h3>
+      <div id="pro-player-posts-list" class="space-y-6">
+        <!-- Pro Player posts will be dynamically inserted here -->
+        <p class="text-gray-500 text-center">Loading Pro Player updates...</p>
+      </div>
+    </div>
+
+    <!-- NEW SECTION: VIDEO CALLING INTERFACE -->
+    <div id="video-call-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Live Communication Grid</h3>
+
+      <!-- Call Control -->
+      <div class="flex flex-col md:flex-row gap-4 mb-4">
+        <div class="flex-grow">
+          <label for="callee-id-input" class="block text-gray-400 text-xs font-bold mb-1">Call another user (UID):</label>
+          <input type="text" id="callee-id-input" placeholder="Enter recipient's User ID (UID)" class="grid-input" />
+        </div>
+        <div class="flex-shrink-0 flex items-end space-x-2 mt-2 md:mt-0">
+          <button id="start-call-btn" class="bg-green-600 text-white px-4 py-2 rounded font-bold uppercase hover:bg-green-700 transition">Call</button>
+          <button id="hang-up-btn" class="bg-red-600 text-white px-4 py-2 rounded font-bold uppercase hover:bg-red-700 transition" disabled>Hang Up</button>
+        </div>
+      </div>
+
+      <!-- Video Display -->
+      <div id="video-streams-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="video-container rounded-lg overflow-hidden border border-gray-700">
+          <video id="local-video" autoplay muted playsinline></video>
+          <div class="absolute top-2 left-2 bg-gray-800/70 text-xs text-gray-300 px-2 py-1 rounded">You</div>
+        </div>
+        <div class="video-container rounded-lg overflow-hidden border border-gray-700">
+          <video id="remote-video" autoplay playsinline></video>
+          <div class="absolute top-2 left-2 bg-gray-800/70 text-xs text-gray-300 px-2 py-1 rounded">Them</div>
+        </div>
+      </div>
+
+      <!-- Incoming Call Notification -->
+      <div id="incoming-call-notification" class="hidden mt-4 p-4 bg-blue-600/20 border border-blue-500 rounded-lg flex items-center justify-between">
+        <p class="text-blue-200 text-sm">Incoming call from <span id="incoming-caller-name" class="font-bold"></span>!</p>
+        <div class="flex space-x-2">
+          <button id="accept-call-btn" class="bg-blue-500 text-white px-4 py-2 rounded font-bold uppercase hover:bg-blue-600 transition">Accept</button>
+          <button id="reject-call-btn" class="bg-gray-500 text-white px-4 py-2 rounded font-bold uppercase hover:bg-gray-600 transition">Reject</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- CHAT INTERFACE -->
+    <div id="chat-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">War Room Chat</h3>
+
+      <!-- Chat Messages Display -->
+      <div id="chat-messages" class="h-80 overflow-y-auto bg-black/50 p-4 rounded-lg mb-4 space-y-4 no-scrollbar">
+        <!-- Chat messages will be dynamically inserted here -->
+        <p class="text-gray-500 text-center">Loading chat history...</p>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="flex items-center space-x-2">
+        <input type="file" id="chat-media-file-input" accept="image/*,video/*" class="hidden" />
+        <button id="attach-media-btn" class="p-2 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+          </svg>
+        </button>
+        <input
+          type="text"
+          id="chat-message-input"
+          placeholder="Send a message or attach media..."
+          class="flex-grow grid-input"
+        />
+        <button
+          id="send-chat-message-btn"
+          class="bg-yellow-500 text-black px-4 py-2 rounded font-bold uppercase hover:bg-yellow-600 transition"
+        >
+          Send
+        </button>
+      </div>
+      <div id="chat-upload-progress" class="hidden w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700 mt-2">
+        <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 0%"></div>
+      </div>
+      <p id="chat-upload-status" class="text-xs text-gray-400 mt-2"></p>
+    </div>
+
+    <!-- PERSONAL MEDIA UPLOAD -->
+    <div id="personal-media-upload-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">My Personal Grid Media</h3>
+
+      <div class="space-y-4">
+        <input type="file" id="media-file-input" accept="image/*,video/*" class="block w-full text-sm text-gray-500
+          file:mr-4 file:py-2 file:px-4
+          file:rounded-full file:border-0
+          file:text-sm file:font-semibold
+          file:bg-yellow-500 file:text-black
+          hover:file:bg-yellow-400"
+        />
+        <button
+          id="upload-media-btn"
+          class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition"
+        >
+          Upload Media
+        </button>
+
+        <div id="upload-progress" class="hidden w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700">
+          <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <p id="upload-status" class="text-xs text-gray-400 mt-2"></p>
+      </div>
+
+      <!-- Display area for uploaded media -->
+      <div id="user-media-list" class="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
+        <!-- Media will be dynamically inserted here -->
+      </div>
+    </div>
+
+
     <!-- GRID TABLE -->
     <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-800">
       <table class="w-full text-left border-collapse">
@@ -259,7 +500,6 @@
 
   <!-- APP BUNDLE -->
     <script>
-      <script>
       // Attach submit handler that defers to bundle's `logIn` when available
       (function(){
         const form = document.getElementById('login-form');
@@ -293,7 +533,12 @@
       modal.classList.toggle('hidden', !show);
     };
   }
-  </script>
-   <script type="module" src="/bundle.js"></script>
+ <!-- APP BUNDLE -->
+<script type="module" src="/bundle.js"></script>
+    <!-- ⚡ ZEUS ATMOSPHERIC FX -->
+    <audio id="zeus-thunder" src="/audio/thunder.mp3" preload="auto"></audio>
+    <div id="zeus-lightning"></div>
+
+    <script type="module" src="/bundle.js"></script>
 </body>
 </html>
