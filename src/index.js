@@ -23,12 +23,20 @@ import { getStorage } from "firebase/storage";
 const netlifyFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG;
 const app = initializeApp(netlifyFirebaseConfig);
 
-// 2. Export Service Constants (Single Source of Truth)
+// 2. Export Service Constants & Functions
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const appId = "sntlmoexclusivesportsgrid"; // Cleaned up the extra string error here
+export const appId = "sntlmoexclusivesportsgrid";
 
+// ⚡ ADD THESE EXPORTS SO APP.JS CAN SEE THEM
+export { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider,
+  firebaseSignOut as signOut 
+};
 // 3. Export Auth Observer & SignOut
 export { onAuthStateChanged, firebaseSignOut };
 
