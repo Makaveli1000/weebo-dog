@@ -1,124 +1,102 @@
 // ============================================================================
-// ⚡ ZEUS SYSTEM IMPORTS (From src/zeus directory)
-// These are now handled within src/app.js where they are actually used.
+// ⚡ OLYMPUS ENGINE (FIREBASE INITIALIZATION)
 // ============================================================================
-// import { handleTimerTick, resetTimerNarration } from "./zeus/timer.js";
-// import { speak } from "./zeus/speech.js";
-// At the top of src/index.js
+import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
+  GoogleAuthProvider, 
+  signInWithPopup, 
   signOut as firebaseSignOut 
 } from "firebase/auth";
-// ... initialization logic ...
-
-export { auth, db, storage, appId, upgradeUser, onAuthStateChanged };
-
-// ============================================================================
-// 🔥 FIREBASE INITIALIZATION & EXPORTS
-// This file primarily handles Firebase initialization and exposes core services.
-// ============================================================================
-import { initializeApp } from "firebase/app";
-import {
-  getAuth,
-  onAuthStateChanged, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut 
-} from "firebase/auth";
-import {
-  getFirestore,
-  collection,
-  onSnapshot, 
-  query,
-  orderBy,
-  addDoc,
-  serverTimestamp,
-  doc,
-  getDoc,
-  updateDoc
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  collection, 
+  serverTimestamp 
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getRemoteConfig } from "firebase/remote-config";
 
-// Firebase config from env-config.js (loaded in index.html)
+// 1. Initialize using Netlify/Window Config
 const netlifyFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG;
 const app = initializeApp(netlifyFirebaseConfig);
 
-// ⚡ These inline exports are sufficient; esbuild will use these.
-export const auth = getAuth(app); 
-export const db = getFirestore(app); 
-export const storage = getStorage(app); 
-export const remoteConfig = getRemoteConfig(app);
+// 2. Export Service Constants (Single Source of Truth)
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const appId = "sntlmoexclusivesportsgrid"; // Cleaned up the extra string error here
 
-// Define and export appId
-export const appId = '1:735791748207:web:74fd6412684db238b6e99a'; 
+// 3. Export Auth Observer & SignOut
+export { onAuthStateChanged, firebaseSignOut };
 
-// Define and export upgradeUser function
+// 4. ASCENSION LOGIC (The Upgrade Function)
 export async function upgradeUser() {
-  if (!auth.currentUser) {
-    throw new Error("User must be logged in to upgrade.");
-  }
+  if (!auth.currentUser) throw new Error("Mortal, you must be logged in to ascend.");
+  
   try {
-    const userProfileRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}/profile/info`);
-    await updateDoc(userProfileRef, {
-      isPro: true,
-      isPremium: true 
-    });
-    alert("Congratulations! You are now a PRO Member.");
+    const userRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}/profile`, "info");
+    await setDoc(userRef, { 
+      isPro: true, 
+      isPremium: true,
+      ascensionDate: serverTimestamp() 
+    }, { merge: true });
+    
+    alert("Congratulations! You have ascended to PRO Status.");
+    return true;
   } catch (error) {
-    console.error("Error upgrading user:", error);
-    throw new Error("Failed to upgrade to PRO: " + error.message);
+    console.error("Ascension Error:", error);
+    throw error;
   }
 }
 
 // ============================================================================
-// 🔐 GLOBAL AUTH FUNCTIONS FOR HTML BUTTONS
+// 🔐 GLOBAL AUTH GATEWAY (For HTML Buttons)
 // ============================================================================
-window.logIn = async () => {
-  const emailInput = document.getElementById("login-email");
-  const passwordInput = document.getElementById("login-password");
-  const loginSubmitBtn = document.getElementById("login-submit-btn");
 
-  if (!emailInput || !passwordInput || !loginSubmitBtn) {
-    console.error("Login form elements not found.");
-    alert("Login form is not available.");
-    return;
+// GOOGLE SIGN-IN (Recommended)
+window.logInGoogle = async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    await signInWithPopup(auth, provider);
+    if (window.toggleLoginModal) window.toggleLoginModal(false);
+  } catch (error) {
+    alert("Google Sign-In Failed: " + error.message);
   }
+};
 
-  const email = emailInput.value;
-  const password = passwordInput.value;
+// EMAIL/PASSWORD SIGN-IN (Your original form logic)
+window.logIn = async () => {
+  const email = document.getElementById("login-email")?.value;
+  const password = document.getElementById("login-password")?.value;
+  const btn = document.getElementById("login-submit-btn");
 
-  loginSubmitBtn.disabled = true;
-  loginSubmitBtn.innerText = "AUTHENTICATING...";
+  if (!email || !password) return alert("Credentials required, Mortal.");
+
+  if (btn) { btn.disabled = true; btn.innerText = "AUTHENTICATING..."; }
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    alert("Signed in successfully!");
     if (window.toggleLoginModal) window.toggleLoginModal(false);
   } catch (error) {
-    console.error("Login Error:", error.message);
-    alert("Login failed: " + error.message);
+    alert("Login Error: " + error.message);
   } finally {
-    loginSubmitBtn.disabled = false;
-    loginSubmitBtn.innerText = "SIGN IN";
+    if (btn) { btn.disabled = false; btn.innerText = "SIGN IN"; }
   }
 };
 
 window.logOut = async () => {
   try {
-    await firebaseSignOut(auth); 
-    alert("Signed out successfully!");
+    await firebaseSignOut(auth);
     if (window.toggleAccountModal) window.toggleAccountModal(false);
   } catch (error) {
-    console.error("Logout Error:", error.message);
-    alert("Logout failed: " + error.message);
+    console.error("Logout Error:", error);
   }
 };
 
 // ============================================================================
-// 🚀 MAIN APPLICATION ENTRY POINT
+// 🚀 BOOT APP LOGIC
 // ============================================================================
 import './app.js';

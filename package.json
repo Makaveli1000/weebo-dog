@@ -1,26 +1,26 @@
-    {
-      "name": "projectsports",
-      "version": "1.0.0",
-      "description": "Zeus Portal Sports App",
-      "main": "index.js",
-      "engines": {
-        "node": "22"
-      },
-      "scripts": {
-        "build": "sh build-env.sh && node esbuild.config.js && npm run tailwind:build && mkdir -p dist/audio && cp audio/thunder.mp3 dist/audio/thunder.mp3 && cp audio/ambient.mp3 dist/audio/ambient.mp3",
-        "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
-        "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
-        "test": "echo \"Error: no test specified\" && exit 1"
-      },
-      "keywords": [],
-      "author": "",
-      "license": "ISC",
-      "dependencies": {
-        "firebase": "^11.1.0"
-      },
-      "devDependencies": {
-        "esbuild": "^0.24.0",
-        "tailwindcss": "^3.4.19"
-      }
-    }
-    
+{
+  "name": "projectsports",
+  "version": "1.0.0",
+  "description": "Zeus Portal Sports App",
+  "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },  "scripts": {
+    "build": "node build-env.js && node esbuild.config.js && npm run tailwind:build && npm run copy:audio",
+    "copy:audio": "shx mkdir -p dist/audio && shx cp audio/thunder.mp3 dist/audio/thunder.mp3 && shx cp audio/ambient.mp3 dist/audio/ambient.mp3",
+    "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
+    "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^11.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "shx": "^0.3.4",
+    "tailwindcss": "^3.4.19"
+  }
+}
