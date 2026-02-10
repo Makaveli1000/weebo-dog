@@ -31,7 +31,6 @@ export const appId = "sntlmoexclusivesportsgrid";
 
 // ⚡ ADD THESE EXPORTS SO APP.JS CAN SEE THEM
 export { 
-  onAuthStateChanged, 
   signInWithEmailAndPassword, 
   signInWithPopup, 
   GoogleAuthProvider,
