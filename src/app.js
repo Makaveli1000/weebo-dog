@@ -12,7 +12,7 @@ import { injectOracleOverlay } from "./zeus/oracleOverlay.js";
 import { zeusPredict } from "./zeus/prediction.js";
 
 // ⚡ WORLD 2: OLYMPUS CONNECTIONS (From your local config)
-import { auth, db, appId, storage, upgradeUser } from "./index.js";
+import { auth, db, appId, storage, upgradeUser,onAuthStateChanged,signOut } from "./index.js";
 
 // ⚡ WORLD 3: OLYMPUS TOOLS (Directly from Firebase)
 import { onAuthStateChanged } from "firebase/auth"; 
