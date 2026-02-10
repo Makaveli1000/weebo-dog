@@ -1,6 +1,7 @@
 // ============================================================================
 // ⚡ ZEUS SYSTEM & OLYMPUS GATEWAY
 // ============================================================================
+// ⚡ WORLD 1: ZEUS SYSTEM (Keep these as they are)
 import { narrateFirestoreEvent } from "./zeus/firestoreNarration.js";
 import { thunder, lightning } from "./zeus/fx.js";
 import { speak } from "./zeus/speech.js";
@@ -10,15 +11,15 @@ import { toggleZeusDebug } from "./zeus/debug.js";
 import { injectOracleOverlay } from "./zeus/oracleOverlay.js";
 import { zeusPredict } from "./zeus/prediction.js";
 
+// ⚡ WORLD 2: OLYMPUS CONNECTIONS (From your local config)
+import { auth, db, appId, storage, upgradeUser } from "./index.js";
+
+// ⚡ WORLD 3: OLYMPUS TOOLS (Directly from Firebase)
+import { onAuthStateChanged } from "firebase/auth"; 
 import { 
-  auth, db, appId, upgradeUser, storage, onAuthStateChanged 
-} from "./index.js";
-
-import {
   doc, getDoc, collection, addDoc, serverTimestamp, query, where, 
-  orderBy, onSnapshot, deleteDoc, limit, updateDoc, increment, getDocs, setDoc
+  orderBy, onSnapshot, deleteDoc, limit, updateDoc, increment, getDocs, setDoc 
 } from "firebase/firestore";
-
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 
 // ⚡ GLOBAL UI GATEWAY
