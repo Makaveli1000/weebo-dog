@@ -14,11 +14,15 @@ dist/env-config.js
 sntlmoexclusivesportsgrid-firebase-adminsdk-*.json
 
 # 3. THE DIST STRATEGY
-# First, tell git NOT to ignore the dist folder itself
+# Tell git to track the folder
 !dist/
 
-# Now, ignore the specific key file inside dist (redundant but safe)
+# Specifically ignore the sensitive keys inside dist
 dist/env-config.js
+dist/sntlmoexclusivesportsgrid-firebase-adminsdk-*.json
 
-# Allow everything else in dist (like bundle.js, styles, etc.)
-!dist/*src/app.copy.js
+# DO NOT ignore these - they must stay in the cloud!
+!dist/index.html
+!dist/bundle.js
+!dist/output.css
+!dist/favicon.ico

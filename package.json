@@ -5,8 +5,10 @@
   "main": "index.js",
   "engines": {
     "node": ">=22"
-  },  "scripts": {
-    "build": "node build-env.js && node esbuild.config.js && npm run tailwind:build && npm run copy:audio",
+  },
+  "scripts": {
+    "build": "node build-env.js && node esbuild.config.js && npm run tailwind:build && npm run copy:audio && npm run copy:html",
+    "copy:html": "shx cp src/index.html dist/index.html",
     "copy:audio": "shx mkdir -p dist/audio && shx cp audio/thunder.mp3 dist/audio/thunder.mp3 && shx cp audio/ambient.mp3 dist/audio/ambient.mp3",
     "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
