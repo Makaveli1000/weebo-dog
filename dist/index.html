@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SntLMoExclusiveSportsGrid</title>
+
+  <link href="./output.css" rel="stylesheet" />
+
+  <style>
+    .hidden { display: none !important; }
+    .hidden-panel { display: none !important; }
+
+    #loading-overlay { transition: opacity 0.5s ease; }
+
+    .zeus-border {
+      border: 1px solid #eab308;
+      box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
+    }
+
+    .grid-input {
+      background: #111;
+      border: 1px solid #333;
+      padding: 8px;
+      border-radius: 4px;
+      color: white;
+      width: 100%;
+    }
+    .grid-input:focus { border-color: #eab308; outline: none; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+
+    /* For ascension animation (if not already in output.css) */
+    @keyframes ascend-pulse {
+      0% { transform: scale(1); box-shadow: 0 0 0 rgba(234, 179, 8, 0.7); }
+      50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(234, 179, 8, 0.9); }
+      100% { transform: scale(1); box-shadow: 0 0 0 rgba(234, 179, 8, 0.7); }
+    }
+    .ascend-pulse {
+      animation: ascend-pulse 1.5s ease-in-out infinite;
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+      background-color: #000;
+    }
+    .video-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .local-video-small {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 120px;
+      height: 90px;
+      object-fit: cover;
+      border: 2px solid #eab308;
+      z-index: 10;
+    }
+  </style>
+</head>
+
+<body class="bg-black text-white overflow-x-hidden">
+
+  <!-- LOADER -->
+  <div id="loading-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black">
+    <div class="text-center">
+      <div class="text-yellow-500 text-2xl animate-pulse font-bold tracking-widest italic">
+        ⚡ CONNECTING TO sntlmoexclusivesportsgrid...
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚡ ZEUS BOOT SEQUENCE -->
+  <div
+    id="zeus-boot"
+    class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black text-yellow-500 text-center opacity-100 pointer-events-auto transition-opacity duration-700"
+  >
+    <div id="boot-line-1" class="text-xs font-mono tracking-widest opacity-0">⚡ INITIALIZING OLYMPUS SYSTEMS...</div>
+    <div id="boot-line-2" class="text-xs font-mono tracking-widest opacity-0 mt-2">⚡ SUMMONING ZEUS ORACLE...</div>
+    <div id="boot-line-3" class="text-xs font-mono tracking-widest opacity-0 mt-2">⚡ ACCESS GRANTED, MORTAL.</div>
+  </div>
+
+  <!-- FLOATING MORTAL TIMER -->
+  <div id="mortal-timer-container" class="hidden fixed top-4 right-4 z-50">
+    <div class="bg-yellow-500 text-black px-4 py-2 rounded-full text-xs font-black tracking-widest shadow-lg">
+      MORTAL ACCESS: <span id="zeus-timer">10:00</span>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="p-4 border-b border-gray-800 flex justify-between items-center bg-black/50 backdrop-blur-md sticky top-0 z-40">
+    <div>
+      <h1 class="text-xl font-black text-yellow-500 tracking-tighter uppercase">SNT LMO EXCLUSIVE SPORTS GRID</h1>
+      <p id="user-status" class="text-[9px] uppercase tracking-widest text-gray-500 font-bold">
+        Status: Mortal Vision
+      </p>
+    </div>
+
+    <div class="flex gap-3 items-center">
+      <button
+        id="header-auth-btn"
+        onclick="window.toggleLoginModal(true)"
+        class="bg-yellow-500 text-black px-4 py-1 rounded font-bold text-sm uppercase tracking-widest"
+      >
+        LOGIN
+      </button>
+
+      <button
+        id="account-btn"
+        onclick="window.toggleAccountModal(true)"
+        class="hidden border border-yellow-500 text-yellow-500 px-4 py-1 rounded font-bold text-sm uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition"
+      >
+        My Grid
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO / PAYWALL -->
+  <section id="paywall-content" class="py-20 text-center px-6">
+    <h2 class="text-5xl font-black mb-4 tracking-tighter italic uppercase">The Grid Awaits.</h2>
+    <p class="text-gray-400 mb-8 max-w-md mx-auto uppercase text-xs tracking-widest font-bold">
+      Access real-time St. Louis statistics and the War Room.
+    </p>
+    <button
+      onclick="window.toggleLoginModal(true)"
+      class="bg-yellow-500 text-black px-10 py-4 rounded-full font-black text-lg hover:scale-105 transition-transform uppercase tracking-widest"
+    >
+      Ascend to Pro
+    </button>
+  </section>
+
+  <!-- MAIN CONTENT (WAR ROOM) -->
+<main id="main-content" class="hidden p-6 max-w-6xl mx-auto">
+
+  <div id="admin-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl shadow-2xl">
+    <h3 class="text-yellow-500 font-black mb-4 uppercase italic tracking-widest">Athlete Command Center</h3>
+
+    <form id="add-athlete-form" class="grid grid-cols-2 md:grid-cols-8 gap-3">
+      <input type="text" id="player-name" placeholder="NAME" class="bg-black border border-gray-800 p-2 text-white rounded md:col-span-1" required />
+      
+      <select id="player-sport" class="bg-black border border-gray-800 p-2 text-white rounded md:col-span-1">
+        <optgroup label="Core Sports">
+          <option value="Football">Football</option>
+          <option value="Baseball">Baseball</option>
+          <option value="Hockey">Hockey</option>
+          <option value="Basketball">Basketball</option>
+          <option value="Track & Field">Track & Field</option>
+        </optgroup>
+        <optgroup label="Soccer Divisions">
+          <option value="Boys Soccer">Boys Soccer</option>
+          <option value="Girls Soccer">Girls Soccer</option>
+        </optgroup>
+      </select>
+
+      <input type="number" id="score0" placeholder="S0" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+      <input type="number" id="score1" placeholder="S1" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+      <input type="number" id="score2" placeholder="S2" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+      <input type="number" id="score3" placeholder="S3" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+      <input type="number" id="score4" placeholder="S4" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+
+      <button id="deploy-athlete-btn" type="submit" class="col-span-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition-all duration-300">
+        Deploy Titan to Grid
+      </button>
+    </form>
+
+    <div class="border-t border-gray-800 my-4"></div>
+    <button id="reset-grid-btn" class="w-full bg-red-900/30 hover:bg-red-600 text-red-200 text-[10px] py-1 rounded border border-red-500/30 transition-all uppercase tracking-widest">
+      Reset All Athletes (Danger Zone)
+    </button>
+  </div>
+
+  <div id="zeus-oracle" class="mb-6 p-4 border border-yellow-500/20 bg-black rounded-xl">
+    <h4 class="text-yellow-500 font-black text-xs tracking-widest uppercase mb-2">⚡ Zeus Oracle Commentary</h4>
+    <div id="zeus-voice-output" class="italic text-gray-300 text-sm">"Watching the grid... waiting for the titans to clash."</div>
+    <button id="zeus-debug-toggle" class="mt-3 text-[10px] uppercase tracking-widest text-gray-500 hover:text-yellow-500 font-bold">⚡ Toggle Debug</button>
+    <div id="zeus-log-panel" class="mt-2 p-3 border border-gray-800 rounded-lg bg-black/70 max-h-40 overflow-y-auto hidden-panel">
+      <div id="zeus-log-feed"></div>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-6" id="sport-filter-bar">
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black active-filter bg-yellow-500 text-black" data-sport="All">All Titans</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Football">Football</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Basketball">Basketball</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Baseball">Baseball</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Hockey">Hockey</button>
+  </div>
+
+  <div id="leaderboard-header" class="mb-4 p-4 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-r-lg">
+    <span class="text-xs text-yellow-500 uppercase font-black tracking-widest">Current Apex Predator</span>
+    <h2 id="top-athlete-display" class="text-2xl font-black text-white uppercase italic">Loading Titan...</h2>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    
+    <div class="lg:col-span-3 overflow-x-auto rounded-xl border border-gray-800 bg-gray-900/50 shadow-inner">
+      <table class="w-full text-left">
+        <thead class="bg-gray-900 text-[10px] uppercase tracking-[0.2em] text-gray-500">
+          <tr class="text-gray-400 border-b border-gray-800">
+            <th class="p-3">Athlete</th>
+            <th class="p-3 text-center">S1</th>
+            <th class="p-3 text-center">S2</th>
+            <th class="p-3 text-center">S3</th>
+            <th class="p-3 text-center">S4</th>
+            <th class="p-3 text-center">S5</th>
+            <th class="p-3 text-center text-yellow-500 font-bold">TOTAL</th>
+            <th class="p-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="match-grid-body" class="divide-y divide-gray-800"></tbody>
+      </table>
+    </div>
+
+    <div class="flex flex-col h-[600px] bg-black border border-yellow-500/30 rounded-xl overflow-hidden shadow-2xl">
+      <div class="bg-yellow-500 p-3">
+        <h3 class="text-black font-black uppercase italic text-xs tracking-tighter">Scout War Room</h3>
+      </div>
+      <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3 text-sm bg-zinc-950">
+        </div>
+      <div class="p-3 border-t border-gray-800 bg-gray-900">
+        <div class="flex gap-2">
+          <input type="text" id="chat-message-input" placeholder="Drop a report..." class="flex-1 bg-black border border-gray-700 text-white p-2 rounded text-xs focus:border-yellow-500 outline-none" />
+          <button id="send-chat-message-btn" class="bg-yellow-500 text-black px-3 py-1 rounded font-bold hover:bg-white transition">→</button>
+        </div>
+      </div>
+    </div>
+
+  </div> </main>
+
+    <div class="grid grid-cols-2 md:grid-cols-7 gap-3 mb-6">
+      <input type="text" id="player-name" placeholder="NAME" class="bg-black border border-gray-800 p-2 text-white rounded md:col-span-2" />
+      <input type="number" id="score0" placeholder="S0" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+      <input type="number" id="score1" placeholder="S1" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+      <input type="number" id="score2" placeholder="S2" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+      <input type="number" id="score3" placeholder="S3" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+      <input type="number" id="score4" placeholder="S4" class="bg-black border border-gray-800 p-2 text-white rounded text-center" />
+
+      <button id="deploy-athlete-btn" class="col-span-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition">
+        Deploy Athlete to Grid
+      </button>
+    </div>
+
+    <div class="border-t border-gray-800 my-4"></div>
+
+    <button id="reset-grid-btn" class="w-full bg-red-900/30 hover:bg-red-600 text-red-200 text-[10px] py-1 rounded border border-red-500/30 transition-all uppercase tracking-widest">
+      Reset All Athletes (Danger Zone)
+    </button>
+  </div>    
+          <!-- ZEUS ORACLE -->
+    <div id="zeus-oracle" class="mb-6 p-4 zeus-border bg-black rounded-xl">
+      <h4 class="text-yellow-500 font-black text-xs tracking-widest uppercase mb-2">⚡ Zeus Oracle Commentary</h4>
+      <div id="zeus-voice-output" class="italic text-gray-300 text-sm">
+        "Watching the grid... waiting for the titans to clash."
+      </div>
+    </div>
+
+    <!-- ⚡ ZEUS DEBUG CONSOLE -->
+    <div class="mt-4 flex items-center justify-between gap-2">
+      <button
+        id="zeus-debug-toggle"
+        class="text-[10px] uppercase tracking-widest text-gray-500 hover:text-yellow-500 font-bold"
+      >
+        ⚡ Toggle Zeus Debug Console
+      </button>
+    </div>
+
+    <div
+      id="zeus-log-panel"
+      class="mt-2 p-3 border border-gray-800 rounded-lg bg-black/70 max-h-40 overflow-y-auto hidden-panel"
+    >
+      <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-1 font-bold">
+        Zeus Observatory
+      </div>
+      <div id="zeus-log-feed"></div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <main id="main-content" class="hidden p-6 max-w-6xl mx-auto">
+
+  <div id="admin-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl shadow-2xl">
+    <h3 class="text-yellow-500 font-black mb-4 uppercase italic tracking-widest">Add New Titan</h3>
+
+    <form id="add-athlete-form" class="grid grid-cols-2 md:grid-cols-8 gap-3">
+      <input type="text" id="player-name" placeholder="NAME" class="bg-black border border-gray-800 p-2 text-white rounded md:col-span-1" required />
+      
+      <select id="player-sport" class="bg-black border border-gray-800 p-2 text-white rounded md:col-span-1">
+        <optgroup label="Core Sports">
+          <option value="Football">Football</option>
+          <option value="Baseball">Baseball</option>
+          <option value="Hockey">Hockey</option>
+          <option value="Basketball">Basketball</option>
+          <option value="Track & Field">Track & Field</option>
+        </optgroup>
+        <optgroup label="Soccer Divisions">
+          <option value="Boys Soccer">Boys Soccer</option>
+          <option value="Girls Soccer">Girls Soccer</option>
+        </optgroup>
+      </select>
+
+      <input type="number" id="score0" placeholder="S0" class="bg-black border border-gray-800 p-2 text-white rounded text-center" required />
+      <input type="number" id="score1" placeholder="S1" class="bg-black border border-gray-800 p-2 text-white rounded text-center" required />
+      <input type="number" id="score2" placeholder="S2" class="bg-black border border-gray-800 p-2 text-white rounded text-center" required />
+      <input type="number" id="score3" placeholder="S3" class="bg-black border border-gray-800 p-2 text-white rounded text-center" required />
+      <input type="number" id="score4" placeholder="S4" class="bg-black border border-gray-800 p-2 text-white rounded text-center" required />
+
+      <button id="deploy-athlete-btn" type="submit" class="col-span-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition-all duration-300">
+        Deploy Titan to Grid
+      </button>
+    </form>
+
+    <div class="border-t border-gray-800 my-4"></div>
+    
+    <button id="reset-grid-btn" class="w-full bg-red-900/30 hover:bg-red-600 text-red-200 text-[10px] py-1 rounded border border-red-500/30 transition-all uppercase tracking-widest">
+      Reset All Athletes (Danger Zone)
+    </button>
+  </div>
+<div class="border-t border-gray-800 my-4"></div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <button id="reset-grid-btn" class="bg-red-900/30 hover:bg-red-600 text-red-200 text-[10px] py-2 rounded border border-red-500/30 transition-all uppercase tracking-widest font-bold">
+    Reset All Athletes (Danger)
+  </button>
+  
+  <button id="clear-chat-btn" class="bg-orange-900/30 hover:bg-orange-600 text-orange-200 text-[10px] py-2 rounded border border-orange-500/30 transition-all uppercase tracking-widest font-bold">
+    Purge War Room Chat
+  </button>
+</div> </div> <div class="flex flex-wrap items-center gap-4 mb-6 mt-8">
+  <div class="flex flex-wrap gap-2" id="sport-filter-bar">
+    <button class="filter-btn active-filter bg-yellow-500 text-black px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all" data-sport="All">All Titans</button>
+    </div>
+
+  <div class="flex-1 min-w-[250px] relative">
+    <input 
+      type="text" 
+      id="athlete-search-input" 
+      placeholder="SEARCH TITAN NAME..." 
+      class="w-full bg-black/50 border border-gray-800 p-2 pl-8 text-white rounded-full text-xs focus:border-yellow-500 outline-none transition-all uppercase tracking-widest"
+    />
+    <span class="absolute left-3 top-2.5 opacity-30 text-xs">🔍</span>
+  </div>
+</div>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Football">Football</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Basketball">Basketball</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Baseball">Baseball</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Hockey">Hockey</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Track & Field">Track</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Boys Soccer">Boys Soccer</button>
+    <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/50 text-xs font-bold uppercase transition-all hover:bg-yellow-500 hover:text-black text-gray-400" data-sport="Girls Soccer">Girls Soccer</button>
+  </div>
+
+  <div class="overflow-x-auto rounded-xl border border-gray-800 bg-gray-900/50 shadow-inner">
+    <table class="w-full text-left">
+      <thead class="bg-gray-900 text-[10px] uppercase tracking-[0.2em] text-gray-500">
+        <tr class="text-gray-400 border-b border-gray-800">
+          <th class="p-3">Athlete</th>
+          <th class="p-3 text-center">S1</th>
+          <th class="p-3 text-center">S2</th>
+          <th class="p-3 text-center">S3</th>
+          <th class="p-3 text-center">S4</th>
+          <th class="p-3 text-center">S5</th>
+          <th class="p-3 text-center text-yellow-500 font-bold">TOTAL</th>
+          <th class="p-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="match-grid-body" class="divide-y divide-gray-800">
+        </tbody>
+    </table>
+  </div>
+
+</main>
+    <!-- NEW SECTION: ACKNOWLEDGED HIGHLIGHTS -->
+    <div id="acknowledged-highlights-panel" class="mb-8 p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">🏆 Acknowledged Highlights 🏆</h3>
+      <p class="text-gray-400 text-sm mb-4">The top highlights from the last two weeks, as chosen by Olympus!</p>
+      <div id="acknowledged-highlights-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Acknowledged highlights will be dynamically inserted here -->
+        <p class="col-span-full text-center text-gray-500">Loading acknowledged highlights...</p>
+      </div>
+    </div>
+
+    <!-- HIGHLIGHTS UPLOAD -->
+    <div id="highlights-upload-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Pro Highlight Reel Contribution</h3>
+      <p class="text-gray-400 text-sm mb-4">Upload your best moments! Only Pro members can contribute.</p>
+
+      <div class="space-y-4">
+        <input type="file" id="highlight-file-input" accept="video/*" class="block w-full text-sm text-gray-500
+          file:mr-4 file:py-2 file:px-4
+          file:rounded-full file:border-0
+          file:text-sm file:font-semibold
+          file:bg-yellow-500 file:text-black
+          hover:file:bg-yellow-400"
+        />
+        <input type="text" id="highlight-title-input" placeholder="Highlight Title (e.g., 'Epic Dunk vs Rivals')" class="grid-input" />
+        <button
+          id="upload-highlight-btn"
+          class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition"
+        >
+          Upload Highlight
+        </button>
+
+        <div id="highlight-upload-progress" class="hidden w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700">
+          <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <p id="highlight-upload-status" class="text-xs text-gray-400 mt-2"></p>
+      </div>
+    </div>
+
+    <!-- HIGHLIGHTS DISPLAY (Shared for all authenticated users) -->
+    <div id="highlights-display-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Community Highlights</h3>
+      <div id="community-highlights-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Highlights will be dynamically inserted here -->
+        <p class="col-span-full text-center text-gray-500">Loading highlights...</p>
+      </div>
+    </div>
+
+    <!-- ST. LOUIS PLAYER HIGHLIGHTS -->
+    <div id="player-highlights-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">St. Louis Player Grid</h3>
+
+      <div class="flex flex-wrap gap-4 mb-6">
+        <div class="flex-grow">
+          <label for="player-level-filter" class="block text-gray-400 text-xs font-bold mb-1">Filter by Level:</label>
+          <select id="player-level-filter" class="grid-input">
+            <option value="All">All Levels</option>
+            <option value="Pro">Pro</option>
+            <option value="College">College</option>
+            <option value="High School">High School</option>
+          </select>
+        </div>
+        <div class="flex-grow">
+          <label for="player-sport-filter" class="block text-gray-400 text-xs font-bold mb-1">Filter by Sport:</label>
+          <select id="player-sport-filter" class="grid-input">
+            <option value="All">All Sports</option>
+            <option value="Basketball">Basketball</option>
+            <option value="Football">Football</option>
+            <option value="Soccer">Soccer</option>
+            <option value="Track">Track & Field</option>
+            <option value="Boxing">Boxing</option>
+            <!-- Add more sports as needed -->
+          </select>
+        </div>
+      </div>
+
+      <div id="st-louis-players-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Player cards will be dynamically inserted here by JavaScript -->
+        <p class="col-span-full text-center text-gray-500">Loading St. Louis players...</p>
+      </div>
+    </div>
+
+    <!-- PRO PLAYER PLATFORM (Post Creation - Pro Only) -->
+    <div id="pro-player-dashboard-panel" class="hidden mb-8 p-6 bg-gray-900 border border-yellow-500 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Pro Player Dashboard</h3>
+      <p class="text-gray-400 text-sm mb-4">Share your thoughts and exclusive content with your fans!</p>
+
+      <div class="space-y-4">
+        <input type="text" id="pro-post-title" placeholder="Post Title" class="grid-input" required />
+        <textarea id="pro-post-content" placeholder="Your exclusive message or content..." class="grid-input h-24" required></textarea>
+        <!-- For now, we'll keep it text-based. Media upload can be added later. -->
+        <button
+          id="post-pro-content-btn"
+          class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition"
+        >
+          Publish Post
+        </button>
+        <p id="pro-post-status" class="text-xs text-gray-400 mt-2"></p>
+      </div>
+    </div>
+
+    <!-- PRO PLAYER POSTS DISPLAY (Visible to all Authenticated) -->
+    <div id="pro-player-posts-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Pro Player Updates</h3>
+      <div id="pro-player-posts-list" class="space-y-6">
+        <!-- Pro Player posts will be dynamically inserted here -->
+        <p class="text-gray-500 text-center">Loading Pro Player updates...</p>
+      </div>
+    </div>
+
+    <!-- VIDEO CALLING INTERFACE -->
+    <div id="video-call-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Live Communication Grid</h3>
+
+      <!-- Call Control -->
+      <div class="flex flex-col md:flex-row gap-4 mb-4">
+        <div class="flex-grow">
+          <label for="callee-id-input" class="block text-gray-400 text-xs font-bold mb-1">Call another user (UID):</label>
+          <input type="text" id="callee-id-input" placeholder="Enter recipient's User ID (UID)" class="grid-input" />
+        </div>
+        <div class="flex-shrink-0 flex items-end space-x-2 mt-2 md:mt-0">
+          <button id="start-call-btn" class="bg-green-600 text-white px-4 py-2 rounded font-bold uppercase hover:bg-green-700 transition">Call</button>
+          <button id="hang-up-btn" class="bg-red-600 text-white px-4 py-2 rounded font-bold uppercase hover:bg-red-700 transition" disabled>Hang Up</button>
+        </div>
+      </div>
+
+      <!-- Video Display -->
+      <div id="video-streams-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="video-container rounded-lg overflow-hidden border border-gray-700">
+          <video id="local-video" autoplay muted playsinline></video>
+          <div class="absolute top-2 left-2 bg-gray-800/70 text-xs text-gray-300 px-2 py-1 rounded">You</div>
+        </div>
+        <div class="video-container rounded-lg overflow-hidden border border-gray-700">
+          <video id="remote-video" autoplay playsinline></video>
+          <div class="absolute top-2 left-2 bg-gray-800/70 text-xs text-gray-300 px-2 py-1 rounded">Them</div>
+        </div>
+      </div>
+
+      <!-- Incoming Call Notification -->
+      <div id="incoming-call-notification" class="hidden mt-4 p-4 bg-blue-600/20 border border-blue-500 rounded-lg flex items-center justify-between">
+        <p class="text-blue-200 text-sm">Incoming call from <span id="incoming-caller-name" class="font-bold"></span>!</p>
+        <div class="flex space-x-2">
+          <button id="accept-call-btn" class="bg-blue-500 text-white px-4 py-2 rounded font-bold uppercase hover:bg-blue-600 transition">Accept</button>
+          <button id="reject-call-btn" class="bg-gray-500 text-white px-4 py-2 rounded font-bold uppercase hover:bg-gray-600 transition">Reject</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- CHAT INTERFACE -->
+    <div id="chat-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">War Room Chat</h3>
+
+      <!-- Chat Messages Display -->
+      <div id="chat-messages" class="h-80 overflow-y-auto bg-black/50 p-4 rounded-lg mb-4 space-y-4 no-scrollbar">
+        <!-- Chat messages will be dynamically inserted here -->
+        <p class="text-gray-500 text-center">Loading chat history...</p>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="flex items-center space-x-2">
+        <input type="file" id="chat-media-file-input" accept="image/*,video/*" class="hidden" />
+        <button id="attach-media-btn" class="p-2 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+          </svg>
+        </button>
+        <input
+          type="text"
+          id="chat-message-input"
+          placeholder="Send a message or attach media..."
+          class="flex-grow grid-input"
+        />
+        <button
+          id="send-chat-message-btn"
+          class="bg-yellow-500 text-black px-4 py-2 rounded font-bold uppercase hover:bg-yellow-600 transition"
+        >
+          Send
+        </button>
+      </div>
+      <div id="chat-upload-progress" class="hidden w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700 mt-2">
+        <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 0%"></div>
+      </div>
+      <p id="chat-upload-status" class="text-xs text-gray-400 mt-2"></p>
+    </div>
+
+    <!-- PERSONAL MEDIA UPLOAD -->
+    <div id="personal-media-upload-panel" class="mb-8 p-6 bg-gray-900 border border-gray-800 rounded-2xl">
+      <h3 class="text-yellow-500 font-black mb-4 uppercase italic">My Personal Grid Media</h3>
+
+      <div class="space-y-4">
+        <input type="file" id="media-file-input" accept="image/*,video/*" class="block w-full text-sm text-gray-500
+          file:mr-4 file:py-2 file:px-4
+          file:rounded-full file:border-0
+          file:text-sm file:font-semibold
+          file:bg-yellow-500 file:text-black
+          hover:file:bg-yellow-400"
+        />
+        <button
+          id="upload-media-btn"
+          class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase hover:bg-white transition"
+        >
+          Upload Media
+        </button>
+
+        <div id="upload-progress" class="hidden w-full bg-gray-700 rounded-full h-2.5 dark:bg-gray-700">
+          <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <p id="upload-status" class="text-xs text-gray-400 mt-2"></p>
+      </div>
+
+      <!-- Display area for uploaded media -->
+      <div id="user-media-list" class="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
+        <!-- Media will be dynamically inserted here -->
+      </div>
+    </div>
+
+
+    <!-- GRID TABLE -->
+    <div class="overflow-x-auto no-scrollbar rounded-xl border border-gray-800">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-900 text-[10px] uppercase tracking-[0.2em] text-gray-500">
+          <tr class="text-gray-400 border-b border-gray-800">
+  <th class="p-3">Athlete</th>
+  <th class="p-3 text-center">S1</th>
+  <th class="p-3 text-center">S2</th>
+  <th class="p-3 text-center">S3</th>
+  <th class="p-3 text-center">S4</th>
+  <th class="p-3 text-center">S5</th>
+  <th class="p-3 text-center text-yellow-500 font-bold">TOTAL</th> <th class="p-3 text-right">Actions</th>
+</tr>        
+    </thead>
+        <tbody id="match-grid-body" class="divide-y divide-gray-800"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- LOGIN MODAL -->
+  <div id="login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
+    <div class="bg-gray-900 border border-yellow-500/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl">
+      <h2 class="text-2xl font-black text-yellow-500 mb-2 uppercase italic">Ascension</h2>
+
+      <form id="login-form" class="space-y-4">
+        <input
+          type="email"
+          id="login-email"
+          placeholder="EMAIL"
+          autocomplete="username"
+          class="grid-input"
+          required
+        />
+
+        <input
+          type="password"
+          id="login-password"
+          placeholder="PASSWORD"
+          class="grid-input"
+          required
+          autocomplete="current-password"
+        />
+
+        <button
+          type="submit"
+          id="login-submit-btn"
+          class="w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase tracking-widest hover:bg-yellow-600 transition"
+        >
+          SIGN IN
+        </button>
+      </form>
+
+      <button
+        onclick="window.toggleLoginModal(false)"
+        class="mt-4 w-full text-gray-400 hover:text-white text-sm uppercase tracking-widest"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- ACCOUNT MODAL -->
+  <div id="account-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
+    <div class="bg-gray-900 border border-yellow-500/40 p-8 rounded-3xl max-w-sm w-full shadow-2xl">
+      <h2 class="text-2xl font-black text-yellow-500 mb-4 uppercase italic">My Grid</h2>
+
+      <div class="bg-black/60 border border-gray-800 rounded-2xl p-4 text-sm space-y-2">
+        <div class="flex justify-between">
+          <span class="text-gray-500 uppercase tracking-widest text-[10px] font-bold">Email:</span>
+          <span id="account-email" class="text-gray-200 text-xs font-mono">—</span>
+        </div>
+
+        <div class="flex justify-between">
+          <span class="text-gray-500 uppercase tracking-widest text-[10px] font-bold">Status:</span>
+          <span id="account-premium-status" class="text-yellow-500 text-xs font-bold">Mortal</span>
+        </div>
+      </div>
+
+      <div class="mt-4 space-y-2">
+        <button
+          id="btn-upgrade-pro"
+          class="w-full bg-yellow-500 text-black font-black py-2 rounded-xl uppercase text-xs tracking-widest hover:bg-yellow-400 transition"
+        >
+          UPGRADE TO PRO
+        </button>
+
+        <button
+          id="logout-btn"
+          onclick="window.logOut()"
+          class="w-full bg-gray-800 text-gray-200 font-bold py-2 rounded-xl uppercase text-[10px] tracking-widest hover:bg-gray-700 transition"
+        >
+          LOG OUT
+        </button>
+      </div>
+
+      <button
+        onclick="window.toggleAccountModal(false)"
+        class="mt-4 w-full text-gray-700 text-[10px] font-bold uppercase hover:text-white"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+
+  <!-- APP BUNDLE -->
+  <script>
+    window.toggleLoginModal = function(show) {
+      const modal = document.getElementById('login-modal');
+      if (modal) modal.classList.toggle('hidden', !show);
+    };
+
+    window.toggleAccountModal = function(show) {
+      const modal = document.getElementById('account-modal');
+      if (modal) modal.classList.toggle('hidden', !show);
+    };
+
+    // Attach submit handler for login form
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginFormElement = document.getElementById('login-form');
+      if (loginFormElement) {
+        loginFormElement.addEventListener('submit', function(e){
+          e.preventDefault();
+          if (typeof window.logIn === 'function') {
+            try { window.logIn(); } catch (err) { alert('Login failed: ' + err.message); }
+          } else {
+            alert('The app bundle is not loaded yet. Please wait a moment.');
+          }
+        });
+      }
+    });
+  </script>
+
+  <script type="module" src="bundle.js"></script>
+
+  <audio id="zeus-thunder" src="./audio/thunder.mp3" preload="auto"></audio>
+  <div id="zeus-lightning"></div>
+
+</body>
+</html>
