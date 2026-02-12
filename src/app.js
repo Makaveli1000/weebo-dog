@@ -11,17 +11,17 @@ import { toggleZeusDebug } from "./zeus/debug.js";
 import { injectOracleOverlay } from "./zeus/oracleOverlay.js";
 import { zeusPredict } from "./zeus/prediction.js";
 
-// ⚡ WORLD 2: OLYMPUS CONNECTIONS (From your local config)
-import { auth, db, appId, storage, upgradeUser,onAuthStateChanged,signOut } from "./index.js";
+// ⚡ WORLD 2: OLYMPUS CONNECTIONS
+// Removed the duplicate 'onAuthStateChanged' from here
+import { auth, db, appId, storage, upgradeUser, signOut } from "./index.js";
 
-// ⚡ WORLD 3: OLYMPUS TOOLS (Directly from Firebase)
+// ⚡ WORLD 3: OLYMPUS TOOLS
 import { onAuthStateChanged } from "firebase/auth"; 
 import { 
   doc, getDoc, collection, addDoc, serverTimestamp, query, where, 
   orderBy, onSnapshot, deleteDoc, limit, updateDoc, increment, getDocs, setDoc 
 } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
-
 // ⚡ GLOBAL UI GATEWAY
 
 window.toggleLoginModal = (isOpen) => {
@@ -339,4 +339,7 @@ async function deletePersonalMedia(docId, storagePath) {
 }
 async function startCall() { zeusLog("CALL_START"); }
 async function hangUpCall() { zeusLog("CALL_HANGUP"); }
-async function listenForIncomingCalls() { zeusLog("LISTENING_FOR_CALLS"); }
+async function listenForIncomingCalls() { zeusLog("LISTENING_FOR_CALLS"); } function setupMediaListener() {
+  console.log("⚡ MEDIA_WATCH_ACTIVE");
+  // This is a placeholder so the code doesn't crash
+}
