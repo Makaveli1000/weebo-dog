@@ -1,27 +1,25 @@
 import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
+  signOut as firebaseSignOut, 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
-  GoogleAuthProvider, 
   signInWithPopup, 
-  signOut as firebaseSignOut 
+  GoogleAuthProvider 
 } from "firebase/auth";
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  collection, 
-  serverTimestamp 
-} from "firebase/firestore";
+import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // 1. OLYMPUS INITIALIZATION
-// This uses the config provided by your Netlify/Window environment
-const netlifyFirebaseConfig = window.NETLIFY_FIREBASE_CONFIG;
-const app = initializeApp(netlifyFirebaseConfig);
+// If you are using Netlify variables, use this. 
+// If you have a local config, replace 'window.NETLIFY_FIREBASE_CONFIG' with your { apiKey: ... } object.
+const firebaseConfig = window.NETLIFY_FIREBASE_CONFIG || {
+    /* YOUR LOCAL CONFIG KEYS HERE IF NOT ON NETLIFY */
+};
 
-// 2. SERVICE CONSTANTS (The "Connections")
+const app = initializeApp(firebaseConfig);
+
+// 2. SERVICE EXPORTS
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
@@ -36,20 +34,12 @@ export {
   firebaseSignOut as signOut 
 };
 
-// 4. ASCENSION LOGIC (The single, fixed Upgrade Function)
+// 4. ASCENSION LOGIC
 export async function upgradeUser() {
-  if (!auth.currentUser) throw new Error("Mortal, you must be logged in to ascend.");
-
-  // This points to the user's profile in your Firestore database
+  if (!auth.currentUser) throw new Error("Mortal, you must be logged in to ascend!");
   const userDocRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}/profile`, "info");
-
   try {
-    await setDoc(userDocRef, { 
-      isPro: true, 
-      upgradedAt: serverTimestamp() 
-    }, { merge: true });
-
-    console.log("⚡ ASCENSION COMPLETE: User is now PRO.");
+    await setDoc(userDocRef, { isPro: true, upgradedAt: serverTimestamp() }, { merge: true });
     return true;
   } catch (error) {
     console.error("Ascension failed:", error);
