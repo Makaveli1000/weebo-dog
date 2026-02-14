@@ -358,17 +358,18 @@ onAuthStateChanged(auth, async (user) => {
 // 2. Handle the Login Form Submission
 const setupLoginHandler = () => {
     const loginForm = document.getElementById('login-form');
+    console.log("Form check:", loginForm); 
     
     if (loginForm) {
-        console.log("⚡ LOGIN_FORM_DETECTED"); // Check your console for this!
+        console.log("⚡ LOGIN_FORM_DETECTED");
         loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
+            console.log("Sign In Clicked!"); 
             
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
 
             try {
-                // We use the auth tool from our imports
                 const { signInWithEmailAndPassword } = await import("firebase/auth");
                 await signInWithEmailAndPassword(auth, email, password);
                 
@@ -384,5 +385,9 @@ const setupLoginHandler = () => {
     }
 };
 
-// Run the setup
-setupLoginHandler();
+// 3. Kickoff: Run the setup once the page is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupLoginHandler);
+} else {
+    setupLoginHandler();
+}
