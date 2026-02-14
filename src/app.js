@@ -356,25 +356,33 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // 2. Handle the Login Form Submission
-const loginForm = document.getElementById('login-form');
-if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault(); // STOP page refresh
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-
-        try {
-            // We use the auth tool from our imports
-            const { signInWithEmailAndPassword } = await import("firebase/auth");
-            await signInWithEmailAndPassword(auth, email, password);
+const setupLoginHandler = () => {
+    const loginForm = document.getElementById('login-form');
+    
+    if (loginForm) {
+        console.log("⚡ LOGIN_FORM_DETECTED"); // Check your console for this!
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
             
-            // Close modal manually on success
-            window.toggleLoginModal(false);
-            zeusLog("LOGIN_SUCCESS", { email });
-        } catch (error) {
-            console.error("Ascension Error:", error);
-            zeusLog("AUTH_FAILED", { error: error.message });
-            alert("Ascension Denied: " + error.message);
-        }
-    });
-} 
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                // We use the auth tool from our imports
+                const { signInWithEmailAndPassword } = await import("firebase/auth");
+                await signInWithEmailAndPassword(auth, email, password);
+                
+                window.toggleLoginModal(false);
+                zeusLog("LOGIN_SUCCESS");
+            } catch (error) {
+                console.error("Ascension Error:", error);
+                alert("Ascension Denied: " + error.message);
+            }
+        });
+    } else {
+        console.error("❌ LOGIN_FORM_NOT_FOUND");
+    }
+};
+
+// Run the setup
+setupLoginHandler();
