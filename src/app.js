@@ -65,43 +65,6 @@ function zeusLog(event, detail = {}) {
   }
 }
 
-// ============================================================================
-// ⚡ ASCENSION WATCHTOWER — AUTH STATE HANDLER
-// ============================================================================
-onAuthStateChanged(auth, async (user) => {
-  zeusLog("AUTH_STATE_CHANGED", { uid: user?.uid || null });
-  currentUser = user;
-
-  const loader = document.getElementById("loading-overlay");
-  const main = document.getElementById("main-content");
-  const paywall = document.getElementById("paywall-content");
-  loader?.classList.add("hidden");
-
-  if (!user) {
-    main?.classList.add("hidden");
-    paywall?.classList.remove("hidden");
-    if (mortalTimerInterval) clearInterval(mortalTimerInterval);
-    return;
-  }
-
-  main?.classList.remove("hidden");
-  paywall?.classList.add("hidden");
-
-  const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "info");
-  const docSnap = await getDoc(userDocRef);
-  userIsPro = docSnap.exists() && (docSnap.data().isPro || docSnap.data().isPremium);
-
-  if (userIsPro) {
-    document.querySelector("header")?.classList.add("ascend-pulse");
-  } else {
-    startMortalTimer();
-  }
-
-  setupPlayersListener(); 
-  setupChatListener();
-  setupMediaListener();
-});
-
 // =============================================================================
 // ⚡ LEADERBOARD ENGINE
 // ============================================================================
@@ -339,4 +302,79 @@ async function hangUpCall() { zeusLog("CALL_HANGUP"); }
 async function listenForIncomingCalls() { zeusLog("LISTENING_FOR_CALLS"); } function setupMediaListener() {
   console.log("⚡ MEDIA_WATCH_ACTIVE");
   // This is a placeholder so the code doesn't crash
-}
+} // ============================================================================
+// ⚡ OLYMPUS AUTHENTICATION LOGIC
+// ============================================================================
+
+// 1. Watch for Auth Changes (The UI Switcher)
+onAuthStateChanged(auth, async (user) => {
+  zeusLog("AUTH_STATE_CHANGED", { uid: user?.uid || null });
+  currentUser = user;
+
+  const loader = document.getElementById("loading-overlay");
+  const main = document.getElementById("main-content");
+  const paywall = document.getElementById("paywall-content");
+  const userStatusText = document.getElementById('user-status');
+  const headerAuthBtn = document.getElementById('header-auth-btn');
+
+  // Hide loader immediately
+  if (loader) loader.classList.add("hidden");
+
+  if (!user) {
+    // ☁️ MORTAL MODE
+    main?.classList.add("hidden");
+    paywall?.classList.remove("hidden");
+    if (userStatusText) userStatusText.innerText = "Status: Mortal Vision";
+    if (headerAuthBtn) headerAuthBtn.innerText = "LOGIN";
+    if (mortalTimerInterval) clearInterval(mortalTimerInterval);
+    return;
+  }
+
+  // ⚡ TITAN MODE (LOGGED IN)
+  main?.classList.remove("hidden");
+  paywall?.classList.add("hidden");
+  if (userStatusText) userStatusText.innerText = "Status: Titan Access";
+  if (headerAuthBtn) headerAuthBtn.innerText = "LOGOUT";
+
+  // Check for Pro status
+  const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile`, "info");
+  const docSnap = await getDoc(userDocRef);
+  userIsPro = docSnap.exists() && (docSnap.data().isPro || docSnap.data().isPremium);
+
+  if (userIsPro) {
+    document.querySelector("header")?.classList.add("ascend-pulse");
+  } else {
+    startMortalTimer();
+  }
+
+  // Activate Zeus Systems
+  thunder();
+  speak("Welcome to the Grid.");
+  setupPlayersListener(); 
+  setupChatListener();
+  setupMediaListener();
+});
+
+// 2. Handle the Login Form Submission
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault(); // STOP page refresh
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+
+        try {
+            // We use the auth tool from our imports
+            const { signInWithEmailAndPassword } = await import("firebase/auth");
+            await signInWithEmailAndPassword(auth, email, password);
+            
+            // Close modal manually on success
+            window.toggleLoginModal(false);
+            zeusLog("LOGIN_SUCCESS", { email });
+        } catch (error) {
+            console.error("Ascension Error:", error);
+            zeusLog("AUTH_FAILED", { error: error.message });
+            alert("Ascension Denied: " + error.message);
+        }
+    });
+} 
