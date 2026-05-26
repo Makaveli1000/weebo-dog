@@ -1,32 +1,33 @@
-const fs = require('fs');
-const path = require('path');
+#!/usr/bin/env bash
+set -euo pipefail
 
-const distDir = path.join(__dirname, 'dist');
-if (!fs.existsSync(distDir)) {
-    fs.mkdirSync(distDir, { recursive: true });
-}
+DIST_DIR="./dist"
+ROOT_ENV_FILE="./env-config.js"
+DIST_ENV_FILE="$DIST_DIR/env-config.js"
 
-const config = {
-    apiKey: process.env.FIREBASE_API_KEY || "YOUR_FIREBASE_API_KEY_HERE",
-    authDomain: process.env.FIREBASE_AUTH_DOMAIN || "YOUR_FIREBASE_AUTH_DOMAIN_HERE",
-    projectId: process.env.FIREBASE_PROJECT_ID || "sntlmoexclusivesportsgrid",
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "sntlmoexclusivesportsgrid.appspot.com",
-    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "YOUR_FIREBASE_MESSAGING_SENDER_ID_HERE",
-    appId: process.env.FIREBASE_APP_ID || "1:735791748207:web:74fd6412684db238b6e99a",
-    measurementId: process.env.FIREBASE_MEASUREMENT_ID || "G-YOURMEASUREMENTID",
-    geminiKey: process.env.GEMINI_API_KEY || "YOUR_GEMINI_API_KEY_HERE"
+mkdir -p "$DIST_DIR"
+
+FIREBASE_API_KEY="${FIREBASE_API_KEY:-AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs}"
+FIREBASE_AUTH_DOMAIN="${FIREBASE_AUTH_DOMAIN:-sntlmoexclusivesportsgrid.firebaseapp.com}"
+FIREBASE_PROJECT_ID="${FIREBASE_PROJECT_ID:-sntlmoexclusivesportsgrid}"
+FIREBASE_STORAGE_BUCKET="${FIREBASE_STORAGE_BUCKET:-sntlmoexclusivesportsgrid.firebasestorage.app}"
+FIREBASE_MESSAGING_SENDER_ID="${FIREBASE_MESSAGING_SENDER_ID:-735791748207}"
+FIREBASE_APP_ID="${FIREBASE_APP_ID:-1:735791748207:web:74fd6412684db238b6e99a}"
+FIREBASE_MEASUREMENT_ID="${FIREBASE_MEASUREMENT_ID:-G-T8RJPDPL4G}"
+
+cat > "$ROOT_ENV_FILE" <<EOF
+window.NETLIFY_FIREBASE_CONFIG = {
+  apiKey: "$FIREBASE_API_KEY",
+  authDomain: "$FIREBASE_AUTH_DOMAIN",
+  projectId: "$FIREBASE_PROJECT_ID",
+  storageBucket: "$FIREBASE_STORAGE_BUCKET",
+  messagingSenderId: "$FIREBASE_MESSAGING_SENDER_ID",
+  appId: "$FIREBASE_APP_ID",
+  measurementId: "$FIREBASE_MEASUREMENT_ID"
 };
+EOF
 
-const content = `window.NETLIFY_FIREBASE_CONFIG = {
-  apiKey: "${config.apiKey}",
-  authDomain: "${config.authDomain}",
-  projectId: "${config.projectId}",
-  storageBucket: "${config.storageBucket}",
-  messagingSenderId: "${config.messagingSenderId}",
-  appId: "${config.appId}",
-  measurementId: "${config.measurementId}"
-};
-window.GEMINI_API_KEY = "${config.geminiKey}";`;
+cp "$ROOT_ENV_FILE" "$DIST_ENV_FILE"
 
-fs.writeFileSync(path.join(distDir, 'env-config.js'), content);
-console.log("✅ Generated env-config.js successfully!");
+echo "✅ Generated $ROOT_ENV_FILE"
+echo "✅ Generated $DIST_ENV_FILE"
