@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp } from "firebase/app";
 import {
   getAuth,
   onAuthStateChanged,
@@ -6,427 +6,451 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   updatePassword
-} from 'firebase/auth';
+} from "firebase/auth";
 import {
   getFirestore,
   doc,
   getDoc,
   setDoc,
-  deleteDoc,
-  onSnapshot,
-  collection,
+  updateDoc,
   addDoc,
-  serverTimestamp,
+  collection,
   query,
   orderBy,
-  limit
-} from 'firebase/firestore';
+  limit,
+  onSnapshot,
+  serverTimestamp
+} from "firebase/firestore";
 import {
   getStorage,
-  ref as storageRef,
+  ref,
   uploadBytesResumable,
   getDownloadURL
-} from 'firebase/storage';
+} from "firebase/storage";
 
-/* ------------------------------
-   Firebase config
------------------------------- */
+/* -------------------------------------------------
+   FIREBASE INIT
+------------------------------------------------- */
 const firebaseConfig =
-  window.NETLIFY_FIREBASE_CONFIG ||
-  window.__firebase_config ||
-  null;
+  window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config;
 
-if (!firebaseConfig || !firebaseConfig.apiKey) {
-  console.error('Firebase config missing.');
-
-  window.addEventListener('DOMContentLoaded', () => {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-      overlay.innerHTML = `
-        <div class="text-center px-6">
-          <p class="text-2xl font-black uppercase text-red-500 mb-3">Configuration Error</p>
-          <p class="text-sm text-white/80">Firebase setup is missing or invalid.</p>
-          <p class="text-xs text-white/60 mt-2">Check env-config.js and remove conflicting inline config.</p>
-        </div>
-      `;
-    }
-  });
-
-  throw new Error('Firebase configuration missing.');
+if (!firebaseConfig) {
+  throw new Error("Missing Firebase config. Check env-config.js.");
 }
 
-/* ------------------------------
-   Firebase init
------------------------------- */
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-/* ------------------------------
-   Helpers
------------------------------- */
-const $ = (id) => document.getElementById(id);
-
-const show = (el) => {
-  if (el) el.classList.remove('hidden');
-};
-
-const hide = (el) => {
-  if (el) el.classList.add('hidden');
-};
-
-const setText = (el, value) => {
-  if (el) el.textContent = value ?? '';
-};
-
-const setHTML = (el, value) => {
-  if (el) el.innerHTML = value ?? '';
-};
-
-const escapeHtml = (value = '') =>
-  String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-
-const formatTimestamp = (ts) => {
-  if (!ts?.toDate) return '';
-  return ts.toDate().toLocaleString();
-};
-
-const minutesAgo = (ts) => {
-  if (!ts?.toDate) return 'just now';
-  const diff = Date.now() - ts.toDate().getTime();
-  const mins = Math.max(0, Math.round(diff / 60000));
-  return mins === 0 ? 'just now' : `${mins} min ago`;
-};
-
-const isAdminLike = (profile) =>
-  profile?.role === 'admin' || profile?.role === 'editor';
-
-/* ------------------------------
-   State
------------------------------- */
+/* -------------------------------------------------
+   STATE
+------------------------------------------------- */
 let currentUser = null;
-let currentUserProfile = null;
+let currentProfile = null;
+let unsubscribers = [];
 let presenceHeartbeat = null;
 
-let unsubscribers = {
-  athletes: null,
-  chat: null,
-  presence: null,
-  liveFeed: null,
-  sportsData: null,
-  media: null
-};
+/* -------------------------------------------------
+   HELPERS
+------------------------------------------------- */
+const $ = (id) => document.getElementById(id);
 
-let els = {};
-
-/* ------------------------------
-   Cache DOM
------------------------------- */
-function cacheElements() {
-  els = {
-    loadingOverlay: $('loading-overlay'),
-
-    headerAuthBtn: $('header-auth-btn'),
-    accountBtn: $('account-btn'),
-    userStatus: $('user-status'),
-
-    paywallContent: $('paywall-content'),
-    mainContent: $('main-content'),
-    adminPanel: $('admin-panel'),
-
-    loginModal: $('login-modal'),
-    accountModal: $('account-modal'),
-
-    loginForm: $('login-form'),
-    loginEmail: $('login-email'),
-    loginPassword: $('login-password'),
-    loginError: $('login-error'),
-    loginSubmitBtn: $('login-submit-btn'),
-
-    accountUID: $('account-uid'),
-    accountEmail: $('account-email'),
-    accountRole: $('account-role'),
-    accountPremiumStatus: $('account-premium-status'),
-    accountNickname: $('account-nickname'),
-    accountNewPassword: $('account-new-password'),
-    saveNicknameBtn: $('save-nickname-btn'),
-    updatePasswordBtn: $('update-password-btn'),
-    logoutBtn: $('logout-btn'),
-
-    addAthleteForm: $('add-athlete-form'),
-    playerName: $('player-name'),
-    playerSport: $('player-sport'),
-    score0: $('score0'),
-    score1: $('score1'),
-    score2: $('score2'),
-    score3: $('score3'),
-    score4: $('score4'),
-    topAthleteDisplay: $('top-athlete-display'),
-    matchGridBody: $('match-grid-body'),
-
-    chatMessages: $('chat-messages'),
-    chatMessageInput: $('chat-message-input'),
-    sendChatMessageBtn: $('send-chat-message-btn'),
-
-    latestData: $('latest-data'),
-    dataStream: $('data-stream'),
-    activeUsersList: $('active-users-list'),
-    sportsDataDisplay: $('sports-data-display'),
-
-    mediaFileInput: $('media-file-input'),
-    lockerUploadBtn: $('locker-upload-btn'),
-    lockerMediaDisplay: $('locker-media-display'),
-    lockerStatusText: $('locker-status-text'),
-    uploadCounterDisplay: $('upload-counter-display'),
-    uploadProgressBar: $('upload-progress-bar')
-  };
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, (char) => {
+    const map = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    };
+    return map[char] || char;
+  });
 }
 
-/* ------------------------------
-   Dynamic UI for missing HTML
------------------------------- */
+function getMillis(value) {
+  if (!value) return 0;
+  if (typeof value?.toMillis === "function") return value.toMillis();
+  if (typeof value?.seconds === "number") return value.seconds * 1000;
+  const parsed = new Date(value).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function formatDateTime(value) {
+  const ms = getMillis(value);
+  if (!ms) return "";
+  return new Date(ms).toLocaleString();
+}
+
+function show(el) {
+  el?.classList.remove("hidden");
+}
+
+function hide(el) {
+  el?.classList.add("hidden");
+}
+
+function setStatus(text) {
+  const el = $("user-status");
+  if (el) el.textContent = text;
+}
+
+function setLoading(isLoading, message = "⚡ CONNECTING...") {
+  const overlay = $("loading-overlay");
+  if (!overlay) return;
+  const textEl = overlay.querySelector("[data-loading-text]");
+  if (textEl) textEl.textContent = message;
+  if (isLoading) show(overlay);
+  else hide(overlay);
+}
+
+/* -------------------------------------------------
+   DYNAMIC UI SAFETY NETS
+------------------------------------------------- */
 function ensureLoginErrorElement() {
-  if (els.loginError || !els.loginForm) return;
+  const form = $("login-form");
+  if (!form) return;
+  if ($("login-error")) return;
 
-  const errorEl = document.createElement('p');
-  errorEl.id = 'login-error';
-  errorEl.className = 'text-xs text-red-500 font-bold';
-  errorEl.textContent = '';
+  const submitBtn = $("login-submit-btn");
+  const errorEl = document.createElement("p");
+  errorEl.id = "login-error";
+  errorEl.className = "text-xs text-red-500 font-bold mt-2";
+  errorEl.textContent = "";
 
-  const submitBtn =
-    els.loginSubmitBtn || els.loginForm.querySelector('button[type="submit"]');
-
-  if (submitBtn) {
-    submitBtn.insertAdjacentElement('beforebegin', errorEl);
+  if (submitBtn?.parentNode) {
+    submitBtn.parentNode.insertBefore(errorEl, submitBtn);
   } else {
-    els.loginForm.appendChild(errorEl);
+    form.appendChild(errorEl);
   }
-
-  els.loginError = errorEl;
 }
 
 function ensureAccountModal() {
-  if ($('account-modal')) return;
+  if ($("account-modal")) return;
 
-  const modal = document.createElement('div');
-  modal.id = 'account-modal';
+  const modal = document.createElement("div");
+  modal.id = "account-modal";
   modal.className =
-    'hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4';
-
+    "hidden fixed inset-0 z-50 bg-black/70 items-center justify-center p-4";
   modal.innerHTML = `
-    <div class="bg-gray-900 border border-yellow-500/30 p-8 rounded-3xl max-w-md w-full shadow-2xl">
-      <h2 class="text-2xl font-black text-yellow-500 mb-4 uppercase italic">My Grid</h2>
-
-      <div class="space-y-3 text-sm">
-        <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-          <p class="text-[10px] uppercase tracking-widest text-gray-500">Email</p>
-          <p id="account-email" class="text-white font-bold break-all">N/A</p>
-        </div>
-
-        <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-          <p class="text-[10px] uppercase tracking-widest text-gray-500">UID</p>
-          <p id="account-uid" class="text-white font-mono text-xs break-all">N/A</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-            <p class="text-[10px] uppercase tracking-widest text-gray-500">Role</p>
-            <p id="account-role" class="text-white font-bold">user</p>
-          </div>
-          <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-            <p class="text-[10px] uppercase tracking-widest text-gray-500">Membership</p>
-            <p id="account-premium-status" class="text-white font-bold">Standard User</p>
-          </div>
-        </div>
-
-        <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-          <label for="account-nickname" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">Nickname</label>
-          <input id="account-nickname" type="text" class="grid-input" placeholder="Your nickname" />
-          <button id="save-nickname-btn" type="button" class="mt-3 w-full bg-yellow-500 text-black font-bold py-2 rounded uppercase">
-            Save Nickname
-          </button>
-        </div>
-
-        <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-          <label for="account-new-password" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">Update Password</label>
-          <input id="account-new-password" type="password" class="grid-input" placeholder="New password" />
-          <button id="update-password-btn" type="button" class="mt-3 w-full border border-yellow-500 text-yellow-500 font-bold py-2 rounded uppercase">
-            Update Password
-          </button>
-        </div>
+    <div class="w-full max-w-md rounded-2xl border border-white/10 bg-[#111] p-5 shadow-2xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-xl font-bold text-white">Account</h2>
+        <button id="account-close-btn" type="button" class="rounded bg-white/10 px-3 py-1 text-sm text-white hover:bg-white/20">Close</button>
       </div>
 
-      <div class="mt-6 grid grid-cols-2 gap-3">
-        <button id="logout-btn" type="button" class="border border-red-500 text-red-400 font-bold py-2 rounded uppercase">
-          Log Out
-        </button>
-        <button id="close-account-btn" type="button" class="text-gray-400 font-bold py-2 rounded uppercase border border-gray-700">
-          Close
-        </button>
+      <div class="space-y-4">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-zinc-400">Email</p>
+          <p id="account-email-display" class="mt-1 text-sm font-semibold text-white"></p>
+        </div>
+
+        <div>
+          <label for="nickname-input" class="mb-1 block text-xs uppercase tracking-wide text-zinc-400">Nickname</label>
+          <input id="nickname-input" type="text" class="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-white outline-none" placeholder="Enter nickname" />
+          <button id="save-nickname-btn" type="button" class="mt-2 rounded-lg bg-yellow-500 px-4 py-2 text-sm font-bold text-black hover:bg-yellow-400">Save Nickname</button>
+        </div>
+
+        <div>
+          <label for="new-password-input" class="mb-1 block text-xs uppercase tracking-wide text-zinc-400">New Password</label>
+          <input id="new-password-input" type="password" class="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-white outline-none" placeholder="New password" />
+          <button id="update-password-btn" type="button" class="mt-2 rounded-lg bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20">Update Password</button>
+        </div>
+
+        <div class="flex justify-end">
+          <button id="logout-btn" type="button" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-500">Logout</button>
+        </div>
       </div>
     </div>
   `;
 
+  modal.style.display = "none";
+  modal.classList.add("items-center", "justify-center");
   document.body.appendChild(modal);
-
-  modal.querySelector('#close-account-btn')?.addEventListener('click', () => {
-    window.toggleAccountModal(false);
-  });
-
-  cacheElements();
 }
 
-function ensureOptionalUI() {
-  ensureLoginErrorElement();
-  ensureAccountModal();
-}
-
-/* ------------------------------
-   Global modal functions
------------------------------- */
-window.toggleLoginModal = function toggleLoginModal(showModal) {
-  const modal = $('login-modal');
-  if (!modal) return;
-
-  modal.classList.toggle('hidden', !showModal);
-
-  if (showModal) {
-    setText($('login-error'), '');
-    $('login-email')?.focus();
-  }
-};
-
-window.toggleAccountModal = function toggleAccountModal(showModal) {
-  const modal = $('account-modal');
-  if (!modal) return;
-
-  if (showModal) {
-    renderAccountPanel();
+function ensureOptionalMessages() {
+  const chatBox = $("chat-messages");
+  if (chatBox && !chatBox.dataset.emptyText) {
+    chatBox.dataset.emptyText = "No messages yet.";
   }
 
-  modal.classList.toggle('hidden', !showModal);
-};
-
-/* ------------------------------
-   UI state
------------------------------- */
-function setUserStatusText() {
-  if (!els.userStatus) return;
-
-  if (!currentUser) {
-    els.userStatus.textContent = 'Status: Mortal Vision';
-    return;
-  }
-
-  const nickname =
-    currentUserProfile?.nickname ||
-    currentUser.email?.split('@')[0] ||
-    'Grid Member';
-
-  els.userStatus.textContent = `Status: ${nickname}`;
-}
-
-function renderAccountPanel() {
-  setText(els.accountUID, currentUser?.uid || 'N/A');
-  setText(els.accountEmail, currentUser?.email || 'N/A');
-  setText(els.accountRole, currentUserProfile?.role || 'user');
-  setText(
-    els.accountPremiumStatus,
-    currentUserProfile?.isPro ? 'PRO Member' : 'Standard User'
-  );
-
-  if (els.accountNickname) {
-    els.accountNickname.value = currentUserProfile?.nickname || '';
-  }
-
-  if (els.accountNewPassword) {
-    els.accountNewPassword.value = '';
+  const usersBox = $("active-users-list");
+  if (usersBox && !usersBox.dataset.emptyText) {
+    usersBox.dataset.emptyText = "No active users yet.";
   }
 }
 
-function updateMainView() {
-  hide(els.loadingOverlay);
+/* -------------------------------------------------
+   DOM CACHE
+------------------------------------------------- */
+function getEls() {
+  return {
+    loadingOverlay: $("loading-overlay"),
+    headerAuthBtn: $("header-auth-btn"),
+    accountBtn: $("account-btn"),
 
-  if (currentUser) {
-    hide(els.paywallContent);
-    show(els.mainContent);
-    hide(els.headerAuthBtn);
-    show(els.accountBtn);
-  } else {
-    show(els.paywallContent);
-    hide(els.mainContent);
-    show(els.headerAuthBtn);
-    hide(els.accountBtn);
-    window.toggleAccountModal(false);
-  }
+    paywallContent: $("paywall-content"),
+    mainContent: $("main-content"),
+    adminPanel: $("admin-panel"),
 
-  if (els.adminPanel) {
-    if (currentUser && isAdminLike(currentUserProfile)) {
-      show(els.adminPanel);
-    } else {
-      hide(els.adminPanel);
-    }
-  }
+    loginModal: $("login-modal"),
+    loginForm: $("login-form"),
+    loginEmail: $("login-email"),
+    loginPassword: $("login-password"),
+    loginSubmitBtn: $("login-submit-btn"),
+    loginError: $("login-error"),
 
-  setUserStatusText();
-}
+    accountModal: $("account-modal"),
+    accountEmailDisplay: $("account-email-display"),
+    nicknameInput: $("nickname-input"),
+    saveNicknameBtn: $("save-nickname-btn"),
+    newPasswordInput: $("new-password-input"),
+    updatePasswordBtn: $("update-password-btn"),
+    logoutBtn: $("logout-btn"),
+    accountCloseBtn: $("account-close-btn"),
 
-function clearRealtimeListeners() {
-  Object.values(unsubscribers).forEach((unsub) => {
-    if (typeof unsub === 'function') unsub();
-  });
+    userStatus: $("user-status"),
 
-  unsubscribers = {
-    athletes: null,
-    chat: null,
-    presence: null,
-    liveFeed: null,
-    sportsData: null,
-    media: null
+    addAthleteForm: $("add-athlete-form"),
+    playerName: $("player-name"),
+    playerSport: $("player-sport"),
+    score0: $("score0"),
+    score1: $("score1"),
+    score2: $("score2"),
+    score3: $("score3"),
+    score4: $("score4"),
+    topAthleteDisplay: $("top-athlete-display"),
+    matchGridBody: $("match-grid-body"),
+
+    chatMessages: $("chat-messages"),
+    chatMessageInput: $("chat-message-input"),
+    sendChatMessageBtn: $("send-chat-message-btn"),
+
+    latestData: $("latest-data"),
+    dataStream: $("data-stream"),
+    activeUsersList: $("active-users-list"),
+    sportsDataDisplay: $("sports-data-display"),
+
+    mediaFileInput: $("media-file-input"),
+    lockerUploadBtn: $("locker-upload-btn"),
+    lockerMediaDisplay: $("locker-media-display"),
+    lockerStatusText: $("locker-status-text"),
+    uploadCounterDisplay: $("upload-counter-display"),
+    uploadProgressBar: $("upload-progress-bar")
   };
 }
 
-function resetUploadUI() {
-  if (els.uploadProgressBar) {
-    els.uploadProgressBar.style.width = '0%';
+ensureLoginErrorElement();
+ensureAccountModal();
+ensureOptionalMessages();
+
+const els = getEls();
+
+/* -------------------------------------------------
+   ACCESS CONTROL
+------------------------------------------------- */
+function canAccessApp(profile) {
+  return (
+    profile?.role === "admin" ||
+    profile?.role === "editor" ||
+    profile?.isPro === true
+  );
+}
+
+function isAdminUser(profile) {
+  return profile?.role === "admin" || profile?.role === "editor";
+}
+
+function updateAccessUI(profile) {
+  const allowed = canAccessApp(profile);
+  const adminAllowed = isAdminUser(profile);
+
+  if (allowed) {
+    hide(els.paywallContent);
+    show(els.mainContent);
+  } else {
+    show(els.paywallContent);
+    hide(els.mainContent);
   }
 
-  if (els.lockerUploadBtn) {
-    els.lockerUploadBtn.disabled = false;
-    els.lockerUploadBtn.textContent = 'Upload to Grid';
+  if (adminAllowed) show(els.adminPanel);
+  else hide(els.adminPanel);
+
+  if (!profile) {
+    setStatus("Guest");
+    return;
+  }
+
+  if (profile.role === "admin") {
+    setStatus(`Admin: ${profile.nickname || profile.email || "User"}`);
+  } else if (profile.role === "editor") {
+    setStatus(`Editor: ${profile.nickname || profile.email || "User"}`);
+  } else if (profile.isPro) {
+    setStatus(`Pro: ${profile.nickname || profile.email || "User"}`);
+  } else {
+    setStatus(profile.nickname || profile.email || "Member");
   }
 }
 
-/* ------------------------------
-   Presence
------------------------------- */
-async function markPresence(online = true) {
-  if (!currentUser) return;
+function updateHeaderButtons(isSignedIn) {
+  if (els.headerAuthBtn) {
+    els.headerAuthBtn.textContent = isSignedIn ? "LOGOUT" : "LOGIN";
+  }
 
-  try {
+  if (els.accountBtn) {
+    if (isSignedIn) show(els.accountBtn);
+    else hide(els.accountBtn);
+  }
+}
+
+/* -------------------------------------------------
+   MODALS
+------------------------------------------------- */
+function toggleLoginModal(force) {
+  if (!els.loginModal) return;
+  const shouldOpen =
+    typeof force === "boolean"
+      ? force
+      : els.loginModal.style.display !== "flex";
+
+  if (shouldOpen) {
+    els.loginModal.style.display = "flex";
+    show(els.loginModal);
+  } else {
+    els.loginModal.style.display = "none";
+    hide(els.loginModal);
+  }
+}
+
+function toggleAccountModal(force) {
+  if (!els.accountModal) return;
+  const shouldOpen =
+    typeof force === "boolean"
+      ? force
+      : els.accountModal.style.display !== "flex";
+
+  if (shouldOpen) {
+    els.accountModal.style.display = "flex";
+    show(els.accountModal);
+    if (els.accountEmailDisplay) {
+      els.accountEmailDisplay.textContent =
+        currentProfile?.email || currentUser?.email || "";
+    }
+    if (els.nicknameInput) {
+      els.nicknameInput.value = currentProfile?.nickname || "";
+    }
+  } else {
+    els.accountModal.style.display = "none";
+    hide(els.accountModal);
+  }
+}
+
+window.toggleLoginModal = toggleLoginModal;
+window.toggleAccountModal = toggleAccountModal;
+
+/* -------------------------------------------------
+   PROFILE
+------------------------------------------------- */
+async function loadOrCreateUserProfile(user) {
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  if (snap.exists()) {
+    return snap.data();
+  }
+
+  const starterProfile = {
+    uid: user.uid,
+    email: user.email || "",
+    nickname: user.displayName || "Member",
+    role: "user",
+    isPro: false,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+
+  await setDoc(userRef, starterProfile, { merge: true });
+  return starterProfile;
+}
+
+async function saveNickname() {
+  if (!currentUser || !els.nicknameInput) return;
+  const nickname = els.nicknameInput.value.trim();
+  if (!nickname) return;
+
+  await updateDoc(doc(db, "users", currentUser.uid), {
+    nickname,
+    updatedAt: serverTimestamp()
+  });
+
+  currentProfile = {
+    ...(currentProfile || {}),
+    nickname
+  };
+
+  if (currentUser) {
     await setDoc(
-      doc(db, 'presence', currentUser.uid),
+      doc(db, "presence", currentUser.uid),
       {
         uid: currentUser.uid,
-        email: currentUser.email || '',
-        nickname:
-          currentUserProfile?.nickname ||
-          currentUser.email?.split('@')[0] ||
-          'Grid Member',
-        online,
+        email: currentUser.email || "",
+        nickname,
+        online: true,
         lastSeen: serverTimestamp()
       },
       { merge: true }
     );
-  } catch (error) {
-    console.error('Presence update failed:', error);
   }
+
+  updateAccessUI(currentProfile);
+  toggleAccountModal(false);
+}
+
+async function changePassword() {
+  if (!auth.currentUser || !els.newPasswordInput) return;
+  const newPassword = els.newPasswordInput.value.trim();
+
+  if (newPassword.length < 6) {
+    alert("Password must be at least 6 characters.");
+    return;
+  }
+
+  await updatePassword(auth.currentUser, newPassword);
+  els.newPasswordInput.value = "";
+  alert("Password updated successfully.");
+}
+
+/* -------------------------------------------------
+   LISTENER CONTROL
+------------------------------------------------- */
+function addUnsubscriber(unsub) {
+  if (typeof unsub === "function") {
+    unsubscribers.push(unsub);
+  }
+}
+
+function clearAllListeners() {
+  unsubscribers.forEach((unsub) => {
+    try {
+      unsub();
+    } catch (err) {
+      console.warn("Unsubscribe error:", err);
+    }
+  });
+  unsubscribers = [];
+}
+
+function startPresenceHeartbeat() {
+  stopPresenceHeartbeat();
+  presenceHeartbeat = window.setInterval(() => {
+    if (currentUser) {
+      markPresence(true).catch((err) =>
+        console.warn("Presence heartbeat failed:", err)
+      );
+    }
+  }, 60000);
 }
 
 function stopPresenceHeartbeat() {
@@ -436,661 +460,566 @@ function stopPresenceHeartbeat() {
   }
 }
 
-function startPresenceHeartbeat() {
-  stopPresenceHeartbeat();
-
+/* -------------------------------------------------
+   PRESENCE
+------------------------------------------------- */
+async function markPresence(isOnline) {
   if (!currentUser) return;
-
-  markPresence(true);
-
-  presenceHeartbeat = setInterval(() => {
-    markPresence(true);
-  }, 60000);
-}
-
-/* ------------------------------
-   Profile
------------------------------- */
-async function loadUserProfile(user) {
-  const userRef = doc(db, 'users', user.uid);
-  const snap = await getDoc(userRef);
-
-  if (!snap.exists()) {
-    const fallbackProfile = {
-      uid: user.uid,
-      email: user.email || '',
-      nickname: user.email?.split('@')[0] || 'Grid Member',
-      isPro: false,
-      role: 'user'
-    };
-
-    await setDoc(
-      userRef,
-      {
-        ...fallbackProfile,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-
-    currentUserProfile = fallbackProfile;
-    return fallbackProfile;
-  }
-
-  currentUserProfile = snap.data();
-  return currentUserProfile;
-}
-
-async function saveNickname() {
-  if (!currentUser || !els.accountNickname) return;
-
-  const nickname = els.accountNickname.value.trim();
-  if (!nickname) return;
-
-  try {
-    await setDoc(
-      doc(db, 'users', currentUser.uid),
-      {
-        nickname,
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-
-    currentUserProfile = {
-      ...(currentUserProfile || {}),
-      nickname
-    };
-
-    setUserStatusText();
-    renderAccountPanel();
-    await markPresence(true);
-  } catch (error) {
-    console.error('Nickname save failed:', error);
-    alert(`Nickname save failed: ${error.message}`);
-  }
-}
-
-async function handlePasswordUpdate() {
-  if (!currentUser || !els.accountNewPassword) return;
-
-  const newPassword = els.accountNewPassword.value.trim();
-
-  if (!newPassword) {
-    alert('Enter a new password first.');
-    return;
-  }
-
-  if (newPassword.length < 6) {
-    alert('Password must be at least 6 characters.');
-    return;
-  }
-
-  try {
-    await updatePassword(currentUser, newPassword);
-    els.accountNewPassword.value = '';
-    alert('Password updated.');
-  } catch (error) {
-    console.error('Password update failed:', error);
-    alert(`Password update failed: ${error.message}`);
-  }
-}
-
-/* ------------------------------
-   Auth
------------------------------- */
-window.logIn = async function logIn() {
-  const email = els.loginEmail?.value?.trim();
-  const password = els.loginPassword?.value || '';
-
-  if (!email || !password) {
-    setText(els.loginError, 'Email and password are required.');
-    return;
-  }
-
-  try {
-    setText(els.loginError, '');
-
-    if (els.loginSubmitBtn) {
-      els.loginSubmitBtn.disabled = true;
-      els.loginSubmitBtn.textContent = 'SIGNING IN...';
-    }
-
-    await signInWithEmailAndPassword(auth, email, password);
-    window.toggleLoginModal(false);
-  } catch (error) {
-    console.error('Login failed:', error);
-    setText(els.loginError, `Login failed: ${error.message}`);
-  } finally {
-    if (els.loginSubmitBtn) {
-      els.loginSubmitBtn.disabled = false;
-      els.loginSubmitBtn.textContent = 'SIGN IN';
-    }
-  }
-};
-
-window.register = async function register() {
-  const email = els.loginEmail?.value?.trim();
-  const password = els.loginPassword?.value || '';
-
-  if (!email || !password) {
-    setText(els.loginError, 'Email and password are required.');
-    return;
-  }
-
-  if (password.length < 6) {
-    setText(els.loginError, 'Password must be at least 6 characters.');
-    return;
-  }
-
-  try {
-    setText(els.loginError, '');
-
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const nickname = email.split('@')[0];
-
-    await setDoc(
-      doc(db, 'users', userCredential.user.uid),
-      {
-        uid: userCredential.user.uid,
-        email: userCredential.user.email || email,
-        nickname,
-        isPro: false,
-        role: 'user',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-
-    window.toggleLoginModal(false);
-  } catch (error) {
-    console.error('Registration failed:', error);
-    setText(els.loginError, `Registration failed: ${error.message}`);
-  }
-};
-
-window.logOut = async function logOut() {
-  try {
-    await markPresence(false);
-    stopPresenceHeartbeat();
-    await signOut(auth);
-    window.toggleAccountModal(false);
-  } catch (error) {
-    console.error('Logout failed:', error);
-    alert(`Logout failed: ${error.message}`);
-  }
-};
-
-/* ------------------------------
-   Athletes
------------------------------- */
-function getAthleteScoresFromForm() {
-  return [
-    Number(els.score0?.value || 0),
-    Number(els.score1?.value || 0),
-    Number(els.score2?.value || 0),
-    Number(els.score3?.value || 0),
-    Number(els.score4?.value || 0)
-  ];
-}
-
-async function handleAddAthlete(event) {
-  event.preventDefault();
-
-  if (!currentUser) {
-    alert('Please log in first.');
-    return;
-  }
-
-  if (!isAdminLike(currentUserProfile)) {
-    alert('Only admin/editor users can deploy athletes.');
-    return;
-  }
-
-  const name = els.playerName?.value?.trim();
-  const sport = els.playerSport?.value || 'Football';
-  const scores = getAthleteScoresFromForm();
-  const total = scores.reduce((sum, n) => sum + Number(n || 0), 0);
-
-  if (!name) {
-    alert('Athlete name is required.');
-    return;
-  }
-
-  try {
-    await addDoc(collection(db, 'athletes'), {
-      name,
-      sport,
-      scores,
-      total,
-      createdAt: serverTimestamp(),
-      createdBy: currentUser.uid,
-      createdByNickname:
-        currentUserProfile?.nickname ||
-        currentUser.email?.split('@')[0] ||
-        'Grid Member'
-    });
-
-    els.addAthleteForm?.reset();
-  } catch (error) {
-    console.error('Add athlete failed:', error);
-    alert(`Failed to add athlete: ${error.message}`);
-  }
-}
-
-window.deleteAthlete = async function deleteAthlete(id) {
-  if (!currentUser) {
-    alert('Please log in first.');
-    return;
-  }
-
-  if (!isAdminLike(currentUserProfile)) {
-    alert('Only admin/editor users can delete athletes.');
-    return;
-  }
-
-  const confirmed = window.confirm('Delete this athlete entry?');
-  if (!confirmed) return;
-
-  try {
-    await deleteDoc(doc(db, 'athletes', id));
-  } catch (error) {
-    console.error('Delete athlete failed:', error);
-    alert(`Delete failed: ${error.message}`);
-  }
-};
-
-function renderAthletes(snapshot) {
-  if (!els.matchGridBody) return;
-
-  const athletes = [];
-  snapshot.forEach((d) => {
-    athletes.push({ id: d.id, ...d.data() });
-  });
-
-  athletes.sort((a, b) => Number(b.total || 0) - Number(a.total || 0));
-  setHTML(els.matchGridBody, '');
-
-  if (!athletes.length) {
-    els.matchGridBody.innerHTML = `
-      <tr>
-        <td colspan="5" class="p-6 text-center text-sm text-gray-500">
-          No athletes deployed yet.
-        </td>
-      </tr>
-    `;
-    setText(els.topAthleteDisplay, 'No athletes yet');
-    return;
-  }
-
-  const top = athletes[0];
-  setText(
-    els.topAthleteDisplay,
-    `${top.name} • ${top.sport} • ${top.total ?? 0}`
+  await setDoc(
+    doc(db, "presence", currentUser.uid),
+    {
+      uid: currentUser.uid,
+      email: currentUser.email || "",
+      nickname:
+        currentProfile?.nickname || currentUser.displayName || "Member",
+      online: !!isOnline,
+      lastSeen: serverTimestamp()
+    },
+    { merge: true }
   );
-
-  athletes.forEach((athlete) => {
-    const scores = Array.isArray(athlete.scores) ? athlete.scores : [];
-    const s1 = scores[1] ?? scores[0] ?? 0;
-    const s2 = scores[2] ?? scores[1] ?? 0;
-
-    const tr = document.createElement('tr');
-    tr.className = 'border-t border-gray-800 bg-black/20';
-
-    tr.innerHTML = `
-      <td class="p-3">
-        <div class="font-bold uppercase text-white">${escapeHtml(athlete.name || 'Unknown')}</div>
-        <div class="text-[10px] uppercase tracking-widest text-gray-500">${escapeHtml(athlete.sport || '')}</div>
-      </td>
-      <td class="p-3 text-center text-white">${s1}</td>
-      <td class="p-3 text-center text-white">${s2}</td>
-      <td class="p-3 text-center font-black text-yellow-500">${athlete.total ?? 0}</td>
-      <td class="p-3 text-right">
-        ${
-          currentUser && isAdminLike(currentUserProfile)
-            ? `<button
-                class="rounded border border-red-500 px-3 py-1 text-[10px] font-black uppercase text-red-400 hover:bg-red-500 hover:text-white"
-                onclick="window.deleteAthlete('${athlete.id}')"
-              >Delete</button>`
-            : `<span class="text-[10px] uppercase text-gray-600">View</span>`
-        }
-      </td>
-    `;
-
-    els.matchGridBody.appendChild(tr);
-  });
 }
 
-function subscribeToAthletes() {
-  if (!els.matchGridBody) return;
-
-  const athletesRef = query(
-    collection(db, 'athletes'),
-    orderBy('createdAt', 'desc'),
-    limit(50)
-  );
-
-  unsubscribers.athletes = onSnapshot(
-    athletesRef,
-    renderAthletes,
-    (error) => {
-      console.error('Athletes listener failed:', error);
+/* -------------------------------------------------
+   RENDER: ATHLETES
+------------------------------------------------- */
+function renderAthletes(docs) {
+  if (els.matchGridBody) {
+    if (!docs.length) {
       els.matchGridBody.innerHTML = `
         <tr>
-          <td colspan="5" class="p-6 text-center text-sm text-red-500">
-            Failed to load athletes.
+          <td colspan="7" class="px-4 py-6 text-center text-zinc-400">
+            No athletes available yet.
           </td>
         </tr>
       `;
+    } else {
+      els.matchGridBody.innerHTML = docs
+        .map(({ id, data }) => {
+          const scores = Array.isArray(data.scores)
+            ? data.scores
+            : [
+                data.score0 ?? "",
+                data.score1 ?? "",
+                data.score2 ?? "",
+                data.score3 ?? "",
+                data.score4 ?? ""
+              ];
+
+          return `
+            <tr class="border-b border-white/10">
+              <td class="px-3 py-3 font-semibold text-white">${escapeHtml(
+                data.name || "Unknown"
+              )}</td>
+              <td class="px-3 py-3 text-zinc-300">${escapeHtml(
+                data.sport || "—"
+              )}</td>
+              <td class="px-3 py-3 text-zinc-300">${escapeHtml(
+                scores[0] ?? ""
+              )}</td>
+              <td class="px-3 py-3 text-zinc-300">${escapeHtml(
+                scores[1] ?? ""
+              )}</td>
+              <td class="px-3 py-3 text-zinc-300">${escapeHtml(
+                scores[2] ?? ""
+              )}</td>
+              <td class="px-3 py-3 text-zinc-300">${escapeHtml(
+                scores[3] ?? ""
+              )}</td>
+              <td class="px-3 py-3 text-zinc-300">${escapeHtml(
+                scores[4] ?? ""
+              )}</td>
+            </tr>
+          `;
+        })
+        .join("");
     }
-  );
+  }
+
+  if (els.topAthleteDisplay) {
+    if (!docs.length) {
+      els.topAthleteDisplay.textContent = "No featured athlete yet.";
+    } else {
+      const top = docs[0].data;
+      const name = top.name || "Unknown";
+      const sport = top.sport ? ` • ${top.sport}` : "";
+      els.topAthleteDisplay.textContent = `${name}${sport}`;
+    }
+  }
 }
 
-/* ------------------------------
-   Chat
------------------------------- */
-async function sendChatMessage() {
-  if (!currentUser) {
-    alert('Please log in first.');
+function subscribeToAthletes() {
+  if (!els.matchGridBody && !els.topAthleteDisplay) return;
+
+  const q = query(collection(db, "athletes"), limit(100));
+  const unsub = onSnapshot(
+    q,
+    (snapshot) => {
+      const docs = snapshot.docs
+        .map((d) => ({ id: d.id, data: d.data() }))
+        .sort(
+          (a, b) =>
+            getMillis(b.data.updatedAt || b.data.createdAt) -
+            getMillis(a.data.updatedAt || a.data.createdAt)
+        );
+
+      renderAthletes(docs);
+    },
+    (error) => {
+      console.error("Athletes listener error:", error);
+      if (els.matchGridBody) {
+        els.matchGridBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="px-4 py-6 text-center text-red-400">
+              Failed to load athletes.
+            </td>
+          </tr>
+        `;
+      }
+    }
+  );
+
+  addUnsubscriber(unsub);
+}
+
+/* -------------------------------------------------
+   RENDER: CHAT
+------------------------------------------------- */
+function renderChatPrompt() {
+  if (!els.chatMessages) return;
+  els.chatMessages.innerHTML = `
+    <div class="rounded-lg border border-white/10 bg-black/30 p-4 text-sm text-zinc-400">
+      Log in to enter War Room Chat.
+    </div>
+  `;
+}
+
+function renderChatMessages(docs) {
+  if (!els.chatMessages) return;
+
+  if (!docs.length) {
+    els.chatMessages.innerHTML = `
+      <div class="rounded-lg border border-white/10 bg-black/30 p-4 text-sm text-zinc-400">
+        ${escapeHtml(els.chatMessages.dataset.emptyText || "No messages yet.")}
+      </div>
+    `;
     return;
   }
 
-  const text = els.chatMessageInput?.value?.trim();
-  if (!text) return;
+  els.chatMessages.innerHTML = docs
+    .map(({ data }) => {
+      const isMine = data.uid && data.uid === currentUser?.uid;
+      const who = data.nickname || data.email || "Member";
+      const when = formatDateTime(data.createdAt);
 
-  try {
-    await addDoc(collection(db, 'chatMessages'), {
-      uid: currentUser.uid,
-      senderNickname:
-        currentUserProfile?.nickname ||
-        currentUser.email?.split('@')[0] ||
-        'Grid Member',
-      text,
-      timestamp: serverTimestamp()
-    });
+      return `
+        <div class="mb-3 rounded-xl border ${
+          isMine ? "border-yellow-500/30 bg-yellow-500/10" : "border-white/10 bg-black/30"
+        } p-3">
+          <div class="mb-1 flex items-center justify-between gap-3">
+            <span class="text-sm font-bold text-white">${escapeHtml(who)}</span>
+            <span class="text-[10px] uppercase tracking-wide text-zinc-500">${escapeHtml(
+              when
+            )}</span>
+          </div>
+          <p class="text-sm text-zinc-200">${escapeHtml(data.text || "")}</p>
+        </div>
+      `;
+    })
+    .join("");
 
-    els.chatMessageInput.value = '';
-  } catch (error) {
-    console.error('Send message failed:', error);
-    alert(`Message failed: ${error.message}`);
-  }
+  els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
 }
 
 function subscribeToChat() {
   if (!els.chatMessages) return;
   if (!currentUser) return;
 
-  const chatRef = query(
-    collection(db, 'chatMessages'),
-    orderBy('timestamp', 'asc'),
-    limit(50)
+  const q = query(
+    collection(db, "chatMessages"),
+    orderBy("createdAt", "asc"),
+    limit(100)
   );
 
-  unsubscribers.chat = onSnapshot(
-    chatRef,
+  const unsub = onSnapshot(
+    q,
     (snapshot) => {
-      setHTML(els.chatMessages, '');
-
-      snapshot.forEach((d) => {
-        const msg = d.data();
-        const mine = msg.uid === currentUser?.uid;
-
-        const row = document.createElement('div');
-        row.className = mine ? 'text-right' : 'text-left';
-
-        row.innerHTML = `
-          <div class="inline-block max-w-[85%] rounded-xl px-3 py-2 ${
-            mine ? 'bg-yellow-500 text-black' : 'bg-gray-800 text-white'
-          }">
-            <div class="text-[10px] font-black uppercase opacity-70">
-              ${escapeHtml(msg.senderNickname || 'Anon')}
-            </div>
-            <div class="mt-1 text-sm">${escapeHtml(msg.text || '')}</div>
-            <div class="mt-1 text-[10px] opacity-60">
-              ${msg.timestamp?.toDate ? msg.timestamp.toDate().toLocaleTimeString() : ''}
-            </div>
-          </div>
-        `;
-
-        els.chatMessages.appendChild(row);
-      });
-
-      els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+      const docs = snapshot.docs.map((d) => ({ id: d.id, data: d.data() }));
+      renderChatMessages(docs);
     },
     (error) => {
-      console.error('Chat listener failed:', error);
-      if (els.chatMessages) {
-        els.chatMessages.innerHTML = `
-          <div class="text-center text-sm text-red-500 py-6">
-            Failed to load chat.
-          </div>
-        `;
-      }
+      console.error("Chat listener error:", error);
+      els.chatMessages.innerHTML = `
+        <div class="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+          Unable to load chat.
+        </div>
+      `;
     }
   );
+
+  addUnsubscriber(unsub);
 }
 
-/* ------------------------------
-   Optional sections
------------------------------- */
+async function sendChatMessage() {
+  if (!currentUser || !els.chatMessageInput) return;
+  const text = els.chatMessageInput.value.trim();
+  if (!text) return;
+
+  const payload = {
+    uid: currentUser.uid,
+    email: currentUser.email || "",
+    nickname:
+      currentProfile?.nickname || currentUser.displayName || "Member",
+    text,
+    createdAt: serverTimestamp()
+  };
+
+  await addDoc(collection(db, "chatMessages"), payload);
+  els.chatMessageInput.value = "";
+}
+
+/* -------------------------------------------------
+   RENDER: PRESENCE
+------------------------------------------------- */
+function renderPresencePrompt() {
+  if (!els.activeUsersList) return;
+  els.activeUsersList.innerHTML = `
+    <div class="rounded-lg border border-white/10 bg-black/30 p-4 text-sm text-zinc-400">
+      Log in to view active users.
+    </div>
+  `;
+}
+
+function renderPresence(docs) {
+  if (!els.activeUsersList) return;
+
+  if (!docs.length) {
+    els.activeUsersList.innerHTML = `
+      <div class="rounded-lg border border-white/10 bg-black/30 p-4 text-sm text-zinc-400">
+        ${escapeHtml(els.activeUsersList.dataset.emptyText || "No active users yet.")}
+      </div>
+    `;
+    return;
+  }
+
+  els.activeUsersList.innerHTML = docs
+    .map(({ data }) => {
+      const online = !!data.online;
+      return `
+        <div class="mb-2 flex items-center justify-between rounded-lg border border-white/10 bg-black/30 px-3 py-2">
+          <div class="flex items-center gap-2">
+            <span class="inline-block h-2.5 w-2.5 rounded-full ${
+              online ? "bg-green-400" : "bg-zinc-500"
+            }"></span>
+            <span class="text-sm font-medium text-white">${escapeHtml(
+              data.nickname || data.email || "Member"
+            )}</span>
+          </div>
+          <span class="text-[10px] uppercase tracking-wide text-zinc-500">
+            ${online ? "Online" : escapeHtml(formatDateTime(data.lastSeen) || "Offline")}
+          </span>
+        </div>
+      `;
+    })
+    .join("");
+}
+
 function subscribeToPresence() {
   if (!els.activeUsersList) return;
   if (!currentUser) return;
 
-  const presenceRef = query(
-    collection(db, 'presence'),
-    orderBy('lastSeen', 'desc'),
-    limit(10)
+  const q = query(
+    collection(db, "presence"),
+    orderBy("lastSeen", "desc"),
+    limit(50)
   );
 
-  unsubscribers.presence = onSnapshot(
-    presenceRef,
+  const unsub = onSnapshot(
+    q,
     (snapshot) => {
-      setHTML(els.activeUsersList, '');
+      const docs = snapshot.docs
+        .map((d) => ({ id: d.id, data: d.data() }))
+        .sort((a, b) => {
+          const onlineDiff = Number(b.data.online) - Number(a.data.online);
+          if (onlineDiff !== 0) return onlineDiff;
+          return getMillis(b.data.lastSeen) - getMillis(a.data.lastSeen);
+        });
 
-      const users = [];
-      snapshot.forEach((d) => users.push(d.data()));
-
-      const active = users.filter((u) => u.online !== false);
-
-      if (!active.length) {
-        els.activeUsersList.innerHTML =
-          '<li class="text-sm text-gray-500">No active users yet.</li>';
-        return;
-      }
-
-      active.forEach((user) => {
-        const li = document.createElement('li');
-        li.className =
-          'flex items-center justify-between rounded-lg bg-black/40 px-3 py-2 text-sm';
-
-        li.innerHTML = `
-          <div class="flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-green-500"></span>
-            <span class="text-white">${escapeHtml(user.nickname || 'Grid User')}</span>
-          </div>
-          <span class="text-xs text-gray-500">${minutesAgo(user.lastSeen)}</span>
-        `;
-
-        els.activeUsersList.appendChild(li);
-      });
+      renderPresence(docs);
     },
     (error) => {
-      console.error('Presence listener failed:', error);
-      if (els.activeUsersList) {
-        els.activeUsersList.innerHTML =
-          '<li class="text-sm text-red-500">Failed to load active users.</li>';
-      }
+      console.error("Presence listener error:", error);
+      els.activeUsersList.innerHTML = `
+        <div class="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+          Unable to load active users.
+        </div>
+      `;
     }
   );
+
+  addUnsubscriber(unsub);
+}
+
+/* -------------------------------------------------
+   RENDER: LIVE FEED
+------------------------------------------------- */
+function renderLiveFeed(docs) {
+  const items = docs.length
+    ? docs
+    : [{ id: "empty", data: { title: "No live updates yet." } }];
+
+  if (els.latestData) {
+    const latest = items[0].data;
+    els.latestData.innerHTML = `
+      <div class="rounded-xl border border-white/10 bg-black/30 p-4">
+        <p class="text-sm font-bold text-white">${escapeHtml(
+          latest.title || latest.headline || "Live Update"
+        )}</p>
+        <p class="mt-2 text-sm text-zinc-300">${escapeHtml(
+          latest.content || latest.summary || ""
+        )}</p>
+      </div>
+    `;
+  }
+
+  if (els.dataStream) {
+    els.dataStream.innerHTML = items
+      .map(({ data }) => {
+        const title = data.title || data.headline || "Update";
+        const body = data.content || data.summary || "";
+        const when = formatDateTime(data.createdAt || data.updatedAt);
+        return `
+          <div class="mb-3 rounded-xl border border-white/10 bg-black/30 p-4">
+            <div class="mb-1 flex items-center justify-between gap-3">
+              <h4 class="text-sm font-bold text-white">${escapeHtml(title)}</h4>
+              <span class="text-[10px] uppercase tracking-wide text-zinc-500">${escapeHtml(
+                when
+              )}</span>
+            </div>
+            <p class="text-sm text-zinc-300">${escapeHtml(body)}</p>
+          </div>
+        `;
+      })
+      .join("");
+  }
 }
 
 function subscribeToLiveFeed() {
   if (!els.latestData && !els.dataStream) return;
 
-  const liveRef = doc(db, 'liveFeed', 'latestScore');
+  const q = query(collection(db, "liveFeed"), limit(50));
+  const unsub = onSnapshot(
+    q,
+    (snapshot) => {
+      const docs = snapshot.docs
+        .map((d) => ({ id: d.id, data: d.data() }))
+        .sort(
+          (a, b) =>
+            getMillis(b.data.createdAt || b.data.updatedAt) -
+            getMillis(a.data.createdAt || a.data.updatedAt)
+        );
 
-  unsubscribers.liveFeed = onSnapshot(
-    liveRef,
-    (snap) => {
-      if (!snap.exists()) {
-        setText(els.latestData, 'No live data available.');
-        setText(els.dataStream, 'No latestScore document found.');
-        return;
-      }
-
-      const data = snap.data();
-      setText(els.latestData, data.score || 'No score update.');
-      setText(els.dataStream, JSON.stringify(data, null, 2));
+      renderLiveFeed(docs);
     },
     (error) => {
-      console.error('Live feed listener failed:', error);
-      setText(els.latestData, 'Live feed error.');
+      console.error("Live feed listener error:", error);
     }
   );
+
+  addUnsubscriber(unsub);
+}
+
+/* -------------------------------------------------
+   RENDER: SPORTS DATA
+------------------------------------------------- */
+function renderSportsData(docs) {
+  if (!els.sportsDataDisplay) return;
+
+  if (!docs.length) {
+    els.sportsDataDisplay.innerHTML = `
+      <div class="rounded-xl border border-white/10 bg-black/30 p-4 text-sm text-zinc-400">
+        No sports data available yet.
+      </div>
+    `;
+    return;
+  }
+
+  els.sportsDataDisplay.innerHTML = docs
+    .map(({ data }) => {
+      const title = data.title || data.label || data.metric || "Sports Data";
+      const value = data.value ?? data.stat ?? data.content ?? "";
+      const meta = data.subtitle || data.description || "";
+      return `
+        <div class="mb-3 rounded-xl border border-white/10 bg-black/30 p-4">
+          <div class="text-xs uppercase tracking-wide text-zinc-500">${escapeHtml(
+            title
+          )}</div>
+          <div class="mt-1 text-lg font-bold text-white">${escapeHtml(value)}</div>
+          ${
+            meta
+              ? `<div class="mt-1 text-sm text-zinc-300">${escapeHtml(meta)}</div>`
+              : ""
+          }
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function subscribeToSportsData() {
   if (!els.sportsDataDisplay) return;
 
-  const sportsRef = query(
-    collection(db, 'sportsData'),
-    orderBy('timestamp', 'desc'),
-    limit(10)
-  );
-
-  unsubscribers.sportsData = onSnapshot(
-    sportsRef,
+  const q = query(collection(db, "sportsData"), limit(50));
+  const unsub = onSnapshot(
+    q,
     (snapshot) => {
-      setHTML(els.sportsDataDisplay, '');
+      const docs = snapshot.docs
+        .map((d) => ({ id: d.id, data: d.data() }))
+        .sort(
+          (a, b) =>
+            getMillis(b.data.createdAt || b.data.updatedAt) -
+            getMillis(a.data.createdAt || a.data.updatedAt)
+        );
 
-      if (snapshot.empty) {
-        els.sportsDataDisplay.innerHTML =
-          '<p class="text-sm text-gray-500">No sports data submitted yet.</p>';
-        return;
-      }
-
-      snapshot.forEach((d) => {
-        const data = d.data();
-        const card = document.createElement('div');
-        card.className = 'rounded-xl border border-gray-800 bg-black/40 p-4';
-
-        card.innerHTML = `
-          <p class="font-bold text-white">${escapeHtml(data.sport || 'Sport')}: ${escapeHtml(data.score || '-')}</p>
-          <p class="mt-1 text-sm text-gray-400">${escapeHtml(data.team1 || '')} vs ${escapeHtml(data.team2 || '')}</p>
-          <p class="mt-2 text-[10px] uppercase text-gray-500">
-            ${escapeHtml(data.submittedBy || 'Anon')} • ${formatTimestamp(data.timestamp)}
-          </p>
-        `;
-
-        els.sportsDataDisplay.appendChild(card);
-      });
+      renderSportsData(docs);
     },
     (error) => {
-      console.error('Sports data listener failed:', error);
+      console.error("Sports data listener error:", error);
+      els.sportsDataDisplay.innerHTML = `
+        <div class="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+          Failed to load sports data.
+        </div>
+      `;
     }
   );
+
+  addUnsubscriber(unsub);
 }
 
-/* ------------------------------
-   Optional locker upload
------------------------------- */
-function subscribeToUserMedia() {
+/* -------------------------------------------------
+   USER MEDIA LOCKER
+------------------------------------------------- */
+function renderLockerPrompt() {
+  if (!els.lockerMediaDisplay) return;
+  els.lockerMediaDisplay.innerHTML = `
+    <div class="rounded-lg border border-white/10 bg-black/30 p-4 text-sm text-zinc-400">
+      Log in to access your media locker.
+    </div>
+  `;
+  if (els.lockerStatusText) {
+    els.lockerStatusText.textContent = "Sign in to upload media.";
+  }
+}
+
+function renderUserMedia(docs) {
   if (!els.lockerMediaDisplay) return;
 
-  if (!currentUser) {
-    els.lockerMediaDisplay.innerHTML =
-      '<p class="col-span-full text-center text-sm text-gray-500">Log in to view your media.</p>';
-    setText(els.lockerStatusText, 'Capacity: Log in to see status.');
-    setText(els.uploadCounterDisplay, 'Uploads: 0');
+  if (els.uploadCounterDisplay) {
+    els.uploadCounterDisplay.textContent = `${docs.length} item${
+      docs.length === 1 ? "" : "s"
+    }`;
+  }
+
+  if (!docs.length) {
+    els.lockerMediaDisplay.innerHTML = `
+      <div class="rounded-lg border border-white/10 bg-black/30 p-4 text-sm text-zinc-400">
+        No media uploaded yet.
+      </div>
+    `;
     return;
   }
 
-  const mediaRef = query(
-    collection(db, 'users', currentUser.uid, 'media'),
-    orderBy('uploadedAt', 'desc'),
-    limit(12)
-  );
+  els.lockerMediaDisplay.innerHTML = docs
+    .map(({ data }) => {
+      const name = data.name || "File";
+      const type = data.contentType || "";
+      const url = data.downloadURL || "#";
+      const isImage = type.startsWith("image/");
+      const isVideo = type.startsWith("video/");
 
-  unsubscribers.media = onSnapshot(
-    mediaRef,
-    (snapshot) => {
-      setHTML(els.lockerMediaDisplay, '');
-
-      if (snapshot.empty) {
-        els.lockerMediaDisplay.innerHTML =
-          '<p class="col-span-full text-center text-sm text-gray-500">No media uploaded yet.</p>';
-        setText(els.lockerStatusText, 'Capacity: 0 / 12 items');
-        setText(els.uploadCounterDisplay, 'Uploads: 0');
-        return;
-      }
-
-      let count = 0;
-
-      snapshot.forEach((d) => {
-        count += 1;
-        const media = d.data();
-        const item = document.createElement('div');
-        item.className =
-          'overflow-hidden rounded-xl border border-gray-800 bg-black/40';
-
-        if (media.type?.startsWith('image/')) {
-          item.innerHTML = `
-            <img src="${media.url}" alt="${escapeHtml(media.name || 'media')}" class="h-32 w-full object-cover" />
-            <div class="p-2 text-[10px] text-gray-400 truncate">${escapeHtml(media.name || '')}</div>
-          `;
-        } else {
-          item.innerHTML = `
-            <a href="${media.url}" target="_blank" class="flex h-32 items-center justify-center p-3 text-center text-xs text-yellow-500 hover:underline">
-              ${escapeHtml(media.name || 'Open file')}
+      return `
+        <div class="mb-4 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+          ${
+            isImage
+              ? `<img src="${escapeHtml(url)}" alt="${escapeHtml(
+                  name
+                )}" class="h-48 w-full object-cover" />`
+              : isVideo
+              ? `<video src="${escapeHtml(
+                  url
+                )}" controls class="h-48 w-full bg-black object-cover"></video>`
+              : ""
+          }
+          <div class="p-4">
+            <div class="text-sm font-bold text-white">${escapeHtml(name)}</div>
+            <div class="mt-1 text-xs text-zinc-400">${escapeHtml(type || "file")}</div>
+            <a href="${escapeHtml(
+              url
+            )}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-block rounded bg-white/10 px-3 py-2 text-xs font-semibold text-white hover:bg-white/20">
+              Open File
             </a>
-          `;
-        }
-
-        els.lockerMediaDisplay.appendChild(item);
-      });
-
-      setText(els.lockerStatusText, `Capacity: ${count} / 12 items`);
-      setText(els.uploadCounterDisplay, `Uploads: ${count}`);
-    },
-    (error) => {
-      console.error('Media listener failed:', error);
-      els.lockerMediaDisplay.innerHTML =
-        '<p class="col-span-full text-center text-sm text-red-500">Failed to load media.</p>';
-    }
-  );
+          </div>
+        </div>
+      `;
+    })
+    .join("");
 }
 
-window.handleFileUpload = async function handleFileUpload() {
-  if (!currentUser) {
-    alert('Please log in first.');
-    return;
-  }
+function subscribeToUserMedia(uid) {
+  if (!els.lockerMediaDisplay || !uid) return;
+  if (!currentUser) return;
 
-  if (!els.mediaFileInput?.files?.length) {
-    alert('Please choose a file first.');
-    return;
-  }
+  const q = query(
+    collection(db, "users", uid, "media"),
+    orderBy("createdAt", "desc"),
+    limit(50)
+  );
 
-  const file = els.mediaFileInput.files[0];
-  const safeName = `${Date.now()}-${file.name}`;
-  const filePath = `user_media/${currentUser.uid}/${safeName}`;
-  const fileRef = storageRef(storage, filePath);
-
-  try {
-    if (els.lockerUploadBtn) {
-      els.lockerUploadBtn.disabled = true;
-      els.lockerUploadBtn.textContent = 'Uploading...';
+  const unsub = onSnapshot(
+    q,
+    (snapshot) => {
+      const docs = snapshot.docs.map((d) => ({ id: d.id, data: d.data() }));
+      renderUserMedia(docs);
+    },
+    (error) => {
+      console.error("User media listener error:", error);
+      els.lockerMediaDisplay.innerHTML = `
+        <div class="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
+          Failed to load media locker.
+        </div>
+      `;
     }
+  );
 
-    resetUploadUI();
+  addUnsubscriber(unsub);
+}
 
-    const uploadTask = uploadBytesResumable(fileRef, file);
+async function uploadSelectedMedia() {
+  if (!currentUser) {
+    alert("Please sign in first.");
+    return;
+  }
 
+  const file = els.mediaFileInput?.files?.[0];
+  if (!file) {
+    alert("Please choose a file first.");
+    return;
+  }
+
+  const path = `user_media/${currentUser.uid}/${Date.now()}-${file.name}`;
+  const storageRef = ref(storage, path);
+  const uploadTask = uploadBytesResumable(storageRef, file);
+
+  if (els.lockerStatusText) {
+    els.lockerStatusText.textContent = `Uploading ${file.name}...`;
+  }
+
+  if (els.uploadProgressBar) {
+    els.uploadProgressBar.style.width = "0%";
+  }
+
+  await new Promise((resolve, reject) => {
     uploadTask.on(
-      'state_changed',
+      "state_changed",
       (snapshot) => {
         const progress = Math.round(
           (snapshot.bytesTransferred / snapshot.totalBytes) * 100
@@ -1099,205 +1028,374 @@ window.handleFileUpload = async function handleFileUpload() {
         if (els.uploadProgressBar) {
           els.uploadProgressBar.style.width = `${progress}%`;
         }
+        if (els.lockerStatusText) {
+          els.lockerStatusText.textContent = `Uploading ${file.name}... ${progress}%`;
+        }
       },
-      (error) => {
-        console.error('Upload failed:', error);
-        alert(`Upload failed: ${error.message}`);
-        resetUploadUI();
-      },
+      (error) => reject(error),
       async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        try {
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-        await addDoc(collection(db, 'users', currentUser.uid, 'media'), {
-          name: file.name,
-          storagePath: filePath,
-          url,
-          type: file.type || 'application/octet-stream',
-          uploadedAt: serverTimestamp()
-        });
+          await addDoc(collection(db, "users", currentUser.uid, "media"), {
+            uid: currentUser.uid,
+            name: file.name,
+            contentType: file.type || "application/octet-stream",
+            size: file.size || 0,
+            storagePath: path,
+            downloadURL,
+            createdAt: serverTimestamp()
+          });
 
-        if (els.mediaFileInput) els.mediaFileInput.value = '';
-        resetUploadUI();
+          if (els.mediaFileInput) {
+            els.mediaFileInput.value = "";
+          }
+          if (els.lockerStatusText) {
+            els.lockerStatusText.textContent = `${file.name} uploaded successfully.`;
+          }
+          if (els.uploadProgressBar) {
+            els.uploadProgressBar.style.width = "100%";
+          }
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
       }
     );
-  } catch (error) {
-    console.error('Upload failed:', error);
-    alert(`Upload failed: ${error.message}`);
-    resetUploadUI();
-  }
-};
+  });
+}
 
-/* ------------------------------
-   Auth state handling
------------------------------- */
+/* -------------------------------------------------
+   ADMIN: ADD ATHLETE
+------------------------------------------------- */
+async function createAthleteFromForm() {
+  if (!currentUser || !isAdminUser(currentProfile)) {
+    alert("Only admin/editor can add athletes.");
+    return;
+  }
+
+  const name = els.playerName?.value?.trim() || "";
+  const sport = els.playerSport?.value?.trim() || "";
+  const scores = [
+    els.score0?.value?.trim() || "",
+    els.score1?.value?.trim() || "",
+    els.score2?.value?.trim() || "",
+    els.score3?.value?.trim() || "",
+    els.score4?.value?.trim() || ""
+  ];
+
+  if (!name) {
+    alert("Player name is required.");
+    return;
+  }
+
+  await addDoc(collection(db, "athletes"), {
+    name,
+    sport,
+    scores,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    createdBy: currentUser.uid
+  });
+
+  els.addAthleteForm?.reset();
+}
+
+/* -------------------------------------------------
+   AUTH
+------------------------------------------------- */
+async function logIn(email, password) {
+  await signInWithEmailAndPassword(auth, email, password);
+}
+
+async function register(email, password, nickname = "Member") {
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  await setDoc(
+    doc(db, "users", cred.user.uid),
+    {
+      uid: cred.user.uid,
+      email: cred.user.email || email,
+      nickname,
+      role: "user",
+      isPro: false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+}
+
+async function logOut() {
+  try {
+    if (currentUser) {
+      await markPresence(false);
+    }
+  } catch (err) {
+    console.warn("Failed to mark offline before logout:", err);
+  }
+
+  await signOut(auth);
+}
+
+/* -------------------------------------------------
+   SIGNED-IN / SIGNED-OUT FLOWS
+------------------------------------------------- */
 async function handleSignedInUser(user) {
-  clearRealtimeListeners();
+  clearAllListeners();
   stopPresenceHeartbeat();
 
   currentUser = user;
-  await loadUserProfile(user);
 
-  renderAccountPanel();
-  updateMainView();
+  try {
+    const profile = await loadOrCreateUserProfile(user);
+    currentProfile = profile;
 
-  if (els.chatMessageInput) {
-    els.chatMessageInput.disabled = false;
-    els.chatMessageInput.placeholder = 'Drop report...';
+    updateAccessUI(profile);
+    updateHeaderButtons(true);
+
+    if (els.accountEmailDisplay) {
+      els.accountEmailDisplay.textContent =
+        profile.email || user.email || "";
+    }
+    if (els.nicknameInput) {
+      els.nicknameInput.value = profile.nickname || "";
+    }
+
+    toggleLoginModal(false);
+
+    // Public reads
+    subscribeToAthletes();
+    subscribeToLiveFeed();
+    subscribeToSportsData();
+
+    // Signed-in-only reads
+    subscribeToChat();
+    subscribeToPresence();
+    subscribeToUserMedia(user.uid);
+
+    await markPresence(true);
+    startPresenceHeartbeat();
+  } catch (error) {
+    console.error("Failed to initialize signed-in user:", error);
+    currentProfile = null;
+    updateAccessUI(null);
+    updateHeaderButtons(false);
+    renderChatPrompt();
+    renderPresencePrompt();
+    renderLockerPrompt();
+  } finally {
+    setLoading(false);
   }
-
-  if (els.sendChatMessageBtn) {
-    els.sendChatMessageBtn.disabled = false;
-    els.sendChatMessageBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-  }
-
-  await markPresence(true);
-  startPresenceHeartbeat();
-
-  subscribeToAthletes();
-  subscribeToChat();
-  subscribeToPresence();
-  subscribeToLiveFeed();
-  subscribeToSportsData();
-  subscribeToUserMedia();
 }
 
 function handleSignedOutUser() {
-  clearRealtimeListeners();
+  clearAllListeners();
   stopPresenceHeartbeat();
 
   currentUser = null;
-  currentUserProfile = null;
+  currentProfile = null;
 
-  updateMainView();
+  updateAccessUI(null);
+  updateHeaderButtons(false);
 
-  if (els.accountUID) els.accountUID.textContent = 'N/A';
-  if (els.accountEmail) els.accountEmail.textContent = 'N/A';
-  if (els.accountRole) els.accountRole.textContent = 'user';
-  if (els.accountPremiumStatus) els.accountPremiumStatus.textContent = 'Standard User';
-  if (els.accountNickname) els.accountNickname.value = '';
-  if (els.accountNewPassword) els.accountNewPassword.value = '';
-
+  // Public listeners remain active
   subscribeToAthletes();
   subscribeToLiveFeed();
   subscribeToSportsData();
 
-  if (els.chatMessages) {
-    els.chatMessages.innerHTML = `
-      <div class="text-center text-sm text-gray-500 py-6">
-        Log in to enter War Room Chat.
-      </div>
-    `;
+  // Signed-out placeholders
+  renderChatPrompt();
+  renderPresencePrompt();
+  renderLockerPrompt();
+
+  setLoading(false);
+}
+
+/* -------------------------------------------------
+   EVENT BINDINGS
+------------------------------------------------- */
+function bindEvents() {
+  if (els.headerAuthBtn) {
+    els.headerAuthBtn.addEventListener("click", async () => {
+      if (currentUser) {
+        try {
+          setLoading(true, "Signing out...");
+          await logOut();
+        } catch (error) {
+          console.error("Logout failed:", error);
+          alert("Logout failed.");
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        toggleLoginModal(true);
+      }
+    });
   }
 
-  if (els.chatMessageInput) {
-    els.chatMessageInput.value = '';
-    els.chatMessageInput.disabled = true;
-    els.chatMessageInput.placeholder = 'Log in to chat...';
+  if (els.accountBtn) {
+    els.accountBtn.addEventListener("click", () => toggleAccountModal(true));
+  }
+
+  if (els.accountCloseBtn) {
+    els.accountCloseBtn.addEventListener("click", () =>
+      toggleAccountModal(false)
+    );
+  }
+
+  if (els.logoutBtn) {
+    els.logoutBtn.addEventListener("click", async () => {
+      toggleAccountModal(false);
+      await logOut();
+    });
+  }
+
+  if (els.saveNicknameBtn) {
+    els.saveNicknameBtn.addEventListener("click", async () => {
+      try {
+        await saveNickname();
+      } catch (error) {
+        console.error("Save nickname failed:", error);
+        alert("Failed to save nickname.");
+      }
+    });
+  }
+
+  if (els.updatePasswordBtn) {
+    els.updatePasswordBtn.addEventListener("click", async () => {
+      try {
+        await changePassword();
+      } catch (error) {
+        console.error("Password update failed:", error);
+        alert("Failed to update password. You may need to sign in again.");
+      }
+    });
+  }
+
+  if (els.loginModal) {
+    els.loginModal.addEventListener("click", (event) => {
+      if (event.target === els.loginModal) {
+        toggleLoginModal(false);
+      }
+    });
+  }
+
+  if (els.accountModal) {
+    els.accountModal.addEventListener("click", (event) => {
+      if (event.target === els.accountModal) {
+        toggleAccountModal(false);
+      }
+    });
+  }
+
+  if (els.loginForm) {
+    els.loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const email = els.loginEmail?.value?.trim() || "";
+      const password = els.loginPassword?.value || "";
+
+      if (els.loginError) els.loginError.textContent = "";
+
+      if (!email || !password) {
+        if (els.loginError) els.loginError.textContent = "Enter email and password.";
+        return;
+      }
+
+      try {
+        setLoading(true, "Signing in...");
+        await logIn(email, password);
+        if (els.loginPassword) els.loginPassword.value = "";
+      } catch (error) {
+        console.error("Login failed:", error);
+        if (els.loginError) {
+          els.loginError.textContent = "Login failed. Check your email and password.";
+        }
+      } finally {
+        setLoading(false);
+      }
+    });
   }
 
   if (els.sendChatMessageBtn) {
-    els.sendChatMessageBtn.disabled = true;
-    els.sendChatMessageBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    els.sendChatMessageBtn.addEventListener("click", async () => {
+      try {
+        await sendChatMessage();
+      } catch (error) {
+        console.error("Send chat failed:", error);
+        alert("Failed to send message.");
+      }
+    });
   }
 
-  if (els.activeUsersList) {
-    els.activeUsersList.innerHTML = `
-      <li class="text-sm text-gray-500">Log in to view active users.</li>
-    `;
+  if (els.chatMessageInput) {
+    els.chatMessageInput.addEventListener("keydown", async (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        try {
+          await sendChatMessage();
+        } catch (error) {
+          console.error("Enter-to-send failed:", error);
+        }
+      }
+    });
   }
 
-  if (els.lockerMediaDisplay) {
-    els.lockerMediaDisplay.innerHTML =
-      '<p class="col-span-full text-center text-sm text-gray-500">Log in to view your media.</p>';
-  }
-
-  setText(els.lockerStatusText, 'Capacity: Log in to see status.');
-  setText(els.uploadCounterDisplay, 'Uploads: 0');
-  resetUploadUI();
-}
-
-/* ------------------------------
-   Events
------------------------------- */
-function bindEvents() {
-  els.loginForm?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    await window.logIn();
-  });
-
-  els.addAthleteForm?.addEventListener('submit', handleAddAthlete);
-
-  els.sendChatMessageBtn?.addEventListener('click', sendChatMessage);
-
-  els.chatMessageInput?.addEventListener('keydown', async (event) => {
-    if (event.key === 'Enter') {
+  if (els.addAthleteForm) {
+    els.addAthleteForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      await sendChatMessage();
-    }
-  });
+      try {
+        await createAthleteFromForm();
+      } catch (error) {
+        console.error("Create athlete failed:", error);
+        alert("Failed to add athlete.");
+      }
+    });
+  }
 
-  els.saveNicknameBtn?.addEventListener('click', saveNickname);
+  if (els.lockerUploadBtn) {
+    els.lockerUploadBtn.addEventListener("click", async () => {
+      try {
+        await uploadSelectedMedia();
+      } catch (error) {
+        console.error("Upload failed:", error);
+        alert("Upload failed.");
+        if (els.lockerStatusText) {
+          els.lockerStatusText.textContent = "Upload failed.";
+        }
+      }
+    });
+  }
 
-  els.accountNickname?.addEventListener('keydown', async (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      await saveNickname();
-    }
-  });
-
-  els.updatePasswordBtn?.addEventListener('click', handlePasswordUpdate);
-  els.logoutBtn?.addEventListener('click', window.logOut);
-
-  els.lockerUploadBtn?.addEventListener('click', window.handleFileUpload);
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      window.toggleLoginModal(false);
-      window.toggleAccountModal(false);
-    }
-  });
-
-  window.addEventListener('beforeunload', () => {
+  window.addEventListener("beforeunload", () => {
     if (currentUser) {
-      markPresence(false);
-    }
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    if (!currentUser) return;
-
-    if (document.hidden) {
-      markPresence(false);
-    } else {
-      markPresence(true);
+      markPresence(false).catch(() => {});
     }
   });
 }
 
-/* ------------------------------
-   Boot
------------------------------- */
+/* -------------------------------------------------
+   INIT
+------------------------------------------------- */
 function init() {
-  cacheElements();
-  ensureOptionalUI();
-  cacheElements();
   bindEvents();
+  setLoading(true, "⚡ CONNECTING...");
 
   onAuthStateChanged(auth, async (user) => {
-    try {
-      if (user) {
-        await handleSignedInUser(user);
-      } else {
-        handleSignedOutUser();
-      }
-    } catch (error) {
-      console.error('Auth state handling failed:', error);
-      hide(els.loadingOverlay);
-      alert(`App error: ${error.message}`);
-    } finally {
-      hide(els.loadingOverlay);
+    if (user) {
+      await handleSignedInUser(user);
+    } else {
+      handleSignedOutUser();
     }
   });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+init();
+
+/* -------------------------------------------------
+   OPTIONAL GLOBAL API
+------------------------------------------------- */
+window.appAuth = {
+  logIn,
+  register,
+  logOut
+};
