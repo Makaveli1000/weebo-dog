@@ -69,6 +69,55 @@
       background: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(10px);
     }
+
+    #intro-screen {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.02);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    #intro-screen.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    #intro-screen.exit {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(1.03);
+    }
+
+    .intro-card {
+      background: radial-gradient(circle at top, rgba(234, 179, 8, 0.12), rgba(0, 0, 0, 0.92) 55%);
+      border: 1px solid rgba(234, 179, 8, 0.35);
+      box-shadow: 0 0 45px rgba(234, 179, 8, 0.16);
+      backdrop-filter: blur(14px);
+    }
+
+    .intro-glow {
+      text-shadow: 0 0 18px rgba(234, 179, 8, 0.45);
+    }
+
+    .intro-fade-up {
+      animation: introFadeUp 0.9s ease both;
+    }
+
+    @keyframes introFadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .intro-subtle {
+      letter-spacing: 0.28em;
+    }
   </style>
 </head>
 <body class="bg-black text-white overflow-x-hidden">
@@ -76,9 +125,57 @@
   <!-- Loading Overlay -->
   <div id="loading-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black">
     <div class="text-center">
-      <div class="text-yellow-500 text-2xl animate-pulse font-bold italic">⚡ CONNECTING...</div>
-      <p class="mt-2 text-xs uppercase tracking-[0.3em] text-gray-500">Entering The Grid</p>
+      <div data-loading-text class="text-yellow-500 text-2xl animate-pulse font-bold italic intro-glow">
+        ⚡ SUMMONING ZEUS...
+      </div>
+      <p class="mt-2 text-xs uppercase tracking-[0.3em] text-gray-500">
+        Preparing The Grid
+      </p>
     </div>
+  </div>
+
+  <!-- Zeus Intro Screen -->
+  <div id="intro-screen" class="hidden fixed inset-0 z-[95] flex items-center justify-center bg-black/95 px-6">
+    <div class="intro-card intro-fade-up max-w-3xl w-full rounded-[28px] p-8 md:p-12 text-center">
+      <p class="text-[11px] uppercase font-black text-yellow-500 intro-subtle mb-4">
+        St. Louis • Every Level • One Grid
+      </p>
+
+      <h2 class="text-4xl md:text-6xl font-black uppercase italic tracking-tight text-white intro-glow">
+        Enter The Grid
+      </h2>
+
+      <p id="zeus-intro-copy" class="mt-5 max-w-2xl mx-auto text-sm md:text-lg text-gray-300 leading-relaxed">
+        Zeus is waiting to introduce the city, the athletes, and the rise of the next titan.
+        Click below to enter the site.
+      </p>
+
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button
+          id="enter-site-btn"
+          type="button"
+          class="bg-yellow-500 text-black px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest hover:scale-105 hover:bg-yellow-400 transition-all"
+        >
+          Enter Site
+        </button>
+
+        <button
+          id="skip-intro-btn"
+          type="button"
+          class="border border-yellow-500 text-yellow-500 px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition-colors"
+        >
+          Skip Voice
+        </button>
+      </div>
+
+      <p class="mt-6 text-xs uppercase tracking-[0.28em] text-gray-500">
+        Audio will begin after your click
+      </p>
+    </div>
+
+    <audio id="zeus-intro-audio" preload="auto">
+      <source src="./audio/zeus-intro.mp3" type="audio/mpeg" />
+    </audio>
   </div>
 
   <!-- Header -->
@@ -389,30 +486,14 @@
       <div class="space-y-3 text-sm">
         <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
           <p class="text-[10px] uppercase tracking-widest text-gray-500">Email</p>
-          <p id="account-email" class="text-white font-bold break-all">N/A</p>
+          <p id="account-email-display" class="text-white font-bold break-all">N/A</p>
         </div>
 
         <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-          <p class="text-[10px] uppercase tracking-widest text-gray-500">UID</p>
-          <p id="account-uid" class="text-white font-mono text-xs break-all">N/A</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-            <p class="text-[10px] uppercase tracking-widest text-gray-500">Role</p>
-            <p id="account-role" class="text-white font-bold">user</p>
-          </div>
-          <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-            <p class="text-[10px] uppercase tracking-widest text-gray-500">Membership</p>
-            <p id="account-premium-status" class="text-white font-bold">Standard User</p>
-          </div>
-        </div>
-
-        <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-          <label for="account-nickname" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
+          <label for="nickname-input" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
             Nickname
           </label>
-          <input id="account-nickname" type="text" class="grid-input" placeholder="Your nickname" />
+          <input id="nickname-input" type="text" class="grid-input" placeholder="Your nickname" />
           <button
             id="save-nickname-btn"
             type="button"
@@ -423,10 +504,10 @@
         </div>
 
         <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
-          <label for="account-new-password" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
+          <label for="new-password-input" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
             Update Password
           </label>
-          <input id="account-new-password" type="password" class="grid-input" placeholder="New password" />
+          <input id="new-password-input" type="password" class="grid-input" placeholder="New password" />
           <button
             id="update-password-btn"
             type="button"
@@ -447,6 +528,7 @@
         </button>
 
         <button
+          id="account-close-btn"
           type="button"
           onclick="window.toggleAccountModal(false)"
           class="text-gray-400 font-bold py-2 rounded uppercase border border-gray-700"
