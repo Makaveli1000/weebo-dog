@@ -9,8 +9,7 @@
   "scripts": {
     "build": "node build-env.js && node esbuild.config.js && npm run tailwind:build && npm run copy:audio && npm run copy:html",
     "copy:html": "shx cp src/index.html dist/index.html",
-    "copy:audio": "shx mkdir -p dist/audio && shx cp audio/thunder.mp3 dist/audio/thunder.mp3 && shx cp audio/ambient.mp3 dist/audio/ambient.mp3",
-    "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
+    "copy:audio": "shx mkdir -p dist/audio && shx cp audio/thunder.mp3 dist/audio/thunder.mp3 && shx cp audio/ambient.mp3 dist/audio/ambient.mp3 && shx cp audio/zeus-intro.mp3 dist/audio/zeus-intro.mp3",    "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -18,11 +17,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "firebase": "^11.1.0"
+    "firebase": "^11.10.0",
+    "stripe": "^20.4.0"
   },
   "devDependencies": {
-    "esbuild": "^0.24.0",
+    "esbuild": "^0.24.2",
     "shx": "^0.3.4",
     "tailwindcss": "^3.4.19"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Makaveli1000/weebo-dog.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Makaveli1000/weebo-dog/issues"
+  },
+  "homepage": "https://github.com/Makaveli1000/weebo-dog#readme"
 }
