@@ -346,6 +346,7 @@ function canAccessApp(profile) {
   );
 }
 
+// Fixed: Clean declaration context helper
 function isAdminUser(profile) {
   return profile?.role === "admin" || profile?.role === "editor";
 }
@@ -618,26 +619,20 @@ function athleteTotal(data) {
   return scores.reduce((sum, value) => sum + safeNumber(value), 0);
 }
 
-// NEW FILTER PROCESSOR: Triggers automatically on dropdown selections
 function processAndRenderFilteredAthletes() {
   if (!els.matchGridBody) return;
 
   const tier = els.mainTierFilter?.value || "all";
   const subCat = els.subCategoryFilter?.value || "all-sub";
 
-  // Filter our cached array pool locally
   let filtered = allAthletesCache.filter(({ data }) => {
-    // 1. Evaluate Main Tier matching
     if (tier !== "all" && data.tier !== tier) return false;
-
-    // 2. Evaluate Specific Sub-category matching
     if (subCat !== "all-sub" && !subCat.startsWith("all-")) {
       if (data.subCategory !== subCat) return false;
     }
     return true;
   });
 
-  // Calculate top predator based on current filtered view results
   if (els.topAthleteDisplay) {
     if (!filtered.length) {
       els.topAthleteDisplay.textContent = "No grid assets match this criteria.";
@@ -690,12 +685,10 @@ function subscribeToAthletes() {
   const unsub = onSnapshot(
     q,
     (snapshot) => {
-      // Parse data and cache the global array internally sorted by raw totals
       allAthletesCache = snapshot.docs
         .map((d) => ({ id: d.id, data: d.data() }))
         .sort((a, b) => athleteTotal(b.data) - athleteTotal(a.data));
       
-      // Fire renderer logic
       processAndRenderFilteredAthletes();
     },
     (error) => {
@@ -715,7 +708,6 @@ function subscribeToAthletes() {
   addUnsubscriber(unsub);
 }
 
-// ENHANCED FORM DISPATCHER: Automatically checks for active tags or extracts generic defaults
 async function createAthleteFromForm() {
   if (!currentUser || !isAdminUser(currentProfile)) {
     alert("Only admin/editor can add athletes.");
@@ -737,8 +729,6 @@ async function createAthleteFromForm() {
     return;
   }
 
-  // REASONING: Fallbacks cleanly back to generic highschool/mcc bucket parameters 
-  // if no deep entry adjustments exist inside your Admin Command panel view yet
   const tier = els.mainTierFilter?.value !== "all" ? els.mainTierFilter.value : "highschool";
   const subCategory = els.subCategoryFilter?.value !== "all-sub" ? els.subCategoryFilter.value : "mcc";
 
@@ -1255,6 +1245,8 @@ async function handleSignedInUser(user) {
   currentUser = user;
 
   try {
+    setLoading(true, "⚡ SUMMONING ZEUS...");
+
     const profile = await loadOrCreateUserProfile(user);
     currentProfile = profile;
 
@@ -1281,13 +1273,20 @@ async function handleSignedInUser(user) {
 
     await markPresence(true);
     startPresenceHeartbeat();
+    
+    setLoading(false);
+
   } catch (error) {
     console.error("Failed to initialize signed-in user:", error);
-     SheltonHandlersCleanedFallBack();
+    
+    SheltonHandlersCleanedFallBack();
+    
+    setLoading(false);
+    alert("Connection timeout: St. Louis Arena data is running offline. Try refreshing your browser.");
   } finally {
     finishBootSequence();
   }
-}
+} // FIXED: Closed curly brace cleanly right here!
 
 function SheltonHandlersCleanedFallBack() {
   currentProfile = null;
@@ -1343,7 +1342,6 @@ function bindEvents() {
     });
   }
 
-  // NEW EVENT LISTENERS: Listen to dropdown updates and run filtering instantly
   if (els.mainTierFilter) {
     els.mainTierFilter.addEventListener("change", () => {
       processAndRenderFilteredAthletes();
