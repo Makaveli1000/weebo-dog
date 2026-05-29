@@ -50,6 +50,9 @@ const firebaseConfig =
     databaseURL: "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/"
   };
 
+// 🔥 FORCE OVERRIDE THE ACCIDENTAL TYPO FROM NETLIFY'S ENVIRONMENT LAYER 🔥
+firebaseConfig.databaseURL = "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/";
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
