@@ -38,20 +38,20 @@ import {
 /* -------------------------------------------------
    FIREBASE CONFIGURATION & INITIALIZATION
 ------------------------------------------------- */
-const firebaseConfig =
-  window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config || {
-    apiKey: "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
-    authDomain: "sntlmoexclusivesportsgrid.firebaseapp.com",
-    projectId: "sntlmoexclusivesportsgrid",
-    storageBucket: "sntlmoexclusivesportsgrid.firebasestorage.app",
-    messagingSenderId: "735791748207",
-    appId: "1:735791748207:web:f742972354f32514b6e99a",
-    measurementId: "G-J9BJ4TPFBD",
-    databaseURL: "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
+  authDomain: "sntmo-exclusive-sports-grid.firebaseapp.com",
+  projectId: "sntmo-exclusive-sports-grid",
+  storageBucket: "sntmo-exclusive-sports-grid.appspot.com",
+  messagingSenderId: "735791748207",
+  appId: "1:735791748207:web:f742972354f32514b6e99a",
+  measurementId: "G-J9BJ4TPFBD",
+  databaseURL: "https://sntmo-exclusive-sports-grid-default-rtdb.firebaseio.com/"
+};
 
-// 🔥 FORCE OVERRIDE THE ACCIDENTAL TYPO FROM NETLIFY'S ENVIRONMENT LAYER 🔥
-firebaseConfig.databaseURL = "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/";
+// Clear any accidental window overrides injected by old Netlify cache layers
+window.NETLIFY_FIREBASE_CONFIG = firebaseConfig;
+window.__firebase_config = firebaseConfig;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
