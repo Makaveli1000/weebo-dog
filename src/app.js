@@ -121,7 +121,7 @@ function setLoading(isLoading, message = "⚡ CONNECTING...") {
 }
 
 /* -------------------------------------------------
-   DOM
+   DOM MAP
 ------------------------------------------------- */
 function getEls() {
   return {
@@ -131,6 +131,10 @@ function getEls() {
     skipIntroBtn: $("skip-intro-btn"),
     zeusIntroAudio: $("zeus-intro-audio"),
     zeusIntroCopy: $("zeus-intro-copy"),
+    
+    // SOUND ENGINE PAIRING HOOKS
+    thunderAudio: $("thunder-audio"),
+    ambientAudio: $("ambient-audio"),
 
     headerAuthBtn: $("header-auth-btn"),
     accountBtn: $("account-btn"),
@@ -192,17 +196,15 @@ function getEls() {
 const els = getEls();
 
 /* -------------------------------------------------
-   ZEUS INTRO
+   ZEUS INTRO AUDIO ENGINE & FX STROBES
 ------------------------------------------------- */
 function stopZeusVoice() {
-  try {
-    if (els.zeusIntroAudio) {
-      els.zeusIntroAudio.pause();
-      els.zeusIntroAudio.currentTime = 0;
-    }
-  } catch (err) {
-    console.warn("Failed to stop Zeus audio:", err);
-  }
+  const audioTracks = [els.zeusIntroAudio, els.thunderAudio, els.ambientAudio];
+  audioTracks.forEach(track => {
+    try {
+      if (track) { track.pause(); track.currentTime = 0; }
+    } catch(err) {}
+  });
 
   try {
     if ("speechSynthesis" in window) {
@@ -298,26 +300,65 @@ async function handleEnterSiteIntro() {
   if (els.enterSiteBtn) {
     els.enterSiteBtn.disabled = true;
     els.enterSiteBtn.textContent = "Entering...";
-    els.enterSiteBtn.classList.add("opacity-70", "cursor-not-allowed");
   }
-
+  
   if (els.skipIntroBtn) {
     els.skipIntroBtn.disabled = true;
     els.skipIntroBtn.classList.add("opacity-70", "cursor-not-allowed");
   }
 
-  if (els.zeusIntroCopy) {
-    els.zeusIntroCopy.textContent =
-      "Zeus is speaking... welcome to the Grid.";
+  // 1. Fire Thunder Sound Track
+  if (els.thunderAudio) {
+    els.thunderAudio.volume = 0.8;
+    els.thunderAudio.play().catch(e => console.warn(e));
   }
 
+  // 2. Fire Ambient Loop Track
+  if (els.ambientAudio) {
+    els.ambientAudio.volume = 0.25;
+    els.ambientAudio.play().catch(e => console.warn(e));
+  }
+
+  // 3. Lightning Flash Strobe Array Mechanics
+  if (els.introScreen) {
+    els.introScreen.style.backgroundColor = "#ffffff";
+    
+    setTimeout(() => {
+      els.introScreen.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
+      
+      setTimeout(() => {
+        els.introScreen.style.backgroundColor = "#ffffff";
+        setTimeout(() => {
+          els.introScreen.style.backgroundColor = "rgba(0, 0, 0, 0.95)";
+        }, 60);
+      }, 150);
+    }, 80);
+  }
+
+  if (els.zeusIntroCopy) {
+    els.zeusIntroCopy.textContent = "Zeus is speaking... welcome to the Grid.";
+  }
+
+  // 4. Play Main Narration Channel Voice
   playZeusIntroVoice().catch((error) => {
     console.warn("Zeus intro playback failed:", error);
   });
 
+  // Slide screen out and clean up sound volumes cleanly
   window.setTimeout(() => {
     hideIntroScreen();
-  }, 1200);
+    
+    if (els.ambientAudio) {
+      let fadeInterval = setInterval(() => {
+        if (els.ambientAudio.volume > 0.02) {
+          els.ambientAudio.volume -= 0.02;
+        } else {
+          els.ambientAudio.pause();
+          clearInterval(fadeInterval);
+        }
+      }, 100);
+    }
+  }, 4500); 
 }
 
 function handleSkipIntro() {
@@ -350,6 +391,7 @@ function isAdminUser(profile) {
   return profile?.role === "admin" || profile?.role === "editor";
 }
 
+// Controls panel rendering visibilities
 function updateAccessUI(profile) {
   const allowed = canAccessApp(profile);
   const adminAllowed = isAdminUser(profile);
@@ -424,7 +466,7 @@ function updateSignedInFeatureUI(isSignedIn) {
 }
 
 /* -------------------------------------------------
-   MODALS
+   MODALS LAYER TALES
 ------------------------------------------------- */
 function toggleLoginModal(force) {
   if (!els.loginModal) return;
@@ -473,7 +515,7 @@ window.toggleLoginModal = toggleLoginModal;
 window.toggleAccountModal = toggleAccountModal;
 
 /* -------------------------------------------------
-   PROFILE
+   PROFILE STORAGE HANDLERS
 ------------------------------------------------- */
 async function loadOrCreateUserProfile(user) {
   const userRef = doc(db, "users", user.uid);
@@ -544,7 +586,7 @@ async function changePasswordAction() {
 }
 
 /* -------------------------------------------------
-   LISTENER CONTROL
+   LISTENER TRACKING MATRIX
 ------------------------------------------------- */
 function addUnsubscriber(unsub) {
   if (typeof unsub === "function") {
@@ -582,7 +624,7 @@ function stopPresenceHeartbeat() {
 }
 
 /* -------------------------------------------------
-   PRESENCE
+   PRESENCE ROUTER
 ------------------------------------------------- */
 async function markPresence(isOnline) {
   if (!currentUser) return;
@@ -746,7 +788,7 @@ async function createAthleteFromForm() {
 }
 
 /* -------------------------------------------------
-   CHAT
+   CHAT PIPELINE
 ------------------------------------------------- */
 function renderChatPrompt() {
   if (!els.chatMessages) return;
@@ -838,7 +880,7 @@ async function sendChatMessage() {
 }
 
 /* -------------------------------------------------
-   PRESENCE LIST
+   PRESENCE CONNECTIONS DISPLAY
 ------------------------------------------------- */
 function renderPresencePrompt() {
   if (!els.activeUsersList) return;
@@ -910,7 +952,7 @@ function subscribeToPresence() {
 }
 
 /* -------------------------------------------------
-   LIVE FEED
+   LIVE FEED STREAM
 ------------------------------------------------- */
 function renderLiveFeed(docs) {
   if (els.latestData) {
@@ -965,7 +1007,7 @@ function subscribeToLiveFeed() {
 }
 
 /* -------------------------------------------------
-   SPORTS DATA
+   COMMUNITY SCOREBOARD METRICS
 ------------------------------------------------- */
 function renderSportsData(docs) {
   if (!els.sportsDataDisplay) return;
@@ -1023,7 +1065,7 @@ function subscribeToSportsData() {
 }
 
 /* -------------------------------------------------
-   MEDIA LOCKER
+   MEDIA LOCKER PIPELINE
 ------------------------------------------------- */
 function renderLockerPrompt() {
   if (els.lockerMediaDisplay) {
@@ -1135,7 +1177,7 @@ async function uploadSelectedMedia() {
 
   const path = `user_media/${currentUser.uid}/${Date.now()}-${file.name}`;
   const storageRef = ref(storage, path);
-  const uploadTask = uploadBytesResResumable(storageRef, file);
+  const uploadTask = uploadBytesResumable(storageRef, file);
 
   if (els.lockerStatusText) {
     els.lockerStatusText.textContent = `Uploading ${file.name}...`;
@@ -1225,7 +1267,6 @@ async function register(email, password, nickname = "Member") {
 async function logOut() {
   try {
     if (currentUser) {
-      // Non-blocking timeout safety layer to prevent network drop freezing loops
       await Promise.race([
         markPresence(false),
         new Promise((_, reject) => setTimeout(() => reject(new Error("Presence timeout")), 1500))
@@ -1239,7 +1280,7 @@ async function logOut() {
 }
 
 /* -------------------------------------------------
-   AUTH FLOW LISTENERS
+   AUTH STATE ENGINE HANDLERS
 ------------------------------------------------- */
 async function handleSignedInUser(user) {
   clearAllListeners();
@@ -1324,7 +1365,7 @@ function handleSignedOutUser() {
 }
 
 /* -------------------------------------------------
-   DOM EVENTS MATRIX
+   DOM ACTIONS INTERACTIVE BINDING MATRIX
 ------------------------------------------------- */
 function bindEvents() {
   if (els.headerAuthBtn) {
