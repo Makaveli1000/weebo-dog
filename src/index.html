@@ -573,18 +573,17 @@
 
         <!-- FIXED: Wrapped container in a formal <form> block with updated auto-complete parameters -->
         <form id="password-update-form" class="rounded-lg bg-black/40 border border-gray-800 p-3">
-          <label for="new-password-input" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
-            Update Password
-          </label>
-          <input id="new-password-input" type="password" class="grid-input" placeholder="New password" autocomplete="new-password" />
-          <button
-            id="update-password-btn"
-            type="button"
-            class="mt-3 w-full border border-yellow-500 text-yellow-500 font-bold py-2 rounded uppercase"
-          >
-            Update Password
-          </button>
-        </form>
+  
+  <input type="text" name="username" autocomplete="username" class="hidden" aria-hidden="true" value="sntlmo_user">
+
+  <label for="new-password-input" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
+    Update Password
+  </label>
+  <input id="new-password-input" type="password" class="grid-input" placeholder="New password" autocomplete="new-password" />
+  <button id="update-password-btn" type="button" class="mt-3 w-full border border-yellow-500 text-yellow-500 font-bold py-2 rounded uppercase">
+    Update Password
+  </button>
+</form>
       </div>
 
       <div class="mt-6 grid grid-cols-2 gap-3">
@@ -624,26 +623,42 @@
       };
 
       if (mainFilter && subFilter) {
+        // Cache the original baseline layout structure of your subfilter groups
+        const originalSubFilterMarkup = subFilter.innerHTML;
+
         mainFilter.addEventListener('change', (e) => {
           const selectedValue = e.target.value;
           const targetGroupId = optGroupMap[selectedValue];
           
+          // 1. If 'All Tiers' is picked, restore default state and reset value safely
+          if (selectedValue === 'all') {
+            subFilter.innerHTML = originalSubFilterMarkup;
+            const optgroups = subFilter.getElementsByTagName('optgroup');
+            for (let group of optgroups) {
+              group.classList.add('hidden');
+            }
+            subFilter.value = 'all-sub';
+            
+            // Dispatch a native change event so app.js registers the cache update instantly
+            subFilter.dispatchEvent(new Event('change'));
+            return;
+          }
+
+          // 2. Hide all option groups cleanly first
           const optgroups = subFilter.getElementsByTagName('optgroup');
           for (let group of optgroups) {
             group.classList.add('hidden');
           }
-          
-          if (selectedValue === 'all') {
-            subFilter.innerHTML = '<option value="all-sub">Select a main tier first...</option>';
-            subFilter.value = 'all-sub';
-            return;
-          }
 
+          // 3. Reveal the target category group selection panel
           const targetGroup = document.getElementById(targetGroupId);
           if (targetGroup) {
             targetGroup.classList.remove('hidden');
             const firstOptionVal = targetGroup.getElementsByTagName('option')[0].value;
             subFilter.value = firstOptionVal;
+            
+            // Dispatch change event to keep app.js state processor perfectly aligned
+            subFilter.dispatchEvent(new Event('change'));
           }
         });
       }
