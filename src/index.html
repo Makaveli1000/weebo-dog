@@ -510,6 +510,7 @@
           type="email"
           id="login-email"
           placeholder="EMAIL"
+          autocomplete="username"
           class="grid-input text-white bg-gray-900 border border-gray-700 w-full"
           style="color: white !important;"
           required
@@ -519,6 +520,7 @@
           type="password"
           id="login-password"
           placeholder="PASSWORD"
+          autocomplete="current-password"
           class="grid-input text-white bg-gray-900 border border-gray-700 w-full"
           style="color: white !important; background-color: #111 !important;"
           required
@@ -569,11 +571,12 @@
           </button>
         </div>
 
-        <div class="rounded-lg bg-black/40 border border-gray-800 p-3">
+        <!-- FIXED: Wrapped container in a formal <form> block with updated auto-complete parameters -->
+        <form id="password-update-form" class="rounded-lg bg-black/40 border border-gray-800 p-3">
           <label for="new-password-input" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
             Update Password
           </label>
-          <input id="new-password-input" type="password" class="grid-input" placeholder="New password" />
+          <input id="new-password-input" type="password" class="grid-input" placeholder="New password" autocomplete="new-password" />
           <button
             id="update-password-btn"
             type="button"
@@ -581,7 +584,7 @@
           >
             Update Password
           </button>
-        </div>
+        </form>
       </div>
 
       <div class="mt-6 grid grid-cols-2 gap-3">
