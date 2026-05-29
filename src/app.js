@@ -16,6 +16,7 @@ import {
   addDoc,
   collection,
   query,
+  where,
   orderBy,
   limit,
   onSnapshot,
@@ -50,6 +51,9 @@ let currentUser = null;
 let currentProfile = null;
 let unsubscribers = [];
 let presenceHeartbeat = null;
+
+// Track the active pool of downloaded athletes to allow instant front-end filtering
+let allAthletesCache = []; 
 
 let zeusIntroStarted = false;
 let zeusIntroFinished = false;
@@ -135,6 +139,10 @@ function getEls() {
     paywallContent: $("paywall-content"),
     mainContent: $("main-content"),
     adminPanel: $("admin-panel"),
+
+    // NEW DROPDOWN DOM ELEMENT LINKS MAPPED HERE
+    mainTierFilter: $("main-tier-filter"),
+    subCategoryFilter: $("sub-category-filter"),
 
     loginModal: $("login-modal"),
     loginForm: $("login-form"),
@@ -594,7 +602,7 @@ async function markPresence(isOnline) {
 }
 
 /* -------------------------------------------------
-   ATHLETES
+   ATHLETES (WITH COMPREHENSIVE FILTER SYSTEM REWRITES)
 ------------------------------------------------- */
 function athleteTotal(data) {
   const scores = Array.isArray(data.scores)
@@ -610,42 +618,51 @@ function athleteTotal(data) {
   return scores.reduce((sum, value) => sum + safeNumber(value), 0);
 }
 
-function renderAthletes(docs) {
-  const sorted = [...docs].sort((a, b) => athleteTotal(b.data) - athleteTotal(a.data));
+// NEW FILTER PROCESSOR: Triggers automatically on dropdown selections
+function processAndRenderFilteredAthletes() {
+  if (!els.matchGridBody) return;
 
+  const tier = els.mainTierFilter?.value || "all";
+  const subCat = els.subCategoryFilter?.value || "all-sub";
+
+  // Filter our cached array pool locally
+  let filtered = allAthletesCache.filter(({ data }) => {
+    // 1. Evaluate Main Tier matching
+    if (tier !== "all" && data.tier !== tier) return false;
+
+    // 2. Evaluate Specific Sub-category matching
+    if (subCat !== "all-sub" && !subCat.startsWith("all-")) {
+      if (data.subCategory !== subCat) return false;
+    }
+    return true;
+  });
+
+  // Calculate top predator based on current filtered view results
   if (els.topAthleteDisplay) {
-    if (!sorted.length) {
-      els.topAthleteDisplay.textContent = "No featured athlete yet.";
+    if (!filtered.length) {
+      els.topAthleteDisplay.textContent = "No grid assets match this criteria.";
     } else {
-      const top = sorted[0].data;
+      const top = filtered[0].data;
       els.topAthleteDisplay.textContent = `${top.name || "Unknown"} • ${athleteTotal(top)}`;
     }
   }
 
-  if (!els.matchGridBody) return;
-
-  if (!sorted.length) {
+  if (!filtered.length) {
     els.matchGridBody.innerHTML = `
       <tr>
         <td colspan="5" class="p-4 text-center text-gray-500">
-          No athletes available yet.
+          No athletes active in this section of the grid.
         </td>
       </tr>
     `;
     return;
   }
 
-  els.matchGridBody.innerHTML = sorted
+  els.matchGridBody.innerHTML = filtered
     .map(({ id, data }) => {
       const scores = Array.isArray(data.scores)
         ? data.scores
-        : [
-            data.score0 ?? "",
-            data.score1 ?? "",
-            data.score2 ?? "",
-            data.score3 ?? "",
-            data.score4 ?? ""
-          ];
+        : [data.score0 ?? "", data.score1 ?? "", data.score2 ?? "", data.score3 ?? "", data.score4 ?? ""];
 
       const total = athleteTotal(data);
 
@@ -669,12 +686,17 @@ function renderAthletes(docs) {
 function subscribeToAthletes() {
   if (!els.matchGridBody && !els.topAthleteDisplay) return;
 
-  const q = query(collection(db, "athletes"), limit(100));
+  const q = query(collection(db, "athletes"), limit(120));
   const unsub = onSnapshot(
     q,
     (snapshot) => {
-      const docs = snapshot.docs.map((d) => ({ id: d.id, data: d.data() }));
-      renderAthletes(docs);
+      // Parse data and cache the global array internally sorted by raw totals
+      allAthletesCache = snapshot.docs
+        .map((d) => ({ id: d.id, data: d.data() }))
+        .sort((a, b) => athleteTotal(b.data) - athleteTotal(a.data));
+      
+      // Fire renderer logic
+      processAndRenderFilteredAthletes();
     },
     (error) => {
       console.error("Athletes listener error:", error);
@@ -682,7 +704,7 @@ function subscribeToAthletes() {
         els.matchGridBody.innerHTML = `
           <tr>
             <td colspan="5" class="p-4 text-center text-red-400">
-              Failed to load athletes.
+              Failed to load grid athletes.
             </td>
           </tr>
         `;
@@ -693,6 +715,7 @@ function subscribeToAthletes() {
   addUnsubscriber(unsub);
 }
 
+// ENHANCED FORM DISPATCHER: Automatically checks for active tags or extracts generic defaults
 async function createAthleteFromForm() {
   if (!currentUser || !isAdminUser(currentProfile)) {
     alert("Only admin/editor can add athletes.");
@@ -714,10 +737,17 @@ async function createAthleteFromForm() {
     return;
   }
 
+  // REASONING: Fallbacks cleanly back to generic highschool/mcc bucket parameters 
+  // if no deep entry adjustments exist inside your Admin Command panel view yet
+  const tier = els.mainTierFilter?.value !== "all" ? els.mainTierFilter.value : "highschool";
+  const subCategory = els.subCategoryFilter?.value !== "all-sub" ? els.subCategoryFilter.value : "mcc";
+
   await addDoc(collection(db, "athletes"), {
     name,
     sport,
     scores,
+    tier,
+    subCategory,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     createdBy: currentUser.uid
@@ -1253,16 +1283,20 @@ async function handleSignedInUser(user) {
     startPresenceHeartbeat();
   } catch (error) {
     console.error("Failed to initialize signed-in user:", error);
-    currentProfile = null;
-    updateAccessUI(null);
-    updateHeaderButtons(false);
-    updateSignedInFeatureUI(false);
-    renderChatPrompt();
-    renderPresencePrompt();
-    renderLockerPrompt();
+     SheltonHandlersCleanedFallBack();
   } finally {
     finishBootSequence();
   }
+}
+
+function SheltonHandlersCleanedFallBack() {
+  currentProfile = null;
+  updateAccessUI(null);
+  updateHeaderButtons(false);
+  updateSignedInFeatureUI(false);
+  renderChatPrompt();
+  renderPresencePrompt();
+  renderLockerPrompt();
 }
 
 function handleSignedOutUser() {
@@ -1306,6 +1340,19 @@ function bindEvents() {
       } else {
         toggleLoginModal(true);
       }
+    });
+  }
+
+  // NEW EVENT LISTENERS: Listen to dropdown updates and run filtering instantly
+  if (els.mainTierFilter) {
+    els.mainTierFilter.addEventListener("change", () => {
+      processAndRenderFilteredAthletes();
+    });
+  }
+
+  if (els.subCategoryFilter) {
+    els.subCategoryFilter.addEventListener("change", () => {
+      processAndRenderFilteredAthletes();
     });
   }
 

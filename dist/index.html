@@ -7,6 +7,8 @@
 
   <script src="./env-config.js"></script>
   <link href="./output.css" rel="stylesheet" />
+  <!-- FontAwesome for Filter Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     .hidden { display: none !important; }
@@ -265,7 +267,7 @@
     </div>
   </section>
 
-  <!-- Main App -->
+  <!-- Main App (Authenticated Experience) -->
   <main id="main-content" class="hidden p-6 max-w-7xl mx-auto space-y-8">
 
     <!-- Admin Panel -->
@@ -307,7 +309,71 @@
       </form>
     </div>
 
-    <!-- Leaderboard -->
+    <!-- Interactive Grid Filter Panel -->
+    <div class="p-5 bg-gray-900 border border-gray-800 rounded-2xl shadow-lg space-y-4">
+      <div class="flex items-center gap-2 text-yellow-500">
+        <i class="fa-solid fa-sliders text-sm"></i>
+        <h3 class="text-xs font-black uppercase tracking-widest text-gray-400">Grid Filters</h3>
+      </div>
+      
+      <div class="flex flex-col md:flex-row gap-4">
+        <!-- LEVEL 1: Main Category Selection -->
+        <div class="flex-1 space-y-1.5">
+          <label for="main-tier-filter" class="block text-[10px] uppercase tracking-widest text-gray-500 font-bold">Select Tier</label>
+          <select id="main-tier-filter" class="grid-input p-3 font-medium cursor-pointer">
+            <option value="all">All Tiers</option>
+            <option value="highschool">St. Louis High Schools</option>
+            <option value="college">Colleges (Local & National)</option>
+            <option value="pro-teams">St. Louis Home Pro Teams</option>
+            <option value="pro-players">Locals in the Pros (Domestic & Global)</option>
+          </select>
+        </div>
+
+        <!-- LEVEL 2: Dynamic Sub-Category Selection -->
+        <div class="flex-1 space-y-1.5">
+          <label for="sub-category-filter" class="block text-[10px] uppercase tracking-widest text-gray-500 font-bold">Refine View</label>
+          <select id="sub-category-filter" class="grid-input p-3 font-medium cursor-pointer">
+            <option value="all-sub">Select a main tier first...</option>
+
+            <!-- High School Conferences -->
+            <optgroup label="High School Conferences" id="opt-highschool" class="hidden">
+              <option value="all-hs">All High Schools</option>
+              <option value="mcc">Metro Catholic (CBC, De Smet, SLUH...)</option>
+              <option value="phsl">Public High School League (Vashon, Soldan...)</option>
+              <option value="suburban">Suburban Conference (Kirkwood, Webster...)</option>
+              <option value="aaa">AAA (Cardinal Ritter, St. Mary's...)</option>
+            </optgroup>
+            
+            <!-- College Tracking -->
+            <optgroup label="College Tracking" id="opt-college" class="hidden">
+              <option value="all-college">All Registered Colleges</option>
+              <option value="college-local">St. Louis In-Market (SLU, Lindenwood, UMSL)</option>
+              <option value="college-regional">Regional Programs (Mizzou, Illinois, SEMO)</option>
+              <option value="college-national">Stars Out-of-State (NCAA National Stage)</option>
+            </optgroup>
+
+            <!-- Home Pro Teams -->
+            <optgroup label="Home Pro Franchises" id="opt-pro-teams" class="hidden">
+              <option value="all-pro-teams">All Pro Teams</option>
+              <option value="battlehawks">St. Louis Battlehawks (UFL)</option>
+              <option value="cardinals">St. Louis Cardinals (MLB)</option>
+              <option value="blues">St. Louis Blues (NHL)</option>
+              <option value="city-sc">St. Louis CITY SC (MLS)</option>
+            </optgroup>
+            
+            <!-- Locals in the Pros -->
+            <optgroup label="Hometown Legends Tracker" id="opt-pro-players" class="hidden">
+              <option value="all-pro-players">All Pro Players</option>
+              <option value="pro-major">Major US Leagues (NFL, NBA, MLB, WNBA)</option>
+              <option value="pro-cfl-alt">Alternative Pro (CFL Canada, Arena Leagues)</option>
+              <option value="pro-overseas">Global / International (EuroLeague, World Soccer)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard & Main Athlete Grid -->
     <div class="space-y-4">
       <div id="leaderboard-header" class="p-4 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-r-lg">
         <span class="text-xs text-yellow-500 uppercase font-black">Current Apex Predator</span>
@@ -332,7 +398,7 @@
       </div>
     </div>
 
-    <!-- Chat + Video -->
+    <!-- Chat + Video Grid Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div id="chat-panel" class="bg-gray-900 p-6 rounded-2xl border border-gray-800 h-[500px] flex flex-col">
         <h3 class="text-yellow-500 font-black mb-4 uppercase italic">War Room Chat</h3>
@@ -540,5 +606,45 @@
   </div>
 
   <script type="module" src="./bundle.js"></script>
+
+  <!-- Filter Initialization & Dropdown Sync Handler -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const mainFilter = document.getElementById('main-tier-filter');
+      const subFilter = document.getElementById('sub-category-filter');
+
+      const optGroupMap = {
+        'highschool': 'opt-highschool',
+        'college': 'opt-college',
+        'pro-teams': 'opt-pro-teams',
+        'pro-players': 'opt-pro-players'
+      };
+
+      if (mainFilter && subFilter) {
+        mainFilter.addEventListener('change', (e) => {
+          const selectedValue = e.target.value;
+          const targetGroupId = optGroupMap[selectedValue];
+          
+          const optgroups = subFilter.getElementsByTagName('optgroup');
+          for (let group of optgroups) {
+            group.classList.add('hidden');
+          }
+          
+          if (selectedValue === 'all') {
+            subFilter.innerHTML = '<option value="all-sub">Select a main tier first...</option>';
+            subFilter.value = 'all-sub';
+            return;
+          }
+
+          const targetGroup = document.getElementById(targetGroupId);
+          if (targetGroup) {
+            targetGroup.classList.remove('hidden');
+            const firstOptionVal = targetGroup.getElementsByTagName('option')[0].value;
+            subFilter.value = firstOptionVal;
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>
