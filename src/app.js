@@ -28,24 +28,36 @@ import {
   uploadBytesResumable,
   getDownloadURL
 } from "firebase/storage";
+import { 
+  getDatabase, 
+  ref as rtdbRef, 
+  set as rtdbSet, 
+  onDisconnect 
+} from "firebase/database";
 
 /* -------------------------------------------------
-   FIREBASE
+   FIREBASE CONFIGURATION & INITIALIZATION
 ------------------------------------------------- */
 const firebaseConfig =
-  window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config;
-
-if (!firebaseConfig) {
-  throw new Error("Missing Firebase config. Check env-config.js.");
-}
+  window.NETLIFY_FIREBASE_CONFIG || window.__firebase_config || {
+    apiKey: "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
+    authDomain: "sntlmoexclusivesportsgrid.firebaseapp.com",
+    projectId: "sntlmoexclusivesportsgrid",
+    storageBucket: "sntlmoexclusivesportsgrid.firebasestorage.app",
+    messagingSenderId: "735791748207",
+    appId: "1:735791748207:web:f742972354f32514b6e99a",
+    measurementId: "G-J9BJ4TPFBD",
+    databaseURL: "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/"
+  };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const rtdb = getDatabase(app);
 
 /* -------------------------------------------------
-   STATE
+   STATE MANAGEMENT
 ------------------------------------------------- */
 let currentUser = null;
 let currentProfile = null;
@@ -555,17 +567,15 @@ async function saveNickname() {
     nickname
   };
 
+  // Keep Firestore mirrored if profile layout is pulled
   await setDoc(
-    doc(db, "presence", currentUser.uid),
-    {
-      uid: currentUser.uid,
-      email: currentUser.email || "",
-      nickname,
-      online: true,
-      lastSeen: serverTimestamp()
-    },
+    doc(db, "users", currentUser.uid),
+    { nickname },
     { merge: true }
   );
+
+  // Sync fresh values down to presence system
+  await markPresence(true);
 
   updateAccessUI(currentProfile);
   toggleAccountModal(false);
@@ -624,23 +634,32 @@ function stopPresenceHeartbeat() {
 }
 
 /* -------------------------------------------------
-   PRESENCE ROUTER
+   PRESENCE ROUTER (REALTIME DATABASE ENGINE)
 ------------------------------------------------- */
 async function markPresence(isOnline) {
   if (!currentUser) return;
 
-  await setDoc(
-    doc(db, "presence", currentUser.uid),
-    {
-      uid: currentUser.uid,
-      email: currentUser.email || "",
-      nickname:
-        currentProfile?.nickname || currentUser.displayName || "Member",
-      online: !!isOnline,
-      lastSeen: serverTimestamp()
-    },
-    { merge: true }
-  );
+  const statusRef = rtdbRef(rtdb, `status/${currentUser.uid}`);
+  
+  const statusData = {
+    uid: currentUser.uid,
+    email: currentUser.email || "",
+    nickname: currentProfile?.nickname || currentUser.displayName || "Member",
+    online: !!isOnline,
+    lastSeen: Date.now()
+  };
+
+  if (isOnline) {
+    await onDisconnect(statusRef).set({
+      ...statusData,
+      online: false,
+      lastSeen: Date.now()
+    });
+    
+    await rtdbSet(statusRef, statusData);
+  } else {
+    await rtdbSet(statusRef, statusData);
+  }
 }
 
 /* -------------------------------------------------
@@ -787,9 +806,9 @@ async function createAthleteFromForm() {
   els.addAthleteForm?.reset();
 }
 
-/* -------------------------------------------------
+/* -----------------------------------------
    CHAT PIPELINE
-------------------------------------------------- */
+----------------------------------------- */
 function renderChatPrompt() {
   if (!els.chatMessages) return;
 
