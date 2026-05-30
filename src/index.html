@@ -7,8 +7,8 @@
 
   <script src="./env-config.js"></script>
   <link href="./output.css" rel="stylesheet" />
-  <!-- FontAwesome for Filter Icons -->
-  <link rel="stylesheet" href="https://<link rel="stylesheet" href="https://npmcdn.com/font-awesome@4.7.0/css/font-awesome.min.css">
+  
+  <link rel="stylesheet" href="https://npmcdn.com/font-awesome@4.7.0/css/font-awesome.min.css">
 
   <style>
     .hidden { display: none !important; }
@@ -124,7 +124,6 @@
 </head>
 <body class="bg-black text-white overflow-x-hidden">
 
-  <!-- Loading Overlay -->
   <div id="loading-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black">
     <div class="text-center">
       <div data-loading-text class="text-yellow-500 text-2xl animate-pulse font-bold italic intro-glow">
@@ -136,27 +135,30 @@
     </div>
   </div>
 
-  <!-- Zeus Intro Screen -->
   <div id="intro-screen" class="hidden fixed inset-0 z-[95] flex items-center justify-center bg-black/95 px-6">
-    <div class="intro-card intro-fade-up max-w-3xl w-full rounded-[28px] p-8 md:p-12 text-center">
+    <div class="intro-card intro-fade-up max-w-xl w-full rounded-[28px] p-6 md:p-8 text-center flex flex-col items-center">
+      
       <p class="text-[11px] uppercase font-black text-yellow-500 intro-subtle mb-4">
         St. Louis • Every Level • One Grid
       </p>
 
-      <h2 class="text-4xl md:text-6xl font-black uppercase italic tracking-tight text-white intro-glow">
+      <div class="relative w-64 h-auto rounded-2xl overflow-hidden border border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.15)] bg-neutral-900 aspect-[2/3] mb-5">
+        <img src="./Zeus Over St. Louis Storm (1).png" alt="Zeus Avatar - Pulse of St. Louis" class="w-full h-full object-cover">
+      </div>
+
+      <h2 class="text-3xl md:text-5xl font-black uppercase italic tracking-tight text-white intro-glow">
         Enter The Grid
       </h2>
 
-      <p id="zeus-intro-copy" class="mt-5 max-w-2xl mx-auto text-sm md:text-lg text-gray-300 leading-relaxed">
-        Zeus is waiting to introduce the city, the athletes, and the rise of the next titan.
-        Click below to enter the site.
+      <p id="zeus-intro-copy" class="mt-4 max-w-sm mx-auto text-sm text-gray-300 leading-relaxed">
+        Zeus is waiting to introduce the city, the athletes, and the rise of the next titan. Click below to enter the site.
       </p>
 
-      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4">
         <button
           id="enter-site-btn"
           type="button"
-          class="bg-yellow-500 text-black px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest hover:scale-105 hover:bg-yellow-400 transition-all"
+          class="w-full sm:w-auto bg-yellow-500 text-black px-8 py-3.5 rounded-full font-black text-base uppercase tracking-widest hover:scale-105 hover:bg-yellow-400 transition-all shadow-lg shadow-yellow-500/10"
         >
           Enter Site
         </button>
@@ -164,32 +166,28 @@
         <button
           id="skip-intro-btn"
           type="button"
-          class="border border-yellow-500 text-yellow-500 px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition-colors"
+          class="w-full sm:w-auto border border-yellow-500 text-yellow-500 px-8 py-3.5 rounded-full font-black text-base uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition-colors"
         >
           Skip Voice
         </button>
       </div>
 
-      <p class="mt-6 text-xs uppercase tracking-[0.28em] text-gray-500">
+      <p class="mt-5 text-[10px] uppercase tracking-[0.28em] text-gray-500">
         Audio will begin after your click
       </p>
     </div>
 
-    <!-- Inside your Zeus Intro Screen wrapper in index.html -->
-<audio id="zeus-intro-audio" preload="auto">
-  <source src="./audio/zeus-intro.mp3" type="audio/mpeg" />
-</audio>
-
-<!-- ADD THESE TWO AUDIO NODES FOR THE EFFECTS -->
-<audio id="thunder-audio" preload="auto">
-  <source src="./audio/thunder.mp3" type="audio/mpeg" />
-</audio>
-<audio id="ambient-audio" preload="auto" loop>
-  <source src="./audio/ambient.mp3" type="audio/mpeg" />
-</audio>
+    <audio id="zeus-intro-audio" preload="auto">
+      <source src="./audio/zeus-intro.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="thunder-audio" preload="auto">
+      <source src="./audio/thunder.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="ambient-audio" preload="auto" loop>
+      <source src="./audio/ambient.mp3" type="audio/mpeg" />
+    </audio>
   </div>
 
-  <!-- Header -->
   <header class="p-4 border-b border-gray-800 flex justify-between items-center glass-bar sticky top-0 z-40">
     <div>
       <h1 class="text-xl md:text-2xl font-black text-yellow-500 tracking-tighter uppercase">
@@ -201,8 +199,17 @@
     </div>
 
     <div class="flex gap-3">
+      <div class="relative hidden md:block">
+        <input 
+          type="text" 
+          id="global-search-input" 
+          placeholder="SEARCH ATHLETE..." 
+          class="bg-black/60 border border-gray-800 rounded px-3 py-1.5 text-xs font-bold uppercase text-white tracking-wider focus:outline-none focus:border-yellow-500 transition-colors w-48"
+        />
+        <span id="global-search-status" class="absolute -bottom-3.5 right-1 text-[8px] uppercase font-bold text-gray-500 tracking-widest">System Ready</span>
+      </div>
+
       <button
-        onclick="window.toggleLoginModal(true)"
         id="header-auth-btn"
         class="bg-yellow-500 text-black px-4 py-2 rounded font-bold text-sm uppercase hover:bg-yellow-400 transition-colors"
       >
@@ -210,7 +217,6 @@
       </button>
 
       <button
-        onclick="window.toggleAccountModal(true)"
         id="account-btn"
         class="hidden border border-yellow-500 text-yellow-500 px-4 py-2 rounded font-bold text-sm uppercase hover:bg-yellow-500 hover:text-black transition-colors"
       >
@@ -219,7 +225,6 @@
     </div>
   </header>
 
-  <!-- Public / Paywall Content -->
   <section id="paywall-content" class="py-20 md:py-28 px-6">
     <div class="max-w-5xl mx-auto text-center">
       <p class="text-[11px] uppercase tracking-[0.35em] text-yellow-500 font-black mb-4">
@@ -237,14 +242,13 @@
 
       <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
         <button
-          onclick="window.toggleLoginModal(true)"
+          id="paywall-join-btn"
           class="bg-yellow-500 text-black px-10 py-4 rounded-full font-black text-lg hover:scale-105 transition-transform uppercase tracking-widest ascend-pulse"
         >
           Join for $1 / Month
         </button>
 
         <button
-          onclick="window.toggleLoginModal(true)"
           class="border border-yellow-500 text-yellow-500 px-10 py-4 rounded-full font-black text-lg uppercase tracking-widest hover:bg-yellow-500 hover:text-black transition-colors"
         >
           Or $10 / Year
@@ -276,10 +280,8 @@
     </div>
   </section>
 
-  <!-- Main App (Authenticated Experience) -->
   <main id="main-content" class="hidden p-6 max-w-7xl mx-auto space-y-8">
 
-    <!-- Admin Panel -->
     <div id="admin-panel" class="hidden p-6 bg-gray-900 border border-yellow-500/50 rounded-2xl shadow-2xl">
       <h3 class="text-yellow-500 font-black mb-4 uppercase italic tracking-widest">
         Athlete Command Center
@@ -318,7 +320,6 @@
       </form>
     </div>
 
-    <!-- Interactive Grid Filter Panel -->
     <div class="p-5 bg-gray-900 border border-gray-800 rounded-2xl shadow-lg space-y-4">
       <div class="flex items-center gap-2 text-yellow-500">
         <i class="fa-solid fa-sliders text-sm"></i>
@@ -326,7 +327,6 @@
       </div>
       
       <div class="flex flex-col md:flex-row gap-4">
-        <!-- LEVEL 1: Main Category Selection -->
         <div class="flex-1 space-y-1.5">
           <label for="main-tier-filter" class="block text-[10px] uppercase tracking-widest text-gray-500 font-bold">Select Tier</label>
           <select id="main-tier-filter" class="grid-input p-3 font-medium cursor-pointer">
@@ -338,13 +338,11 @@
           </select>
         </div>
 
-        <!-- LEVEL 2: Dynamic Sub-Category Selection -->
         <div class="flex-1 space-y-1.5">
           <label for="sub-category-filter" class="block text-[10px] uppercase tracking-widest text-gray-500 font-bold">Refine View</label>
           <select id="sub-category-filter" class="grid-input p-3 font-medium cursor-pointer">
             <option value="all-sub">Select a main tier first...</option>
 
-            <!-- High School Conferences -->
             <optgroup label="High School Conferences" id="opt-highschool" class="hidden">
               <option value="all-hs">All High Schools</option>
               <option value="mcc">Metro Catholic (CBC, De Smet, SLUH...)</option>
@@ -353,7 +351,6 @@
               <option value="aaa">AAA (Cardinal Ritter, St. Mary's...)</option>
             </optgroup>
             
-            <!-- College Tracking -->
             <optgroup label="College Tracking" id="opt-college" class="hidden">
               <option value="all-college">All Registered Colleges</option>
               <option value="college-local">St. Louis In-Market (SLU, Lindenwood, UMSL)</option>
@@ -361,7 +358,6 @@
               <option value="college-national">Stars Out-of-State (NCAA National Stage)</option>
             </optgroup>
 
-            <!-- Home Pro Teams -->
             <optgroup label="Home Pro Franchises" id="opt-pro-teams" class="hidden">
               <option value="all-pro-teams">All Pro Teams</option>
               <option value="battlehawks">St. Louis Battlehawks (UFL)</option>
@@ -370,7 +366,6 @@
               <option value="city-sc">St. Louis CITY SC (MLS)</option>
             </optgroup>
             
-            <!-- Locals in the Pros -->
             <optgroup label="Hometown Legends Tracker" id="opt-pro-players" class="hidden">
               <option value="all-pro-players">All Pro Players</option>
               <option value="pro-major">Major US Leagues (NFL, NBA, MLB, WNBA)</option>
@@ -382,7 +377,6 @@
       </div>
     </div>
 
-    <!-- Leaderboard & Main Athlete Grid -->
     <div class="space-y-4">
       <div id="leaderboard-header" class="p-4 bg-yellow-500/10 border-l-4 border-yellow-500 rounded-r-lg">
         <span class="text-xs text-yellow-500 uppercase font-black">Current Apex Predator</span>
@@ -407,7 +401,6 @@
       </div>
     </div>
 
-    <!-- Chat + Video Grid Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div id="chat-panel" class="bg-gray-900 p-6 rounded-2xl border border-gray-800 h-[500px] flex flex-col">
         <h3 class="text-yellow-500 font-black mb-4 uppercase italic">War Room Chat</h3>
@@ -449,17 +442,13 @@
       </div>
     </div>
 
-    <!-- Secondary Dashboard Panels -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-      <!-- Live Feed -->
       <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
         <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Live Feed</h3>
         <p id="latest-data" class="text-white font-bold">No live data available.</p>
         <pre id="data-stream" class="mt-3 text-xs text-gray-400 whitespace-pre-wrap break-words">Waiting for updates...</pre>
       </div>
 
-      <!-- Active Users -->
       <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
         <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Active Users</h3>
         <ul id="active-users-list" class="space-y-2">
@@ -467,7 +456,6 @@
         </ul>
       </div>
 
-      <!-- Sports Data -->
       <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
         <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Community Scoreboard</h3>
         <div id="sports-data-display" class="space-y-3">
@@ -475,7 +463,6 @@
         </div>
       </div>
 
-      <!-- Media Locker -->
       <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800">
         <h3 class="text-yellow-500 font-black mb-4 uppercase italic">Media Locker</h3>
 
@@ -509,7 +496,6 @@
     </div>
   </main>
 
-  <!-- Login Modal -->
   <div id="login-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4">
     <div class="bg-gray-900 border border-yellow-500/30 p-8 rounded-3xl max-w-sm w-full shadow-2xl">
       <h2 class="text-2xl font-black text-yellow-500 mb-4 uppercase italic">Ascension</h2>
@@ -555,7 +541,6 @@
     </div>
   </div>
 
-  <!-- Account Modal -->
   <div id="account-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4">
     <div class="bg-gray-900 border border-yellow-500/30 p-8 rounded-3xl max-w-md w-full shadow-2xl">
       <h2 class="text-2xl font-black text-yellow-500 mb-4 uppercase italic">My Grid</h2>
@@ -580,19 +565,17 @@
           </button>
         </div>
 
-        <!-- FIXED: Wrapped container in a formal <form> block with updated auto-complete parameters -->
         <form id="password-update-form" class="rounded-lg bg-black/40 border border-gray-800 p-3">
-  
-  <input type="text" name="username" autocomplete="username" class="hidden" aria-hidden="true" value="sntlmo_user">
+          <input type="text" name="username" autocomplete="username" class="hidden" aria-hidden="true" value="sntlmo_user">
 
-  <label for="new-password-input" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
-    Update Password
-  </label>
-  <input id="new-password-input" type="password" class="grid-input" placeholder="New password" autocomplete="new-password" />
-  <button id="update-password-btn" type="button" class="mt-3 w-full border border-yellow-500 text-yellow-500 font-bold py-2 rounded uppercase">
-    Update Password
-  </button>
-</form>
+          <label for="new-password-input" class="block text-[10px] uppercase tracking-widest text-gray-500 mb-2">
+            Update Password
+          </label>
+          <input id="new-password-input" type="password" class="grid-input" placeholder="New password" autocomplete="new-password" />
+          <button id="update-password-btn" type="button" class="mt-3 w-full border border-yellow-500 text-yellow-500 font-bold py-2 rounded uppercase">
+            Update Password
+          </button>
+        </form>
       </div>
 
       <div class="mt-6 grid grid-cols-2 gap-3">
@@ -618,7 +601,6 @@
 
   <script type="module" src="./bundle.js"></script>
 
-  <!-- Filter Initialization & Dropdown Sync Handler -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const mainFilter = document.getElementById('main-tier-filter');
@@ -632,14 +614,12 @@
       };
 
       if (mainFilter && subFilter) {
-        // Cache the original baseline layout structure of your subfilter groups
         const originalSubFilterMarkup = subFilter.innerHTML;
 
         mainFilter.addEventListener('change', (e) => {
           const selectedValue = e.target.value;
           const targetGroupId = optGroupMap[selectedValue];
           
-          // 1. If 'All Tiers' is picked, restore default state and reset value safely
           if (selectedValue === 'all') {
             subFilter.innerHTML = originalSubFilterMarkup;
             const optgroups = subFilter.getElementsByTagName('optgroup');
@@ -647,26 +627,20 @@
               group.classList.add('hidden');
             }
             subFilter.value = 'all-sub';
-            
-            // Dispatch a native change event so app.js registers the cache update instantly
             subFilter.dispatchEvent(new Event('change'));
             return;
           }
 
-          // 2. Hide all option groups cleanly first
           const optgroups = subFilter.getElementsByTagName('optgroup');
           for (let group of optgroups) {
             group.classList.add('hidden');
           }
 
-          // 3. Reveal the target category group selection panel
           const targetGroup = document.getElementById(targetGroupId);
           if (targetGroup) {
             targetGroup.classList.remove('hidden');
             const firstOptionVal = targetGroup.getElementsByTagName('option')[0].value;
             subFilter.value = firstOptionVal;
-            
-            // Dispatch change event to keep app.js state processor perfectly aligned
             subFilter.dispatchEvent(new Event('change'));
           }
         });
