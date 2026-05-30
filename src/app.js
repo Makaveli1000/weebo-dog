@@ -44,8 +44,8 @@ const firebaseConfig = {
   projectId: "sntlmoexclusivesportsgrid",
   storageBucket: "sntlmoexclusivesportsgrid.firebasestorage.app",
   messagingSenderId: "735791748207",
-  appId: "1:735791748207:web:f742972354f32514b6e99a",
-  measurementId: "G-J9BJ4TPFBD",
+  appId: "1:735791748207:web:74fd6412684db238b6e99a",
+  measurementId: "G-T8RJPDPL4G",
   databaseURL: "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/"
 };
 
@@ -158,6 +158,11 @@ function getEls() {
     paywallContent: $("paywall-content"),
     mainContent: $("main-content"),
     adminPanel: $("admin-panel"),
+
+    // GLOBAL AI RADAR MODULES
+    globalSearchInput: $("global-search-input"),
+    globalSearchSpinner: $("global-search-spinner"),
+    globalSearchStatus: $("global-search-status"),
 
     // DROPDOWN DOM SELECTORS
     mainTierFilter: $("main-tier-filter"),
@@ -322,19 +327,16 @@ async function handleEnterSiteIntro() {
     els.skipIntroBtn.classList.add("opacity-70", "cursor-not-allowed");
   }
 
-  // 1. Fire Thunder Sound Track
   if (els.thunderAudio) {
     els.thunderAudio.volume = 0.8;
     els.thunderAudio.play().catch(e => console.warn(e));
   }
 
-  // 2. Fire Ambient Loop Track
   if (els.ambientAudio) {
     els.ambientAudio.volume = 0.25;
     els.ambientAudio.play().catch(e => console.warn(e));
   }
 
-  // 3. Lightning Flash Strobe Array Mechanics
   if (els.introScreen) {
     els.introScreen.style.backgroundColor = "#ffffff";
     
@@ -354,12 +356,10 @@ async function handleEnterSiteIntro() {
     els.zeusIntroCopy.textContent = "Zeus is speaking... welcome to the Grid.";
   }
 
-  // 4. Play Main Narration Channel Voice
   playZeusIntroVoice().catch((error) => {
     console.warn("Zeus intro playback failed:", error);
   });
 
-  // Slide screen out and clean up sound volumes cleanly
   window.setTimeout(() => {
     hideIntroScreen();
     
@@ -406,7 +406,6 @@ function isAdminUser(profile) {
   return profile?.role === "admin" || profile?.role === "editor";
 }
 
-// Controls panel rendering visibilities
 function updateAccessUI(profile) {
   const allowed = canAccessApp(profile);
   const adminAllowed = isAdminUser(profile);
@@ -438,6 +437,9 @@ function updateAccessUI(profile) {
   }
 }
 
+/* -------------------------------------------------
+   UI CONNECTIVITY PIPELINES
+------------------------------------------------- */
 function updateHeaderButtons(isSignedIn) {
   if (els.headerAuthBtn) {
     els.headerAuthBtn.textContent = isSignedIn ? "LOGOUT" : "LOGIN";
@@ -570,14 +572,12 @@ async function saveNickname() {
     nickname
   };
 
-  // Keep Firestore mirrored if profile layout is pulled
   await setDoc(
     doc(db, "users", currentUser.uid),
     { nickname },
     { merge: true }
   );
 
-  // Sync fresh values down to presence system
   await markPresence(true);
 
   updateAccessUI(currentProfile);
@@ -892,8 +892,7 @@ async function sendChatMessage() {
   await addDoc(collection(db, "chatMessages"), {
     uid: currentUser.uid,
     email: currentUser.email || "",
-    nickname:
-      currentProfile?.nickname || currentUser.displayName || "Member",
+    nickname: currentProfile?.nickname || currentUser.displayName || "Member",
     text,
     createdAt: serverTimestamp()
   });
@@ -982,8 +981,7 @@ function renderLiveFeed(docs) {
       els.latestData.textContent = "No live data available.";
     } else {
       const latest = docs[0].data;
-      els.latestData.textContent =
-        latest.title || latest.headline || latest.content || "Live update";
+      els.latestData.textContent = latest.title || latest.headline || latest.content || "Live update";
     }
   }
 
@@ -1012,11 +1010,7 @@ function subscribeToLiveFeed() {
     (snapshot) => {
       const docs = snapshot.docs
         .map((d) => ({ id: d.id, data: d.data() }))
-        .sort(
-          (a, b) =>
-            getMillis(b.data.createdAt || b.data.updatedAt) -
-            getMillis(a.data.createdAt || a.data.updatedAt)
-        );
+        .sort((a, b) => getMillis(b.data.createdAt || b.data.updatedAt) - getMillis(a.data.createdAt || a.data.updatedAt));
 
       renderLiveFeed(docs);
     },
@@ -1067,11 +1061,7 @@ function subscribeToSportsData() {
     (snapshot) => {
       const docs = snapshot.docs
         .map((d) => ({ id: d.id, data: d.data() }))
-        .sort(
-          (a, b) =>
-            getMillis(b.data.createdAt || b.data.updatedAt) -
-            getMillis(a.data.createdAt || a.data.updatedAt)
-        );
+        .sort((a, b) => getMillis(b.data.createdAt || b.data.updatedAt) - getMillis(a.data.createdAt || a.data.updatedAt));
 
       renderSportsData(docs);
     },
@@ -1092,23 +1082,12 @@ function subscribeToSportsData() {
 function renderLockerPrompt() {
   if (els.lockerMediaDisplay) {
     els.lockerMediaDisplay.innerHTML = `
-      <p class="col-span-full text-center text-sm text-gray-500">
-        Log in to view your media.
-      </p>
+      <p class="col-span-full text-center text-sm text-gray-500">Log in to view your media.</p>
     `;
   }
-
-  if (els.lockerStatusText) {
-    els.lockerStatusText.textContent = "Capacity: Log in to see status.";
-  }
-
-  if (els.uploadCounterDisplay) {
-    els.uploadCounterDisplay.textContent = "Uploads: 0";
-  }
-
-  if (els.uploadProgressBar) {
-    els.uploadProgressBar.style.width = "0%";
-  }
+  if (els.lockerStatusText) els.lockerStatusText.textContent = "Capacity: Log in to see status.";
+  if (els.uploadCounterDisplay) els.uploadCounterDisplay.textContent = "Uploads: 0";
+  if (els.uploadProgressBar) els.uploadProgressBar.style.width = "0%";
 }
 
 function renderUserMedia(docs) {
@@ -1120,9 +1099,7 @@ function renderUserMedia(docs) {
 
   if (!docs.length) {
     els.lockerMediaDisplay.innerHTML = `
-      <p class="col-span-full text-center text-sm text-gray-500">
-        No media uploaded yet.
-      </p>
+      <p class="col-span-full text-center text-sm text-gray-500">No media uploaded yet.</p>
     `;
     return;
   }
@@ -1138,11 +1115,8 @@ function renderUserMedia(docs) {
       return `
         <div class="overflow-hidden rounded-xl border border-gray-800 bg-black/20">
           ${
-            isImage
-              ? `<img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" class="h-40 w-full object-cover" />`
-              : isVideo
-              ? `<video src="${escapeHtml(url)}" controls class="h-40 w-full bg-black object-cover"></video>`
-              : ""
+            isImage ? `<img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" class="h-40 w-full object-cover" />` : 
+            isVideo ? `<video src="${escapeHtml(url)}" controls class="h-40 w-full bg-black object-cover"></video>` : ""
           }
           <div class="p-3">
             <div class="text-sm font-bold text-white">${escapeHtml(name)}</div>
@@ -1175,9 +1149,7 @@ function subscribeToUserMedia(uid) {
     (error) => {
       console.error("User media listener error:", error);
       els.lockerMediaDisplay.innerHTML = `
-        <p class="col-span-full text-center text-sm text-red-400">
-          Failed to load media.
-        </p>
+        <p class="col-span-full text-center text-sm text-red-400">Failed to load media.</p>
       `;
     }
   );
@@ -1201,29 +1173,16 @@ async function uploadSelectedMedia() {
   const storageRef = ref(storage, path);
   const uploadTask = uploadBytesResumable(storageRef, file);
 
-  if (els.lockerStatusText) {
-    els.lockerStatusText.textContent = `Uploading ${file.name}...`;
-  }
-
-  if (els.uploadProgressBar) {
-    els.uploadProgressBar.style.width = "0%";
-  }
+  if (els.lockerStatusText) els.lockerStatusText.textContent = `Uploading ${file.name}...`;
+  if (els.uploadProgressBar) els.uploadProgressBar.style.width = "0%";
 
   await new Promise((resolve, reject) => {
     uploadTask.on(
       "state_changed",
       (snapshot) => {
-        const progress = Math.round(
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-        );
-
-        if (els.uploadProgressBar) {
-          els.uploadProgressBar.style.width = `${progress}%`;
-        }
-
-        if (els.lockerStatusText) {
-          els.lockerStatusText.textContent = `Uploading ${file.name}... ${progress}%`;
-        }
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        if (els.uploadProgressBar) els.uploadProgressBar.style.width = `${progress}%`;
+        if (els.lockerStatusText) els.lockerStatusText.textContent = `Uploading ${file.name}... ${progress}%`;
       },
       (error) => reject(error),
       async () => {
@@ -1240,22 +1199,12 @@ async function uploadSelectedMedia() {
             createdAt: serverTimestamp()
           });
 
-          if (els.mediaFileInput) {
-            els.mediaFileInput.value = "";
-          }
-
-          if (els.lockerStatusText) {
-            els.lockerStatusText.textContent = `${file.name} uploaded successfully.`;
-          }
-
-          if (els.uploadProgressBar) {
-            els.uploadProgressBar.style.width = "100%";
-          }
+          if (els.mediaFileInput) els.mediaFileInput.value = "";
+          if (els.lockerStatusText) els.lockerStatusText.textContent = `${file.name} uploaded successfully.`;
+          if (els.uploadProgressBar) els.uploadProgressBar.style.width = "100%";
 
           resolve();
-        } catch (err) {
-          reject(err);
-        }
+        } catch (err) { reject(err); }
       }
     );
   });
@@ -1294,9 +1243,7 @@ async function logOut() {
         new Promise((_, reject) => setTimeout(() => reject(new Error("Presence timeout")), 1500))
       ]).catch(err => console.warn("Presence offline cleanup bypassed:", err));
     }
-  } catch (err) {
-    console.warn("Failed to mark offline before logout:", err);
-  }
+  } catch (err) { console.warn("Failed to mark offline before logout:", err); }
 
   await signOut(auth);
 }
@@ -1320,13 +1267,8 @@ async function handleSignedInUser(user) {
     updateHeaderButtons(true);
     updateSignedInFeatureUI(true);
 
-    if (els.accountEmailDisplay) {
-      els.accountEmailDisplay.textContent = profile.email || user.email || "N/A";
-    }
-
-    if (els.nicknameInput) {
-      els.nicknameInput.value = profile.nickname || "";
-    }
+    if (els.accountEmailDisplay) els.accountEmailDisplay.textContent = profile.email || user.email || "N/A";
+    if (els.nicknameInput) els.nicknameInput.value = profile.nickname || "";
 
     toggleLoginModal(false);
 
@@ -1341,12 +1283,9 @@ async function handleSignedInUser(user) {
     startPresenceHeartbeat();
     
     setLoading(false);
-
   } catch (error) {
     console.error("Failed to initialize signed-in user:", error);
-    
     SheltonHandlersCleanedFallBack();
-    
     setLoading(false);
     alert("Connection timeout: St. Louis Arena data is running offline. Try refreshing your browser.");
   } finally {
@@ -1390,6 +1329,121 @@ function handleSignedOutUser() {
    DOM ACTIONS INTERACTIVE BINDING MATRIX
 ------------------------------------------------- */
 function bindEvents() {
+  // ─── RUNNING GLOBAL INTERNET SEARCH PIPELINE ───
+  if (els.globalSearchInput) {
+    els.globalSearchInput.addEventListener("keydown", async (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        
+        const queryText = els.globalSearchInput.value.trim();
+        if (!queryText) return;
+
+        console.log(`🤖 Deployed deep bots for query target: ${queryText}`);
+        
+        // Lock inputs and turn on loader panels
+        els.globalSearchInput.disabled = true;
+        if (els.globalSearchSpinner) show(els.globalSearchSpinner);
+        if (els.globalSearchStatus) {
+          els.globalSearchStatus.textContent = "SCANNING WEB...";
+          els.globalSearchStatus.classList.remove("text-gray-500");
+          els.globalSearchStatus.classList.add("text-yellow-500", "animate-pulse");
+        }
+        
+        if (els.topAthleteDisplay) {
+          els.topAthleteDisplay.textContent = `PARSING RADAR: ${queryText.toUpperCase()}...`;
+        }
+
+        try {
+          const activeTier = els.mainTierFilter?.value || "all";
+
+          // 1. Fetch live parsed global structure package out of Netlify Serverless Function
+          const response = await fetch("/.netlify/functions/searchGlobalAthlete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ athleteName: queryText, currentTier: activeTier }),
+          });
+
+          if (!response.ok) throw new Error(`Scraper API returned status ${response.status}`);
+          const resultData = await response.json();
+
+          // 2. Render matching metrics directly over your leaderboard headers
+          if (els.topAthleteDisplay) {
+            els.topAthleteDisplay.textContent = `${queryText.toUpperCase()} • GLOBAL TARGET FOUND`;
+          }
+
+          if (els.matchGridBody) {
+            els.matchGridBody.innerHTML = `
+              <tr class="border-t border-gray-800 bg-yellow-500/10">
+                <td class="p-3 font-bold text-yellow-400 flex items-center gap-2">
+                  <i class="fa-solid fa-earth-americas text-xs animate-spin-slow"></i> ${escapeHtml(queryText)}
+                </td>
+                <td class="p-3 text-center text-gray-300">📈 Live</td>
+                <td class="p-3 text-center text-gray-300">📰 News Feed</td>
+                <td class="p-3 text-center font-black text-yellow-500">${escapeHtml(resultData.stats.status || "PRO")}</td>
+                <td class="p-3 text-right">
+                  <span class="inline-block rounded border border-yellow-500/40 bg-yellow-500/20 px-2 py-1 text-[10px] uppercase tracking-wider text-yellow-400">
+                    Radar Streamed
+                  </span>
+                </td>
+              </tr>
+            `;
+          }
+
+          // 3. Sync returned newspaper arrays straight inside the Live Feed Section
+          if (els.dataStream && resultData.news && resultData.news.length > 0) {
+            els.dataStream.textContent = resultData.news
+              .map(item => `📰 [${item.source}] ${item.title}\n→ Read: ${item.url}\n${item.summary}`)
+              .join("\n\n");
+            if (els.latestData) els.latestData.textContent = `Latest on ${queryText}: ${resultData.news[0].title}`;
+          }
+
+          // 4. Populate Media Locker layout interface dynamically with clickable video blocks
+          if (els.lockerMediaDisplay && resultData.videos && resultData.videos.length > 0) {
+            els.lockerMediaDisplay.innerHTML = resultData.videos
+              .map(video => `
+                <div class="overflow-hidden rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-3 flex flex-col justify-between">
+                  <div>
+                    <img src="${escapeHtml(video.thumbnail)}" class="h-28 w-full object-cover rounded-lg mb-2 border border-gray-800" />
+                    <div class="text-xs font-bold text-white line-clamp-2">${escapeHtml(video.title)}</div>
+                  </div>
+                  <a href="${escapeHtml(video.url)}" target="_blank" rel="noopener noreferrer" 
+                     class="mt-3 block text-center rounded border border-yellow-500/30 bg-black py-1.5 text-[10px] uppercase tracking-wider text-yellow-400 hover:bg-yellow-500/10 transition-colors">
+                    <i class="fa-brands fa-youtube mr-1 text-red-500"></i> Watch Highlight
+                  </a>
+                </div>
+              `).join("");
+          }
+
+          // 5. Caching an automated background duplicate record snapshot straight to Firestore collection
+          if (currentUser) {
+            await addDoc(collection(db, "global_cache"), {
+              athleteName: queryText.toLowerCase(),
+              tierMatched: activeTier,
+              scrapedPayload: resultData,
+              searchedBy: currentUser.uid,
+              createdAt: serverTimestamp()
+            });
+            console.log("💾 Aggregation snapshot successfully cached to Firestore instance logs.");
+          }
+
+        } catch (error) {
+          console.error("Aggregation stream UI update failed:", error);
+          alert("The global network stream encountered an initialization timeout. Try again.");
+        } finally {
+          // Restore native app state rules cleanly
+          els.globalSearchInput.disabled = false;
+          if (els.globalSearchSpinner) hide(els.globalSearchSpinner);
+          if (els.globalSearchStatus) {
+            els.globalSearchStatus.textContent = "System Ready";
+            els.globalSearchStatus.classList.remove("text-yellow-500", "animate-pulse");
+            els.globalSearchStatus.classList.add("text-gray-500");
+          }
+          els.globalSearchInput.value = "";
+        }
+      }
+    });
+  }
+
   if (els.headerAuthBtn) {
     els.headerAuthBtn.removeAttribute("onclick");
     els.headerAuthBtn.addEventListener("click", async () => {
@@ -1400,7 +1454,6 @@ function bindEvents() {
           setLoading(false); 
         } catch (error) {
           console.error("Logout failed:", error);
-          alert("Logout encountered an issue, resetting view.");
           setLoading(false);
           handleSignedOutUser();
         }
@@ -1445,9 +1498,7 @@ function bindEvents() {
   }
 
   if (els.accountCloseBtn) {
-    els.accountCloseBtn.addEventListener("click", () =>
-      toggleAccountModal(false)
-    );
+    els.accountCloseBtn.addEventListener("click", () => toggleAccountModal(false));
   }
 
   if (els.logoutBtn) {
@@ -1457,64 +1508,43 @@ function bindEvents() {
         setLoading(true, "Signing out...");
         await logOut();
         setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-      }
+      } catch (err) { console.error(err); setLoading(false); }
     });
   }
 
   if (els.saveNicknameBtn) {
     els.saveNicknameBtn.addEventListener("click", async () => {
-      try {
-        await saveNickname();
-      } catch (error) {
-        console.error("Save nickname failed:", error);
-        alert("Failed to save nickname.");
-      }
+      try { await saveNickname(); } catch (error) { console.error(error); alert("Failed to save nickname."); }
     });
   }
 
   if (els.updatePasswordBtn) {
     els.updatePasswordBtn.addEventListener("click", async () => {
-      try {
-        await changePasswordAction();
-      } catch (error) {
-        console.error("Password update failed:", error);
-        alert("Failed to update password. You may need to sign in again.");
-      }
+      try { await changePasswordAction(); } catch (error) { console.error(error); alert("Failed to update password."); }
     });
   }
 
   if (els.loginModal) {
     els.loginModal.addEventListener("click", (event) => {
-      if (event.target === els.loginModal) {
-        toggleLoginModal(false);
-      }
+      if (event.target === els.loginModal) toggleLoginModal(false);
     });
   }
 
   if (els.accountModal) {
     els.accountModal.addEventListener("click", (event) => {
-      if (event.target === els.accountModal) {
-        toggleAccountModal(false);
-      }
+      if (event.target === els.accountModal) toggleAccountModal(false);
     });
   }
 
   if (els.loginForm) {
     els.loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-
       const email = els.loginEmail?.value?.trim() || "";
       const password = els.loginPassword?.value || "";
 
       if (els.loginError) els.loginError.textContent = "";
-
       if (!email || !password) {
-        if (els.loginError) {
-          els.loginError.textContent = "Enter email and password.";
-        }
+        if (els.loginError) els.loginError.textContent = "Enter email and password.";
         return;
       }
 
@@ -1525,10 +1555,7 @@ function bindEvents() {
       } catch (error) {
         console.error("Login failed:", error);
         if (els.loginError) {
-          els.loginError.textContent =
-            error?.code === "auth/invalid-credential"
-              ? "Invalid email or password."
-              : "Login failed. Check your email and password.";
+          els.loginError.textContent = error?.code === "auth/invalid-credential" ? "Invalid email or password." : "Login failed.";
         }
         setLoading(false);
       }
@@ -1537,12 +1564,7 @@ function bindEvents() {
 
   if (els.sendChatMessageBtn) {
     els.sendChatMessageBtn.addEventListener("click", async () => {
-      try {
-        await sendChatMessage();
-      } catch (error) {
-        console.error("Send chat failed:", error);
-        alert("Failed to send message.");
-      }
+      try { await sendChatMessage(); } catch (error) { console.error(error); }
     });
   }
 
@@ -1550,11 +1572,7 @@ function bindEvents() {
     els.chatMessageInput.addEventListener("keydown", async (event) => {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
-        try {
-          await sendChatMessage();
-        } catch (error) {
-          console.error("Enter-to-send failed:", error);
-        }
+        try { await sendChatMessage(); } catch (error) { console.error(error); }
       }
     });
   }
@@ -1562,12 +1580,7 @@ function bindEvents() {
   if (els.addAthleteForm) {
     els.addAthleteForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      try {
-        await createAthleteFromForm();
-      } catch (error) {
-        console.error("Create athlete failed:", error);
-        alert("Failed to add athlete.");
-      }
+      try { await createAthleteFromForm(); } catch (error) { console.error(error); }
     });
   }
 
@@ -1576,19 +1589,14 @@ function bindEvents() {
       try {
         await uploadSelectedMedia();
       } catch (error) {
-        console.error("Upload failed:", error);
-        alert("Upload failed.");
-        if (els.lockerStatusText) {
-          els.lockerStatusText.textContent = "Upload failed.";
-        }
+        console.error(error);
+        if (els.lockerStatusText) els.lockerStatusText.textContent = "Upload failed.";
       }
     });
   }
 
   window.addEventListener("beforeunload", () => {
-    if (currentUser) {
-      markPresence(false).catch(() => {});
-    }
+    if (currentUser) { markPresence(false).catch(() => {}); }
     stopZeusVoice();
   });
 }
@@ -1614,8 +1622,4 @@ init();
 /* -------------------------------------------------
    GLOBAL INTERFACE EXPORTS
 ------------------------------------------------- */
-window.appAuth = {
-  logIn,
-  register,
-  logOut
-};
+window.appAuth = { logIn, register, logOut };
