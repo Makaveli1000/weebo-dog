@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, addDoc, collection, query, limit, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { getFirestore, doc, getDoc, addDoc, collection, query, limit, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "firebase/firestore";
 import { getDatabase, ref as rtdbRef, set as rtdbSet } from "firebase/database";
 
 // ==========================================
@@ -84,11 +84,11 @@ function updateAccessUI(profile) {
   
   if (profile?.role === "admin" || profile?.role === "editor") { 
     show("admin-panel"); 
-    show("admin-purge-btn"); // 👈 Unlocks button layer for Admin: Mac10 only
+    show("admin-purge-btn"); 
     checkAndSeedDatabase().catch((e) => console.error(e)); 
   } else { 
     hide("admin-panel"); 
-    hide("admin-purge-btn"); // 👈 Shuts out unauthorized guests
+    hide("admin-purge-btn"); 
   }
   
   const statusEl = $("user-status");
@@ -300,3 +300,4 @@ window.appAuth = {
   logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), 
   logOut: () => signOut(auth) 
 };
+window.runGridPurge = purgeGridDuplicates;
