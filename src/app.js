@@ -142,7 +142,7 @@ async function handleSignedInUser(user) {
   } catch(err) { 
     console.error(err); 
   } finally { 
-    hide("loading-overlay"); // Protective crash exit gate
+    hide("loading-overlay"); 
   }
 }
 
@@ -151,13 +151,14 @@ function handleSignedOutUser() {
   currentProfile = null;
   updateAccessUI(null); 
   subscribeToAthletes();
-  hide("loading-overlay"); // Protective crash exit gate
+  hide("loading-overlay"); 
 }
 
 // ==========================================
 // 🎛️ EVENT LISTENERS MATRIX BOUNDS
 // ==========================================
 function bindEvents() {
+  // 1. GLOBAL ATHLETE LOOKUP TERMINAL
   $("global-search-input")?.addEventListener("keydown", async (e) => {
     if (e.key === "Enter") {
       const qText = $("global-search-input").value.trim();
@@ -178,6 +179,52 @@ function bindEvents() {
     }
   });
 
+  // 2. LIVE DEPLOY TITAN FORM CAPTURE (Captures real values & blocks duplication)
+  const deployForm = $("athlete-form") || document.querySelector("form");
+  deployForm?.addEventListener("submit", async (e) => {
+    e.preventDefault(); 
+
+    // Target the specific UI inputs or class fallbacks
+    const nameInput = $("athlete-name") || document.querySelector("input[placeholder*='Name']");
+    const sportSelect = $("athlete-sport") || document.querySelector("select");
+    
+    // Extract values dynamically from the S0-S4 matrix slots
+    const s0 = safeNumber($("score-0")?.value || $("s0")?.value || 90);
+    const s1 = safeNumber($("score-1")?.value || $("s1")?.value || 90);
+    const s2 = safeNumber($("score-2")?.value || $("s2")?.value || 90);
+    const s3 = safeNumber($("score-3")?.value || $("s3")?.value || 90);
+    const s4 = safeNumber($("score-4")?.value || $("s4")?.value || 90);
+
+    if (!nameInput || !nameInput.value.trim()) {
+      alert("Please enter a Titan Name first!");
+      return;
+    }
+
+    const newTitan = {
+      name: nameInput.value.trim(),
+      sport: sportSelect ? sportSelect.value : "Football",
+      tier: "pro-players", 
+      subCategory: "pro-major",
+      scores: [s0, s1, s2, s3, s4],
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      console.log("🛰️ Deploying custom unique Titan to Firestore:", newTitan.name);
+      await addDoc(collection(db, "athletes"), newTitan);
+      
+      // Clean and flush out form fields for the next entry loop
+      nameInput.value = "";
+      ["score-0", "score-1", "score-2", "score-3", "score-4", "s0", "s1", "s2", "s3", "s4"].forEach(id => {
+        const el = $(id);
+        if (el) el.value = "";
+      });
+    } catch (err) {
+      console.error("❌ Failed to deploy Titan:", err);
+    }
+  });
+
+  // 3. AUTH COOKIE MANAGER BUTTON
   $("header-auth-btn")?.addEventListener("click", () => { 
     if (currentUser) signOut(auth); 
     else show("login-modal"); 
