@@ -8,8 +8,9 @@
   },
   "scripts": {
     "build": "node build-env.js && node esbuild.config.js && npm run tailwind:build && npm run copy:audio && npm run copy:html",
-    "copy:html": "shx cp src/index.html dist/index.html && shx cp src/zeus-avatar.png dist/zeus-avatar.png"
-    "copy:audio": "shx mkdir -p dist/audio && shx cp audio/thunder.mp3 dist/audio/thunder.mp3 && shx cp audio/ambient.mp3 dist/audio/ambient.mp3 && shx cp audio/zeus-intro.mp3 dist/audio/zeus-intro.mp3",    "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
+    "copy:html": "shx cp src/index.html dist/index.html && shx cp src/zeus-avatar.png dist/zeus-avatar.png",
+    "copy:audio": "shx mkdir -p dist/audio && shx cp audio/thunder.mp3 dist/audio/thunder.mp3 && shx cp audio/ambient.mp3 dist/audio/ambient.mp3 && shx cp audio/zeus-intro.mp3 dist/audio/zeus-intro.mp3",
+    "tailwind:build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -35,3 +36,4 @@
   },
   "homepage": "https://github.com/Makaveli1000/weebo-dog#readme"
 }
+
