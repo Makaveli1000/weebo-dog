@@ -130,6 +130,38 @@ function subscribeToAthletes() {
 }
 
 // ==========================================
+// 🧹 AUTHENTICATED ADMINISTRATIVE PURGE ENGINE
+// ==========================================
+async function purgeGridDuplicates() {
+  const statusEl = $("user-status");
+  if (statusEl) statusEl.textContent = "Purging Extras...";
+  console.log("🧹 Initializing authenticated Firestore sweep for duplicates...");
+  
+  try {
+    const { getDocs, deleteDoc, doc } = await import("firebase/firestore");
+    const querySnapshot = await getDocs(collection(db, "athletes"));
+    const seen = new Set();
+    let deletedCount = 0;
+    
+    for (const document of querySnapshot.docs) {
+      const name = document.data().name;
+      if (seen.has(name)) {
+        await deleteDoc(doc(db, "athletes", document.id));
+        console.log(`🗑️ Wiped duplicate: ${name}`);
+        deletedCount++;
+      } else {
+        seen.add(name);
+      }
+    }
+    if (statusEl) statusEl.textContent = "Admin: Mac10 (Cleaned!)";
+    console.log(`✅ Success! Purged ${deletedCount} duplicate rows cleanly.`);
+  } catch (err) {
+    console.error("❌ Purge operation failed:", err);
+    if (statusEl) statusEl.textContent = "Purge Blocked!";
+  }
+}
+
+// ==========================================
 // 🔐 CORE BOOT SEQUENCE & AUTH LIFECYCLE
 // ==========================================
 async function handleSignedInUser(user) {
@@ -179,16 +211,14 @@ function bindEvents() {
     }
   });
 
-  // 2. LIVE DEPLOY TITAN FORM CAPTURE (Captures real values & blocks duplication)
+  // 2. LIVE DEPLOY TITAN FORM CAPTURE (Captures unique form data arrays)
   const deployForm = $("athlete-form") || document.querySelector("form");
   deployForm?.addEventListener("submit", async (e) => {
     e.preventDefault(); 
 
-    // Target the specific UI inputs or class fallbacks
     const nameInput = $("athlete-name") || document.querySelector("input[placeholder*='Name']");
     const sportSelect = $("athlete-sport") || document.querySelector("select");
     
-    // Extract values dynamically from the S0-S4 matrix slots
     const s0 = safeNumber($("score-0")?.value || $("s0")?.value || 90);
     const s1 = safeNumber($("score-1")?.value || $("s1")?.value || 90);
     const s2 = safeNumber($("score-2")?.value || $("s2")?.value || 90);
@@ -213,7 +243,6 @@ function bindEvents() {
       console.log("🛰️ Deploying custom unique Titan to Firestore:", newTitan.name);
       await addDoc(collection(db, "athletes"), newTitan);
       
-      // Clean and flush out form fields for the next entry loop
       nameInput.value = "";
       ["score-0", "score-1", "score-2", "score-3", "score-4", "s0", "s1", "s2", "s3", "s4"].forEach(id => {
         const el = $(id);
@@ -235,8 +264,9 @@ function bindEvents() {
 bindEvents();
 onAuthStateChanged(auth, u => { if (u) handleSignedInUser(u); else handleSignedOutUser(); });
 
-// Global namespace bridging triggers
+// Global namespace bridges
 window.appAuth = { 
   logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), 
   logOut: () => signOut(auth) 
 };
+window.runGridPurge = purgeGridDuplicates;
