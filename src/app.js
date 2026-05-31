@@ -84,9 +84,11 @@ function updateAccessUI(profile) {
   
   if (profile?.role === "admin" || profile?.role === "editor") { 
     show("admin-panel"); 
+    show("admin-purge-btn"); // 👈 Unlocks button layer for Admin: Mac10 only
     checkAndSeedDatabase().catch((e) => console.error(e)); 
   } else { 
     hide("admin-panel"); 
+    hide("admin-purge-btn"); // 👈 Shuts out unauthorized guests
   }
   
   const statusEl = $("user-status");
@@ -120,6 +122,14 @@ function processAndRenderFilteredAthletes() {
       <td class="p-3 text-right"><span class="rounded border border-yellow-500/30 px-2 py-1 text-[10px] uppercase text-yellow-400">${escapeHtml(data.sport)}</span></td>
     </tr>
   `).join("");
+
+  // Dynamically update the Apex Predator Marquee at the top
+  if (allAthletesCache.length > 0) {
+    const leader = allAthletesCache[0].data;
+    if ($("apex-predator-name")) $("apex-predator-name").textContent = leader.name;
+    if ($("apex-predator-score")) $("apex-predator-score").textContent = athleteTotal(leader);
+    if ($("grid-count-badge")) $("grid-count-badge").textContent = `${allAthletesCache.length} Active`;
+  }
 }
 
 function subscribeToAthletes() {
@@ -134,11 +144,11 @@ function subscribeToAthletes() {
 // ==========================================
 async function purgeGridDuplicates() {
   const statusEl = $("user-status");
+  const oldText = statusEl ? statusEl.textContent : "";
   if (statusEl) statusEl.textContent = "Purging Extras...";
   console.log("🧹 Initializing authenticated Firestore sweep for duplicates...");
   
   try {
-    const { getDocs, deleteDoc, doc } = await import("firebase/firestore");
     const querySnapshot = await getDocs(collection(db, "athletes"));
     const seen = new Set();
     let deletedCount = 0;
@@ -147,7 +157,7 @@ async function purgeGridDuplicates() {
       const name = document.data().name;
       if (seen.has(name)) {
         await deleteDoc(doc(db, "athletes", document.id));
-        console.log(`🗑️ Wiped duplicate: ${name}`);
+        console.log(`🗑️ Wiped duplicate document: ${name}`);
         deletedCount++;
       } else {
         seen.add(name);
@@ -155,6 +165,7 @@ async function purgeGridDuplicates() {
     }
     if (statusEl) statusEl.textContent = "Admin: Mac10 (Cleaned!)";
     console.log(`✅ Success! Purged ${deletedCount} duplicate rows cleanly.`);
+    setTimeout(() => { if (statusEl) statusEl.textContent = oldText; }, 3000);
   } catch (err) {
     console.error("❌ Purge operation failed:", err);
     if (statusEl) statusEl.textContent = "Purge Blocked!";
@@ -211,7 +222,7 @@ function bindEvents() {
     }
   });
 
-  // 2. LIVE DEPLOY TITAN FORM CAPTURE (Captures unique form data arrays)
+  // 2. LIVE DEPLOY TITAN FORM CAPTURE
   const deployForm = $("athlete-form") || document.querySelector("form");
   deployForm?.addEventListener("submit", async (e) => {
     e.preventDefault(); 
@@ -253,10 +264,30 @@ function bindEvents() {
     }
   });
 
-  // 3. AUTH COOKIE MANAGER BUTTON
+  // 3. PHYSICAL BUTTON CLICK PURGE TRIGGER
+  $("admin-purge-btn")?.addEventListener("click", async () => {
+    if (confirm("Are you sure you want to clean all duplicate entries off the St. Louis scoreboard?")) {
+      await purgeGridDuplicates();
+    }
+  });
+
+  // 4. AUTH BUTTON
   $("header-auth-btn")?.addEventListener("click", () => { 
     if (currentUser) signOut(auth); 
     else show("login-modal"); 
+  });
+  
+  // 5. MODAL AUTH SUBMIT BRIDGE
+  $("modal-submit-login")?.addEventListener("click", async () => {
+    const email = $("login-email")?.value.trim();
+    const pass = $("login-pass")?.value.trim();
+    if (!email || !pass) return;
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      hide("login-modal");
+    } catch (err) {
+      alert("Authorization Denied: Check identity key configuration.");
+    }
   });
 }
 
@@ -264,9 +295,8 @@ function bindEvents() {
 bindEvents();
 onAuthStateChanged(auth, u => { if (u) handleSignedInUser(u); else handleSignedOutUser(); });
 
-// Global namespace bridges
+// Global Namespace bridges
 window.appAuth = { 
   logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), 
   logOut: () => signOut(auth) 
 };
-window.runGridPurge = purgeGridDuplicates;
