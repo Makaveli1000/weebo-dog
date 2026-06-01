@@ -1,171 +1,308 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  getDocs, 
-  onSnapshot, 
-  query, 
-  orderBy 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { initializeApp } from "firebase/app";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { getFirestore, doc, getDoc, addDoc, collection, query, limit, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "firebase/firestore";
+import { getDatabase, ref as rtdbRef, push, onValue, serverTimestamp as rtdbServerTimestamp, query as rtdbQuery, limitToLast } from "firebase/database";
 
-// ==========================================
-// 1. FIREBASE CONFIGURATION
-// ==========================================
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
+  authDomain: "sntlmoexclusivesportsgrid.firebaseapp.com",
+  projectId: "sntlmoexclusivesportsgrid",
+  storageBucket: "sntlmoexclusivesportsgrid.firebasestorage.app",
+  messagingSenderId: "735791748207",
+  appId: "1:735791748207:web:74fd6412684db238b6e99a",
+  databaseURL: "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/"
 };
 
-// Initialize Firebase App & Services
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
-const titansCollection = collection(db, "titans");
+const rtdb = getDatabase(app);
 
-// ==========================================
-// 2. ATHLETE COMMAND CENTER: DEPLOY TITAN
-// ==========================================
-const deployForm = document.getElementById("deployTitanForm");
+let currentUser = null;
+let currentProfile = null;
+let allAthletesCache = [];
+let unsubscribeAthletes = null;
+let unsubscribeChat = null;
 
-if (deployForm) {
-  deployForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+const $ = (id) => document.getElementById(id);
 
-    // Pull raw layout parameters from input targets
-    const name = document.getElementById("titanName").value.trim();
-    const sport = document.getElementById("sportType").value;
-    const youtubeIdInput = document.getElementById("youtubeId").value.trim();
+function escapeHtml(v = "") {
+  return String(v).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c] || c));
+}
 
-    // Simple Input Validation
-    if (!name) {
-      alert("Please provide a valid Titan Name and School before deploying.");
-      return;
-    }
+function show(id) { $(id)?.classList.remove("hidden"); }
+function hide(id) { $(id)?.classList.add("hidden"); }
+function safeNumber(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
+function isAdminProfile(profile) { return profile?.role === "admin" || profile?.role === "editor"; }
+function hasMainAccess(profile) { return isAdminProfile(profile) || profile?.isPro === true; }
+function setText(id, text) { const el = $(id); if (el) el.textContent = text; }
 
-    // Process and isolate pure 11-character YouTube video ID if full URL is pasted
-    let finalizedVideoId = youtubeIdInput;
-    if (youtubeIdInput.includes("youtube.com") || youtubeIdInput.includes("youtu.be")) {
-      try {
-        const urlObj = new URL(youtubeIdInput);
-        if (youtubeIdInput.includes("youtu.be")) {
-          finalizedVideoId = urlObj.pathname.substring(1);
-        } else {
-          finalizedVideoId = urlObj.searchParams.get("v");
-        }
-      } catch (err) {
-        console.error("Failed to parse YouTube URL string, defaulting to original input.", err);
+window.show = show;
+window.hide = hide;
+
+function toEmbedUrl(url = "") {
+  const raw = String(url).trim();
+  if (!raw) return "";
+  try {
+    const parsed = new URL(raw);
+    if (parsed.hostname.includes("youtube.com")) {
+      const videoId = parsed.searchParams.get("v");
+      if (videoId) return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
+      if (parsed.pathname.startsWith("/shorts/")) {
+        const shortsId = parsed.pathname.split("/").filter(Boolean)[1];
+        if (shortsId) return `https://www.youtube.com/embed/${encodeURIComponent(shortsId)}`;
       }
+      if (parsed.pathname.startsWith("/embed/")) return raw;
     }
-
-    // Build Payload Structure (Simulating random placement values for S0 - S4 attributes)
-    const titanPayload = {
-      titanName: name,
-      sportType: sport,
-      youtubeId: finalizedVideoId || "", // Save clean ID if present, else empty string
-      attributes: [
-        Math.floor(Math.random() * 15) + 85, // S0
-        Math.floor(Math.random() * 15) + 85, // S1
-        Math.floor(Math.random() * 15) + 85, // S2
-        Math.floor(Math.random() * 15) + 85, // S3
-        Math.floor(Math.random() * 15) + 85  // S4
-      ],
-      deployedAt: new Date()
-    };
-
-    try {
-      await addDoc(titansCollection, titanPayload);
-      deployForm.reset();
-      console.log("Titan deployed successfully to Snt.L.Mo. Live Grid Feed.");
-    } catch (error) {
-      console.error("Error writing document to Firestore dashboard schema:", error);
-      alert("Deployment failed. Verify Firebase database write rules layout configuration.");
+    if (parsed.hostname.includes("youtu.be")) {
+      const videoId = parsed.pathname.replace("/", "");
+      if (videoId) return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
     }
+    if (parsed.hostname.includes("vimeo.com")) {
+      const videoId = parsed.pathname.split("/").filter(Boolean)[0];
+      if (videoId) return `https://player.vimeo.com/video/${encodeURIComponent(videoId)}`;
+    }
+    return raw;
+  } catch { return ""; }
+}
+
+function playHighlight(athlete) {
+  const iframe = $("theater-iframe");
+  const placeholder = $("video-placeholder");
+  const title = $("now-playing-title");
+  if (!iframe || !placeholder) return;
+
+  const embedUrl = toEmbedUrl(athlete?.highlightUrl || athlete?.highlight || "");
+  if (!embedUrl) {
+    iframe.src = "";
+    iframe.classList.add("hidden");
+    placeholder.classList.remove("hidden", "opacity-0", "pointer-events-none");
+    if (title) title.textContent = `${athlete?.name || "Titan"}: No highlight attached`;
+    return;
+  }
+
+  iframe.src = embedUrl;
+  iframe.classList.remove("hidden");
+  placeholder.classList.add("hidden", "opacity-0", "pointer-events-none");
+  if (title) title.textContent = `Now Playing: ${athlete?.name || "Titan Highlight"}`;
+}
+
+const ST_LOUIS_INITIAL_SEEDS = [
+  { name: "Vashon Elite Squad", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [95, 92, 94, 96, 98], highlightUrl: "https://www.youtube.com/watch?v=ifiFShFX5Pg" },
+  { name: "Soldan Prep Leader", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [88, 85, 90, 89, 91], highlightUrl: "" },
+  { name: "CBC Cadet Core", sport: "Football", tier: "highschool", subCategory: "mcc", scores: [94, 96, 95, 93, 97], highlightUrl: "" },
+  { name: "SLUH Jr. Billikens", sport: "Track", tier: "highschool", subCategory: "mcc", scores: [89, 92, 91, 90, 94], highlightUrl: "" },
+  { name: "Macler Cody (Mac10)", sport: "Football", tier: "pro-players", subCategory: "pro-cfl-alt", scores: [98, 97, 99, 96, 98], highlightUrl: "" },
+  { name: "David Freese (Lafayette HS)", sport: "Baseball", tier: "pro-players", subCategory: "pro-major", scores: [95, 94, 96, 92, 95], highlightUrl: "" },
+  { name: "Pat Maroon (Oakville HS)", sport: "Hockey", tier: "pro-players", subCategory: "pro-major", scores: [93, 95, 94, 91, 96], highlightUrl: "" },
+  { name: "Bradley Beal (Chaminade)", sport: "Basketball", tier: "pro-players", subCategory: "pro-major", scores: [97, 98, 96, 95, 99], highlightUrl: "" }
+];
+
+async function checkAndSeedDatabase() {
+  const existingSnap = await getDocs(query(collection(db, "athletes"), limit(1)));
+  if (!existingSnap.empty) return;
+  const athletesRef = collection(db, "athletes");
+  for (const titan of ST_LOUIS_INITIAL_SEEDS) {
+    await addDoc(athletesRef, { ...titan, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy: "auto_init" });
+  }
+}
+
+function updateAccessUI(profile) {
+  const loginBtn = $("header-auth-btn");
+  if (hasMainAccess(profile)) { hide("paywall-content"); show("main-content"); } 
+  else { show("paywall-content"); hide("main-content"); }
+
+  if (isAdminProfile(profile)) { show("admin-panel"); show("admin-purge-btn"); checkAndSeedDatabase().catch(e => console.error(e)); } 
+  else { hide("admin-panel"); hide("admin-purge-btn"); }
+
+  if (profile) {
+    setText("user-status", `Admin: ${profile.nickname || profile.email || "Authorized"}`);
+    if (loginBtn) loginBtn.textContent = "Logout";
+  } else {
+    setText("user-status", "Status: Mortal Vision");
+    if (loginBtn) loginBtn.textContent = "Login";
+  }
+}
+
+function athleteTotal(d) {
+  const scores = Array.isArray(d?.scores) ? d.scores : [d?.score0, d?.score1, d?.score2, d?.score3, d?.score4];
+  return scores.reduce((sum, value) => sum + safeNumber(value), 0);
+}
+
+const SUB_TIER_OPTIONS = {
+  all: [["all", "All Sub-Categories"]],
+  highschool: [["all", "All St. Louis High Schools"], ["phsl", "Public High League"], ["mcc", "Metro Catholic Conference"], ["suburban", "Suburban Programs"], ["independent", "Independent Programs"]],
+  college: [["all", "All Colleges"], ["local-college", "Local Colleges"], ["national-college", "National Colleges"]],
+  "pro-teams": [["all", "All St. Louis Home Pro Teams"], ["mlb", "Cardinals / MLB"], ["nhl", "Blues / NHL"], ["mls", "CITY SC / MLS"], ["ufl", "Battlehawks / UFL"]],
+  "pro-players": [["all", "All Locals in the Pros"], ["pro-major", "Major Pro Leagues"], ["pro-cfl-alt", "CFL / Alt Pro"], ["pro-global", "Global Pros"]]
+};
+
+function refreshSubTierOptions() {
+  const tierSelect = $("tier-select");
+  const subTierSelect = $("sub-tier-select");
+  if (!tierSelect || !subTierSelect) return;
+  const selectedTier = tierSelect.value || "all";
+  const options = SUB_TIER_OPTIONS[selectedTier] || SUB_TIER_OPTIONS.all;
+  subTierSelect.innerHTML = options.map(([v, l]) => `<option value="${escapeHtml(v)}">${escapeHtml(l)}</option>`).join("");
+}
+
+function getFilteredAthletes() {
+  const tier = $("tier-select")?.value || "all";
+  const subTier = $("sub-tier-select")?.value || "all";
+  return allAthletesCache.filter(({ data }) => {
+    return (tier === "all" || data.tier === tier) && (subTier === "all" || data.subCategory === subTier);
   });
 }
 
-// ==========================================
-// 3. LIVE GRID FEED: REAL-TIME SYNC
-// ==========================================
-const gridContainer = document.querySelector(".grid");
+function processAndRenderFilteredAthletes() {
+  const gridBody = $("match-grid-body");
+  if (!gridBody) return;
+  const filteredAthletes = getFilteredAthletes();
 
-if (gridContainer) {
-  // Query to sort athletes by newest deployment timestamp
-  const q = query(titansCollection, orderBy("deployedAt", "desc"));
+  if (!filteredAthletes.length) {
+    gridBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No athletes active for this filter.</td></tr>`;
+    setText("apex-predator-name", "No Apex Selected"); setText("apex-predator-score", "---"); setText("grid-count-badge", "0 Active");
+    return;
+  }
 
-  // Open Real-time listening channel stream
-  onSnapshot(q, (snapshot) => {
-    // Clear out current container grid before painting updated payload snapshots
-    gridContainer.innerHTML = "";
+  gridBody.innerHTML = filteredAthletes.map(({ id, data }) => {
+    const hasHighlight = Boolean(data.highlightUrl || data.highlight);
+    return `
+      <tr class="border-t border-zeus-border hover:bg-zeus-gold/5 cursor-pointer transition animate-feed-slide" data-athlete-id="${escapeHtml(id)}">
+        <td class="p-3 font-bold text-white flex items-center">
+          ${escapeHtml(data.name)}
+          ${hasHighlight ? `<span class="ml-2 bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider">Video</span>` : ""}
+        </td>
+        <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[0])}</td>
+        <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[1])}</td>
+        <td class="p-3 text-center font-black text-zeus-gold">${athleteTotal(data)}</td>
+        <td class="p-3 text-right"><span class="rounded border border-zeus-gold/30 px-2 py-1 text-[10px] uppercase text-zeus-gold">${escapeHtml(data.sport)}</span></td>
+      </tr>`;
+  }).join("");
 
-    if (snapshot.empty) {
-      gridContainer.innerHTML = `
-        <div class="col-span-full text-center py-12 border border-dashed border-slate-800 rounded-2xl bg-slate-900/20 text-slate-500">
-          No active Titan profiles found. Deploy an athlete profile to begin stream updates.
-        </div>
-      `;
-      return;
-    }
+  const leader = filteredAthletes[0].data;
+  setText("apex-predator-name", leader.name || "Unknown Titan");
+  setText("apex-predator-score", athleteTotal(leader));
+  setText("grid-count-badge", `${filteredAthletes.length} Active`);
 
-    snapshot.forEach((doc) => {
-      const titan = doc.data();
-      const attrs = titan.attributes || [0, 0, 0, 0, 0];
-
-      // Handle Title Splitting (Extract Main Name vs School metadata info cleanly)
-      let displayName = titan.titanName;
-      let SubtitleText = "";
-      if (titan.titanName.includes("(") && titan.titanName.includes(")")) {
-        const parts = titan.titanName.split("(");
-        displayName = parts[0].trim();
-        SubtitleText = parts[1].replace(")", "").trim();
-      }
-
-      // Check if YouTube Video ID exists to decide if button layout should display
-      const hasHighlights = titan.youtubeId && titan.youtubeId.trim().length > 0;
-
-      // Construct interactive grid layout profile interface card dynamically
-      const cardHtml = `
-        <div class="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 shadow-xl flex flex-col justify-between hover:border-slate-700 transition-colors duration-300">
-          <div>
-            <div class="flex justify-between items-start mb-4">
-              <div>
-                <h3 class="text-xl font-bold tracking-tight text-white">${displayName}</h3>
-                ${SubtitleText ? `<p class="text-xs text-orange-500 font-semibold uppercase tracking-wider mt-0.5">${SubtitleText}</p>` : ""}
-              </div>
-              <span class="bg-slate-800 border border-slate-700 text-slate-300 text-[11px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
-                ${titan.sportType || "General"}
-              </span>
-            </div>
-
-            <div class="grid grid-cols-5 gap-2 text-center my-5 bg-slate-950/60 border border-slate-800/50 p-3 rounded-xl">
-              <div><p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">S0</p><p class="text-base font-black text-white">${attrs[0]}</p></div>
-              <div><p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">S1</p><p class="text-base font-black text-white">${attrs[1]}</p></div>
-              <div><p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">S2</p><p class="text-base font-black text-white">${attrs[2]}</p></div>
-              <div><p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">S3</p><p class="text-base font-black text-white">${attrs[3]}</p></div>
-              <div><p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">S4</p><p class="text-base font-black text-white">${attrs[4]}</p></div>
-            </div>
-          </div>
-
-          ${hasHighlights ? `
-            <button 
-              onclick="openHighlightModal('${titan.youtubeId}')" 
-              class="w-full mt-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 text-sm cursor-pointer"
-            >
-              <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-              Watch Highlights
-            </button>
-          ` : `
-            <div class="w-full mt-3 text-center py-2.5 text-xs text-slate-600 border border-slate-800 bg-slate-950/40 rounded-xl font-medium select-none">
-              No Highlights Linked
-            </div>
-          `}
-        </div>
-      `;
-
-      gridContainer.insertAdjacentHTML("beforeend", cardHtml);
+  gridBody.querySelectorAll("tr[data-athlete-id]").forEach((row) => {
+    row.addEventListener("click", () => {
+      const id = row.getAttribute("data-athlete-id");
+      const found = allAthletesCache.find(item => item.id === id);
+      if (found) playHighlight(found.data);
     });
   });
 }
+
+function subscribeToAthletes() {
+  if (unsubscribeAthletes) return;
+  unsubscribeAthletes = onSnapshot(query(collection(db, "athletes"), limit(120)), (snap) => {
+    allAthletesCache = snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => athleteTotal(b.data) - athleteTotal(a.data));
+    processAndRenderFilteredAthletes();
+  }, e => console.error(e));
+}
+
+async function purgeGridDuplicates() {
+  if (!isAdminProfile(currentProfile)) return;
+  const statusEl = $("user-status"); const oldText = statusEl?.textContent || "";
+  if (statusEl) statusEl.textContent = "Purging Extras...";
+  try {
+    const snap = await getDocs(collection(db, "athletes"));
+    const seen = new Set(); let deletedCount = 0;
+    for (const d of snap.docs) {
+      const n = String(d.data().name || "").trim().toLowerCase();
+      if (!n) continue;
+      if (seen.has(n)) { await deleteDoc(doc(db, "athletes", d.id)); deletedCount++; } 
+      else seen.add(n);
+    }
+    if (statusEl) statusEl.textContent = `Cleaned ${deletedCount} rows`;
+    setTimeout(() => { if (statusEl) statusEl.textContent = oldText; }, 3000);
+  } catch (e) { console.error(e); }
+}
+
+function renderChatMessage(message) {
+  const display = $("chat-box-display"); if (!display) return;
+  const row = document.createElement("div");
+  row.className = "text-gray-300 text-[11px] font-mono leading-relaxed animate-feed-slide";
+  row.innerHTML = `<span class="text-zeus-gold font-bold">[${escapeHtml(message.nickname || message.email || "User")}]:</span> <span>${escapeHtml(message.text || "")}</span>`;
+  display.appendChild(row); display.scrollTop = display.scrollHeight;
+}
+
+function subscribeToChat() {
+  if (unsubscribeChat) return;
+  unsubscribeChat = onValue(rtdbQuery(rtdbRef(rtdb, "warRoomMessages"), limitToLast(40)), (snap) => {
+    const display = $("chat-box-display"); if (!display) return;
+    display.innerHTML = `<div class="text-gray-600">[System]: Connection secure. Welcome to the Admin War Room.</div>`;
+    snap.forEach(child => { renderChatMessage(child.val()); });
+  }, e => console.error(e));
+}
+
+async function sendChatMessage() {
+  const input = $("chat-message-input"); const text = input?.value.trim();
+  if (!text || !currentUser || !currentProfile) return;
+  try {
+    await push(rtdbRef(rtdb, "warRoomMessages"), { text, uid: currentUser.uid, email: currentUser.email || "", nickname: currentProfile.nickname || currentProfile.email || "User", createdAt: rtdbServerTimestamp() });
+    input.value = "";
+  } catch (e) { console.error(e); }
+}
+
+async function handleSignedInUser(user) {
+  currentUser = user;
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    currentProfile = snap.exists() ? { uid: user.uid, email: user.email, ...snap.data() } : { uid: user.uid, email: user.email, role: "admin", nickname: "Mac10" };
+    updateAccessUI(currentProfile); subscribeToAthletes(); subscribeToChat();
+  } catch { updateAccessUI(null); } finally { hide("loading-overlay"); }
+}
+
+function handleSignedOutUser() {
+  currentUser = null; currentProfile = null;
+  updateAccessUI(null); subscribeToAthletes(); hide("loading-overlay");
+}
+
+function bindEvents() {
+  $("tier-select")?.addEventListener("change", () => { refreshSubTierOptions(); processAndRenderFilteredAthletes(); });
+  $("sub-tier-select")?.addEventListener("change", processAndRenderFilteredAthletes);
+
+  $("athlete-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!isAdminProfile(currentProfile)) return;
+    const nameIn = $("athlete-name"); const sportSel = $("athlete-sport"); const hlIn = $("athlete-highlight");
+    if (!nameIn?.value.trim()) return;
+
+    const tier = $("tier-select")?.value; const sub = $("sub-tier-select")?.value;
+    const newTitan = {
+      name: nameIn.value.trim(), sport: sportSel?.value || "Football",
+      tier: tier !== "all" ? tier : "pro-players", subCategory: sub !== "all" ? sub : "pro-major",
+      scores: [safeNumber($("score-0")?.value||90), safeNumber($("score-1")?.value||90), safeNumber($("score-2")?.value||90), safeNumber($("score-3")?.value||90), safeNumber($("score-4")?.value||90)],
+      highlightUrl: hlIn?.value.trim() || "", createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy: currentUser?.uid || "unknown"
+    };
+
+    try {
+      await addDoc(collection(db, "athletes"), newTitan);
+      nameIn.value = ""; if (hlIn) hlIn.value = "";
+      ["score-0", "score-1", "score-2", "score-3", "score-4"].forEach(id => { const el = $(id); if (el) el.value = ""; });
+    } catch (err) { console.error(err); }
+  });
+
+  $("admin-purge-btn")?.addEventListener("click", async () => {
+    if (confirm("Clean all duplicate entries off the St. Louis scoreboard?")) await purgeGridDuplicates();
+  });
+  $("header-auth-btn")?.addEventListener("click", async () => { if (currentUser) await signOut(auth); else show("login-modal"); });
+  $("modal-submit-login")?.addEventListener("click", async () => {
+    const e = $("login-email")?.value.trim(); const p = $("login-pass")?.value.trim();
+    if (!e || !p) return;
+    try { await signInWithEmailAndPassword(auth, e, p); hide("login-modal"); } catch { alert("Authorization Denied"); }
+  });
+  $("login-pass")?.addEventListener("keydown", async (e) => { if (e.key === "Enter") $("modal-submit-login")?.click(); });
+  $("send-chat-btn")?.addEventListener("click", sendChatMessage);
+  $("chat-message-input")?.addEventListener("keydown", async (e) => { if (e.key === "Enter") await sendChatMessage(); });
+}
+
+refreshSubTierOptions();
+bindEvents();
+onAuthStateChanged(auth, u => { if (u) handleSignedInUser(u); else handleSignedOutUser(); });
+
+window.appAuth = { logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), logOut: () => signOut(auth) };
