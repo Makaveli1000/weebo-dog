@@ -47,13 +47,12 @@
   </main>
 
   <!-- ==========================================
-       🏆 MAIN GRID ENVIRONMENT (ADMIN ACTIVE LAYER)
+       🏆 MAIN GRID ENVIRONMENT (UNIFIED ACTIVE LAYER)
        ========================================== -->
-  <main id="main-content" class="hidden max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+  <main id="main-content" class="hidden max-w-[1600px] mx-auto px-4 py-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
     
-    <!-- LEFT COLUMN: OPERATIONAL INPUTS & SELECTIONS -->
-    <div class="lg:col-span-1 space-y-6">
-      
+    <!-- COLUMN 1: CONTROL TERMINAL (INPUTS & FILTERS) -->
+    <div class="space-y-6">
       <!-- ATHLETE COMMAND CENTER (ADMIN DATA ENTRY PANEL) -->
       <div id="admin-panel" class="hidden border border-gray-900 bg-gradient-to-b from-gray-950 to-black p-4 rounded-xl">
         <h3 class="text-xs font-black tracking-wider text-yellow-500 uppercase mb-3 font-mono">Athlete Command Center</h3>
@@ -99,7 +98,6 @@
           </button>
         </form>
 
-        <!-- ⚠️ PHYSICAL ADMIN-ONLY SCRUB PURGE TRIGGER -->
         <button id="admin-purge-btn" class="hidden mt-3 w-full bg-red-950/40 hover:bg-red-600 border border-red-900/60 hover:border-red-500 text-red-400 hover:text-white font-bold py-2 px-4 rounded transition duration-200 uppercase tracking-wider text-[11px] font-mono">
           ⚠️ Clear Duplicates
         </button>
@@ -127,9 +125,8 @@
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: CORE ATHLETE LEADERBOARD GRID MATRIX -->
-    <div class="lg:col-span-3 space-y-6">
-      
+    <!-- COLUMN 2 & 3: MAIN SCOREBOARD DATA MATRIX (SPAN 2 WIDTH) -->
+    <div class="xl:col-span-2 space-y-6">
       <!-- APEX SPEED MARQUEE ACCENT -->
       <div class="border border-yellow-500/20 bg-yellow-500/5 p-4 rounded-xl flex items-center justify-between">
         <div>
@@ -160,12 +157,92 @@
               </tr>
             </thead>
             <tbody id="match-grid-body" class="text-sm font-mono divide-y divide-gray-900">
-              <!-- Instantly populated by real-time Firestore synchronization strings -->
+              <!-- Handled in real-time by Firebase sync engine -->
             </tbody>
           </table>
         </div>
       </div>
+
+      <!-- 📡 LIVE FEEDS AND BROADCAST COMMUNICATION GRID -->
+      <div class="border border-gray-900 bg-gradient-to-b from-gray-950 to-black p-4 rounded-xl space-y-3">
+        <h3 class="text-xs font-black tracking-wider text-yellow-500 uppercase font-mono">Communication Grid Live Feed</h3>
+        <div id="live-feed-container" class="h-40 overflow-y-auto border border-gray-900 bg-black/60 p-3 rounded font-mono text-xs text-gray-400 space-y-2">
+          <div class="text-yellow-500/80">🛰️ [SYSTEM]: Grid Synchronization fully active.</div>
+          <div class="text-gray-500">Waiting for live athletic events broadcast streaming pipelines...</div>
+        </div>
+      </div>
     </div>
+
+    <!-- COLUMN 4: WAR ROOM PORTAL, MEDIA LOCKER & SPORTS GEAR VAULT -->
+    <div class="space-y-6">
+      <!-- WAR ROOM PORTAL SECURE CHAT -->
+      <div class="border border-gray-900 bg-gradient-to-b from-gray-950 to-black p-4 rounded-xl flex flex-col h-64">
+        <h3 class="text-xs font-black tracking-wider text-yellow-500 uppercase font-mono mb-2">War Room Chat Terminal</h3>
+        <div id="chat-box-display" class="flex-1 overflow-y-auto border border-gray-900 bg-black/60 p-2 rounded text-xs font-mono mb-2 text-gray-300 space-y-1">
+          <div class="text-gray-600">[System]: Connection secure. Welcome to the Admin War Room.</div>
+        </div>
+        <div class="flex space-x-2">
+          <input type="text" id="chat-message-input" placeholder="Broadcast to War Room..." class="flex-1 bg-black border border-gray-800 rounded p-1.5 text-xs text-white focus:outline-none focus:border-yellow-500">
+          <button id="send-chat-btn" class="bg-yellow-500 hover:bg-yellow-400 text-black px-3 rounded font-bold text-xs uppercase font-mono">⟶</button>
+        </div>
+      </div>
+
+      <!-- MEDIA LOCKER CLOUD UPLOADS -->
+      <div class="border border-gray-900 bg-gradient-to-b from-gray-950 to-black p-4 rounded-xl space-y-3">
+        <h3 class="text-xs font-black tracking-wider text-yellow-500 uppercase font-mono">Media Locker Grid Vault</h3>
+        <div class="border-2 border-dashed border-gray-800 hover:border-yellow-500/40 rounded-xl p-6 text-center transition cursor-pointer bg-black/40">
+          <div class="text-xl mb-1">📁</div>
+          <span class="block text-xs text-gray-400 font-mono uppercase tracking-wider">Upload Video / Highlights</span>
+          <span class="block text-[9px] text-gray-600 font-mono mt-1">Max capacity monitored by Admin node</span>
+        </div>
+        <div class="flex justify-between items-center text-[10px] font-mono text-gray-500 uppercase">
+          <span>Storage Node: Optimal</span>
+          <span>Uploads: 0</span>
+        </div>
+      </div>
+
+      <!-- EXCLUSIVE SPORTS GEAR VAULT -->
+      <div class="border border-gray-900 bg-gradient-to-b from-gray-950 to-black p-4 rounded-xl space-y-3">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xs font-black tracking-wider text-yellow-500 uppercase font-mono">Exclusive Gear Vault</h3>
+          <span class="text-[9px] font-mono bg-yellow-500/10 text-yellow-400 px-2 py-0.5 rounded border border-yellow-500/20 uppercase tracking-widest">Drop 01</span>
+        </div>
+        
+        <!-- MERCHANDISE ITEM CARD RASTER GRID -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Item 1: Vashon Wolverines Custom Tee -->
+          <div class="bg-black/60 border border-gray-900 rounded-lg p-2.5 flex flex-col justify-between group hover:border-yellow-500/30 transition">
+            <div class="relative w-full aspect-square bg-gray-950 rounded border border-gray-900 overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-yellow-500 transition">
+              👕
+            </div>
+            <div class="mt-2">
+              <span class="block text-[10px] font-bold text-white tracking-tight truncate">Wolverines Premium Tee</span>
+              <span class="block text-[8px] font-mono text-gray-500 uppercase tracking-wider mt-0.5">"Outwork Yesterday" Edition</span>
+            </div>
+            <div class="flex justify-between items-center mt-2 pt-1 border-t border-gray-900/60">
+              <span class="text-xs font-mono font-black text-yellow-500">$30</span>
+              <button class="bg-gray-900 hover:bg-yellow-500 text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition">View</button>
+            </div>
+          </div>
+
+          <!-- Item 2: Exclusive Sports Grid Player Hoodie -->
+          <div class="bg-black/60 border border-gray-900 rounded-lg p-2.5 flex flex-col justify-between group hover:border-yellow-500/30 transition">
+            <div class="relative w-full aspect-square bg-gray-950 rounded border border-gray-900 overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-yellow-500 transition">
+               jacket
+            </div>
+            <div class="mt-2">
+              <span class="block text-[10px] font-bold text-white tracking-tight truncate">Snt.L.Mo Elite Hoodie</span>
+              <span class="block text-[8px] font-mono text-gray-500 uppercase tracking-wider mt-0.5">"Dominate Today" Heavyweight</span>
+            </div>
+            <div class="flex justify-between items-center mt-2 pt-1 border-t border-gray-900/60">
+              <span class="text-xs font-mono font-black text-yellow-500">$65</span>
+              <button class="bg-gray-900 hover:bg-yellow-500 text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition">View</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- ==========================================

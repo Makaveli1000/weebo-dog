@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { getFirestore, doc, getDoc, addDoc, collection, query, limit, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "firebase/firestore";
-import { getDatabase, ref as rtdbRef, set as rtdbSet } from "firebase/database";
+import { getDatabase, ref as rtdbRef, set as rtdbSet, push as rtdbPush, onChildAdded } from "firebase/database";
 
 // ==========================================
 // ⚡ CORE INFRASTRUCTURE CONFIGURATION
@@ -27,6 +27,8 @@ const rtdb = getDatabase(app);
 let currentUser = null;
 let currentProfile = null;
 let allAthletesCache = [];
+let selectedTierFilter = "all";
+let selectedSubTierFilter = "all";
 
 // ==========================================
 // 🛠️ COMPACT UTILITY TOOLKIT
@@ -102,19 +104,26 @@ function athleteTotal(d) {
 }
 
 // ==========================================
-// 📊 RENDER ENGINE (SPORTS HUB MATRIX)
+// 📊 RENDER ENGINE WITH ACTIVE DYNAMIC FILTERING
 // ==========================================
 function processAndRenderFilteredAthletes() {
   const gridBody = $("match-grid-body");
   if (!gridBody) return;
   
-  if (!allAthletesCache.length) { 
-    gridBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No athletes active.</td></tr>`; 
+  // Apply our user-selected filter parameters on the client array
+  const filteredData = allAthletesCache.filter(({ data }) => {
+    const matchTier = (selectedTierFilter === "all" || data.tier === selectedTierFilter);
+    const matchSub = (selectedSubTierFilter === "all" || data.subCategory === selectedSubTierFilter);
+    return matchTier && matchSub;
+  });
+
+  if (!filteredData.length) { 
+    gridBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No athletes active match this criteria.</td></tr>`; 
     return; 
   }
   
-  gridBody.innerHTML = allAthletesCache.map(({ data }) => `
-    <tr class="border-t border-gray-800">
+  gridBody.innerHTML = filteredData.map(({ data }) => `
+    <tr class="border-t border-gray-800 hover:bg-gray-950/40 transition">
       <td class="p-3 font-bold text-white">${escapeHtml(data.name)}</td>
       <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[0])}</td>
       <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[1])}</td>
@@ -123,13 +132,13 @@ function processAndRenderFilteredAthletes() {
     </tr>
   `).join("");
 
-  // Dynamically update the Apex Predator Marquee at the top
+  // Keep Global Apex Display anchored to absolute top overall performer
   if (allAthletesCache.length > 0) {
     const leader = allAthletesCache[0].data;
     if ($("apex-predator-name")) $("apex-predator-name").textContent = leader.name;
     if ($("apex-predator-score")) $("apex-predator-score").textContent = athleteTotal(leader);
-    if ($("grid-count-badge")) $("grid-count-badge").textContent = `${allAthletesCache.length} Active`;
   }
+  if ($("grid-count-badge")) $("grid-count-badge").textContent = `${filteredData.length} Shown`;
 }
 
 function subscribeToAthletes() {
@@ -140,13 +149,90 @@ function subscribeToAthletes() {
 }
 
 // ==========================================
+// 📡 REAL-TIME WAR ROOM TERMINAL CHAT ENGINE
+// ==========================================
+function initWarRoomChat() {
+  const chatDisplay = $("chat-box-display");
+  if (!chatDisplay) return;
+
+  const chatRef = rtdbRef(rtdb, "war_room_messages");
+  
+  // Realtime structural listening thread
+  onChildAdded(chatRef, (snapshot) => {
+    const data = snapshot.val();
+    const msgDiv = document.createElement("div");
+    msgDiv.className = "py-0.5 border-b border-gray-900/40";
+    msgDiv.innerHTML = `<span class="text-yellow-500 font-bold">${escapeHtml(data.user)}:</span> <span class="text-gray-200">${escapeHtml(data.text)}</span>`;
+    chatDisplay.appendChild(msgDiv);
+    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+  });
+}
+
+async function sendWarRoomBroadcast() {
+  const inputEl = $("chat-message-input");
+  const text = inputEl?.value.trim();
+  if (!text) return;
+
+  const userHandle = currentProfile?.nickname || currentProfile?.email || "Mortal Node";
+  try {
+    const chatRef = rtdbRef(rtdb, "war_room_messages");
+    const newMsgRef = rtdbPush(chatRef);
+    await rtdbSet(newMsgRef, {
+      user: userHandle,
+      text: text,
+      timestamp: Date.now()
+    });
+    if (inputEl) inputEl.value = "";
+  } catch (err) {
+    console.error("Transmission breakdown:", err);
+  }
+}
+
+// ==========================================
+// 📡 LIVE STREAM BROADCAST EVENT SIMULATOR
+// ==========================================
+function startLiveBroadcastTicker() {
+  const liveFeedContainer = $("live-feed-container");
+  if (!liveFeedContainer) return;
+
+  const dynamicBroadcastAlerts = [
+    "🔥 [TRAINING]: Vashon Wolverines working out. 'Outwork Yesterday. Dominate Today.'",
+    "🚀 [PRO MATRIX]: Jayson Tatum attribute tracking metrics initialized.",
+    "🏟️ [UFL]: Battlehawks attendance projecting maximum capacity limits.",
+    "⚡ [APEX SHIFT]: Recruiting analysis engines syncing high school score arrays.",
+    "📣 [GEAR VAULT]: Premium Drop 01 Apparel allocation active inside warehouse hooks."
+  ];
+
+  setInterval(() => {
+    if (allAthletesCache.length === 0) return;
+    
+    // Pick a random system alert or random premium athlete metric stream
+    let notificationText = "";
+    if (Math.random() > 0.4) {
+      const luckyPick = allAthletesCache[Math.floor(Math.random() * allAthletesCache.length)].data;
+      notificationText = `📈 [EVALUATION MATRIX]: ${luckyPick.name} tracking total composite score of ${athleteTotal(luckyPick)} in disciplines.`;
+    } else {
+      notificationText = dynamicBroadcastAlerts[Math.floor(Math.random() * dynamicBroadcastAlerts.length)];
+    }
+
+    const reportLine = document.createElement("div");
+    reportLine.className = "text-yellow-400/90 font-mono animate-fade-in";
+    reportLine.textContent = `📡 ${new Date().toLocaleTimeString()} - ${notificationText}`;
+    
+    liveFeedContainer.prepend(reportLine);
+    if (liveFeedContainer.children.length > 25) {
+      liveFeedContainer.removeChild(liveFeedContainer.lastChild);
+    }
+  }, 9000); // Emits structural telemetry updates every 9 seconds
+}
+
+// ==========================================
 // 🧹 AUTHENTICATED ADMINISTRATIVE PURGE ENGINE
 // ==========================================
 async function purgeGridDuplicates() {
   const statusEl = $("user-status");
   const oldText = statusEl ? statusEl.textContent : "";
   if (statusEl) statusEl.textContent = "Purging Extras...";
-  console.log("🧹 Initializing authenticated Firestore sweep for duplicates...");
   
   try {
     const querySnapshot = await getDocs(collection(db, "athletes"));
@@ -157,18 +243,15 @@ async function purgeGridDuplicates() {
       const name = document.data().name;
       if (seen.has(name)) {
         await deleteDoc(doc(db, "athletes", document.id));
-        console.log(`🗑️ Wiped duplicate document: ${name}`);
         deletedCount++;
       } else {
         seen.add(name);
       }
     }
     if (statusEl) statusEl.textContent = "Admin: Mac10 (Cleaned!)";
-    console.log(`✅ Success! Purged ${deletedCount} duplicate rows cleanly.`);
     setTimeout(() => { if (statusEl) statusEl.textContent = oldText; }, 3000);
   } catch (err) {
-    console.error("❌ Purge operation failed:", err);
-    if (statusEl) statusEl.textContent = "Purge Blocked!";
+    console.error("Purge operation stalled:", err);
   }
 }
 
@@ -182,6 +265,8 @@ async function handleSignedInUser(user) {
     currentProfile = snap.exists() ? snap.data() : { uid: user.uid, email: user.email, role: "admin", nickname: "Mac10" };
     updateAccessUI(currentProfile);
     subscribeToAthletes();
+    initWarRoomChat();
+    startLiveBroadcastTicker();
   } catch(err) { 
     console.error(err); 
   } finally { 
@@ -198,86 +283,83 @@ function handleSignedOutUser() {
 }
 
 // ==========================================
-// 🎛️ EVENT LISTENERS MATRIX BOUNDS
+// 🎛️ SYSTEM CONTROLLER EVENT LISTENERS MATRIX
 // ==========================================
 function bindEvents() {
-  // 1. GLOBAL ATHLETE LOOKUP TERMINAL
-  $("global-search-input")?.addEventListener("keydown", async (e) => {
-    if (e.key === "Enter") {
-      const qText = $("global-search-input").value.trim();
-      if (!qText) return;
-      
-      $("global-search-status").textContent = "SCANNING WEB...";
-      try {
-        await fetch("/.netlify/functions/searchGlobalAthlete", { 
-          method: "POST", 
-          body: JSON.stringify({ athleteName: qText }) 
-        });
-      } catch (err) {
-        console.error("Global search sweep failed:", err);
-      } finally {
-        $("global-search-status").textContent = "System Ready";
-        $("global-search-input").value = "";
-      }
+  // 1. DYNAMIC DROPDOWN INTERCEPT CONDITIONAL MATRIX (SORTING LAYOUTS)
+  $("tier-select")?.addEventListener("change", (e) => {
+    selectedTierFilter = e.target.value;
+    const subSelect = $("sub-tier-select");
+    if (!subSelect) return;
+
+    // Dynamically re-populate secondary sub-tier items to map clean choices
+    if (selectedTierFilter === "highschool") {
+      subSelect.innerHTML = `
+        <option value="all">All High Schools</option>
+        <option value="phsl">Public High School League (Vashon, Soldan...)</option>
+        <option value="mcc">Metro Catholic (CBC, SLUH...)</option>
+      `;
+    } else if (selectedTierFilter === "pro-players") {
+      subSelect.innerHTML = `
+        <option value="all">All Pro Players</option>
+        <option value="pro-major">Major US Leagues (NFL, NBA, MLB)</option>
+        <option value="pro-cfl-alt">Alternative Pro (CFL, Arena)</option>
+      `;
+    } else {
+      subSelect.innerHTML = `<option value="all">All Sub-Categories</option>`;
     }
+    selectedSubTierFilter = "all";
+    processAndRenderFilteredAthletes();
   });
 
-  // 2. LIVE DEPLOY TITAN FORM CAPTURE
+  $("sub-tier-select")?.addEventListener("change", (e) => {
+    selectedSubTierFilter = e.target.value;
+    processAndRenderFilteredAthletes();
+  });
+
+  // 2. WAR ROOM TRANSMISSION BROADCAST HOOKS
+  $("send-chat-btn")?.addEventListener("click", sendWarRoomBroadcast);
+  $("chat-message-input")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendWarRoomBroadcast();
+  });
+
+  // 3. LIVE DEPLOY TITAN FORM INTERCEPTOR
   const deployForm = $("athlete-form") || document.querySelector("form");
   deployForm?.addEventListener("submit", async (e) => {
     e.preventDefault(); 
-
-    const nameInput = $("athlete-name") || document.querySelector("input[placeholder*='Name']");
-    const sportSelect = $("athlete-sport") || document.querySelector("select");
+    const nameInput = $("athlete-name");
+    const sportSelect = $("athlete-sport");
     
-    const s0 = safeNumber($("score-0")?.value || $("s0")?.value || 90);
-    const s1 = safeNumber($("score-1")?.value || $("s1")?.value || 90);
-    const s2 = safeNumber($("score-2")?.value || $("s2")?.value || 90);
-    const s3 = safeNumber($("score-3")?.value || $("s3")?.value || 90);
-    const s4 = safeNumber($("score-4")?.value || $("s4")?.value || 90);
-
-    if (!nameInput || !nameInput.value.trim()) {
-      alert("Please enter a Titan Name first!");
-      return;
-    }
+    if (!nameInput || !nameInput.value.trim()) return alert("Enter Titan Name!");
 
     const newTitan = {
       name: nameInput.value.trim(),
       sport: sportSelect ? sportSelect.value : "Football",
-      tier: "pro-players", 
-      subCategory: "pro-major",
-      scores: [s0, s1, s2, s3, s4],
+      tier: selectedTierFilter === "all" ? "pro-players" : selectedTierFilter, 
+      subCategory: selectedSubTierFilter === "all" ? "pro-major" : selectedSubTierFilter,
+      scores: [
+        safeNumber($("score-0")?.value || 90),
+        safeNumber($("score-1")?.value || 90),
+        safeNumber($("score-2")?.value || 90),
+        safeNumber($("score-3")?.value || 90),
+        safeNumber($("score-4")?.value || 90)
+      ],
       createdAt: new Date().toISOString()
     };
 
     try {
-      console.log("🛰️ Deploying custom unique Titan to Firestore:", newTitan.name);
       await addDoc(collection(db, "athletes"), newTitan);
-      
       nameInput.value = "";
-      ["score-0", "score-1", "score-2", "score-3", "score-4", "s0", "s1", "s2", "s3", "s4"].forEach(id => {
-        const el = $(id);
-        if (el) el.value = "";
-      });
-    } catch (err) {
-      console.error("❌ Failed to deploy Titan:", err);
-    }
+      ["score-0", "score-1", "score-2", "score-3", "score-4"].forEach(id => { if($(id)) $(id).value = ""; });
+    } catch (err) { console.error(err); }
   });
 
-  // 3. PHYSICAL BUTTON CLICK PURGE TRIGGER
+  // 4. PHYSICAL SCRUB TRIGGER & AUTH MANAGEMENT
   $("admin-purge-btn")?.addEventListener("click", async () => {
-    if (confirm("Are you sure you want to clean all duplicate entries off the St. Louis scoreboard?")) {
-      await purgeGridDuplicates();
-    }
+    if (confirm("Clean all duplicate entries off the St. Louis scoreboard?")) await purgeGridDuplicates();
   });
-
-  // 4. AUTH BUTTON
-  $("header-auth-btn")?.addEventListener("click", () => { 
-    if (currentUser) signOut(auth); 
-    else show("login-modal"); 
-  });
+  $("header-auth-btn")?.addEventListener("click", () => { if (currentUser) signOut(auth); else show("login-modal"); });
   
-  // 5. MODAL AUTH SUBMIT BRIDGE
   $("modal-submit-login")?.addEventListener("click", async () => {
     const email = $("login-email")?.value.trim();
     const pass = $("login-pass")?.value.trim();
@@ -285,9 +367,7 @@ function bindEvents() {
     try {
       await signInWithEmailAndPassword(auth, email, pass);
       hide("login-modal");
-    } catch (err) {
-      alert("Authorization Denied: Check identity key configuration.");
-    }
+    } catch (err) { alert("Authorization Denied."); }
   });
 }
 
@@ -295,9 +375,5 @@ function bindEvents() {
 bindEvents();
 onAuthStateChanged(auth, u => { if (u) handleSignedInUser(u); else handleSignedOutUser(); });
 
-// Global Namespace bridges
-window.appAuth = { 
-  logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), 
-  logOut: () => signOut(auth) 
-};
+window.appAuth = { logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), logOut: () => signOut(auth) };
 window.runGridPurge = purgeGridDuplicates;
