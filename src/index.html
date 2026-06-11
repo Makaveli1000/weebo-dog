@@ -8,6 +8,9 @@
 </head>
 <body class="bg-zeus-black text-gray-100 min-h-screen font-sans antialiased selection:bg-zeus-gold selection:text-black">
 
+  <!-- ==========================================
+       ⚡ SYSTEM HEADER NAVIGATION MATRIX
+       ========================================== -->
   <header class="border-b border-zeus-border bg-zeus-black/80 backdrop-blur sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
     <div class="flex items-center space-x-3">
       <img src="zeus-avatar.png" alt="Zeus Avatar" class="w-10 h-10 rounded-full border border-zeus-gold/50 shadow-zeus-soft">
@@ -21,11 +24,17 @@
     </button>
   </header>
 
+  <!-- ==========================================
+       ⏳ PROTECTIVE CRASH EXIT GATEWAY (LOADING OVERLAY)
+       ========================================== -->
   <div id="loading-overlay" class="fixed inset-0 bg-zeus-black z-50 flex flex-col items-center justify-center space-y-4">
     <div class="text-2xl font-black tracking-widest text-zeus-gold animate-pulse uppercase">⚡ Summoning Zeus...</div>
     <div class="text-[10px] font-mono text-gray-600 tracking-widest uppercase">Preparing The Grid Layout Matrix</div>
   </div>
 
+  <!-- ==========================================
+       🛡️ UNAUTHENTICATED RESTRICTION (PAYWALL LAYER)
+       ========================================== -->
   <main id="paywall-content" class="hidden max-w-md mx-auto mt-20 px-6 text-center">
     <div class="border border-zeus-border bg-zeus-panel p-8 rounded-xl shadow-panel-deep">
       <div class="text-4xl mb-4">👑</div>
@@ -37,9 +46,14 @@
     </div>
   </main>
 
+  <!-- ==========================================
+       🏆 MAIN GRID ENVIRONMENT (UNIFIED ACTIVE LAYER)
+       ========================================== -->
   <main id="main-content" class="hidden max-w-grid mx-auto px-4 py-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
     
+    <!-- COLUMN 1: CONTROL TERMINAL (INPUTS & FILTERS) -->
     <div class="space-y-6">
+      <!-- ATHLETE COMMAND CENTER (ADMIN DATA ENTRY PANEL) -->
       <div id="admin-panel" class="hidden border border-zeus-border bg-zeus-panel p-4 rounded-xl">
         <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase mb-3 font-mono">Athlete Command Center</h3>
         <form id="athlete-form" class="space-y-3">
@@ -93,6 +107,7 @@
         </button>
       </div>
 
+      <!-- FILTER CONTROLLER LAYOUT MATRIX -->
       <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-4">
         <h3 class="text-xs font-black tracking-wider text-gray-400 uppercase font-mono">Grid Filters</h3>
         <div>
@@ -114,7 +129,9 @@
       </div>
     </div>
 
+    <!-- COLUMN 2 & 3: MAIN SCOREBOARD DATA MATRIX (SPAN 2 WIDTH) -->
     <div class="xl:col-span-2 space-y-6">
+      <!-- APEX SPEED MARQUEE ACCENT -->
       <div class="border border-zeus-gold/20 bg-zeus-goldSoft p-4 rounded-xl flex items-center justify-between shadow-zeus-soft">
         <div>
           <span class="text-[10px] font-mono text-zeus-gold uppercase tracking-widest block">Current Apex Predator</span>
@@ -126,6 +143,7 @@
         </div>
       </div>
 
+      <!-- LIVE ROSTER LEADERBOARD DATA TABLE -->
       <div class="border border-zeus-border bg-zeus-black rounded-xl overflow-hidden">
         <div class="p-4 border-b border-zeus-border bg-zeus-panel/50 flex justify-between items-center">
           <span class="text-xs font-black text-white uppercase tracking-wider font-mono">St. Louis Metric Evaluation Matrix</span>
@@ -143,17 +161,58 @@
               </tr>
             </thead>
             <tbody id="match-grid-body" class="text-sm font-mono divide-y divide-zeus-border">
-              </tbody>
+              <!-- Handled in real-time by Firebase sync engine -->
+            </tbody>
           </table>
         </div>
       </div>
 
+      <!-- ==========================================
+           ⚔️ WAR ROOM DRAFT BOARD & ROSTER BUILDER
+           ========================================== -->
+      <div id="roster-builder-vault" class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-4">
+        <div class="flex justify-between items-center border-b border-zeus-border/60 pb-2">
+          <div>
+            <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Live War Room Draft Board</h3>
+            <p class="text-[10px] font-mono text-gray-500 uppercase">Click any player in the matrix above to assign them below</p>
+          </div>
+          <button id="reset-draft-btn" class="bg-zeus-red/20 hover:bg-zeus-red border border-red-900/60 hover:border-red-500 text-red-400 hover:text-white font-mono text-[10px] font-bold uppercase px-2.5 py-1 rounded transition duration-150">
+            Reset Draft Board
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- SQUAD A: TEAM ST. LOUIS ELITE -->
+          <div class="bg-zeus-black/40 border border-zeus-border rounded-lg p-3 space-y-2">
+            <div class="flex justify-between items-center font-mono border-b border-zeus-border/40 pb-1.5">
+              <span class="text-xs font-black text-white uppercase tracking-tight">⚜️ Team St. Louis Elite</span>
+              <span id="squad-a-rating" class="text-[10px] font-bold bg-zeus-goldSoft text-zeus-gold px-1.5 py-0.5 rounded border border-zeus-gold/10">AVG: 0</span>
+            </div>
+            <div id="squad-a-slots" class="space-y-1.5 min-h-[120px] flex flex-col justify-start">
+              <div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Click an athlete above to draft.</div>
+            </div>
+          </div>
+
+          <!-- SQUAD B: REGIONAL CHALLENGERS -->
+          <div class="bg-zeus-black/40 border border-zeus-border rounded-lg p-3 space-y-2">
+            <div class="flex justify-between items-center font-mono border-b border-zeus-border/40 pb-1.5">
+              <span class="text-xs font-black text-gray-400 uppercase tracking-tight">🚀 Regional Challengers</span>
+              <span id="squad-b-rating" class="text-[10px] font-bold bg-gray-900 text-gray-500 px-1.5 py-0.5 rounded border border-zeus-border">AVG: 0</span>
+            </div>
+            <div id="squad-b-slots" class="space-y-1.5 min-h-[120px] flex flex-col justify-start">
+              <div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Click an athlete above to draft.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📺 LIVE HIGHLIGHT MEDIA MATRIX DISPLAY -->
       <div id="highlight-theater" class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
         <div class="flex justify-between items-center">
           <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Titan Highlight Theater</h3>
           <span id="now-playing-title" class="text-[10px] font-mono text-gray-500 uppercase truncate max-w-[250px]">Select a row to play</span>
         </div>
-        <div class="aspect-video w-full rounded-lg overflow-hidden bg-black/60 border border-zeus-border flex items-center justify-center relative">
+        <div class="aspect-video w-full rounded-lg overflow-hidden bg-black/60 border border-zeus-border flex items-center justify-center relative p-2">
           <div id="video-placeholder" class="text-center p-6 space-y-2 absolute inset-0 flex flex-col items-center justify-center bg-zeus-black/90 z-10 transition-opacity duration-300">
             <span class="text-3xl">🎥</span>
             <span class="block text-xs text-gray-500 font-mono uppercase tracking-wider">No Highlight Selected</span>
@@ -162,6 +221,7 @@
         </div>
       </div>
 
+      <!-- 📡 LIVE FEEDS AND BROADCAST COMMUNICATION GRID -->
       <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
         <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Communication Grid Live Feed</h3>
         <div id="live-feed-container" class="h-40 overflow-y-auto border border-zeus-border bg-zeus-black/60 p-3 rounded font-mono text-xs text-gray-400 space-y-2">
@@ -171,7 +231,9 @@
       </div>
     </div>
 
+    <!-- COLUMN 4: WAR ROOM PORTAL, MEDIA LOCKER & SPORTS GEAR VAULT -->
     <div class="space-y-6">
+      <!-- WAR ROOM PORTAL SECURE CHAT -->
       <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl flex flex-col h-64">
         <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono mb-2">War Room Chat Terminal</h3>
         <div id="chat-box-display" class="flex-1 overflow-y-auto border border-zeus-border bg-zeus-black/60 p-2 rounded text-xs font-mono mb-2 text-gray-300 space-y-1">
@@ -183,6 +245,7 @@
         </div>
       </div>
 
+      <!-- MEDIA LOCKER CLOUD UPLOADS -->
       <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
         <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Media Locker Grid Vault</h3>
         <div class="border-2 border-dashed border-zeus-border hover:border-zeus-gold/40 rounded-xl p-6 text-center transition cursor-pointer bg-zeus-black/40">
@@ -196,6 +259,7 @@
         </div>
       </div>
 
+      <!-- EXCLUSIVE SPORTS GEAR VAULT -->
       <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
         <div class="flex justify-between items-center">
           <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Exclusive Gear Vault</h3>
@@ -234,6 +298,9 @@
 
   </main>
 
+  <!-- ==========================================
+       🔐 ACCESS CHALLENGE CAPTURE GATE (LOGIN MODAL)
+       ========================================== -->
   <div id="login-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-modal-pop">
     <div class="border border-zeus-border bg-zeus-black max-w-sm w-full p-6 rounded-xl shadow-panel-deep relative">
       <h3 class="text-base font-black text-white uppercase tracking-tight mb-4 font-mono text-center">Establish Administrative Security</h3>

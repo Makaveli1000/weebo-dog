@@ -22,13 +22,17 @@ const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
 // ==========================================
-// APPLICATION STATE MEMORY
+// APPLICATION GLOBAL STATE MEMORY
 // ==========================================
 let currentUser = null;
 let currentProfile = null;
 let allAthletesCache = [];
 let unsubscribeAthletes = null;
 let unsubscribeChat = null;
+
+// DRAFT BOARD ARRAYS MEMORY NODES
+let squadA = [];
+let squadB = [];
 
 // ==========================================
 // COMPACT UTILITY TOOLKIT
@@ -100,6 +104,50 @@ function playHighlight(athlete) {
   placeholder.classList.add("hidden", "opacity-0", "pointer-events-none");
   if (title) title.textContent = `Now Playing: ${athlete?.name || "Titan Highlight"}`;
 }
+
+// ==========================================
+// ⚜️ LIVE WAR ROOM DRAFT BOARD MATH & RENDERING ENGINE
+// ==========================================
+function calculateSquadAverages() {
+  const calcAvg = (arr) => arr.length ? Math.round(arr.reduce((sum, p) => sum + athleteTotal(p), 0) / arr.length) : 0;
+  setText("squad-a-rating", `AVG: ${calcAvg(squadA)}`);
+  setText("squad-b-rating", `AVG: ${calcAvg(squadB)}`);
+}
+
+function renderDraftBoards() {
+  const slotA = $("squad-a-slots");
+  const slotB = $("squad-b-slots");
+  
+  const rowMarkup = (p, index, squadType) => `
+    <div class="flex items-center justify-between bg-zeus-panel border border-zeus-border/80 rounded px-2.5 py-1.5 text-xs font-mono animate-feed-slide">
+      <div class="truncate max-w-[180px]">
+        <span class="font-bold text-white">${escapeHtml(p.name)}</span>
+        <span class="text-[9px] text-gray-500 block uppercase">${escapeHtml(p.sport)}</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span class="font-black text-zeus-gold">${athleteTotal(p)}</span>
+        <button onclick="window.dropFromSquad('${squadType}', ${index})" class="text-gray-600 hover:text-zeus-red font-bold text-sm px-1">&times;</button>
+      </div>
+    </div>`;
+
+  if (slotA) {
+    slotA.innerHTML = squadA.length 
+      ? squadA.map((p, i) => rowMarkup(p, i, 'A')).join("")
+      : `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Click an athlete above to draft.</div>`;
+  }
+  if (slotB) {
+    slotB.innerHTML = squadB.length 
+      ? squadB.map((p, i) => rowMarkup(p, i, 'B')).join("")
+      : `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Click an athlete above to draft.</div>`;
+  }
+  calculateSquadAverages();
+}
+
+window.dropFromSquad = (squadType, index) => {
+  if (squadType === 'A') squadA.splice(index, 1);
+  else squadB.splice(index, 1);
+  renderDraftBoards();
+};
 
 // ==========================================
 // ST. LOUIS BASELINE SPORTS SEEDS
@@ -215,7 +263,23 @@ function processAndRenderFilteredAthletes() {
     row.addEventListener("click", () => {
       const id = row.getAttribute("data-athlete-id");
       const found = allAthletesCache.find(item => item.id === id);
-      if (found) playHighlight(found.data);
+      if (!found) return;
+
+      // 1. Play headline track highlight video natively
+      playHighlight(found.data);
+
+      // 2. Assign to Custom War Room Draft Boards
+      const targetSquad = prompt(`Draft ${found.data.name} to which War Room Roster?\nType '1' for Team St. Louis Elite\nType '2' for Regional Challengers`);
+      
+      if (targetSquad === "1") {
+        if (squadA.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster A.");
+        squadA.push(found.data);
+        renderDraftBoards();
+      } else if (targetSquad === "2") {
+        if (squadB.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster B.");
+        squadB.push(found.data);
+        renderDraftBoards();
+      }
     });
   });
 }
@@ -287,7 +351,7 @@ const ST_LOUIS_TICKER_ALERTS = [
   { prefix: "🐯 [MIZZOU]", text: "Luther Burden III clocked at a split-second acceleration burst in open-field camp reps.", color: "text-zeus-gold" },
   { prefix: "⚾ [MLB]", text: "Cardinals bullpen registers optimal spin rates on closing strikeout sequences down at Busch Stadium.", color: "text-gray-300" },
   { prefix: "🚨 [SYSTEM]", text: "Metric Matrix updated. 4 new regional player profiles pushed to primary database storage node.", color: "text-red-400" },
-  { prefix: "⚽ [MLS]", text: "CITY SC pressuring structural defensive lines early with aggressive high-counter transitions.", color: "text-white" },
+  { prefix: "╚► [MLS]", text: "CITY SC pressuring structural defensive lines early with aggressive high-counter transitions.", color: "text-white" },
   { prefix: "🏀 [PHSL]", text: "Soldan Prep lighting up the perimeter, shooting a blistering 54% from deep in early scrimmage.", color: "text-gray-400" },
   { prefix: "🦅 [CFL]", text: "Macler Cody (Mac10) breaks another perimeter coverage tracking matrix, clearing a 40-yard gain.", color: "text-zeus-gold" },
   { prefix: "👟 [TRACK]", text: "Lincoln High relay squad shatters regional meet floor times, setting a brand new record.", color: "text-white" },
@@ -336,6 +400,11 @@ function handleSignedOutUser() {
 function bindEvents() {
   $("tier-select")?.addEventListener("change", () => { refreshSubTierOptions(); processAndRenderFilteredAthletes(); });
   $("sub-tier-select")?.addEventListener("change", processAndRenderFilteredAthletes);
+
+  $("reset-draft-btn")?.addEventListener("click", () => {
+    squadA = []; squadB = [];
+    renderDraftBoards();
+  });
 
   $("athlete-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
