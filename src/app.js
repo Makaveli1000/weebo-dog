@@ -1,7 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, addDoc, collection, query, limit, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, query, limit, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "firebase/firestore";
 import { getDatabase, ref as rtdbRef, push, onValue, serverTimestamp as rtdbServerTimestamp, query as rtdbQuery, limitToLast } from "firebase/database";
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 // ==========================================
 // ⚡ CORE INFRASTRUCTURE CONFIGURATION
@@ -20,6 +21,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
+const storage = getStorage(app);
 
 // ==========================================
 // APPLICATION GLOBAL STATE MEMORY
@@ -29,6 +31,8 @@ let currentProfile = null;
 let allAthletesCache = [];
 let unsubscribeAthletes = null;
 let unsubscribeChat = null;
+let activeSelectedAthleteId = null; 
+let totalSuccessfulUploads = 0;
 
 // DRAFT BOARD ARRAYS MEMORY NODES
 let squadA = [];
@@ -56,8 +60,12 @@ window.show = show;
 window.hide = hide;
 
 // ==========================================
-// 🎥 VIDEO URL HELPERS & THEATER ENGINE
+// 🎥 DUAL-VIEW PORT MEDIA THEATER CONTROLLER
 // ==========================================
+function isFirebaseStorageUrl(url = "") {
+  return url.includes("firebasestorage.googleapis.com") || url.includes(".appspot.com");
+}
+
 function toEmbedUrl(url = "") {
   const raw = String(url).trim();
   if (!raw) return "";
@@ -85,28 +93,110 @@ function toEmbedUrl(url = "") {
 }
 
 function playHighlight(athlete) {
-  const iframe = $("theater-iframe");
+  const viewport = $("theater-media-viewport");
   const placeholder = $("video-placeholder");
   const title = $("now-playing-title");
-  if (!iframe || !placeholder) return;
+  if (!viewport || !placeholder) return;
 
-  const embedUrl = toEmbedUrl(athlete?.highlightUrl || athlete?.highlight || "");
-  if (!embedUrl) {
-    iframe.src = "";
-    iframe.classList.add("hidden");
-    placeholder.classList.remove("hidden", "opacity-0", "pointer-events-none");
-    if (title) title.textContent = `${athlete?.name || "Titan"}: No highlight attached`;
+  const targetUrl = String(athlete?.highlightUrl || athlete?.highlight || "").trim();
+
+  if (!targetUrl) {
+    viewport.innerHTML = "";
+    placeholder.classList.remove("hidden", "opacity-0");
+    if (title) title.textContent = `${athlete?.name || "Titan"}: No clip connected`;
     return;
   }
 
-  iframe.src = embedUrl;
-  iframe.classList.remove("hidden");
-  placeholder.classList.add("hidden", "opacity-0", "pointer-events-none");
+  placeholder.classList.add("hidden", "opacity-0");
   if (title) title.textContent = `Now Playing: ${athlete?.name || "Titan Highlight"}`;
+
+  if (isFirebaseStorageUrl(targetUrl) || targetUrl.endsWith(".mp4") || targetUrl.endsWith(".webm")) {
+    viewport.innerHTML = `
+      <video id="theater-native-player" src="${targetUrl}" controls autoplay class="w-full h-full rounded border border-zeus-border/40 bg-black">
+        Your browser container does not support video elements.
+      </video>`;
+  } else {
+    const embedUrl = toEmbedUrl(targetUrl);
+    viewport.innerHTML = `
+      <iframe id="theater-iframe" src="${escapeHtml(embedUrl)}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  }
 }
 
 // ==========================================
-// ⚜️ LIVE WAR ROOM DRAFT BOARD MATH & RENDERING ENGINE
+// 📥 CLOUD STORAGE RAW MEDIA LOCKER DISPATCHER
+// ==========================================
+function initializeMediaLockerEngine() {
+  const fileInput = $("media-locker-file-input");
+  if (!fileInput) return;
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!isAdminProfile(currentProfile)) {
+      alert("Administrative verification token missing. Stream channel access denied.");
+      fileInput.value = "";
+      return;
+    }
+
+    if (!activeSelectedAthleteId) {
+      alert("Operational Fault: Select a player row from the matrix before uploading a file.");
+      fileInput.value = "";
+      return;
+    }
+
+    const matchedAthlete = allAthletesCache.find(p => p.id === activeSelectedAthleteId);
+    const sanitizedTitle = (matchedAthlete?.data?.name || "unnamed").replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const fileExtension = file.name.split('.').pop();
+    
+    // Adjusted storage location route path to cleanly sync with updated rules
+    const storagePath = `highlights/${activeSelectedAthleteId}/${sanitizedTitle}.${fileExtension}`;
+    
+    const targetRef = storageRef(storage, storagePath);
+    const uploadTask = uploadBytesResumable(targetRef, file);
+
+    setText("upload-status-text", "Streaming File data...");
+    setText("upload-status-icon", "⏳");
+
+    uploadTask.on('state_changed', 
+      (snapshot) => {
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        setText("upload-progress-sub", `PIPE TRANSACTING: ${progress}% COMPLETE`);
+      }, 
+      (error) => {
+        console.error("Cloud storage stream faulted:", error);
+        setText("upload-status-text", "Upload Failure");
+        setText("upload-status-icon", "❌");
+        setText("upload-progress-sub", "Check security permissions.");
+        fileInput.value = "";
+      }, 
+      async () => {
+        try {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          
+          const docRef = doc(db, "athletes", activeSelectedAthleteId);
+          await updateDoc(docRef, {
+            highlightUrl: downloadUrl,
+            updatedAt: serverTimestamp()
+          });
+
+          totalSuccessfulUploads++;
+          setText("upload-status-text", "GRID BIND COMPLETED");
+          setText("upload-status-icon", "✅");
+          setText("upload-progress-sub", `${file.name.substring(0, 18)}... linked`);
+          setText("upload-count-badge", `Uploads: ${totalSuccessfulUploads}`);
+          
+          fileInput.value = "";
+        } catch (err) {
+          console.error("Binding configuration array update rejected:", err);
+        }
+      }
+    );
+  });
+}
+
+// ==========================================
+// ⚡ LIVE WAR ROOM DRAFT BOARD INTERACTIVE MATRIX
 // ==========================================
 function calculateSquadAverages() {
   const calcAvg = (arr) => arr.length ? Math.round(arr.reduce((sum, p) => sum + athleteTotal(p), 0) / arr.length) : 0;
@@ -149,13 +239,13 @@ window.dropFromSquad = (squadType, index) => {
   renderDraftBoards();
 };
 
-// EXPOSE SINGLE-TITAN DIRECT PURGE HOOK TO THE DOM MATRIX
 window.directPurgeRow = async (e, id, name) => {
-  e.stopPropagation(); // Prevents prompt script collision!
+  e.stopPropagation();
   if (!isAdminProfile(currentProfile)) return;
   if (confirm(`Are you sure you want to permanently erase ${name} from the database?`)) {
     try {
       await deleteDoc(doc(db, "athletes", id));
+      if (activeSelectedAthleteId === id) activeSelectedAthleteId = null;
     } catch (err) {
       console.error("Purge system rejected:", err);
     }
@@ -163,7 +253,7 @@ window.directPurgeRow = async (e, id, name) => {
 };
 
 // ==========================================
-// ST. LOUIS BASELINE SPORTS SEEDS
+// ST. LOUIS BASELINE INITIALIZATION SEEDS
 // ==========================================
 const ST_LOUIS_INITIAL_SEEDS = [
   { name: "Vashon Elite Squad", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [95, 92, 94, 96, 98], highlightUrl: "https://www.youtube.com/watch?v=ifiFShFX5Pg" },
@@ -186,7 +276,7 @@ async function checkAndSeedDatabase() {
 }
 
 // ==========================================
-// ACCESSIBILITY AND INTERACTION HANDLERS
+// ACCESSIBILITY INTERFACE HANDLERS
 // ==========================================
 function updateAccessUI(profile) {
   const loginBtn = $("header-auth-btn");
@@ -257,8 +347,11 @@ function processAndRenderFilteredAthletes() {
 
   gridBody.innerHTML = filteredAthletes.map(({ id, data }) => {
     const hasHighlight = Boolean(data.highlightUrl || data.highlight);
+    const isSelected = activeSelectedAthleteId === id;
+    const trackingClass = isSelected ? "bg-zeus-gold/10 border-l-2 border-zeus-gold" : "border-t border-zeus-border";
+    
     return `
-      <tr class="border-t border-zeus-border hover:bg-zeus-gold/5 cursor-pointer transition animate-feed-slide" data-athlete-id="${escapeHtml(id)}">
+      <tr class="${trackingClass} hover:bg-zeus-gold/5 cursor-pointer transition animate-feed-slide" data-athlete-id="${escapeHtml(id)}">
         <td class="p-3 font-bold text-white flex items-center justify-between">
           <div class="flex items-center">
             ${escapeHtml(data.name)}
@@ -284,9 +377,16 @@ function processAndRenderFilteredAthletes() {
       const found = allAthletesCache.find(item => item.id === id);
       if (!found) return;
 
+      activeSelectedAthleteId = id;
+      
+      gridBody.querySelectorAll("tr").forEach(tr => tr.classList.remove("bg-zeus-gold/10", "border-l-2", "border-zeus-gold"));
+      row.classList.add("bg-zeus-gold/10", "border-l-2", "border-zeus-gold");
+
+      setText("upload-progress-sub", `BOUNDING TARGET: ${found.data.name.substring(0, 15)}...`);
+
       playHighlight(found.data);
 
-      const targetSquad = prompt(`Draft ${found.data.name} to which War Room Roster?\nType '1' for Team St. Louis Elite\nType '2' for Regional Challengers\nHit cancel or leave blank to close.`);
+      const targetSquad = prompt(`Draft ${found.data.name} to which War Room Roster?\nType '1' for Team St. Louis Elite\nType '2' for Regional Challengers\nHit cancel or leave blank to browse player clips.`);
       
       if (targetSquad === "1") {
         if (squadA.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster A.");
@@ -413,21 +513,11 @@ function openGearLightbox(product) {
 
 function initializeGearLightbox() {
   $("gear-view-tee")?.addEventListener("click", () => {
-    openGearLightbox({
-      title: "Wolverines Premium Tee",
-      sub: '"Outwork Yesterday" Edition',
-      price: "$30",
-      icon: "👕"
-    });
+    openGearLightbox({ title: "Wolverines Premium Tee", sub: '"Outwork Yesterday" Edition', price: "$30", icon: "👕" });
   });
 
   $("gear-view-hoodie")?.addEventListener("click", () => {
-    openGearLightbox({
-      title: "Snt.L.Mo Elite Hoodie",
-      sub: '"Dominate Today" Heavyweight',
-      price: "$65",
-      icon: "🧥"
-    });
+    openGearLightbox({ title: "Snt.L.Mo Elite Hoodie", sub: '"Dominate Today" Heavyweight', price: "$65", icon: "🧥" });
   });
 
   const closeBtn = $("gear-lightbox-close");
@@ -511,6 +601,7 @@ refreshSubTierOptions();
 bindEvents();
 initializeLiveSportsTicker();
 initializeGearLightbox();
+initializeMediaLockerEngine();
 
 onAuthStateChanged(auth, u => { if (u) handleSignedInUser(u); else handleSignedOutUser(); });
 
