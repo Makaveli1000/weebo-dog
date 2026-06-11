@@ -3,6 +3,9 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from
 import { getFirestore, doc, getDoc, addDoc, collection, query, limit, onSnapshot, serverTimestamp, getDocs, deleteDoc } from "firebase/firestore";
 import { getDatabase, ref as rtdbRef, push, onValue, serverTimestamp as rtdbServerTimestamp, query as rtdbQuery, limitToLast } from "firebase/database";
 
+// ==========================================
+// ⚡ CORE INFRASTRUCTURE CONFIGURATION
+// ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
   authDomain: "sntlmoexclusivesportsgrid.firebaseapp.com",
@@ -18,12 +21,18 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
 
+// ==========================================
+// APPLICATION STATE MEMORY
+// ==========================================
 let currentUser = null;
 let currentProfile = null;
 let allAthletesCache = [];
 let unsubscribeAthletes = null;
 let unsubscribeChat = null;
 
+// ==========================================
+// COMPACT UTILITY TOOLKIT
+// ==========================================
 const $ = (id) => document.getElementById(id);
 
 function escapeHtml(v = "") {
@@ -42,6 +51,9 @@ function setText(id, text) { const el = $(id); if (el) el.textContent = text; }
 window.show = show;
 window.hide = hide;
 
+// ==========================================
+// 🎥 VIDEO URL HELPERS & THEATER ENGINE
+// ==========================================
 function toEmbedUrl(url = "") {
   const raw = String(url).trim();
   if (!raw) return "";
@@ -89,6 +101,9 @@ function playHighlight(athlete) {
   if (title) title.textContent = `Now Playing: ${athlete?.name || "Titan Highlight"}`;
 }
 
+// ==========================================
+// ST. LOUIS BASELINE SPORTS SEEDS
+// ==========================================
 const ST_LOUIS_INITIAL_SEEDS = [
   { name: "Vashon Elite Squad", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [95, 92, 94, 96, 98], highlightUrl: "https://www.youtube.com/watch?v=ifiFShFX5Pg" },
   { name: "Soldan Prep Leader", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [88, 85, 90, 89, 91], highlightUrl: "" },
@@ -109,6 +124,9 @@ async function checkAndSeedDatabase() {
   }
 }
 
+// ==========================================
+// ACCESSIBILITY AND INTERACTION HANDLERS
+// ==========================================
 function updateAccessUI(profile) {
   const loginBtn = $("header-auth-btn");
   if (hasMainAccess(profile)) { hide("paywall-content"); show("main-content"); } 
@@ -131,6 +149,9 @@ function athleteTotal(d) {
   return scores.reduce((sum, value) => sum + safeNumber(value), 0);
 }
 
+// ==========================================
+// FILTER MATRIX CONTROLLER
+// ==========================================
 const SUB_TIER_OPTIONS = {
   all: [["all", "All Sub-Categories"]],
   highschool: [["all", "All St. Louis High Schools"], ["phsl", "Public High League"], ["mcc", "Metro Catholic Conference"], ["suburban", "Suburban Programs"], ["independent", "Independent Programs"]],
@@ -156,6 +177,9 @@ function getFilteredAthletes() {
   });
 }
 
+// ==========================================
+// RENDER ENGINE (DYNAMIC ROW INJECTION & LISTENERS)
+// ==========================================
 function processAndRenderFilteredAthletes() {
   const gridBody = $("match-grid-body");
   if (!gridBody) return;
@@ -204,6 +228,9 @@ function subscribeToAthletes() {
   }, e => console.error(e));
 }
 
+// ==========================================
+// ADMINISTRATIVE PURGE ENGINE
+// ==========================================
 async function purgeGridDuplicates() {
   if (!isAdminProfile(currentProfile)) return;
   const statusEl = $("user-status"); const oldText = statusEl?.textContent || "";
@@ -222,6 +249,9 @@ async function purgeGridDuplicates() {
   } catch (e) { console.error(e); }
 }
 
+// ==========================================
+// WAR ROOM CHAT ENGINE
+// ==========================================
 function renderChatMessage(message) {
   const display = $("chat-box-display"); if (!display) return;
   const row = document.createElement("div");
@@ -248,6 +278,44 @@ async function sendChatMessage() {
   } catch (e) { console.error(e); }
 }
 
+// ==========================================
+// 📡 REAL-TIME SPORTS TICKER SIMULATION ENGINE
+// ==========================================
+const ST_LOUIS_TICKER_ALERTS = [
+  { prefix: "🛰️ [PHSL]", text: "Vashon Wolverines defensive press forces 4 consecutive turnovers in 3rd quarter run.", color: "text-zeus-gold" },
+  { prefix: "🏈 [MCC]", text: "CBC Cadet backcourt and vertical pass game charting a massive +14 separation margin.", color: "text-white" },
+  { prefix: "🐯 [MIZZOU]", text: "Luther Burden III clocked at a split-second acceleration burst in open-field camp reps.", color: "text-zeus-gold" },
+  { prefix: "⚾ [MLB]", text: "Cardinals bullpen registers optimal spin rates on closing strikeout sequences down at Busch Stadium.", color: "text-gray-300" },
+  { prefix: "🚨 [SYSTEM]", text: "Metric Matrix updated. 4 new regional player profiles pushed to primary database storage node.", color: "text-red-400" },
+  { prefix: "⚽ [MLS]", text: "CITY SC pressuring structural defensive lines early with aggressive high-counter transitions.", color: "text-white" },
+  { prefix: "🏀 [PHSL]", text: "Soldan Prep lighting up the perimeter, shooting a blistering 54% from deep in early scrimmage.", color: "text-gray-400" },
+  { prefix: "🦅 [CFL]", text: "Macler Cody (Mac10) breaks another perimeter coverage tracking matrix, clearing a 40-yard gain.", color: "text-zeus-gold" },
+  { prefix: "👟 [TRACK]", text: "Lincoln High relay squad shatters regional meet floor times, setting a brand new record.", color: "text-white" },
+  { prefix: "⚡ [WAR ROOM]", text: "Admin Node 'Mac10' successfully verified authorization protocols. Live telemetry active.", color: "text-zeus-gold" }
+];
+
+function initializeLiveSportsTicker() {
+  const container = $("live-feed-container");
+  if (!container) return;
+  container.innerHTML = `<div class="text-zeus-gold/80 animate-feed-slide">🛰️ [SYSTEM]: Grid Synchronization fully active. Telemetry rolling...</div>`;
+
+  setInterval(() => {
+    const alert = ST_LOUIS_TICKER_ALERTS[Math.floor(Math.random() * ST_LOUIS_TICKER_ALERTS.length)];
+    const alertRow = document.createElement("div");
+    alertRow.className = `animate-feed-slide pt-1 font-mono text-xs border-t border-zeus-border/40 mt-1 flex flex-col sm:flex-row sm:space-x-2 ${alert.color}`;
+    alertRow.innerHTML = `
+      <span class="font-bold shrink-0">${escapeHtml(alert.prefix)}</span>
+      <span class="text-gray-300">${escapeHtml(alert.text)}</span>
+    `;
+    container.appendChild(alertRow);
+    container.scrollTop = container.scrollHeight;
+    if (container.children.length > 25) { container.removeChild(container.firstChild); }
+  }, 4500);
+}
+
+// ==========================================
+// CORE BOOT SEQUENCE & AUTH LIFECYCLE
+// ==========================================
 async function handleSignedInUser(user) {
   currentUser = user;
   try {
@@ -262,6 +330,9 @@ function handleSignedOutUser() {
   updateAccessUI(null); subscribeToAthletes(); hide("loading-overlay");
 }
 
+// ==========================================
+// EVENT LISTENERS MATRIX BOUNDS
+// ==========================================
 function bindEvents() {
   $("tier-select")?.addEventListener("change", () => { refreshSubTierOptions(); processAndRenderFilteredAthletes(); });
   $("sub-tier-select")?.addEventListener("change", processAndRenderFilteredAthletes);
@@ -301,8 +372,13 @@ function bindEvents() {
   $("chat-message-input")?.addEventListener("keydown", async (e) => { if (e.key === "Enter") await sendChatMessage(); });
 }
 
+// ==========================================
+// RUNTIME TRIGGER INITIATION
+// ==========================================
 refreshSubTierOptions();
 bindEvents();
+initializeLiveSportsTicker();
+
 onAuthStateChanged(auth, u => { if (u) handleSignedInUser(u); else handleSignedOutUser(); });
 
 window.appAuth = { logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), logOut: () => signOut(auth) };
