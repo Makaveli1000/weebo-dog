@@ -148,8 +148,6 @@ function initializeMediaLockerEngine() {
     const matchedAthlete = allAthletesCache.find(p => p.id === activeSelectedAthleteId);
     const sanitizedTitle = (matchedAthlete?.data?.name || "unnamed").replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const fileExtension = file.name.split('.').pop();
-    
-    // Adjusted storage location route path to cleanly sync with updated rules
     const storagePath = `highlights/${activeSelectedAthleteId}/${sanitizedTitle}.${fileExtension}`;
     
     const targetRef = storageRef(storage, storagePath);
@@ -157,6 +155,7 @@ function initializeMediaLockerEngine() {
 
     setText("upload-status-text", "Streaming File data...");
     setText("upload-status-icon", "⏳");
+    $("media-locker-container")?.classList.add("border-zeus-gold", "shadow-[0_0_10px_rgba(212,175,55,0.2)]");
 
     uploadTask.on('state_changed', 
       (snapshot) => {
@@ -168,6 +167,7 @@ function initializeMediaLockerEngine() {
         setText("upload-status-text", "Upload Failure");
         setText("upload-status-icon", "❌");
         setText("upload-progress-sub", "Check security permissions.");
+        $("media-locker-container")?.classList.remove("border-zeus-gold", "shadow-[0_0_10px_rgba(212,175,55,0.2)]");
         fileInput.value = "";
       }, 
       async () => {
@@ -185,6 +185,7 @@ function initializeMediaLockerEngine() {
           setText("upload-status-icon", "✅");
           setText("upload-progress-sub", `${file.name.substring(0, 18)}... linked`);
           setText("upload-count-badge", `Uploads: ${totalSuccessfulUploads}`);
+          $("media-locker-container")?.classList.remove("border-zeus-gold", "shadow-[0_0_10px_rgba(212,175,55,0.2)]");
           
           fileInput.value = "";
         } catch (err) {
@@ -223,12 +224,12 @@ function renderDraftBoards() {
   if (slotA) {
     slotA.innerHTML = squadA.length 
       ? squadA.map((p, i) => rowMarkup(p, i, 'A')).join("")
-      : `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Click an athlete above to draft.</div>`;
+      : `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Select an athlete above to draft.</div>`;
   }
   if (slotB) {
     slotB.innerHTML = squadB.length 
       ? squadB.map((p, i) => rowMarkup(p, i, 'B')).join("")
-      : `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Click an athlete above to draft.</div>`;
+      : `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Select an athlete above to draft.</div>`;
   }
   calculateSquadAverages();
 }
@@ -237,6 +238,22 @@ window.dropFromSquad = (squadType, index) => {
   if (squadType === 'A') squadA.splice(index, 1);
   else squadB.splice(index, 1);
   renderDraftBoards();
+};
+
+// GLOBAL WIRE TO CALL DIRECT INLINE SQUAD DISPATCH FROM EMBED ROW CONSOLES
+window.inlineDraftDispatch = (athleteId, targetSquadNum) => {
+  const found = allAthletesCache.find(item => item.id === athleteId);
+  if (!found) return;
+
+  if (targetSquadNum === 1) {
+    if (squadA.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster A.");
+    squadA.push(found.data);
+    renderDraftBoards();
+  } else if (targetSquadNum === 2) {
+    if (squadB.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster B.");
+    squadB.push(found.data);
+    renderDraftBoards();
+  }
 };
 
 window.directPurgeRow = async (e, id, name) => {
@@ -330,7 +347,7 @@ function getFilteredAthletes() {
 }
 
 // ==========================================
-// RENDER ENGINE (DYNAMIC ROW INJECTION & LISTENERS)
+// RENDER ENGINE (DYNAMIC INLINE COGNITIVE MAPPING CONTROLLER)
 // ==========================================
 function processAndRenderFilteredAthletes() {
   const gridBody = $("match-grid-body");
@@ -350,14 +367,21 @@ function processAndRenderFilteredAthletes() {
     const isSelected = activeSelectedAthleteId === id;
     const trackingClass = isSelected ? "bg-zeus-gold/10 border-l-2 border-zeus-gold" : "border-t border-zeus-border";
     
+    // Injected direct non-blocking dashboard evaluation control consoles into table row markup template
     return `
-      <tr class="${trackingClass} hover:bg-zeus-gold/5 cursor-pointer transition animate-feed-slide" data-athlete-id="${escapeHtml(id)}">
-        <td class="p-3 font-bold text-white flex items-center justify-between">
-          <div class="flex items-center">
-            ${escapeHtml(data.name)}
-            ${hasHighlight ? `<span class="ml-2 bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider font-sans">Video</span>` : ""}
+      <tr class="${trackingClass} hover:bg-zeus-gold/5 cursor-pointer transition" data-athlete-id="${escapeHtml(id)}">
+        <td class="p-3 font-bold text-white">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span>${escapeHtml(data.name)}</span>
+              ${hasHighlight ? `<span class="bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider font-sans">Video</span>` : ""}
+            </div>
+            <div class="flex items-center space-x-1.5" onclick="event.stopPropagation()">
+              <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 1)" class="bg-zeus-goldSoft text-zeus-gold border border-zeus-gold/20 hover:bg-zeus-gold hover:text-black font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft A</button>
+              <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 2)" class="bg-gray-900 text-gray-400 border border-zeus-border hover:bg-gray-700 hover:text-white font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft B</button>
+              ${activeAdmin ? `<button onclick="window.directPurgeRow(event, '${escapeHtml(id)}', '${escapeHtml(data.name.replace(/'/g, "\\'"))}')" class="text-gray-600 hover:text-red-500 text-xs px-1.5 font-bold transition font-sans select-none" title="Instant Delete">🗑️</button>` : ""}
+            </div>
           </div>
-          ${activeAdmin ? `<button onclick="window.directPurgeRow(event, '${escapeHtml(id)}', '${escapeHtml(data.name.replace(/'/g, "\\'"))}')" class="text-gray-600 hover:text-red-500 text-xs px-2 py-0.5 font-bold transition font-sans select-none" title="Instant Delete">🗑️</button>` : ""}
         </td>
         <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[0])}</td>
         <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[1])}</td>
@@ -383,20 +407,9 @@ function processAndRenderFilteredAthletes() {
       row.classList.add("bg-zeus-gold/10", "border-l-2", "border-zeus-gold");
 
       setText("upload-progress-sub", `BOUNDING TARGET: ${found.data.name.substring(0, 15)}...`);
+      $("media-locker-container")?.classList.add("border-zeus-gold", "shadow-[0_0_15px_rgba(212,175,55,0.15)]");
 
       playHighlight(found.data);
-
-      const targetSquad = prompt(`Draft ${found.data.name} to which War Room Roster?\nType '1' for Team St. Louis Elite\nType '2' for Regional Challengers\nHit cancel or leave blank to browse player clips.`);
-      
-      if (targetSquad === "1") {
-        if (squadA.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster A.");
-        squadA.push(found.data);
-        renderDraftBoards();
-      } else if (targetSquad === "2") {
-        if (squadB.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster B.");
-        squadB.push(found.data);
-        renderDraftBoards();
-      }
     });
   });
 }
