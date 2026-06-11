@@ -62,44 +62,16 @@ window.hide = hide;
 // ==========================================
 // 🎥 DUAL-VIEW PORT MEDIA THEATER CONTROLLER
 // ==========================================
-function isFirebaseStorageUrl(url = "") {
-  return url.includes("firebasestorage.googleapis.com") || url.includes(".appspot.com");
-}
-
-function toEmbedUrl(url = "") {
-  const raw = String(url).trim();
-  if (!raw) return "";
-  try {
-    const parsed = new URL(raw);
-    if (parsed.hostname.includes("youtube.com")) {
-      const videoId = parsed.searchParams.get("v");
-      if (videoId) return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
-      if (parsed.pathname.startsWith("/shorts/")) {
-        const shortsId = parsed.pathname.split("/").filter(Boolean)[1];
-        if (shortsId) return `https://www.youtube.com/embed/${encodeURIComponent(shortsId)}`;
-      }
-      if (parsed.pathname.startsWith("/embed/")) return raw;
-    }
-    if (parsed.hostname.includes("youtu.be")) {
-      const videoId = parsed.pathname.replace("/", "");
-      if (videoId) return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
-    }
-    if (parsed.hostname.includes("vimeo.com")) {
-      const videoId = parsed.pathname.split("/").filter(Boolean)[0];
-      if (videoId) return `https://player.vimeo.com/video/${encodeURIComponent(videoId)}`;
-    }
-    return raw;
-  } catch { return ""; }
-}
-
 function playHighlight(athlete) {
   const viewport = $("theater-media-viewport");
   const placeholder = $("video-placeholder");
   const title = $("now-playing-title");
+  
   if (!viewport || !placeholder) return;
 
   const targetUrl = String(athlete?.highlightUrl || athlete?.highlight || "").trim();
 
+  // If no URL exists, revert to empty state
   if (!targetUrl) {
     viewport.innerHTML = "";
     placeholder.classList.remove("hidden", "opacity-0");
@@ -107,18 +79,32 @@ function playHighlight(athlete) {
     return;
   }
 
+  // Hide placeholder and update the title
   placeholder.classList.add("hidden", "opacity-0");
-  if (title) title.textContent = `Now Playing: ${athlete?.name || "Titan Highlight"}`;
+  if (title) title.textContent = `Now Playing: ${athlete.name}`;
 
+  // Logic: Use <video> for local files, <iframe> for YouTube embeds
   if (isFirebaseStorageUrl(targetUrl) || targetUrl.endsWith(".mp4") || targetUrl.endsWith(".webm")) {
     viewport.innerHTML = `
-      <video id="theater-native-player" src="${targetUrl}" controls autoplay class="w-full h-full rounded border border-zeus-border/40 bg-black">
-        Your browser container does not support video elements.
+      <video 
+        src="${targetUrl}" 
+        controls 
+        autoplay 
+        muted 
+        playsinline 
+        class="w-full h-full rounded border border-zeus-border/40 bg-black">
+        Your browser does not support HTML5 video.
       </video>`;
   } else {
-    const embedUrl = toEmbedUrl(targetUrl);
+    // Standard embed for YouTube URLs
     viewport.innerHTML = `
-      <iframe id="theater-iframe" src="${escapeHtml(embedUrl)}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      <iframe 
+        src="${targetUrl.includes('youtube') ? targetUrl.replace('watch?v=', 'embed/') : targetUrl}" 
+        class="w-full h-full" 
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen>
+      </iframe>`;
   }
 }
 
