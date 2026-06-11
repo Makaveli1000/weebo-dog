@@ -149,6 +149,19 @@ window.dropFromSquad = (squadType, index) => {
   renderDraftBoards();
 };
 
+// EXPOSE SINGLE-TITAN DIRECT PURGE HOOK TO THE DOM MATRIX
+window.directPurgeRow = async (e, id, name) => {
+  e.stopPropagation(); // Prevents prompt script collision!
+  if (!isAdminProfile(currentProfile)) return;
+  if (confirm(`Are you sure you want to permanently erase ${name} from the database?`)) {
+    try {
+      await deleteDoc(doc(db, "athletes", id));
+    } catch (err) {
+      console.error("Purge system rejected:", err);
+    }
+  }
+};
+
 // ==========================================
 // ST. LOUIS BASELINE SPORTS SEEDS
 // ==========================================
@@ -190,6 +203,8 @@ function updateAccessUI(profile) {
     setText("user-status", "Status: Mortal Vision");
     if (loginBtn) loginBtn.textContent = "Login";
   }
+  // Re-trigger render loop to toggle administrative row components cleanly
+  processAndRenderFilteredAthletes();
 }
 
 function athleteTotal(d) {
@@ -239,13 +254,18 @@ function processAndRenderFilteredAthletes() {
     return;
   }
 
+  const activeAdmin = isAdminProfile(currentProfile);
+
   gridBody.innerHTML = filteredAthletes.map(({ id, data }) => {
     const hasHighlight = Boolean(data.highlightUrl || data.highlight);
     return `
       <tr class="border-t border-zeus-border hover:bg-zeus-gold/5 cursor-pointer transition animate-feed-slide" data-athlete-id="${escapeHtml(id)}">
-        <td class="p-3 font-bold text-white flex items-center">
-          ${escapeHtml(data.name)}
-          ${hasHighlight ? `<span class="ml-2 bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider">Video</span>` : ""}
+        <td class="p-3 font-bold text-white flex items-center justify-between">
+          <div class="flex items-center">
+            ${escapeHtml(data.name)}
+            ${hasHighlight ? `<span class="ml-2 bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider font-sans">Video</span>` : ""}
+          </div>
+          ${activeAdmin ? `<button onclick="window.directPurgeRow(event, '${escapeHtml(id)}', '${escapeHtml(data.name.replace(/'/g, "\\'"))}')" class="text-gray-600 hover:text-red-500 text-xs px-2 py-0.5 font-bold transition font-sans select-none" title="Instant Delete">🗑️</button>` : ""}
         </td>
         <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[0])}</td>
         <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[1])}</td>
@@ -269,7 +289,7 @@ function processAndRenderFilteredAthletes() {
       playHighlight(found.data);
 
       // 2. Assign to Custom War Room Draft Boards
-      const targetSquad = prompt(`Draft ${found.data.name} to which War Room Roster?\nType '1' for Team St. Louis Elite\nType '2' for Regional Challengers`);
+      const targetSquad = prompt(`Draft ${found.data.name} to which War Room Roster?\nType '1' for Team St. Louis Elite\nType '2' for Regional Challengers\nHit cancel or leave blank to close.`);
       
       if (targetSquad === "1") {
         if (squadA.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster A.");
