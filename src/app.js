@@ -148,7 +148,6 @@ function initializeMediaLockerEngine() {
     const matchedAthlete = allAthletesCache.find(p => p.id === activeSelectedAthleteId);
     const sanitizedTitle = (matchedAthlete?.data?.name || "unnamed").replace(/[^a-z0-9]/gi, '_').toLowerCase();
     const fileExtension = file.name.split('.').pop();
-    
     const storagePath = `highlights/${activeSelectedAthleteId}/${sanitizedTitle}.${fileExtension}`;
     
     const targetRef = storageRef(storage, storagePath);
@@ -313,7 +312,7 @@ function updateAccessUI(profile) {
   processAndRenderFilteredAthletes();
 }
 
-function mergeRosterScores(d) {
+function athleteTotal(d) {
   const scores = Array.isArray(d?.scores) ? d.scores : [d?.score0, d?.score1, d?.score2, d?.score3, d?.score4];
   return scores.reduce((sum, value) => sum + safeNumber(value), 0);
 }
@@ -347,7 +346,7 @@ function getFilteredAthletes() {
 }
 
 // ==========================================
-// RENDER ENGINE (DYNAMIC INLINE COGNITIVE MAPPING CONTROLLER)
+// RENDER ENGINE (DYNAMIC DECOUPLED MATRIX GENERATOR)
 // ==========================================
 function processAndRenderFilteredAthletes() {
   const gridBody = $("match-grid-body");
@@ -355,7 +354,7 @@ function processAndRenderFilteredAthletes() {
   const filteredAthletes = getFilteredAthletes();
 
   if (!filteredAthletes.length) {
-    gridBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No athletes active for this filter.</td></tr>`;
+    gridBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">No athletes active for this filter.</td></tr>`;
     setText("apex-predator-name", "No Apex Selected"); setText("apex-predator-score", "---"); setText("grid-count-badge", "0 Active");
     return;
   }
@@ -367,32 +366,32 @@ function processAndRenderFilteredAthletes() {
     const isSelected = activeSelectedAthleteId === id;
     const trackingClass = isSelected ? "bg-zeus-gold/10 border-l-2 border-zeus-gold" : "border-t border-zeus-border";
     
-    // Fixed layout wrapping bugs: Forced inline components into tight horizontal flex rows to stay perfectly linear
+    // Shifted active administration control buttons cleanly into an isolated, independent column cell (far right)
     return `
       <tr class="${trackingClass} hover:bg-zeus-gold/5 cursor-pointer transition" data-athlete-id="${escapeHtml(id)}">
         <td class="p-3 font-bold text-white">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2 mr-2">
-              <span class="truncate max-w-[140px] sm:max-w-none">${escapeHtml(data.name)}</span>
-              ${hasHighlight ? `<span class="bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider font-sans shrink-0">Video</span>` : ""}
-            </div>
-            <div class="flex items-center space-x-1 shrink-0" onclick="event.stopPropagation()">
-              <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 1)" class="bg-zeus-goldSoft text-zeus-gold border border-zeus-gold/20 hover:bg-zeus-gold hover:text-black font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft A</button>
-              <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 2)" class="bg-gray-900 text-gray-400 border border-zeus-border hover:bg-gray-700 hover:text-white font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft B</button>
-              ${activeAdmin ? `<button onclick="window.directPurgeRow(event, '${escapeHtml(id)}', '${escapeHtml(data.name.replace(/'/g, "\\'"))}')" class="text-gray-600 hover:text-red-500 text-xs px-1 font-bold transition font-sans select-none" title="Instant Delete">🗑️</button>` : ""}
-            </div>
+          <div class="flex items-center space-x-2">
+            <span class="truncate max-w-[180px] sm:max-w-none">${escapeHtml(data.name)}</span>
+            ${hasHighlight ? `<span class="bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider font-sans shrink-0">Video</span>` : ""}
           </div>
         </td>
         <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[0])}</td>
         <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[1])}</td>
-        <td class="p-3 text-center font-black text-zeus-gold">${mergeRosterScores(data)}</td>
-        <td class="p-3 text-right"><span class="rounded border border-zeus-gold/30 px-2 py-1 text-[10px] uppercase text-zeus-gold">${escapeHtml(data.sport)}</span></td>
+        <td class="p-3 text-center font-black text-zeus-gold">${athleteTotal(data)}</td>
+        <td class="p-3 text-center uppercase text-zeus-gold text-xs">${escapeHtml(data.sport)}</td>
+        <td class="p-3 text-right" onclick="event.stopPropagation()">
+          <div class="flex items-center justify-end space-x-1">
+            <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 1)" class="bg-zeus-goldSoft text-zeus-gold border border-zeus-gold/20 hover:bg-zeus-gold hover:text-black font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft A</button>
+            <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 2)" class="bg-gray-900 text-gray-400 border border-zeus-border hover:bg-gray-700 hover:text-white font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft B</button>
+            ${activeAdmin ? `<button onclick="window.directPurgeRow(event, '${escapeHtml(id)}', '${escapeHtml(data.name.replace(/'/g, "\\'"))}')" class="text-gray-600 hover:text-red-500 text-xs px-1 font-bold transition font-sans select-none" title="Instant Delete">🗑️</button>` : ""}
+          </div>
+        </td>
       </tr>`;
   }).join("");
 
   const leader = filteredAthletes[0].data;
   setText("apex-predator-name", leader.name || "Unknown Titan");
-  setText("apex-predator-score", mergeRosterScores(leader));
+  setText("apex-predator-score", athleteTotal(leader));
   setText("grid-count-badge", `${filteredAthletes.length} Active`);
 
   gridBody.querySelectorAll("tr[data-athlete-id]").forEach((row) => {
@@ -417,7 +416,7 @@ function processAndRenderFilteredAthletes() {
 function subscribeToAthletes() {
   if (unsubscribeAthletes) return;
   unsubscribeAthletes = onSnapshot(query(collection(db, "athletes"), limit(120)), (snap) => {
-    allAthletesCache = snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => mergeRosterScores(b.data) - mergeRosterScores(a.data));
+    allAthletesCache = snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => athleteTotal(b.data) - athleteTotal(a.data));
     processAndRenderFilteredAthletes();
   }, e => console.error(e));
 }
