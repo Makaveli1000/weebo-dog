@@ -203,7 +203,6 @@ function updateAccessUI(profile) {
     setText("user-status", "Status: Mortal Vision");
     if (loginBtn) loginBtn.textContent = "Login";
   }
-  // Re-trigger render loop to toggle administrative row components cleanly
   processAndRenderFilteredAthletes();
 }
 
@@ -285,10 +284,8 @@ function processAndRenderFilteredAthletes() {
       const found = allAthletesCache.find(item => item.id === id);
       if (!found) return;
 
-      // 1. Play headline track highlight video natively
       playHighlight(found.data);
 
-      // 2. Assign to Custom War Room Draft Boards
       const targetSquad = prompt(`Draft ${found.data.name} to which War Room Roster?\nType '1' for Team St. Louis Elite\nType '2' for Regional Challengers\nHit cancel or leave blank to close.`);
       
       if (targetSquad === "1") {
@@ -398,6 +395,52 @@ function initializeLiveSportsTicker() {
 }
 
 // ==========================================
+// 🧥 APPAREL LIGHTBOX MODAL MAPPING INTERFACE ENGINE
+// ==========================================
+function openGearLightbox(product) {
+  const modal = $("gear-lightbox-modal");
+  if (!modal) return;
+
+  setText("lightbox-title", product.title);
+  setText("lightbox-sub", product.sub);
+  setText("lightbox-price", product.price);
+  
+  const iconEl = $("lightbox-icon");
+  if (iconEl) iconEl.textContent = product.icon;
+
+  modal.classList.remove("hidden");
+}
+
+function initializeGearLightbox() {
+  $("gear-view-tee")?.addEventListener("click", () => {
+    openGearLightbox({
+      title: "Wolverines Premium Tee",
+      sub: '"Outwork Yesterday" Edition',
+      price: "$30",
+      icon: "👕"
+    });
+  });
+
+  $("gear-view-hoodie")?.addEventListener("click", () => {
+    openGearLightbox({
+      title: "Snt.L.Mo Elite Hoodie",
+      sub: '"Dominate Today" Heavyweight',
+      price: "$65",
+      icon: "🧥"
+    });
+  });
+
+  const closeBtn = $("gear-lightbox-close");
+  closeBtn?.addEventListener("click", () => {
+    $("gear-lightbox-modal")?.classList.add("hidden");
+  });
+
+  $("lightbox-checkout-btn")?.addEventListener("click", () => {
+    alert("Stripe initialization active. Launching outer checkout terminal connection node...");
+  });
+}
+
+// ==========================================
 // CORE BOOT SEQUENCE & AUTH LIFECYCLE
 // ==========================================
 async function handleSignedInUser(user) {
@@ -467,6 +510,7 @@ function bindEvents() {
 refreshSubTierOptions();
 bindEvents();
 initializeLiveSportsTicker();
+initializeGearLightbox();
 
 onAuthStateChanged(auth, u => { if (u) handleSignedInUser(u); else handleSignedOutUser(); });
 

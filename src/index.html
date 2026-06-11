@@ -266,6 +266,7 @@
           <span class="text-[9px] font-mono bg-zeus-goldSoft text-zeus-gold px-2 py-0.5 rounded border border-zeus-gold/20 uppercase tracking-widest">Drop 01</span>
         </div>
         <div class="grid grid-cols-2 gap-3">
+          <!-- Item 1: Wolverines Premium Tee -->
           <div class="bg-zeus-black/60 border border-zeus-border rounded-lg p-2.5 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
             <div class="relative w-full aspect-square bg-zeus-panel rounded border border-zeus-border overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-zeus-gold transition">
               👕
@@ -276,9 +277,10 @@
             </div>
             <div class="flex justify-between items-center mt-2 pt-1 border-t border-zeus-border">
               <span class="text-xs font-mono font-black text-zeus-gold">$30</span>
-              <button class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
+              <button id="gear-view-tee" class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
             </div>
           </div>
+          <!-- Item 2: Snt.L.Mo Elite Hoodie -->
           <div class="bg-zeus-black/60 border border-zeus-border rounded-lg p-2.5 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
             <div class="relative w-full aspect-square bg-zeus-panel rounded border border-zeus-border overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-zeus-gold transition">
               🧥
@@ -289,7 +291,7 @@
             </div>
             <div class="flex justify-between items-center mt-2 pt-1 border-t border-zeus-border">
               <span class="text-xs font-mono font-black text-zeus-gold">$65</span>
-              <button class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
+              <button id="gear-view-hoodie" class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
             </div>
           </div>
         </div>
@@ -312,6 +314,48 @@
         </button>
       </div>
       <button onclick="hide('login-modal')" class="absolute top-3 right-3 text-gray-600 hover:text-white text-sm font-mono">&times;</button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       🧥 GEAR LIGHTBOX FOCUS FRAME MODAL
+       ========================================== -->
+  <div id="gear-lightbox-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="border border-zeus-border bg-zeus-black max-w-md w-full p-6 rounded-xl shadow-panel-deep relative space-y-4 font-mono">
+      <button id="gear-lightbox-close" class="absolute top-3 right-3 text-gray-500 hover:text-white text-base">&times;</button>
+      
+      <div class="flex items-center space-x-4 border-b border-zeus-border pb-3">
+        <div id="lightbox-icon" class="text-4xl bg-zeus-panel border border-zeus-border rounded-lg p-3 w-20 h-20 flex items-center justify-center">👕</div>
+        <div>
+          <h3 id="lightbox-title" class="text-sm font-black text-white uppercase tracking-tight">Product Name</h3>
+          <p id="lightbox-sub" class="text-[10px] text-gray-500 uppercase mt-0.5">Product Subtitle</p>
+          <p id="lightbox-price" class="text-xs font-black text-zeus-gold mt-1">$0.00</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <span class="block text-[9px] text-gray-600 uppercase mb-1">Select Size Shell</span>
+          <div class="flex space-x-2">
+            <button class="bg-zeus-panel hover:bg-zeus-gold hover:text-black border border-zeus-border px-2.5 py-1 rounded text-[10px] font-bold transition">S</button>
+            <button class="bg-zeus-panel hover:bg-zeus-gold hover:text-black border border-zeus-gold/40 text-zeus-gold px-2.5 py-1 rounded text-[10px] font-bold transition">M</button>
+            <button class="bg-zeus-panel hover:bg-zeus-gold hover:text-black border border-zeus-border px-2.5 py-1 rounded text-[10px] font-bold transition">L</button>
+            <button class="bg-zeus-panel hover:bg-zeus-gold hover:text-black border border-zeus-border px-2.5 py-1 rounded text-[10px] font-bold transition">XL</button>
+          </div>
+        </div>
+        
+        <div>
+          <span class="block text-[9px] text-gray-600 uppercase mb-1">Specifications & Telemetry</span>
+          <p class="text-[11px] text-gray-400 leading-relaxed bg-zeus-panel/40 p-2.5 rounded border border-zeus-border/40"> Engineered for high-output environments. Premium drop-shoulder custom tailored geometry cuts featuring extreme tensile strength fiber matrices. Finished with signature Snt.L.Mo custom reflective gold brand detailing. </p>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button id="lightbox-checkout-btn" class="w-full bg-zeus-gold hover:bg-yellow-400 text-black font-black py-2.5 rounded uppercase text-xs tracking-wider transition duration-150">
+          Initialize Secure Checkout
+        </button>
+        <span class="block text-center text-[9px] text-gray-600 uppercase mt-2">Monitored transaction channel // Stripe secure infrastructure</span>
+      </div>
     </div>
   </div>
 
