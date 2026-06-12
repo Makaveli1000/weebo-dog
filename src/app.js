@@ -102,17 +102,53 @@ function initializeMediaLockerEngine() {
 
   fileInput.addEventListener("change", async (e) => {
     const file = e.target.files[0];
-    if (!file || !activeSelectedAthleteId) return alert("Select a player row first.");
+    if (!file) return;
 
-    const storagePath = `highlights/${activeSelectedAthleteId}/${file.name}`;
-    const uploadTask = uploadBytesResumable(storageRef(storage, storagePath), file);
+    if (!isAdminProfile(currentProfile)) {
+      alert("Administrative verification token missing.");
+      fileInput.value = "";
+      return;
+    }
 
-    setText("upload-status-text", "Uploading...");
-    uploadTask.on('state_changed', null, null, async () => {
-      const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-      await updateDoc(doc(db, "athletes", activeSelectedAthleteId), { highlightUrl: downloadUrl });
-      setText("upload-status-text", "GRID BIND COMPLETED");
-    });
+    if (!activeSelectedAthleteId) {
+      alert("Operational Fault: Select a player row first.");
+      fileInput.value = "";
+      return;
+    }
+
+    const matchedAthlete = allAthletesCache.find(p => p.id === activeSelectedAthleteId);
+    const sanitizedTitle = (matchedAthlete?.data?.name || "unnamed").replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const fileExtension = file.name.split('.').pop();
+    const storagePath = `highlights/${activeSelectedAthleteId}/${sanitizedTitle}.${fileExtension}`;
+    
+    const targetRef = storageRef(storage, storagePath);
+    const uploadTask = uploadBytesResumable(targetRef, file);
+
+    setText("upload-status-text", "Streaming File data...");
+    setText("upload-status-icon", "⏳");
+    
+    uploadTask.on('state_changed', 
+      (snapshot) => {
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        setText("upload-progress-sub", `PIPE TRANSACTING: ${progress}% COMPLETE`);
+      }, 
+      (error) => {
+        setText("upload-status-text", "Upload Failure");
+        setText("upload-status-icon", "❌");
+        fileInput.value = "";
+      }, 
+      async () => {
+        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+        await updateDoc(doc(db, "athletes", activeSelectedAthleteId), {
+          highlightUrl: downloadUrl,
+          updatedAt: serverTimestamp()
+        });
+        totalSuccessfulUploads++;
+        setText("upload-status-text", "GRID BIND COMPLETED");
+        setText("upload-status-icon", "✅");
+        fileInput.value = "";
+      }
+    ); // <-- THIS MATCHING CLOSING PARENTHESIS IS WHAT WAS MISSING
   });
 }
 
