@@ -463,38 +463,39 @@ async function sendChatMessage() {
 }
 
 // ==========================================
-// 📡 REAL-TIME SPORTS TICKER SIMULATION ENGINE
+// 📡 UPDATED REAL-TIME SPORTS TICKER ENGINE
 // ==========================================
 const ST_LOUIS_TICKER_ALERTS = [
-  { prefix: "🛰️ [PHSL]", text: "Vashon Wolverines defensive press forces 4 consecutive turnovers in 3rd quarter run.", color: "text-zeus-gold" },
-  { prefix: "🏈 [MCC]", text: "CBC Cadet backcourt and vertical pass game charting a massive +14 separation margin.", color: "text-white" },
-  { prefix: "🐯 [MIZZOU]", text: "Luther Burden III clocked at a split-second acceleration burst in open-field camp reps.", color: "text-zeus-gold" },
-  { prefix: "⚾ [MLB]", text: "Cardinals bullpen registers optimal spin rates on closing strikeout sequences down at Busch Stadium.", color: "text-gray-300" },
-  { prefix: "🚨 [SYSTEM]", text: "Metric Matrix updated. 4 new regional player profiles pushed to primary database storage node.", color: "text-red-400" },
-  { prefix: "╚► [MLS]", text: "CITY SC pressuring structural defensive lines early with aggressive high-counter transitions.", color: "text-white" },
-  { prefix: "🏀 [PHSL]", text: "Soldan Prep lighting up the perimeter, shooting a blistering 54% from deep in early scrimmage.", color: "text-gray-400" },
-  { prefix: "🦅 [CFL]", text: "Macler Cody (Mac10) breaks another perimeter coverage tracking matrix, clearing a 40-yard gain.", color: "text-zeus-gold" },
-  { prefix: "👟 [TRACK]", text: "Lincoln High relay squad shatters regional meet floor times, setting a brand new record.", color: "text-white" },
-  { prefix: "⚡ [WAR ROOM]", text: "Admin Node 'Mac10' successfully verified authorization protocols. Live telemetry active.", color: "text-zeus-gold" }
+  { prefix: "🏈 [NFL]", text: "Mini-camp intensity spiking; veteran defensive sets showing +12% efficiency.", color: "text-zeus-gold" },
+  { prefix: "🏀 [NBA]", text: "Finals series intensity reaching apex levels; court-side telemetry data locked.", color: "text-white" },
+  { prefix: "⚾ [MLB]", text: "Mid-season pitching rotation adjusted for high-heat summer weather.", color: "text-gray-300" },
+  { prefix: "🏒 [NHL]", text: "Stanley Cup playoffs entering high-stakes overtime simulation mode.", color: "text-white" },
+  { prefix: "⚽ [MLS]", text: "CITY SC maintaining aggressive high-press transition against defensive lines.", color: "text-zeus-gold" },
+  { prefix: "🎾 [ATP/WTA]", text: "Grand Slam circuit updates: baseline rally duration trending upwards.", color: "text-gray-400" },
+  { prefix: "🎓 [COLLEGE]", text: "Spring camp drills concluding; incoming roster depth charts finalized.", color: "text-zeus-gold" },
+  { prefix: "🦅 [CFL]", text: "Pre-season training camp coverage hitting peak operational velocity.", color: "text-zeus-gold" },
+  { prefix: "🚨 [SYSTEM]", text: "Cross-league data ingestion: All global sports tickers synchronized.", color: "text-red-400" }
 ];
 
 function initializeLiveSportsTicker() {
   const container = $("live-feed-container");
   if (!container) return;
-  container.innerHTML = `<div class="text-zeus-gold/80 animate-feed-slide">🛰️ [SYSTEM]: Grid Synchronization fully active. Telemetry rolling...</div>`;
+  container.innerHTML = `<div class="text-zeus-gold/80 animate-feed-slide">🛰️ [SYSTEM]: Global Feed Sync active...</div>`;
 
+  // Increased speed: Alerts now fire every 3 seconds instead of 4.5
   setInterval(() => {
     const alert = ST_LOUIS_TICKER_ALERTS[Math.floor(Math.random() * ST_LOUIS_TICKER_ALERTS.length)];
     const alertRow = document.createElement("div");
     alertRow.className = `animate-feed-slide pt-1 font-mono text-xs border-t border-zeus-border/40 mt-1 flex flex-col sm:flex-row sm:space-x-2 ${alert.color}`;
     alertRow.innerHTML = `
-      <span class="font-bold shrink-0">${escapeHtml(alert.prefix)}</span>
-      <span class="text-gray-300">${escapeHtml(alert.text)}</span>
+      <span class="font-bold shrink-0">${alert.prefix}</span>
+      <span class="text-gray-300">${alert.text}</span>
     `;
     container.appendChild(alertRow);
     container.scrollTop = container.scrollHeight;
-    if (container.children.length > 25) { container.removeChild(container.firstChild); }
-  }, 4500);
+    // Keeps the feed tidy by limiting lines
+    if (container.children.length > 20) { container.removeChild(container.firstChild); }
+  }, 3000); 
 }
 
 // ==========================================
