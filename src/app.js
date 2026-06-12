@@ -92,7 +92,6 @@ function playHighlight(athlete) {
       <iframe src="${targetUrl.includes('youtube') ? targetUrl.replace('watch?v=', 'embed/') : targetUrl}" class="w-full h-full" allowfullscreen></iframe>`;
   }
 }
-
 // ==========================================
 // 📥 CLOUD STORAGE RAW MEDIA LOCKER DISPATCHER
 // ==========================================
@@ -103,56 +102,6 @@ function initializeMediaLockerEngine() {
   fileInput.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    if (!isAdminProfile(currentProfile)) {
-      alert("Administrative verification token missing.");
-      fileInput.value = "";
-      return;
-    }
-
-    if (!activeSelectedAthleteId) {
-      alert("Operational Fault: Select a player row first.");
-      fileInput.value = "";
-      return;
-    }
-
-    const matchedAthlete = allAthletesCache.find(p => p.id === activeSelectedAthleteId);
-    const sanitizedTitle = (matchedAthlete?.data?.name || "unnamed").replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    const fileExtension = file.name.split('.').pop();
-    const storagePath = `highlights/${activeSelectedAthleteId}/${sanitizedTitle}.${fileExtension}`;
-    
-    const targetRef = storageRef(storage, storagePath);
-    const uploadTask = uploadBytesResumable(targetRef, file);
-
-    setText("upload-status-text", "Streaming File data...");
-    setText("upload-status-icon", "⏳");
-    
-    uploadTask.on('state_changed', 
-      (snapshot) => {
-        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        setText("upload-progress-sub", `PIPE TRANSACTING: ${progress}% COMPLETE`);
-      }, 
-      (error) => {
-        setText("upload-status-text", "Upload Failure");
-        setText("upload-status-icon", "❌");
-        fileInput.value = "";
-      }, 
-      async () => {
-        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-        await updateDoc(doc(db, "athletes", activeSelectedAthleteId), {
-          highlightUrl: downloadUrl,
-          updatedAt: serverTimestamp()
-        });
-        totalSuccessfulUploads++;
-        setText("upload-status-text", "GRID BIND COMPLETED");
-        setText("upload-status-icon", "✅");
-        fileInput.value = "";
-      }
-    ); // <-- THIS MATCHING CLOSING PARENTHESIS IS WHAT WAS MISSING
-  });
-}
-
-// [Include your remaining renderDraftBoards, bindAdminEvents, and onAuthStateChanged logic here]
 
     if (!isAdminProfile(currentProfile)) {
       alert("Administrative verification token missing. Stream channel access denied.");
@@ -171,9 +120,7 @@ function initializeMediaLockerEngine() {
     const fileExtension = file.name.split('.').pop();
     
     const storagePath = `highlights/${activeSelectedAthleteId}/${sanitizedTitle}.${fileExtension}`;
-    
-    const targetRef = storageRef(storage, storagePath);
-    const uploadTask = uploadBytesResumable(targetRef, file);
+    const uploadTask = uploadBytesResumable(storageRef(storage, storagePath), file);
 
     setText("upload-status-text", "Streaming File data...");
     setText("upload-status-icon", "⏳");
@@ -195,9 +142,7 @@ function initializeMediaLockerEngine() {
       async () => {
         try {
           const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          
-          const docRef = doc(db, "athletes", activeSelectedAthleteId);
-          await updateDoc(docRef, {
+          await updateDoc(doc(db, "athletes", activeSelectedAthleteId), {
             highlightUrl: downloadUrl,
             updatedAt: serverTimestamp()
           });
@@ -208,7 +153,6 @@ function initializeMediaLockerEngine() {
           setText("upload-progress-sub", `${file.name.substring(0, 18)}... linked`);
           setText("upload-count-badge", `Uploads: ${totalSuccessfulUploads}`);
           $("media-locker-container")?.classList.remove("border-zeus-gold", "shadow-[0_0_10px_rgba(212,175,55,0.2)]");
-          
           fileInput.value = "";
         } catch (err) {
           console.error("Binding configuration array update rejected:", err);
