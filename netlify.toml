@@ -1,5 +1,7 @@
 [functions]
-  directory = "nonexistent_folder_xyz"[build]
+  directory = "nonexistent_folder_xyz"
+
+[build]
   # CI= prevents Netlify from failing on warnings
   command = "CI= npm install && npm run build"
   publish = "dist"
