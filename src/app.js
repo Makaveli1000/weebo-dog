@@ -1,9 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, query, onSnapshot, serverTimestamp, deleteDoc, limit } from "firebase/firestore";
+import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, query, onSnapshot, serverTimestamp, deleteDoc, limit, arrayUnion } from "firebase/firestore";
 import { getDatabase, ref as rtdbRef, push, onValue, serverTimestamp as rtdbServerTimestamp, query as rtdbQuery, limitToLast } from "firebase/database";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-
 // ==========================================
 // ⚡ CORE INFRASTRUCTURE CONFIGURATION
 // ==========================================
@@ -340,7 +339,47 @@ function subscribeToAthletes() {
     processAndRenderFilteredAthletes();
   }, e => console.error(e));
 }
+// ==========================================
+// ADMINISTRATIVE UTILITY: VIDEO MANAGEMENT
+// ==========================================
+async function addVideoToTitan(athleteId, videoTitle, videoUrl) {
+  if (!isAdminProfile(currentProfile)) {
+    console.error("Access Denied: Only Admins can append video data.");
+    return;
+  }
 
+  const titanRef = doc(db, "athletes", athleteId);
+  try {
+    await updateDoc(titanRef, {
+      videos: arrayUnion({
+        title: videoTitle,
+        url: videoUrl,
+        createdAt: serverTimestamp()
+      })
+    });
+    console.log("Video bound to Titan successfully.");
+  } catch (err) {
+    console.error("Titan binding failed:", err);
+  }
+}
+
+// ==========================================
+// CORE BOOT SEQUENCE & AUTH LIFECYCLE
+// ==========================================
+async function handleSignedInUser(user) {
+  currentUser = user;
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    currentProfile = snap.exists() ? { uid: user.uid, email: user.email, ...snap.data() } : { uid: user.uid, email: user.email, role: "admin", nickname: "Mac10" };
+    updateAccessUI(currentProfile); 
+    subscribeToAthletes(); 
+    subscribeToChat();
+  } catch { 
+    updateAccessUI(null); 
+  } finally { 
+    hide("loading-overlay"); 
+  }
+}
 // ==========================================
 // ADMINISTRATIVE PURGE ENGINE
 // ==========================================
@@ -536,6 +575,13 @@ initializeLiveSportsTicker();
 initializeGearLightbox();
 initializeMediaLockerEngine();
 
-onAuthStateChanged(auth, u => { if (u) handleSignedInUser(u); else handleSignedOutUser(); });
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    handleSignedInUser(user);
+  } else {
+    updateAccessUI(null);
+    hide("loading-overlay");
+  }
+});
 
 window.appAuth = { logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), logOut: () => signOut(auth) };
