@@ -70,26 +70,37 @@ function playHighlight(athlete) {
   
   if (!viewport || !placeholder) return;
 
-  const targetUrl = String(athlete?.highlightUrl || athlete?.highlight || "").trim();
+  let url = String(athlete?.highlightUrl || athlete?.highlight || "").trim();
 
-  if (!targetUrl) {
+  if (!url) {
     viewport.innerHTML = "";
     placeholder.classList.remove("hidden", "opacity-0");
-    if (title) title.textContent = `${athlete?.name || "Titan"}: No clip connected`;
+    if (title) title.textContent = "No clip connected";
     return;
   }
 
   placeholder.classList.add("hidden", "opacity-0");
   if (title) title.textContent = `Now Playing: ${athlete.name}`;
 
-  if (isFirebaseStorageUrl(targetUrl) || targetUrl.endsWith(".mp4") || targetUrl.endsWith(".webm")) {
+  // 1. UNIVERSAL YOUTUBE EMBED HANDLER
+  if (url.includes("youtube.com") || url.includes("youtu.be")) {
+    let videoId = url.split("v=")[1] || url.split("/").pop();
+    if (videoId.includes("?")) videoId = videoId.split("?")[0];
+    
     viewport.innerHTML = `
-      <video src="${targetUrl}" controls autoplay muted playsinline class="w-full h-full rounded border border-zeus-border/40 bg-black">
+      <iframe 
+        src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1" 
+        class="w-full h-full" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen>
+      </iframe>`;
+  } 
+  // 2. UNIVERSAL DIRECT VIDEO HANDLER (MP4/WebM)
+  else {
+    viewport.innerHTML = `
+      <video src="${url}" controls autoplay muted playsinline class="w-full h-full bg-black">
         Your browser does not support HTML5 video.
       </video>`;
-  } else {
-    viewport.innerHTML = `
-      <iframe src="${targetUrl.includes('youtube') ? targetUrl.replace('watch?v=', 'embed/') : targetUrl}" class="w-full h-full" allowfullscreen></iframe>`;
   }
 }
 // ==========================================
