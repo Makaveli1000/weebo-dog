@@ -503,23 +503,6 @@ function initializeGearLightbox() {
 }
 
 // ==========================================
-// CORE BOOT SEQUENCE & AUTH LIFECYCLE
-// ==========================================
-async function handleSignedInUser(user) {
-  currentUser = user;
-  try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    currentProfile = snap.exists() ? { uid: user.uid, email: user.email, ...snap.data() } : { uid: user.uid, email: user.email, role: "admin", nickname: "Mac10" };
-    updateAccessUI(currentProfile); subscribeToAthletes(); subscribeToChat();
-  } catch { updateAccessUI(null); } finally { hide("loading-overlay"); }
-}
-
-function handleSignedOutUser() {
-  currentUser = null; currentProfile = null;
-  updateAccessUI(null); subscribeToAthletes(); hide("loading-overlay");
-}
-
-// ==========================================
 // EVENT LISTENERS MATRIX BOUNDS
 // ==========================================
 function bindEvents() {

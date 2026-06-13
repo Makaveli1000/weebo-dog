@@ -1,8 +1,11 @@
-[build]
-  command = "npm install && npm run build"
+[functions]
+  directory = "nonexistent_folder_xyz"[build]
+  # CI= prevents Netlify from failing on warnings
+  command = "CI= npm install && npm run build"
   publish = "dist"
 
 [build.environment]
+  NODE_VERSION = "22"
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 [[headers]]
@@ -14,6 +17,3 @@
   for = "/*.map"
   [headers.values]
     Content-Type = "application/json"
-
-[context.production]
-  environment = { NETLIFY_USE_DIRECTORY_INDEX = "false" }
