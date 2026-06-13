@@ -63,7 +63,6 @@ window.hide = hide;
 // ==========================================
 // 🎥 DUAL-VIEW PORT MEDIA THEATER CONTROLLER
 // ==========================================
-// Helper for URL conversion
 function getEmbedUrl(url) {
   if (url.includes("youtube.com/watch?v=")) return url.replace("watch?v=", "embed/");
   if (url.includes("youtu.be/")) return url.replace("youtu.be/", "youtube.com/embed/");
