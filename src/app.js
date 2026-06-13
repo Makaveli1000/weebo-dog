@@ -72,7 +72,6 @@ function getEmbedUrl(url) {
 function playHighlight(athlete) {
   const viewport = $("theater-media-viewport");
   const placeholder = $("video-placeholder");
-  
   if (!viewport || !placeholder) return;
 
   const videoList = athlete.videos || (athlete.highlightUrl ? [{ title: "Main Highlight", url: athlete.highlightUrl }] : []);
@@ -82,15 +81,11 @@ function playHighlight(athlete) {
     placeholder.classList.remove("hidden");
     return;
   }
-
   placeholder.classList.add("hidden");
 
-  // Define the switchVideo function inside playHighlight so it has access to 'viewport' and 'videoList'
   window.switchVideo = (index) => {
     const v = videoList[index];
     const url = v.url;
-
-    // Create Menu
     let menuHtml = videoList.length > 1 ? `
       <div class="absolute top-0 left-0 w-full bg-zeus-panel/90 p-2 flex space-x-2 overflow-x-auto z-20">
         ${videoList.map((item, i) => `
@@ -101,21 +96,15 @@ function playHighlight(athlete) {
       </div>
     ` : "";
 
-    // Universal Player Logic
     if (url.includes("youtube.com") || url.includes("youtu.be")) {
       let videoId = url.split("v=")[1] || url.split("/").pop();
       if (videoId.includes("?")) videoId = videoId.split("?")[0];
-      
-      viewport.innerHTML = menuHtml + `
-        <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1" 
-                class="w-full h-full" allowfullscreen></iframe>`;
+      viewport.innerHTML = menuHtml + `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1" class="w-full h-full" allowfullscreen></iframe>`;
     } else {
-      viewport.innerHTML = menuHtml + `
-        <video src="${url}" controls autoplay muted playsinline class="w-full h-full bg-black"></video>`;
+      viewport.innerHTML = menuHtml + `<video src="${url}" controls autoplay muted playsinline class="w-full h-full bg-black"></video>`;
     }
   };
-
-  window.switchVideo(0); // Load first video
+  window.switchVideo(0);
 }
 
   // 1. UNIVERSAL YOUTUBE EMBED HANDLER
