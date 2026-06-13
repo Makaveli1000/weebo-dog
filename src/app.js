@@ -63,24 +63,61 @@ window.hide = hide;
 // ==========================================
 // 🎥 DUAL-VIEW PORT MEDIA THEATER CONTROLLER
 // ==========================================
+// Helper for URL conversion
+function getEmbedUrl(url) {
+  if (url.includes("youtube.com/watch?v=")) return url.replace("watch?v=", "embed/");
+  if (url.includes("youtu.be/")) return url.replace("youtu.be/", "youtube.com/embed/");
+  return url;
+}
+
 function playHighlight(athlete) {
   const viewport = $("theater-media-viewport");
   const placeholder = $("video-placeholder");
-  const title = $("now-playing-title");
   
   if (!viewport || !placeholder) return;
 
-  let url = String(athlete?.highlightUrl || athlete?.highlight || "").trim();
+  const videoList = athlete.videos || (athlete.highlightUrl ? [{ title: "Main Highlight", url: athlete.highlightUrl }] : []);
 
-  if (!url) {
+  if (videoList.length === 0) {
     viewport.innerHTML = "";
-    placeholder.classList.remove("hidden", "opacity-0");
-    if (title) title.textContent = "No clip connected";
+    placeholder.classList.remove("hidden");
     return;
   }
 
-  placeholder.classList.add("hidden", "opacity-0");
-  if (title) title.textContent = `Now Playing: ${athlete.name}`;
+  placeholder.classList.add("hidden");
+
+  // Define the switchVideo function inside playHighlight so it has access to 'viewport' and 'videoList'
+  window.switchVideo = (index) => {
+    const v = videoList[index];
+    const url = v.url;
+
+    // Create Menu
+    let menuHtml = videoList.length > 1 ? `
+      <div class="absolute top-0 left-0 w-full bg-zeus-panel/90 p-2 flex space-x-2 overflow-x-auto z-20">
+        ${videoList.map((item, i) => `
+          <button onclick="window.switchVideo(${i})" class="text-[9px] ${i === index ? 'bg-zeus-gold text-black' : 'bg-gray-800 text-white'} px-2 py-1 rounded font-bold uppercase whitespace-nowrap">
+            ${item.title}
+          </button>
+        `).join("")}
+      </div>
+    ` : "";
+
+    // Universal Player Logic
+    if (url.includes("youtube.com") || url.includes("youtu.be")) {
+      let videoId = url.split("v=")[1] || url.split("/").pop();
+      if (videoId.includes("?")) videoId = videoId.split("?")[0];
+      
+      viewport.innerHTML = menuHtml + `
+        <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1" 
+                class="w-full h-full" allowfullscreen></iframe>`;
+    } else {
+      viewport.innerHTML = menuHtml + `
+        <video src="${url}" controls autoplay muted playsinline class="w-full h-full bg-black"></video>`;
+    }
+  };
+
+  window.switchVideo(0); // Load first video
+}
 
   // 1. UNIVERSAL YOUTUBE EMBED HANDLER
   if (url.includes("youtube.com") || url.includes("youtu.be")) {
