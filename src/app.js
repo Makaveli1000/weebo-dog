@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, query, onSnapshot, serverTimestamp, deleteDoc, limit, arrayUnion } from "firebase/firestore";
+import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, query, onSnapshot, serverTimestamp, deleteDoc, limit, arrayUnion, getDocs } from "firebase/firestore";
 import { getDatabase, ref as rtdbRef, push, onValue, serverTimestamp as rtdbServerTimestamp, query as rtdbQuery, limitToLast } from "firebase/database";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 // ==========================================
