@@ -75,7 +75,6 @@ function playHighlight(athlete) {
   if (!viewport || !placeholder) return;
 
   const videoList = athlete.videos || (athlete.highlightUrl ? [{ title: "Main Highlight", url: athlete.highlightUrl }] : []);
-
   if (videoList.length === 0) {
     viewport.innerHTML = "";
     placeholder.classList.remove("hidden");
@@ -107,27 +106,6 @@ function playHighlight(athlete) {
   window.switchVideo(0);
 }
 
-  // 1. UNIVERSAL YOUTUBE EMBED HANDLER
-  if (url.includes("youtube.com") || url.includes("youtu.be")) {
-    let videoId = url.split("v=")[1] || url.split("/").pop();
-    if (videoId.includes("?")) videoId = videoId.split("?")[0];
-    
-    viewport.innerHTML = `
-      <iframe 
-        src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1" 
-        class="w-full h-full" 
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-        allowfullscreen>
-      </iframe>`;
-  } 
-  // 2. UNIVERSAL DIRECT VIDEO HANDLER (MP4/WebM)
-  else {
-    viewport.innerHTML = `
-      <video src="${url}" controls autoplay muted playsinline class="w-full h-full bg-black">
-        Your browser does not support HTML5 video.
-      </video>`;
-  }
-}
 // ==========================================
 // 📥 CLOUD STORAGE RAW MEDIA LOCKER DISPATCHER
 // ==========================================
@@ -139,62 +117,17 @@ function initializeMediaLockerEngine() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!isAdminProfile(currentProfile)) {
-      alert("Administrative verification token missing. Stream channel access denied.");
-      fileInput.value = "";
-      return;
-    }
+    if (!isAdminProfile(currentProfile)) return alert("Admin access denied.");
+    if (!activeSelectedAthleteId) return alert("Select an athlete row first.");
 
-    if (!activeSelectedAthleteId) {
-      alert("Operational Fault: Select a player row from the matrix before uploading a file.");
-      fileInput.value = "";
-      return;
-    }
-
-    const matchedAthlete = allAthletesCache.find(p => p.id === activeSelectedAthleteId);
-    const sanitizedTitle = (matchedAthlete?.data?.name || "unnamed").replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    const fileExtension = file.name.split('.').pop();
-    
-    const storagePath = `highlights/${activeSelectedAthleteId}/${sanitizedTitle}.${fileExtension}`;
+    const storagePath = `highlights/${activeSelectedAthleteId}/${file.name}`;
     const uploadTask = uploadBytesResumable(storageRef(storage, storagePath), file);
 
-    setText("upload-status-text", "Streaming File data...");
-    setText("upload-status-icon", "⏳");
-    $("media-locker-container")?.classList.add("border-zeus-gold", "shadow-[0_0_10px_rgba(212,175,55,0.2)]");
-
-    uploadTask.on('state_changed', 
-      (snapshot) => {
-        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        setText("upload-progress-sub", `PIPE TRANSACTING: ${progress}% COMPLETE`);
-      }, 
-      (error) => {
-        console.error("Cloud storage stream faulted:", error);
-        setText("upload-status-text", "Upload Failure");
-        setText("upload-status-icon", "❌");
-        setText("upload-progress-sub", "Check security permissions.");
-        $("media-locker-container")?.classList.remove("border-zeus-gold", "shadow-[0_0_10px_rgba(212,175,55,0.2)]");
-        fileInput.value = "";
-      }, 
-      async () => {
-        try {
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          await updateDoc(doc(db, "athletes", activeSelectedAthleteId), {
-            highlightUrl: downloadUrl,
-            updatedAt: serverTimestamp()
-          });
-
-          totalSuccessfulUploads++;
-          setText("upload-status-text", "GRID BIND COMPLETED");
-          setText("upload-status-icon", "✅");
-          setText("upload-progress-sub", `${file.name.substring(0, 18)}... linked`);
-          setText("upload-count-badge", `Uploads: ${totalSuccessfulUploads}`);
-          $("media-locker-container")?.classList.remove("border-zeus-gold", "shadow-[0_0_10px_rgba(212,175,55,0.2)]");
-          fileInput.value = "";
-        } catch (err) {
-          console.error("Binding configuration array update rejected:", err);
-        }
-      }
-    );
+    uploadTask.on('state_changed', null, null, async () => {
+      const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+      await updateDoc(doc(db, "athletes", activeSelectedAthleteId), { highlightUrl: downloadUrl });
+      alert("Upload complete.");
+    });
   });
 }
 
