@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from
 import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, query, onSnapshot, serverTimestamp, deleteDoc, limit, arrayUnion, getDocs } from "firebase/firestore";
 import { getDatabase, ref as rtdbRef, push, onValue, serverTimestamp as rtdbServerTimestamp, query as rtdbQuery, limitToLast } from "firebase/database";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+
 // ==========================================
 // ⚡ CORE INFRASTRUCTURE CONFIGURATION
 // ==========================================
@@ -31,7 +32,6 @@ let allAthletesCache = [];
 let unsubscribeAthletes = null;
 let unsubscribeChat = null;
 let activeSelectedAthleteId = null; 
-let totalSuccessfulUploads = 0;
 
 // DRAFT BOARD ARRAYS MEMORY NODES
 let squadA = [];
@@ -71,12 +71,14 @@ function getEmbedUrl(url) {
 function playHighlight(athlete) {
   const viewport = $("theater-media-viewport");
   const placeholder = $("video-placeholder");
+  const titleBadge = $("now-playing-title");
   if (!viewport || !placeholder) return;
 
   const videoList = athlete.videos || (athlete.highlightUrl ? [{ title: "Main Highlight", url: athlete.highlightUrl }] : []);
   if (videoList.length === 0) {
     viewport.innerHTML = "";
     placeholder.classList.remove("hidden");
+    if (titleBadge) titleBadge.textContent = "Select a row to play";
     return;
   }
   placeholder.classList.add("hidden");
@@ -84,6 +86,8 @@ function playHighlight(athlete) {
   window.switchVideo = (index) => {
     const v = videoList[index];
     const url = v.url;
+    if (titleBadge) titleBadge.textContent = `Playing: ${v.title}`;
+
     let menuHtml = videoList.length > 1 ? `
       <div class="absolute top-0 left-0 w-full bg-zeus-panel/90 p-2 flex space-x-2 overflow-x-auto z-20">
         ${videoList.map((item, i) => `
@@ -119,14 +123,38 @@ function initializeMediaLockerEngine() {
     if (!isAdminProfile(currentProfile)) return alert("Admin access denied.");
     if (!activeSelectedAthleteId) return alert("Select an athlete row first.");
 
-    const storagePath = `highlights/${activeSelectedAthleteId}/${file.name}`;
+    const subLabel = $("upload-progress-sub");
+    if (subLabel) subLabel.textContent = "UPLOADING MEDIA BLOCKS...";
+
+    const storagePath = `highlights/${activeSelectedAthleteId}/${Date.now()}_${file.name}`;
     const uploadTask = uploadBytesResumable(storageRef(storage, storagePath), file);
 
-    uploadTask.on('state_changed', null, null, async () => {
-      const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-      await updateDoc(doc(db, "athletes", activeSelectedAthleteId), { highlightUrl: downloadUrl });
-      alert("Upload complete.");
-    });
+    uploadTask.on('state_changed', null, 
+      (error) => {
+        console.error("Upload process rejected:", error);
+        alert("Upload failed.");
+      }, 
+      async () => {
+        try {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          const titanRef = doc(db, "athletes", activeSelectedAthleteId);
+          
+          await updateDoc(titanRef, { 
+            highlightUrl: downloadUrl,
+            videos: arrayUnion({
+              title: file.name.split('.').slice(0, -1).join('.') || "Uploaded Video",
+              url: downloadUrl,
+              createdAt: new Date().toISOString()
+            })
+          });
+          
+          if (subLabel) subLabel.textContent = "UPLOAD MATRIX SECURE.";
+          alert("Media permanently attached to athlete grid profiles.");
+        } catch (err) {
+          console.error("Failed to commit video data:", err);
+        }
+      }
+    );
   });
 }
 
@@ -134,7 +162,6 @@ function initializeMediaLockerEngine() {
 // ⚡ SCORING ENGINE
 // ==========================================
 function athleteTotal(athlete) {
-  // Handles both the new 'scores' array format and the old individual 'scoreX' format
   const scores = Array.isArray(athlete?.scores) ? athlete.scores : 
                  [athlete?.score0, athlete?.score1, athlete?.score2, athlete?.score3, athlete?.score4];
   return scores.reduce((sum, val) => sum + safeNumber(val), 0);
@@ -149,6 +176,34 @@ function calculateSquadAverages() {
   setText("squad-b-rating", `AVG: ${calcAvg(squadB)}`);
 }
 
+function renderDraftBoards() {
+  const slotA = $("squad-a-slots");
+  const slotB = $("squad-b-slots");
+  
+  if (slotA) {
+    slotA.innerHTML = squadA.length === 0 
+      ? `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Select an athlete above to draft.</div>`
+      : squadA.map((p, idx) => `
+          <div class="flex justify-between items-center bg-zeus-panel border border-zeus-border/40 p-2 rounded text-xs font-mono">
+            <span class="text-white font-bold">${escapeHtml(p.name)}</span>
+            <button onclick="window.dropFromSquad('A', ${idx})" class="text-red-400 hover:text-red-500 font-bold px-1">&times;</button>
+          </div>
+        `).join("");
+  }
+  
+  if (slotB) {
+    slotB.innerHTML = squadB.length === 0 
+      ? `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Select an athlete above to draft.</div>`
+      : squadB.map((p, idx) => `
+          <div class="flex justify-between items-center bg-zeus-panel border border-zeus-border/40 p-2 rounded text-xs font-mono">
+            <span class="text-gray-300">${escapeHtml(p.name)}</span>
+            <button onclick="window.dropFromSquad('B', ${idx})" class="text-red-400 hover:text-red-500 font-bold px-1">&times;</button>
+          </div>
+        `).join("");
+  }
+  calculateSquadAverages();
+}
+window.renderDraftBoards = renderDraftBoards;
 window.dropFromSquad = (squadType, index) => {
   if (squadType === 'A') squadA.splice(index, 1);
   else squadB.splice(index, 1);
@@ -182,6 +237,23 @@ window.directPurgeRow = async (e, id, name) => {
     }
   }
 };
+
+window.handleAdminAddVideo = async () => {
+  const titleEl = $("new-vid-title");
+  const urlEl = $("new-vid-url");
+  const title = titleEl?.value.trim();
+  const url = urlEl?.value.trim();
+
+  if (!activeSelectedAthleteId) return alert("Select an athlete profile row first from the matrix.");
+  if (!title || !url) return alert("Please specify both a valid title and URL string.");
+
+  await addVideoToTitan(activeSelectedAthleteId, title, url);
+  titleEl.value = "";
+  urlEl.value = "";
+  alert("Video payload successfully committed to user array.");
+};
+
+window.renderDraftBoards = renderDraftBoards;
 
 // ==========================================
 // ST. LOUIS BASELINE INITIALIZATION SEEDS
@@ -252,6 +324,9 @@ function refreshSubTierOptions() {
   subTierSelect.innerHTML = options.map(([v, l]) => `<option value="${escapeHtml(v)}">${escapeHtml(l)}</option>`).join("");
 }
 
+// ==========================================
+// RENDER ENGINE (DYNAMIC DECOUPLED MATRIX GENERATOR)
+// ==========================================
 function getFilteredAthletes() {
   const tier = $("tier-select")?.value || "all";
   const subTier = $("sub-tier-select")?.value || "all";
@@ -260,9 +335,6 @@ function getFilteredAthletes() {
   });
 }
 
-// ==========================================
-// RENDER ENGINE (DYNAMIC DECOUPLED MATRIX GENERATOR)
-// ==========================================
 function processAndRenderFilteredAthletes() {
   const gridBody = $("match-grid-body");
   if (!gridBody) return;
@@ -274,30 +346,23 @@ function processAndRenderFilteredAthletes() {
     return;
   }
 
-  // Fixed column matching parameters: mapped every property <td> directly to its matching <th> column header slot
   gridBody.innerHTML = filteredAthletes.map(({ id, data }) => {
-    const hasHighlight = Boolean(data.highlightUrl || data.highlight);
+    const hasHighlight = Boolean((data.videos && data.videos.length > 0) || data.highlightUrl || data.highlight);
     const isSelected = activeSelectedAthleteId === id;
     const trackingClass = isSelected ? "bg-zeus-gold/10 border-l-2 border-zeus-gold" : "border-t border-zeus-border";
     
     return `
       <tr class="${trackingClass} hover:bg-zeus-gold/5 cursor-pointer transition" data-athlete-id="${escapeHtml(id)}">
-        <!-- Col 1: Name -->
         <td class="p-3 font-bold text-white max-w-[200px] truncate">
           <div class="flex items-center space-x-2">
             <span>${escapeHtml(data.name)}</span>
             ${hasHighlight ? `<span class="bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider shrink-0">Video</span>` : ""}
           </div>
         </td>
-        <!-- Col 2: Primary Attribute (Score 0) -->
         <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[0])}</td>
-        <!-- Col 3: Performance Tier (Score 1) -->
         <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[1])}</td>
-        <!-- Col 4: Total Composite -->
         <td class="p-3 text-center font-black text-zeus-gold">${mergeRosterScores(data)}</td>
-        <!-- Col 5: Discipline (Sport) -->
         <td class="p-3 text-center text-gray-400 uppercase text-xs">${escapeHtml(data.sport)}</td>
-        <!-- Col 6: Roster Actions (Bypasses row tracking) -->
         <td class="p-3 text-right" onclick="event.stopPropagation()">
           <div class="flex items-center justify-end space-x-1">
             <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 1)" class="bg-zeus-goldSoft text-zeus-gold border border-zeus-gold/20 hover:bg-zeus-gold hover:text-black font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft A</button>
@@ -327,6 +392,11 @@ function processAndRenderFilteredAthletes() {
       setText("upload-progress-sub", `BOUNDING TARGET: ${found.data.name.substring(0, 15)}...`);
       $("media-locker-container")?.classList.add("border-zeus-gold", "shadow-[0_0_15px_rgba(212,175,55,0.15)]");
 
+      const uploadBadge = $("upload-count-badge");
+      if (uploadBadge) {
+        uploadBadge.textContent = `Uploads: ${found.data.videos ? found.data.videos.length : 0}`;
+      }
+
       playHighlight(found.data);
     });
   });
@@ -337,8 +407,19 @@ function subscribeToAthletes() {
   unsubscribeAthletes = onSnapshot(query(collection(db, "athletes"), limit(120)), (snap) => {
     allAthletesCache = snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => mergeRosterScores(b.data) - mergeRosterScores(a.data));
     processAndRenderFilteredAthletes();
+    
+    if (activeSelectedAthleteId) {
+      const currentSelected = allAthletesCache.find(item => item.id === activeSelectedAthleteId);
+      if (currentSelected) {
+        const uploadBadge = $("upload-count-badge");
+        if (uploadBadge) {
+          uploadBadge.textContent = `Uploads: ${currentSelected.data.videos ? currentSelected.data.videos.length : 0}`;
+        }
+      }
+    }
   }, e => console.error(e));
 }
+
 // ==========================================
 // ADMINISTRATIVE UTILITY: VIDEO MANAGEMENT
 // ==========================================
@@ -354,7 +435,7 @@ async function addVideoToTitan(athleteId, videoTitle, videoUrl) {
       videos: arrayUnion({
         title: videoTitle,
         url: videoUrl,
-        createdAt: serverTimestamp()
+        createdAt: new Date().toISOString()
       })
     });
     console.log("Video bound to Titan successfully.");
@@ -380,6 +461,7 @@ async function handleSignedInUser(user) {
     hide("loading-overlay"); 
   }
 }
+
 // ==========================================
 // ADMINISTRATIVE PURGE ENGINE
 // ==========================================
@@ -431,7 +513,7 @@ async function sendChatMessage() {
 }
 
 // ==========================================
-// 📡 UPDATED REAL-TIME SPORTS TICKER ENGINE
+// 📡 REAL-TIME SPORTS TICKER ENGINE
 // ==========================================
 const ST_LOUIS_TICKER_ALERTS = [
   { prefix: "🏈 [NFL]", text: "Mini-camp intensity spiking; veteran defensive sets showing +12% efficiency.", color: "text-zeus-gold" },
@@ -450,7 +532,6 @@ function initializeLiveSportsTicker() {
   if (!container) return;
   container.innerHTML = `<div class="text-zeus-gold/80 animate-feed-slide">🛰️ [SYSTEM]: Global Feed Sync active...</div>`;
 
-  // Increased speed: Alerts now fire every 3 seconds instead of 4.5
   setInterval(() => {
     const alert = ST_LOUIS_TICKER_ALERTS[Math.floor(Math.random() * ST_LOUIS_TICKER_ALERTS.length)];
     const alertRow = document.createElement("div");
@@ -461,7 +542,6 @@ function initializeLiveSportsTicker() {
     `;
     container.appendChild(alertRow);
     container.scrollTop = container.scrollHeight;
-    // Keeps the feed tidy by limiting lines
     if (container.children.length > 20) { container.removeChild(container.firstChild); }
   }, 3000); 
 }
@@ -525,7 +605,9 @@ function bindEvents() {
       name: nameIn.value.trim(), sport: sportSel?.value || "Football",
       tier: tier !== "all" ? tier : "pro-players", subCategory: sub !== "all" ? sub : "pro-major",
       scores: [safeNumber($("score-0")?.value||90), safeNumber($("score-1")?.value||90), safeNumber($("score-2")?.value||90), safeNumber($("score-3")?.value||90), safeNumber($("score-4")?.value||90)],
-      highlightUrl: hlIn?.value.trim() || "", createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy: currentUser?.uid || "unknown"
+      highlightUrl: hlIn?.value.trim() || "", 
+      videos: [], // Initialize pristine array space
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy: currentUser?.uid || "unknown"
     };
 
     try {

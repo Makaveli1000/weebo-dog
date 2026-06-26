@@ -55,23 +55,49 @@
     <div class="space-y-6">
       <!-- ATHLETE COMMAND CENTER (ADMIN DATA ENTRY PANEL) -->
       <div id="admin-panel" class="hidden border border-zeus-border bg-zeus-panel p-4 rounded-xl">
-        <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase mb-3 font-mono">Athlete Command Center</h3>
-        </form>
+  <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase mb-3 font-mono">Athlete Command Center</h3>
+  
+  <!-- FIX: Restored missing form tag and input matrix to bind with document fields -->
+  <form id="athlete-form" class="space-y-2 mb-3">
+    <input type="text" id="athlete-name" placeholder="Titan Athlete Name" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-zeus-gold" required>
+    
+    <select id="athlete-sport" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white focus:outline-none focus:border-zeus-gold">
+      <option value="Basketball">Basketball</option>
+      <option value="Football">Football</option>
+      <option value="Track">Track / Speed</option>
+      <option value="Hockey">Hockey</option>
+      <option value="Baseball">Baseball</option>
+    </select>
+    
+    <input type="text" id="athlete-highlight" placeholder="Fallback Main Highlight URL (Optional)" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-zeus-gold">
+    
+    <div class="grid grid-cols-5 gap-1">
+      <input type="number" id="score-0" placeholder="Attr 1" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+      <input type="number" id="score-1" placeholder="Attr 2" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+      <input type="number" id="score-2" placeholder="Attr 3" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+      <input type="number" id="score-3" placeholder="Attr 4" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+      <input type="number" id="score-4" placeholder="Attr 5" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+    </div>
+    
+    <button type="submit" class="w-full bg-zeus-gold text-black font-bold py-2 rounded transition duration-150 uppercase font-mono tracking-wider text-xs">
+      Commit Titan to Grid
+    </button>
+  </form>
 
-        <!-- NEW: Playlist Expansion Controller -->
-        <div class="border-t border-zeus-border mt-3 pt-3">
-          <label class="block text-[10px] font-mono text-gray-500 uppercase tracking-wider mb-1">Playlist Entry</label>
-          <input type="text" id="new-vid-title" placeholder="Video Title" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white mb-1">
-          <input type="text" id="new-vid-url" placeholder="YouTube/Storage URL" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white mb-2">
-          <button onclick="window.handleAdminAddVideo()" class="w-full bg-zeus-gold/20 hover:bg-zeus-gold text-zeus-gold hover:text-black font-bold py-1.5 rounded transition duration-150 uppercase font-mono tracking-wider text-[10px]">
-            Add Video to Titan
-          </button>
-        </div>
+  <!-- Playlist Expansion Controller -->
+  <div class="border-t border-zeus-border mt-3 pt-3">
+    <label class="block text-[10px] font-mono text-gray-500 uppercase tracking-wider mb-1">Playlist Entry</label>
+    <input type="text" id="new-vid-title" placeholder="Video Title" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white mb-1">
+    <input type="text" id="new-vid-url" placeholder="YouTube/Storage URL" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white mb-2">
+    <button onclick="window.handleAdminAddVideo()" class="w-full bg-zeus-gold/20 hover:bg-zeus-gold text-zeus-gold hover:text-black font-bold py-1.5 rounded transition duration-150 uppercase font-mono tracking-wider text-[10px]">
+      Add Video to Titan
+    </button>
+  </div>
 
-        <button id="admin-purge-btn" class="hidden mt-3 w-full bg-red-950/40 hover:bg-zeus-red border border-red-900/60 hover:border-red-500 text-red-400 hover:text-white font-bold py-2 px-4 rounded transition duration-200 uppercase tracking-wider text-[11px] font-mono">
-          ⚠️ Clear Duplicates
-        </button>
-      </div>
+  <button id="admin-purge-btn" class="hidden mt-3 w-full bg-red-950/40 hover:bg-zeus-red border border-red-900/60 hover:border-red-500 text-red-400 hover:text-white font-bold py-2 px-4 rounded transition duration-200 uppercase tracking-wider text-[11px] font-mono">
+    ⚠️ Clear Duplicates
+  </button>
+</div>
 
       <!-- FILTER CONTROLLER LAYOUT MATRIX -->
       <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-4">
