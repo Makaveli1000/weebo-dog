@@ -353,7 +353,7 @@ function processAndRenderFilteredAthletes() {
     
     return `
       <tr class="${trackingClass} hover:bg-zeus-gold/5 cursor-pointer transition" data-athlete-id="${escapeHtml(id)}">
-        <td class="p-3 font-bold text-white max-w-[200px] truncate">
+        <td class="p-3 font-bold text-white whitespace-nowrap">
           <div class="flex items-center space-x-2">
             <span>${escapeHtml(data.name)}</span>
             ${hasHighlight ? `<span class="bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider shrink-0">Video</span>` : ""}
