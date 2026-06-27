@@ -664,17 +664,23 @@ function initializeGearLightbox() {
 }
 
 // ==========================================
-// 📡 CLOUD INVENTORY SYNC TERMINAL ENGINE
+// 📡 CLOUD INVENTORY SYNC TERMINAL ENGINE (UPDATED)
 // ==========================================
 function loadLiveGearMarketplace() {
-  onSnapshot(collection(db, "merchandise"), (snapshot) => {
+  const merchandiseRef = collection(db, "merchandise");
+  
+  onSnapshot(merchandiseRef, (snapshot) => {
     const productsArray = [];
+    
     snapshot.forEach((doc) => {
       productsArray.push({ id: doc.id, ...doc.data() });
     });
+
     if (productsArray.length > 0) {
       renderGlobalGearMarketplace(productsArray);
     }
+  }, (error) => {
+    console.error("Firestore synchronizer pipeline blocked:", error);
   });
 }
 
