@@ -6,6 +6,14 @@
   "engines": {
     "node": ">=22"
   },
+  {
+  "name": "projectsports",
+  "version": "1.0.0",
+  "description": "Zeus Portal Sports App",
+  "main": "index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "build": "node build-env.js && node esbuild.config.js && npm run tailwind:build && npm run copy:audio && npm run copy:html",
     "copy:html": "node -e \"const fs = require('fs'); fs.mkdirSync('dist', { recursive: true }); fs.copyFileSync('src/index.html', 'dist/index.html'); if(fs.existsSync('src/zeus-avatar.png')) fs.copyFileSync('src/zeus-avatar.png', 'dist/zeus-avatar.png');\"",
@@ -13,6 +21,8 @@
     "tailwind:build": "node ./node_modules/tailwindcss/lib/cli.js -i ./src/input.css -o ./dist/output.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
   },
   }, copy:audio && npm run copy:html",
     "copy:html": "shx cp src/index.html dist/index.html && shx cp src/zeus-avatar.png dist/zeus-avatar.png",
