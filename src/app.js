@@ -553,35 +553,74 @@ function openGearLightbox(product) {
   const modal = $("gear-lightbox-modal");
   if (!modal) return;
 
-  setText("lightbox-title", product.title);
-  setText("lightbox-sub", product.sub);
-  setText("lightbox-price", product.price);
+  // Set the text content dynamically
+  setText("lightbox-title", product.name); // Using product.name from Firestore
+  setText("lightbox-price", typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price);
+  
+  // Set a clean sub-label showing the origin network/brand
+  const subText = product.isExternal ? `Available via ${product.storeName} (${product.location || 'Global'})` : (product.sub || '"Dominate Today" Edition');
+  setText("lightbox-sub", subText);
   
   const iconEl = $("lightbox-icon");
-  if (iconEl) iconEl.textContent = product.icon;
+  if (iconEl) {
+    iconEl.textContent = product.isExternal ? "👟" : (product.icon || "🧥");
+  }
+
+  // SAVE THE FULL PRODUCT OBJECT ON THE CHECKOUT BUTTON so it knows what to do when clicked
+  const checkoutBtn = $("lightbox-checkout-btn");
+  if (checkoutBtn) {
+    // Convert object to a string format the button can hold onto
+    checkoutBtn.dataset.productPayload = JSON.stringify(product);
+    
+    // Change the button text depending on who handles the transaction
+    if (product.isExternal) {
+      checkoutBtn.textContent = `Buy via ${product.storeName}`;
+      checkoutBtn.className = "w-full py-3 rounded-lg bg-white text-black font-black uppercase tracking-wider text-xs transition-all";
+    } else {
+      checkoutBtn.textContent = "Secure Local Checkout";
+      checkoutBtn.className = "w-full py-3 rounded-lg bg-gold text-black font-black uppercase tracking-wider text-xs transition-all hover:bg-amber-400";
+    }
+  }
 
   modal.classList.remove("hidden");
 }
 
 function initializeGearLightbox() {
+  // 1. Static Click Listeners for hardcoded template items
   $("gear-view-tee")?.addEventListener("click", () => {
-    openGearLightbox({ title: "Wolverines Premium Tee", sub: '"Outwork Yesterday" Edition', price: "$30", icon: "👕" });
+    openGearLightbox({ name: "Wolverines Premium Tee", sub: '"Outwork Yesterday" Edition', price: 30.00, isExternal: false, stripePriceId: "price_tee_123", icon: "👕" });
   });
 
   $("gear-view-hoodie")?.addEventListener("click", () => {
-    openGearLightbox({ title: "Snt.L.Mo Elite Hoodie", sub: '"Dominate Today" Heavyweight', price: "$65", icon: "🧥" });
+    openGearLightbox({ name: "Snt.L.Mo Elite Hoodie", sub: '"Dominate Today" Heavyweight', price: 65.00, isExternal: false, stripePriceId: "price_1QxXYZ123456", icon: "🧥" });
   });
 
+  // 2. Close Modal Listener
   const closeBtn = $("gear-lightbox-close");
   closeBtn?.addEventListener("click", () => {
     $("gear-lightbox-modal")?.classList.add("hidden");
   });
 
-  $("lightbox-checkout-btn")?.addEventListener("click", () => {
-    alert("Stripe initialization active. Launching outer checkout terminal connection node...");
+  // 3. THE DYNAMIC ROUTING CHECKOUT BUTTON ENGINE
+  $("lightbox-checkout-btn")?.addEventListener("click", (e) => {
+    const payloadRaw = e.currentTarget.dataset.productPayload;
+    if (!payloadRaw) return;
+
+    const product = JSON.parse(payloadRaw);
+
+    if (product.isExternal) {
+      // AFFILIATE ROUTE: Opens Nike, Fanatics, etc., in a clean tracking tab
+      window.open(product.affiliateUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // LOCAL STRIPE ROUTE: Fire your actual checkout session link logic here
+      if (typeof redirectToStripeCheckout === 'function') {
+        redirectToStripeCheckout(product.stripePriceId);
+      } else {
+        alert(`Launching checkout node for ${product.name}...`);
+      }
+    }
   });
 }
-
 // ==========================================
 // EVENT LISTENERS MATRIX BOUNDS
 // ==========================================
