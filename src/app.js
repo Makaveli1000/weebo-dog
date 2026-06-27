@@ -546,43 +546,46 @@ function initializeLiveSportsTicker() {
 }
 
 // ==========================================
-// ⚙️ UNIFIED DYNAMIC MARKETPLACE GRID GENERATOR
+// ⚙️ UNIFIED DYNAMIC MARKETPLACE GRID GENERATOR (THEMED FIX)
 // ==========================================
 function renderGlobalGearMarketplace(products) {
   const container = document.getElementById('gear-grid-container');
   if (!container) return;
   
-  container.innerHTML = '';
+  container.innerHTML = ''; // This safely clears out your hardcoded backup hoodies!
 
   products.forEach(product => {
     const isAffiliate = product.isExternal === true;
     const productString = JSON.stringify(product).replace(/"/g, '&quot;');
     
+    // Formats price safely whether it's stored as a double or text string
+    const priceFormatted = !isNaN(product.price) ? Number(product.price).toFixed(2) : "0.00";
+    
     const cardHtml = `
-      <div class="border border-gold/20 bg-[#121214] rounded-xl p-4 flex flex-col justify-between shadow-lg transition-transform hover:scale-[1.01]">
+      <div class="border border-zeus-border bg-zeus-black/60 rounded-xl p-3 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
         <div>
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">${product.location || 'US Shipping'}</span>
-            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gold/10 text-gold border border-gold/20 uppercase tracking-wide">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="text-[8px] text-gray-500 font-mono uppercase tracking-wider">${product.location || 'US Shipping'}</span>
+            <span class="px-2 py-0.5 text-[8px] font-mono font-bold rounded bg-zeus-goldSoft text-zeus-gold border border-zeus-gold/20 uppercase tracking-wide">
               ${isAffiliate ? product.storeName : "Snt.L.Mo. Exclusive"}
             </span>
           </div>
           
-          <div class="w-full h-44 bg-[#1a1a1e] rounded-lg flex items-center justify-center p-3 overflow-hidden">
-            <img src="${product.image}" alt="${product.name || product.title}" class="max-w-full max-h-full object-contain" />
+          <div class="w-full aspect-square bg-zeus-panel rounded border border-zeus-border flex items-center justify-center p-2 overflow-hidden relative">
+            <img src="${product.image}" alt="${product.name || product.title}" class="w-full h-full object-cover absolute inset-0" />
           </div>
           
-          <div class="mt-4">
-            <h3 class="text-base font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis" title="${product.name || product.title}">
+          <div class="mt-2">
+            <h3 class="text-[10px] font-bold text-white tracking-tight truncate" title="${product.name || product.title}">
               ${product.name || product.title}
             </h3>
-            <p class="text-gold font-bold text-lg mt-1">$${Number(product.price).toFixed(2)}</p>
+            <p class="text-zeus-gold font-mono font-black text-xs mt-0.5">$${priceFormatted}</p>
           </div>
         </div>
 
         <button 
           onclick="openGearLightbox(${productString})"
-          class="w-full mt-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-200 bg-gold text-black hover:bg-amber-400 active:scale-[0.98]"
+          class="w-full mt-3 bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1.5 rounded transition border border-zeus-border"
         >
           View Details
         </button>
