@@ -255,42 +255,48 @@
 
       <!-- EXCLUSIVE SPORTS GEAR VAULT -->
       <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
-        <div class="flex justify-between items-center">
-          <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Exclusive Gear Vault</h3>
-          <span class="text-[9px] font-mono bg-zeus-goldSoft text-zeus-gold px-2 py-0.5 rounded border border-zeus-gold/20 uppercase tracking-widest">Drop 01</span>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="bg-zeus-black/60 border border-zeus-border rounded-lg p-2.5 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
-            <div class="relative w-full aspect-square bg-zeus-panel rounded border border-zeus-border overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-zeus-gold transition">
-              👕
-            </div>
-            <div class="mt-2">
-              <span class="block text-[10px] font-bold text-white tracking-tight truncate">Wolverines Premium Tee</span>
-              <span class="block text-[8px] font-mono text-gray-500 uppercase tracking-wider mt-0.5">"Outwork Yesterday" Edition</span>
-            </div>
-            <div class="flex justify-between items-center mt-2 pt-1 border-t border-zeus-border">
-              <span class="text-xs font-mono font-black text-zeus-gold">$30</span>
-              <button id="gear-view-tee" class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
-            </div>
-          </div>
-          <div class="bg-zeus-black/60 border border-zeus-border rounded-lg p-2.5 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
-            <div class="relative w-full aspect-square bg-zeus-panel rounded border border-zeus-border overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-zeus-gold transition">
-              🧥
-            </div>
-            <div class="mt-2">
-              <span class="block text-[10px] font-bold text-white tracking-tight truncate">Snt.L.Mo Elite Hoodie</span>
-              <span class="block text-[8px] font-mono text-gray-500 uppercase tracking-wider mt-0.5">"Dominate Today" Heavyweight</span>
-            </div>
-            <div class="flex justify-between items-center mt-2 pt-1 border-t border-zeus-border">
-              <span class="text-xs font-mono font-black text-zeus-gold">$65</span>
-              <button id="gear-view-hoodie" class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
-            </div>
-          </div>
-        </div>
+  <div class="flex justify-between items-center">
+    <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Exclusive Gear Vault</h3>
+    <span class="text-[9px] font-mono bg-zeus-goldSoft text-zeus-gold px-2 py-0.5 rounded border border-zeus-gold/20 uppercase tracking-widest">Drop 01</span>
+  </div>
+  
+  <!-- ⚡ THE JAVASCRIPT TARGET ID IS NOW ASSIGNED HERE -->
+  <div id="gear-grid-container" class="grid grid-cols-2 gap-3">
+    
+    <!-- Fallback Card 01: Wolverines Premium Tee -->
+    <div class="bg-zeus-black/60 border border-zeus-border rounded-lg p-2.5 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
+      <div class="relative w-full aspect-square bg-zeus-panel rounded border border-zeus-border overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-zeus-gold transition">
+        👕
+      </div>
+      <div class="mt-2">
+        <span class="block text-[10px] font-bold text-white tracking-tight truncate">Wolverines Premium Tee</span>
+        <span class="block text-[8px] font-mono text-gray-500 uppercase tracking-wider mt-0.5">"Outwork Yesterday" Edition</span>
+      </div>
+      <div class="flex justify-between items-center mt-2 pt-1 border-t border-zeus-border">
+        <span class="text-xs font-mono font-black text-zeus-gold">$30</span>
+        <button id="gear-view-tee" class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
+      </div>
+    </div>
+    
+    <!-- Fallback Card 02: Snt.L.Mo Elite Hoodie -->
+    <div class="bg-zeus-black/60 border border-zeus-border rounded-lg p-2.5 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
+      <div class="relative w-full aspect-square bg-zeus-panel rounded border border-zeus-border overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-zeus-gold transition">
+        🧥
+      </div>
+      <div class="mt-2">
+        <span class="block text-[10px] font-bold text-white tracking-tight truncate">Snt.L.Mo Elite Hoodie</span>
+        <span class="block text-[8px] font-mono text-gray-500 uppercase tracking-wider mt-0.5">"Dominate Today" Heavyweight</span>
+      </div>
+      <div class="flex justify-between items-center mt-2 pt-1 border-t border-zeus-border">
+        <span class="text-xs font-mono font-black text-zeus-gold">$65</span>
+        <button id="gear-view-hoodie" class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
       </div>
     </div>
 
-  </main>
+  </div> <!-- End of gear-grid-container -->
+</div>
+
+</main>
 
   <!-- ==========================================
        🔐 ACCESS CHALLENGE CAPTURE GATE (LOGIN MODAL)
