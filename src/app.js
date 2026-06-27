@@ -253,8 +253,6 @@ window.handleAdminAddVideo = async () => {
   alert("Video payload successfully committed to user array.");
 };
 
-window.renderDraftBoards = renderDraftBoards;
-
 // ==========================================
 // ST. LOUIS BASELINE INITIALIZATION SEEDS
 // ==========================================
@@ -455,6 +453,7 @@ async function handleSignedInUser(user) {
     updateAccessUI(currentProfile); 
     subscribeToAthletes(); 
     subscribeToChat();
+    loadLiveGearMarketplace(); // Hook up merchandise pipeline on authorization success
   } catch { 
     updateAccessUI(null); 
   } finally { 
@@ -547,18 +546,68 @@ function initializeLiveSportsTicker() {
 }
 
 // ==========================================
+// ⚙️ UNIFIED DYNAMIC MARKETPLACE GRID GENERATOR
+// ==========================================
+function renderGlobalGearMarketplace(products) {
+  const container = document.getElementById('gear-grid-container');
+  if (!container) return;
+  
+  container.innerHTML = '';
+
+  products.forEach(product => {
+    const isAffiliate = product.isExternal === true;
+    const productString = JSON.stringify(product).replace(/"/g, '&quot;');
+    
+    const cardHtml = `
+      <div class="border border-gold/20 bg-[#121214] rounded-xl p-4 flex flex-col justify-between shadow-lg transition-transform hover:scale-[1.01]">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-3">
+            <span class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">${product.location || 'US Shipping'}</span>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gold/10 text-gold border border-gold/20 uppercase tracking-wide">
+              ${isAffiliate ? product.storeName : "Snt.L.Mo. Exclusive"}
+            </span>
+          </div>
+          
+          <div class="w-full h-44 bg-[#1a1a1e] rounded-lg flex items-center justify-center p-3 overflow-hidden">
+            <img src="${product.image}" alt="${product.name || product.title}" class="max-w-full max-h-full object-contain" />
+          </div>
+          
+          <div class="mt-4">
+            <h3 class="text-base font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis" title="${product.name || product.title}">
+              ${product.name || product.title}
+            </h3>
+            <p class="text-gold font-bold text-lg mt-1">$${Number(product.price).toFixed(2)}</p>
+          </div>
+        </div>
+
+        <button 
+          onclick="openGearLightbox(${productString})"
+          class="w-full mt-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-200 bg-gold text-black hover:bg-amber-400 active:scale-[0.98]"
+        >
+          View Details
+        </button>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', cardHtml);
+  });
+}
+
+// ==========================================
 // 🧥 APPAREL LIGHTBOX MODAL MAPPING INTERFACE ENGINE
 // ==========================================
 function openGearLightbox(product) {
   const modal = $("gear-lightbox-modal");
   if (!modal) return;
 
-  // Set the text content dynamically
-  setText("lightbox-title", product.name); // Using product.name from Firestore
-  setText("lightbox-price", typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price);
+  const productName = product.name || product.title;
+  const productPrice = typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price;
   
-  // Set a clean sub-label showing the origin network/brand
-  const subText = product.isExternal ? `Available via ${product.storeName} (${product.location || 'Global'})` : (product.sub || '"Dominate Today" Edition');
+  setText("lightbox-title", productName);
+  setText("lightbox-price", productPrice);
+  
+  const subText = product.isExternal 
+    ? `Available via ${product.storeName} (${product.location || 'Global'})` 
+    : (product.sub || '"Dominate Today" Edition');
   setText("lightbox-sub", subText);
   
   const iconEl = $("lightbox-icon");
@@ -566,19 +615,16 @@ function openGearLightbox(product) {
     iconEl.textContent = product.isExternal ? "👟" : (product.icon || "🧥");
   }
 
-  // SAVE THE FULL PRODUCT OBJECT ON THE CHECKOUT BUTTON so it knows what to do when clicked
   const checkoutBtn = $("lightbox-checkout-btn");
   if (checkoutBtn) {
-    // Convert object to a string format the button can hold onto
     checkoutBtn.dataset.productPayload = JSON.stringify(product);
     
-    // Change the button text depending on who handles the transaction
     if (product.isExternal) {
       checkoutBtn.textContent = `Buy via ${product.storeName}`;
-      checkoutBtn.className = "w-full py-3 rounded-lg bg-white text-black font-black uppercase tracking-wider text-xs transition-all";
+      checkoutBtn.className = "w-full py-3 rounded-lg bg-white text-black font-black uppercase tracking-wider text-xs transition-all cursor-pointer text-center block";
     } else {
       checkoutBtn.textContent = "Secure Local Checkout";
-      checkoutBtn.className = "w-full py-3 rounded-lg bg-gold text-black font-black uppercase tracking-wider text-xs transition-all hover:bg-amber-400";
+      checkoutBtn.className = "w-full py-3 rounded-lg bg-gold text-black font-black uppercase tracking-wider text-xs transition-all hover:bg-amber-400 cursor-pointer text-center block";
     }
   }
 
@@ -586,7 +632,6 @@ function openGearLightbox(product) {
 }
 
 function initializeGearLightbox() {
-  // 1. Static Click Listeners for hardcoded template items
   $("gear-view-tee")?.addEventListener("click", () => {
     openGearLightbox({ name: "Wolverines Premium Tee", sub: '"Outwork Yesterday" Edition', price: 30.00, isExternal: false, stripePriceId: "price_tee_123", icon: "👕" });
   });
@@ -595,13 +640,11 @@ function initializeGearLightbox() {
     openGearLightbox({ name: "Snt.L.Mo Elite Hoodie", sub: '"Dominate Today" Heavyweight', price: 65.00, isExternal: false, stripePriceId: "price_1QxXYZ123456", icon: "🧥" });
   });
 
-  // 2. Close Modal Listener
   const closeBtn = $("gear-lightbox-close");
   closeBtn?.addEventListener("click", () => {
     $("gear-lightbox-modal")?.classList.add("hidden");
   });
 
-  // 3. THE DYNAMIC ROUTING CHECKOUT BUTTON ENGINE
   $("lightbox-checkout-btn")?.addEventListener("click", (e) => {
     const payloadRaw = e.currentTarget.dataset.productPayload;
     if (!payloadRaw) return;
@@ -609,18 +652,32 @@ function initializeGearLightbox() {
     const product = JSON.parse(payloadRaw);
 
     if (product.isExternal) {
-      // AFFILIATE ROUTE: Opens Nike, Fanatics, etc., in a clean tracking tab
       window.open(product.affiliateUrl, '_blank', 'noopener,noreferrer');
     } else {
-      // LOCAL STRIPE ROUTE: Fire your actual checkout session link logic here
       if (typeof redirectToStripeCheckout === 'function') {
         redirectToStripeCheckout(product.stripePriceId);
       } else {
-        alert(`Launching checkout node for ${product.name}...`);
+        alert(`Launching checkout node for ${product.name || product.title}...`);
       }
     }
   });
 }
+
+// ==========================================
+// 📡 CLOUD INVENTORY SYNC TERMINAL ENGINE
+// ==========================================
+function loadLiveGearMarketplace() {
+  onSnapshot(collection(db, "merchandise"), (snapshot) => {
+    const productsArray = [];
+    snapshot.forEach((doc) => {
+      productsArray.push({ id: doc.id, ...doc.data() });
+    });
+    if (productsArray.length > 0) {
+      renderGlobalGearMarketplace(productsArray);
+    }
+  });
+}
+
 // ==========================================
 // EVENT LISTENERS MATRIX BOUNDS
 // ==========================================
@@ -645,7 +702,7 @@ function bindEvents() {
       tier: tier !== "all" ? tier : "pro-players", subCategory: sub !== "all" ? sub : "pro-major",
       scores: [safeNumber($("score-0")?.value||90), safeNumber($("score-1")?.value||90), safeNumber($("score-2")?.value||90), safeNumber($("score-3")?.value||90), safeNumber($("score-4")?.value||90)],
       highlightUrl: hlIn?.value.trim() || "", 
-      videos: [], // Initialize pristine array space
+      videos: [], 
       createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy: currentUser?.uid || "unknown"
     };
 
