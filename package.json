@@ -8,12 +8,15 @@
   },
   "scripts": {
     "build": "node build-env.js && node esbuild.config.js && npm run tailwind:build && npm run copy:audio && npm run copy:html",
-    "copy:html": "shx cp src/index.html dist/index.html && shx cp src/zeus-avatar.png dist/zeus-avatar.png",
-    "copy:audio": "shx mkdir -p dist/audio && shx cp audio/thunder.mp3 dist/audio/thunder.mp3 && shx cp audio/ambient.mp3 dist/audio/ambient.mp3 && shx cp audio/zeus-intro.mp3 dist/audio/zeus-intro.mp3",
+    "copy:html": "node -e \"const fs = require('fs'); fs.mkdirSync('dist', { recursive: true }); fs.copyFileSync('src/index.html', 'dist/index.html'); if(fs.existsSync('src/zeus-avatar.png')) fs.copyFileSync('src/zeus-avatar.png', 'dist/zeus-avatar.png');\"",
+    "copy:audio": "node -e \"const fs = require('fs'); fs.mkdirSync('dist/audio', { recursive: true }); ['thunder.mp3', 'ambient.mp3', 'zeus-intro.mp3'].forEach(f => { if(fs.existsSync('audio/' + f)) fs.copyFileSync('audio/' + f, 'dist/audio/' + f); });\"",
     "tailwind:build": "node ./node_modules/tailwindcss/lib/cli.js -i ./src/input.css -o ./dist/output.css --minify",
     "tailwind:watch": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  }, copy:audio && npm run copy:html",
+    "copy:html": "shx cp src/index.html dist/index.html && shx cp src/zeus-avatar.png dist/zeus-avatar.png",
+    "copy:audio": "shx mkdir -p dist/audio && shx cp audio/thunder.mp3 dist/audio/thunder.mp3 && shx cp audio/ambient.mp3 dist/audio/ambient.mp3 && shx cp audio/zeus-intro.mp3 dist/audio/zeus-i
   "keywords": [],
   "author": "",
   "license": "ISC",
