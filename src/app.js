@@ -741,6 +741,7 @@ bindEvents();
 initializeLiveSportsTicker();
 initializeGearLightbox();
 initializeMediaLockerEngine();
+loadLiveGearMarketplace(); // 🔥 Moving this here makes sure your inventory loads for the public instantly!
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
