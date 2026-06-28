@@ -11,18 +11,35 @@
   <!-- ==========================================
        ⚡ SYSTEM HEADER NAVIGATION MATRIX
        ========================================== -->
-  <header class="border-b border-zeus-border bg-zeus-black/80 backdrop-blur sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <img src="zeus-avatar.png" alt="Zeus Avatar" class="w-10 h-10 rounded-full border border-zeus-gold/50 shadow-zeus-soft">
-      <div>
-        <h1 class="text-lg font-black tracking-tighter text-white uppercase">Snt.L.Mo. Exclusive Sports Hub</h1>
-        <p id="user-status" class="text-xs font-mono text-zeus-gold tracking-widest">Status: Authenticating...</p>
-      </div>
+  <header class="border-b border-zeus-border bg-zeus-black/90 backdrop-blur sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center space-x-3">
+    <img src="zeus-avatar.png" alt="Zeus Avatar" class="w-10 h-10 rounded-full border border-zeus-gold/50 shadow-zeus-soft">
+
+    <div>
+      <h1 class="text-lg font-black tracking-tighter text-white uppercase">
+        Snt.L.Mo. Sports Network
+      </h1>
+      <p id="user-status" class="text-xs font-mono text-zeus-gold tracking-widest uppercase">
+        The Home of Every Athlete
+      </p>
     </div>
-    <button id="header-auth-btn" class="border border-zeus-gold/40 hover:border-zeus-gold bg-zeus-goldSoft text-zeus-gold font-mono text-xs uppercase px-4 py-2 rounded transition duration-200 tracking-wider">
-      Login
-    </button>
-  </header>
+  </div>
+
+  <nav class="hidden lg:flex items-center space-x-4 text-xs font-mono uppercase tracking-wider">
+    <a href="#home" class="text-gray-400 hover:text-zeus-gold transition">Home</a>
+    <a href="#athletes" class="text-gray-400 hover:text-zeus-gold transition">Athletes</a>
+    <a href="#schools" class="text-gray-400 hover:text-zeus-gold transition">Schools</a>
+    <a href="#rankings" class="text-gray-400 hover:text-zeus-gold transition">Rankings</a>
+    <a href="#highlights" class="text-gray-400 hover:text-zeus-gold transition">Highlights</a>
+    <a href="#recruiting" class="text-gray-400 hover:text-zeus-gold transition">Recruiting</a>
+    <a href="#gear" class="text-gray-400 hover:text-zeus-gold transition">Gear</a>
+    <a href="#zeus-ai" class="text-gray-400 hover:text-zeus-gold transition">Zeus AI</a>
+  </nav>
+
+  <button id="header-auth-btn" class="border border-zeus-gold/40 hover:border-zeus-gold bg-zeus-goldSoft text-zeus-gold font-mono text-xs uppercase px-4 py-2 rounded transition duration-200 tracking-wider">
+    Login
+  </button>
+</header>
 
   <!-- ==========================================
        ⏳ PROTECTIVE CRASH EXIT GATEWAY (LOADING OVERLAY)
@@ -49,7 +66,73 @@
   <!-- ==========================================
        🏆 MAIN GRID ENVIRONMENT (UNIFIED ACTIVE LAYER)
        ========================================== -->
-  <main id="main-content" class="hidden max-w-grid mx-auto px-4 py-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
+ <section id="home" class="max-w-grid mx-auto px-4 py-10">
+  <div class="border border-zeus-border bg-zeus-panel rounded-2xl p-8 shadow-panel-deep">
+    <p class="text-xs font-mono text-zeus-gold uppercase tracking-widest mb-3">
+      National Sports Platform
+    </p>
+
+    <h2 class="text-4xl md:text-6xl font-black text-white uppercase tracking-tight leading-tight">
+      Snt.L.Mo. Sports Network
+    </h2>
+
+    <p class="mt-3 text-xl text-zeus-gold font-mono uppercase tracking-wider">
+      The Home of Every Athlete
+    </p>
+
+    <p class="mt-5 max-w-3xl text-gray-400 leading-relaxed">
+      A national sports platform built for athletes, coaches, schools, recruiters, families, fans, highlights, rankings, live games, team stores, and Zeus AI scouting.
+    </p>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
+      <a href="#athletes" class="bg-zeus-gold text-black text-center font-black py-3 rounded uppercase text-xs font-mono">Explore Athletes</a>
+      <a href="#schools" class="border border-zeus-border text-white text-center font-black py-3 rounded uppercase text-xs font-mono hover:border-zeus-gold">Find Schools</a>
+      <a href="#highlights" class="border border-zeus-border text-white text-center font-black py-3 rounded uppercase text-xs font-mono hover:border-zeus-gold">Watch Highlights</a>
+      <a href="#recruiting" class="border border-zeus-border text-white text-center font-black py-3 rounded uppercase text-xs font-mono hover:border-zeus-gold">Recruiting Portal</a>
+    </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+
+      <!-- FEATURED SPORTS -->
+
+<div class="mt-16">
+
+  <h2 class="text-2xl font-black text-white uppercase tracking-tight mb-6">
+    Explore Sports
+  </h2>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+
+    <div class="sport-card">🏈<span>Football</span></div>
+    <div class="sport-card">🏈<span>Girls Flag Football</span></div>
+    <div class="sport-card">🏀<span>Basketball</span></div>
+    <div class="sport-card">⚽<span>Soccer</span></div>
+    <div class="sport-card">🏐<span>Volleyball</span></div>
+
+    <div class="sport-card">⚾<span>Baseball</span></div>
+    <div class="sport-card">🥎<span>Softball</span></div>
+    <div class="sport-card">🏃<span>Track & Field</span></div>
+    <div class="sport-card">🏃‍♂️<span>Cross Country</span></div>
+    <div class="sport-card">🤼<span>Wrestling</span></div>
+
+    <div class="sport-card">🏊<span>Swimming</span></div>
+    <div class="sport-card">🎾<span>Tennis</span></div>
+    <div class="sport-card">🏌️<span>Golf</span></div>
+    <div class="sport-card">🏒<span>Hockey</span></div>
+    <div class="sport-card">🥍<span>Lacrosse</span></div>
+
+    <div class="sport-card">🎳<span>Bowling</span></div>
+    <div class="sport-card">🤸<span>Gymnastics</span></div>
+    <div class="sport-card">📣<span>Cheer</span></div>
+    <div class="sport-card">💃<span>Dance</span></div>
+    <div class="sport-card">🏋️<span>Weightlifting</span></div>
+
+  </div>
+
+</div>
+
+</section>
+
+<main id="main-content" class="hidden max-w-grid mx-auto px-4 py-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
     
     <!-- COLUMN 1: CONTROL TERMINAL (INPUTS & FILTERS) -->
     <div class="space-y-6">

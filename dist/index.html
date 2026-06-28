@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snt.L.Mo. Exclusive Sports Grid</title>
+  <link rel="stylesheet" href="output.css">
+</head>
+<body class="bg-zeus-black text-gray-100 min-h-screen font-sans antialiased selection:bg-zeus-gold selection:text-black">
+
+  <!-- ==========================================
+       ⚡ SYSTEM HEADER NAVIGATION MATRIX
+       ========================================== -->
+  <header class="border-b border-zeus-border bg-zeus-black/90 backdrop-blur sticky top-0 z-50 px-4 py-3 flex items-center justify-between">
+  <div class="flex items-center space-x-3">
+    <img src="zeus-avatar.png" alt="Zeus Avatar" class="w-10 h-10 rounded-full border border-zeus-gold/50 shadow-zeus-soft">
+
+    <div>
+      <h1 class="text-lg font-black tracking-tighter text-white uppercase">
+        Snt.L.Mo. Sports Network
+      </h1>
+      <p id="user-status" class="text-xs font-mono text-zeus-gold tracking-widest uppercase">
+        The Home of Every Athlete
+      </p>
+    </div>
+  </div>
+
+  <nav class="hidden lg:flex items-center space-x-4 text-xs font-mono uppercase tracking-wider">
+    <a href="#home" class="text-gray-400 hover:text-zeus-gold transition">Home</a>
+    <a href="#athletes" class="text-gray-400 hover:text-zeus-gold transition">Athletes</a>
+    <a href="#schools" class="text-gray-400 hover:text-zeus-gold transition">Schools</a>
+    <a href="#rankings" class="text-gray-400 hover:text-zeus-gold transition">Rankings</a>
+    <a href="#highlights" class="text-gray-400 hover:text-zeus-gold transition">Highlights</a>
+    <a href="#recruiting" class="text-gray-400 hover:text-zeus-gold transition">Recruiting</a>
+    <a href="#gear" class="text-gray-400 hover:text-zeus-gold transition">Gear</a>
+    <a href="#zeus-ai" class="text-gray-400 hover:text-zeus-gold transition">Zeus AI</a>
+  </nav>
+
+  <button id="header-auth-btn" class="border border-zeus-gold/40 hover:border-zeus-gold bg-zeus-goldSoft text-zeus-gold font-mono text-xs uppercase px-4 py-2 rounded transition duration-200 tracking-wider">
+    Login
+  </button>
+</header>
+
+  <!-- ==========================================
+       ⏳ PROTECTIVE CRASH EXIT GATEWAY (LOADING OVERLAY)
+       ========================================== -->
+  <div id="loading-overlay" class="fixed inset-0 bg-zeus-black z-50 flex flex-col items-center justify-center space-y-4">
+    <div class="text-2xl font-black tracking-widest text-zeus-gold animate-pulse uppercase">⚡ Summoning Zeus...</div>
+    <div class="text-[10px] font-mono text-gray-600 tracking-widest uppercase">Preparing The Grid Layout Matrix</div>
+  </div>
+
+  <!-- ==========================================
+       🛡️ UNAUTHENTICATED RESTRICTION (PAYWALL LAYER)
+       ========================================== -->
+  <main id="paywall-content" class="hidden max-w-md mx-auto mt-20 px-6 text-center">
+    <div class="border border-zeus-border bg-zeus-panel p-8 rounded-xl shadow-panel-deep">
+      <div class="text-4xl mb-4">👑</div>
+      <h2 class="text-xl font-black text-white uppercase tracking-tight">Mortal Vision Active</h2>
+      <p class="text-gray-400 text-sm mt-2 leading-relaxed">Access to the real-time St. Louis athlete rating matrix, statistical projections, and the War Room portal requires a secure administrative connection.</p>
+      <button onclick="show('login-modal')" class="mt-6 w-full bg-zeus-gold hover:bg-yellow-400 text-black font-bold py-3 px-4 rounded font-mono uppercase tracking-wider text-sm transition duration-150">
+        Establish Connection
+      </button>
+    </div>
+  </main>
+
+  <!-- ==========================================
+       🏆 MAIN GRID ENVIRONMENT (UNIFIED ACTIVE LAYER)
+       ========================================== -->
+ <section id="home" class="max-w-grid mx-auto px-4 py-10">
+  <div class="border border-zeus-border bg-zeus-panel rounded-2xl p-8 shadow-panel-deep">
+    <p class="text-xs font-mono text-zeus-gold uppercase tracking-widest mb-3">
+      National Sports Platform
+    </p>
+
+    <h2 class="text-4xl md:text-6xl font-black text-white uppercase tracking-tight leading-tight">
+      Snt.L.Mo. Sports Network
+    </h2>
+
+    <p class="mt-3 text-xl text-zeus-gold font-mono uppercase tracking-wider">
+      The Home of Every Athlete
+    </p>
+
+    <p class="mt-5 max-w-3xl text-gray-400 leading-relaxed">
+      A national sports platform built for athletes, coaches, schools, recruiters, families, fans, highlights, rankings, live games, team stores, and Zeus AI scouting.
+    </p>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
+      <a href="#athletes" class="bg-zeus-gold text-black text-center font-black py-3 rounded uppercase text-xs font-mono">Explore Athletes</a>
+      <a href="#schools" class="border border-zeus-border text-white text-center font-black py-3 rounded uppercase text-xs font-mono hover:border-zeus-gold">Find Schools</a>
+      <a href="#highlights" class="border border-zeus-border text-white text-center font-black py-3 rounded uppercase text-xs font-mono hover:border-zeus-gold">Watch Highlights</a>
+      <a href="#recruiting" class="border border-zeus-border text-white text-center font-black py-3 rounded uppercase text-xs font-mono hover:border-zeus-gold">Recruiting Portal</a>
+    </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+
+      <!-- FEATURED SPORTS -->
+
+<div class="mt-16">
+
+  <h2 class="text-2xl font-black text-white uppercase tracking-tight mb-6">
+    Explore Sports
+  </h2>
+
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+
+    <div class="sport-card">🏈<span>Football</span></div>
+    <div class="sport-card">🏈<span>Girls Flag Football</span></div>
+    <div class="sport-card">🏀<span>Basketball</span></div>
+    <div class="sport-card">⚽<span>Soccer</span></div>
+    <div class="sport-card">🏐<span>Volleyball</span></div>
+
+    <div class="sport-card">⚾<span>Baseball</span></div>
+    <div class="sport-card">🥎<span>Softball</span></div>
+    <div class="sport-card">🏃<span>Track & Field</span></div>
+    <div class="sport-card">🏃‍♂️<span>Cross Country</span></div>
+    <div class="sport-card">🤼<span>Wrestling</span></div>
+
+    <div class="sport-card">🏊<span>Swimming</span></div>
+    <div class="sport-card">🎾<span>Tennis</span></div>
+    <div class="sport-card">🏌️<span>Golf</span></div>
+    <div class="sport-card">🏒<span>Hockey</span></div>
+    <div class="sport-card">🥍<span>Lacrosse</span></div>
+
+    <div class="sport-card">🎳<span>Bowling</span></div>
+    <div class="sport-card">🤸<span>Gymnastics</span></div>
+    <div class="sport-card">📣<span>Cheer</span></div>
+    <div class="sport-card">💃<span>Dance</span></div>
+    <div class="sport-card">🏋️<span>Weightlifting</span></div>
+
+  </div>
+
+</div>
+
+</section>
+
+<main id="main-content" class="hidden max-w-grid mx-auto px-4 py-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
+    
+    <!-- COLUMN 1: CONTROL TERMINAL (INPUTS & FILTERS) -->
+    <div class="space-y-6">
+      <!-- ATHLETE COMMAND CENTER (ADMIN DATA ENTRY PANEL) -->
+      <div id="admin-panel" class="hidden border border-zeus-border bg-zeus-panel p-4 rounded-xl">
+  <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase mb-3 font-mono">Athlete Command Center</h3>
+  
+  <!-- FIX: Restored missing form tag and input matrix to bind with document fields -->
+  <form id="athlete-form" class="space-y-2 mb-3">
+    <input type="text" id="athlete-name" placeholder="Titan Athlete Name" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-zeus-gold" required>
+    
+    <select id="athlete-sport" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white focus:outline-none focus:border-zeus-gold">
+      <option value="Basketball">Basketball</option>
+      <option value="Football">Football</option>
+      <option value="Track">Track / Speed</option>
+      <option value="Hockey">Hockey</option>
+      <option value="Baseball">Baseball</option>
+    </select>
+    
+    <input type="text" id="athlete-highlight" placeholder="Fallback Main Highlight URL (Optional)" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-zeus-gold">
+    
+    <div class="grid grid-cols-5 gap-1">
+      <input type="number" id="score-0" placeholder="Attr 1" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+      <input type="number" id="score-1" placeholder="Attr 2" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+      <input type="number" id="score-2" placeholder="Attr 3" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+      <input type="number" id="score-3" placeholder="Attr 4" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+      <input type="number" id="score-4" placeholder="Attr 5" class="bg-zeus-black border border-zeus-border rounded p-1 text-center text-xs text-white placeholder-gray-600" min="0" max="100">
+    </div>
+    
+    <button type="submit" class="w-full bg-zeus-gold text-black font-bold py-2 rounded transition duration-150 uppercase font-mono tracking-wider text-xs">
+      Commit Titan to Grid
+    </button>
+  </form>
+
+  <!-- Playlist Expansion Controller -->
+  <div class="border-t border-zeus-border mt-3 pt-3">
+    <label class="block text-[10px] font-mono text-gray-500 uppercase tracking-wider mb-1">Playlist Entry</label>
+    <input type="text" id="new-vid-title" placeholder="Video Title" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white mb-1">
+    <input type="text" id="new-vid-url" placeholder="YouTube/Storage URL" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white mb-2">
+    <button onclick="window.handleAdminAddVideo()" class="w-full bg-zeus-gold/20 hover:bg-zeus-gold text-zeus-gold hover:text-black font-bold py-1.5 rounded transition duration-150 uppercase font-mono tracking-wider text-[10px]">
+      Add Video to Titan
+    </button>
+  </div>
+
+  <button id="admin-purge-btn" class="hidden mt-3 w-full bg-red-950/40 hover:bg-zeus-red border border-red-900/60 hover:border-red-500 text-red-400 hover:text-white font-bold py-2 px-4 rounded transition duration-200 uppercase tracking-wider text-[11px] font-mono">
+    ⚠️ Clear Duplicates
+  </button>
+</div>
+
+      <!-- FILTER CONTROLLER LAYOUT MATRIX -->
+      <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-4">
+        <h3 class="text-xs font-black tracking-wider text-gray-400 uppercase font-mono">Grid Filters</h3>
+        <div>
+          <label class="block text-[10px] font-mono text-gray-600 uppercase tracking-wider mb-1">Select Tier</label>
+          <select id="tier-select" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white focus:outline-none focus:border-zeus-gold">
+            <option value="all">All Tiers</option>
+            <option value="highschool">St. Louis High Schools</option>
+            <option value="college">Colleges (Local & National)</option>
+            <option value="pro-teams">St. Louis Home Pro Teams</option>
+            <option value="pro-players">Locals in the Pros (Domestic & Global)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-[10px] font-mono text-gray-600 uppercase tracking-wider mb-1">Refine View</label>
+          <select id="sub-tier-select" class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white focus:outline-none focus:border-zeus-gold">
+            <option value="all">All Sub-Categories</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 2 & 3: MAIN SCOREBOARD DATA MATRIX (SPAN 2 WIDTH) -->
+    <div class="xl:col-span-2 space-y-6">
+      <!-- APEX SPEED MARQUEE ACCENT -->
+      <div class="border border-zeus-gold/20 bg-zeus-goldSoft p-4 rounded-xl flex items-center justify-between shadow-zeus-soft">
+        <div>
+          <span class="text-[10px] font-mono text-zeus-gold uppercase tracking-widest block">Current Apex Predator</span>
+          <span id="apex-predator-name" class="text-xl font-black text-white uppercase tracking-tight">Loading Grid Apex...</span>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] font-mono text-gray-500 uppercase block">Apex Rating</span>
+          <span id="apex-predator-score" class="text-xl font-mono font-black text-zeus-gold">---</span>
+        </div>
+      </div>
+
+      <!-- LIVE ROSTER LEADERBOARD DATA TABLE -->
+      <div class="border border-zeus-border bg-zeus-black rounded-xl overflow-hidden">
+        <div class="p-4 border-b border-zeus-border bg-zeus-panel/50 flex justify-between items-center">
+          <span class="text-xs font-black text-white uppercase tracking-wider font-mono">St. Louis Metric Evaluation Matrix</span>
+          <span id="grid-count-badge" class="text-[10px] font-mono bg-zeus-panel text-gray-400 px-2 py-0.5 rounded uppercase border border-zeus-border">0 Active</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse border-spacing-0">
+            <thead>
+              <tr class="bg-zeus-panel text-gray-500 text-[10px] uppercase font-mono tracking-wider border-b border-zeus-border">
+                <th class="p-3 font-medium">Athlete Name</th>
+                <th class="p-3 text-center font-medium">Primary Attribute</th>
+                <th class="p-3 text-center font-medium">Performance Tier</th>
+                <th class="p-3 text-center font-medium">Total Composite</th>
+                <th class="p-3 text-center font-medium">Discipline</th>
+                <th class="p-3 text-right font-medium">Roster Actions</th>
+              </tr>
+            </thead>
+            <tbody id="match-grid-body" class="text-sm font-mono divide-y divide-zeus-border">
+              <!-- Handled in real-time by Firebase sync engine -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           ⚔️ WAR ROOM DRAFT BOARD & ROSTER BUILDER
+           ========================================== -->
+      <div id="roster-builder-vault" class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-4">
+        <div class="flex justify-between items-center border-b border-zeus-border/60 pb-2">
+          <div>
+            <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Live War Room Draft Board</h3>
+            <p class="text-[10px] font-mono text-gray-500 uppercase">Select an athlete above to view custom deployment paths</p>
+          </div>
+          <button id="reset-draft-btn" class="bg-zeus-red/20 hover:bg-zeus-red border border-red-900/60 hover:border-red-500 text-red-400 hover:text-white font-mono text-[10px] font-bold uppercase px-2.5 py-1 rounded transition duration-150">
+            Reset Draft Board
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- SQUAD A: TEAM ST. LOUIS ELITE -->
+          <div class="bg-zeus-black/40 border border-zeus-border rounded-lg p-3 space-y-2">
+            <div class="flex justify-between items-center font-mono border-b border-zeus-border/40 pb-1.5">
+              <span class="text-xs font-black text-white uppercase tracking-tight">⚜️ Team St. Louis Elite</span>
+              <span id="squad-a-rating" class="text-[10px] font-bold bg-zeus-goldSoft text-zeus-gold px-1.5 py-0.5 rounded border border-zeus-gold/10">AVG: 0</span>
+            </div>
+            <div id="squad-a-slots" class="space-y-1.5 min-h-[120px] flex flex-col justify-start">
+              <div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Select an athlete above to draft.</div>
+            </div>
+          </div>
+
+          <!-- SQUAD B: REGIONAL CHALLENGERS -->
+          <div class="bg-zeus-black/40 border border-zeus-border rounded-lg p-3 space-y-2">
+            <div class="flex justify-between items-center font-mono border-b border-zeus-border/40 pb-1.5">
+              <span class="text-xs font-black text-gray-400 uppercase tracking-tight">🚀 Regional Challengers</span>
+              <span id="squad-b-rating" class="text-[10px] font-bold bg-gray-900 text-gray-500 px-1.5 py-0.5 rounded border border-zeus-border">AVG: 0</span>
+            </div>
+            <div id="squad-b-slots" class="space-y-1.5 min-h-[120px] flex flex-col justify-start">
+              <div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Select an athlete above to draft.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📺 LIVE HIGHLIGHT MEDIA MATRIX DISPLAY -->
+      <div id="highlight-theater" class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Titan Highlight Theater</h3>
+          <span id="now-playing-title" class="text-[10px] font-mono text-gray-500 uppercase truncate max-w-[250px]">Select a row to play</span>
+        </div>
+        <div class="aspect-video w-full rounded-lg overflow-hidden bg-black/60 border border-zeus-border flex items-center justify-center relative p-2">
+          <div id="video-placeholder" class="text-center p-6 space-y-2 absolute inset-0 flex flex-col items-center justify-center bg-zeus-black/90 z-10 transition-opacity duration-300">
+            <span class="text-3xl">🎥</span>
+            <span class="block text-xs text-gray-500 font-mono uppercase tracking-wider">No Highlight Selected</span>
+          </div>
+          <div id="theater-media-viewport" class="w-full h-full flex items-center justify-center"></div>
+        </div>
+      </div>
+
+      <!-- 📡 LIVE FEEDS AND BROADCAST COMMUNICATION GRID -->
+      <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
+        <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Communication Grid Live Feed</h3>
+        <div id="live-feed-container" class="h-40 overflow-y-auto border border-zeus-border bg-zeus-black/60 p-3 rounded font-mono text-xs text-gray-400 space-y-2">
+          <div class="text-zeus-gold/80">🛰️ [SYSTEM]: Grid Synchronization fully active.</div>
+          <div class="text-gray-500">Waiting for live athletic events broadcast streaming pipelines...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 4: WAR ROOM PORTAL, MEDIA LOCKER & SPORTS GEAR VAULT -->
+    <div class="space-y-6">
+      <!-- WAR ROOM PORTAL SECURE CHAT -->
+      <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl flex flex-col h-64">
+        <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono mb-2">War Room Chat Terminal</h3>
+        <div id="chat-box-display" class="flex-1 overflow-y-auto border border-zeus-border bg-zeus-black/60 p-2 rounded text-xs font-mono mb-2 text-gray-300 space-y-1">
+          <div class="text-gray-600">[System]: Connection secure. Welcome to the Admin War Room.</div>
+        </div>
+        <div class="flex space-x-2">
+          <input type="text" id="chat-message-input" placeholder="Broadcast to War Room..." class="flex-1 bg-zeus-black border border-zeus-border rounded p-1.5 text-xs text-white focus:outline-none focus:border-zeus-gold">
+          <button id="send-chat-btn" class="bg-zeus-gold hover:bg-yellow-400 text-black px-3 rounded font-bold text-xs uppercase font-mono">⟶</button>
+        </div>
+      </div>
+
+      <!-- MEDIA LOCKER CLOUD UPLOADS -->
+      <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3" id="media-locker-container">
+        <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Media Locker Grid Vault</h3>
+        <label for="media-locker-file-input" class="block border-2 border-dashed border-zeus-border hover:border-zeus-gold/40 rounded-xl p-6 text-center transition cursor-pointer bg-zeus-black/40 relative">
+          <input type="file" id="media-locker-file-input" accept="video/mp4,video/quicktime,video/webm" class="hidden">
+          <div class="text-xl mb-1" id="upload-status-icon">📁</div>
+          <span class="block text-xs text-gray-400 font-mono uppercase tracking-wider" id="upload-status-text">Upload Video / Highlights</span>
+          <span class="block text-[9px] text-gray-600 font-mono mt-1" id="upload-progress-sub">Select file to bind to active row</span>
+        </label>
+        <div class="flex justify-between items-center text-[10px] font-mono text-gray-500 uppercase">
+          <span>Storage Node: Optimal</span>
+          <span id="upload-count-badge">Uploads: 0</span>
+        </div>
+      </div>
+
+      <!-- EXCLUSIVE SPORTS GEAR VAULT -->
+      <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
+  <div class="flex justify-between items-center">
+    <h3 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">Exclusive Gear Vault</h3>
+    <span class="text-[9px] font-mono bg-zeus-goldSoft text-zeus-gold px-2 py-0.5 rounded border border-zeus-gold/20 uppercase tracking-widest">Drop 01</span>
+  </div>
+  
+  <!-- ⚡ THE JAVASCRIPT TARGET ID IS NOW ASSIGNED HERE -->
+  <div id="gear-grid-container" class="grid grid-cols-2 gap-3">
+    
+    <!-- Fallback Card 01: Wolverines Premium Tee -->
+    <div class="bg-zeus-black/60 border border-zeus-border rounded-lg p-2.5 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
+      <div class="relative w-full aspect-square bg-zeus-panel rounded border border-zeus-border overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-zeus-gold transition">
+        👕
+      </div>
+      <div class="mt-2">
+        <span class="block text-[10px] font-bold text-white tracking-tight truncate">Wolverines Premium Tee</span>
+        <span class="block text-[8px] font-mono text-gray-500 uppercase tracking-wider mt-0.5">"Outwork Yesterday" Edition</span>
+      </div>
+      <div class="flex justify-between items-center mt-2 pt-1 border-t border-zeus-border">
+        <span class="text-xs font-mono font-black text-zeus-gold">$30</span>
+        <button id="gear-view-tee" class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
+      </div>
+    </div>
+    
+    <!-- Fallback Card 02: Snt.L.Mo Elite Hoodie -->
+    <div class="bg-zeus-black/60 border border-zeus-border rounded-lg p-2.5 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
+      <div class="relative w-full aspect-square bg-zeus-panel rounded border border-zeus-border overflow-hidden flex items-center justify-center text-xl text-gray-700 group-hover:text-zeus-gold transition">
+        🧥
+      </div>
+      <div class="mt-2">
+        <span class="block text-[10px] font-bold text-white tracking-tight truncate">Snt.L.Mo Elite Hoodie</span>
+        <span class="block text-[8px] font-mono text-gray-500 uppercase tracking-wider mt-0.5">"Dominate Today" Heavyweight</span>
+      </div>
+      <div class="flex justify-between items-center mt-2 pt-1 border-t border-zeus-border">
+        <span class="text-xs font-mono font-black text-zeus-gold">$65</span>
+        <button id="gear-view-hoodie" class="bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1 rounded transition border border-zeus-border">View</button>
+      </div>
+    </div>
+
+  </div> <!-- End of gear-grid-container -->
+</div>
+
+</main>
+
+  <!-- ==========================================
+       🔐 ACCESS CHALLENGE CAPTURE GATE (LOGIN MODAL)
+       ========================================== -->
+  <div id="login-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-modal-pop">
+    <div class="border border-zeus-border bg-zeus-black max-w-sm w-full p-6 rounded-xl shadow-panel-deep relative">
+      <h3 class="text-base font-black text-white uppercase tracking-tight mb-4 font-mono text-center">Establish Administrative Security</h3>
+      <div class="space-y-3">
+        <input type="email" id="login-email" placeholder="Terminal Access Identity Key" class="w-full bg-zeus-panel border border-zeus-border rounded p-2 text-sm text-white focus:outline-none focus:border-zeus-gold">
+        <input type="password" id="login-pass" placeholder="Authorization Pin Lock" class="w-full bg-zeus-panel border border-zeus-border rounded p-2 text-sm text-white focus:outline-none focus:border-zeus-gold">
+        <button id="modal-submit-login" class="w-full bg-zeus-gold hover:bg-yellow-400 text-black font-bold py-2 rounded transition font-mono uppercase text-xs tracking-wider">
+          Verify Authorization
+        </button>
+      </div>
+      <button onclick="hide('login-modal')" class="absolute top-3 right-3 text-gray-600 hover:text-white text-sm font-mono">&times;</button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       🧥 GEAR LIGHTBOX FOCUS FRAME MODAL
+       ========================================== -->
+  <div id="gear-lightbox-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="border border-zeus-border bg-zeus-black max-w-md w-full p-6 rounded-xl shadow-panel-deep relative space-y-4 font-mono">
+      <button id="gear-lightbox-close" class="absolute top-3 right-3 text-gray-500 hover:text-white text-base">&times;</button>
+      
+      <div class="flex items-center space-x-4 border-b border-zeus-border pb-3">
+        <div id="lightbox-icon" class="text-4xl bg-zeus-panel border border-zeus-border rounded-lg p-3 w-20 h-20 flex items-center justify-center">👕</div>
+        <div>
+          <h3 id="lightbox-title" class="text-sm font-black text-white uppercase tracking-tight">Product Name</h3>
+          <p id="lightbox-sub" class="text-[10px] text-gray-500 uppercase mt-0.5">Product Subtitle</p>
+          <p id="lightbox-price" class="text-xs font-black text-zeus-gold mt-1">$0.00</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <span class="block text-[9px] text-gray-600 uppercase mb-1">Select Size Shell</span>
+          <div class="flex space-x-2">
+            <button class="bg-zeus-panel hover:bg-zeus-gold hover:text-black border border-zeus-border px-2.5 py-1 rounded text-[10px] font-bold transition">S</button>
+            <button class="bg-zeus-panel hover:bg-zeus-gold hover:text-black border border-zeus-gold/40 text-zeus-gold px-2.5 py-1 rounded text-[10px] font-bold transition">M</button>
+            <button class="bg-zeus-panel hover:bg-zeus-gold hover:text-black border border-zeus-border px-2.5 py-1 rounded text-[10px] font-bold transition">L</button>
+            <button class="bg-zeus-panel hover:bg-zeus-gold hover:text-black border border-zeus-border px-2.5 py-1 rounded text-[10px] font-bold transition">XL</button>
+          </div>
+        </div>
+        
+        <div>
+          <span class="block text-[9px] text-gray-600 uppercase mb-1">Specifications & Telemetry</span>
+          <p class="text-[11px] text-gray-400 leading-relaxed bg-zeus-panel/40 p-2.5 rounded border border-zeus-border/40"> Engineered for high-output environments. Premium drop-shoulder custom tailored geometry cuts featuring extreme tensile strength fiber matrices. Finished with signature Snt.L.Mo custom reflective gold brand detailing. </p>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button id="lightbox-checkout-btn" class="w-full bg-zeus-gold hover:bg-yellow-400 text-black font-black py-2.5 rounded uppercase text-xs tracking-wider transition duration-150">
+          Initialize Secure Checkout
+        </button>
+        <span class="block text-center text-[9px] text-gray-600 uppercase mt-2">Monitored transaction channel // Stripe secure infrastructure</span>
+      </div>
+    </div>
+  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script type="module" src="bundle.js"></script>
+</body>
+</html>

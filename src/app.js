@@ -19,7 +19,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db = getFirestore(app, "(default)");
 const rtdb = getDatabase(app);
 const storage = getStorage(app);
 
@@ -291,7 +291,7 @@ function updateAccessUI(profile) {
     setText("user-status", `Admin: ${profile.nickname || profile.email || "Authorized"}`);
     if (loginBtn) loginBtn.textContent = "Logout";
   } else {
-    setText("user-status", "Status: Mortal Vision");
+    setText("user-status", "The Home of Every Athlete");
     if (loginBtn) loginBtn.textContent = "Login";
   }
   processAndRenderFilteredAthletes();
@@ -453,7 +453,6 @@ async function handleSignedInUser(user) {
     updateAccessUI(currentProfile); 
     subscribeToAthletes(); 
     subscribeToChat();
-    loadLiveGearMarketplace(); // Hook up merchandise pipeline on authorization success
   } catch { 
     updateAccessUI(null); 
   } finally { 
