@@ -403,8 +403,13 @@ function processAndRenderFilteredAthletes() {
 function subscribeToAthletes() {
   if (unsubscribeAthletes) return;
   unsubscribeAthletes = onSnapshot(query(collection(db, "athletes"), limit(120)), (snap) => {
-    allAthletesCache = snap.docs.map(d => ({ id: d.id, data: d.data() })).sort((a, b) => mergeRosterScores(b.data) - mergeRosterScores(a.data));
-    processAndRenderFilteredAthletes();
+    allAthletesCache = snap.docs
+  .map(d => ({ id: d.id, data: d.data() }))
+  .sort((a, b) => mergeRosterScores(b.data) - mergeRosterScores(a.data));
+
+setText("athlete-count", allAthletesCache.length);
+
+processAndRenderFilteredAthletes();
     
     if (activeSelectedAthleteId) {
       const currentSelected = allAthletesCache.find(item => item.id === activeSelectedAthleteId);
