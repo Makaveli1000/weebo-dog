@@ -2,20 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base */
+/* ==========================
+   Base
+========================== */
+
 @import "./styles/base.css";
 
-/* Layout */
+/* ==========================
+   Layout
+========================== */
+
 @import "./styles/layout.css";
 
-/* Pages */
+/* ==========================
+   Pages
+========================== */
+
 @import "./styles/home.css";
 @import "./styles/athletes.css";
 @import "./styles/athlete-profile.css";
+@import "./styles/highlights.css";      /* NEW */
+@import "./styles/schools.css";         /* Future */
+@import "./styles/rankings.css";        /* Future */
+@import "./styles/recruiting.css";      /* Future */
+@import "./styles/zeus-ai.css";         /* Future */
+@import "./styles/news.css";            /* Future */
+@import "./styles/live.css";            /* Future */
+@import "./styles/marketplace.css";     /* Future */
 @import "./styles/national-dashboard.css";
 
-/* Admin / Dashboard */
+/* ==========================
+   Admin
+========================== */
+
 @import "./styles/admin.css";
 
-/* Animations */
-@import "./styles/animations.css"; 
+/* ==========================
+   Animations
+========================== */
+
+@import "./styles/animations.css";

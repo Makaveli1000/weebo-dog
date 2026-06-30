@@ -538,9 +538,39 @@ function processAndRenderFilteredAthletes() {
         uploadBadge.textContent = `Uploads: ${found.data.videos ? found.data.videos.length : 0}`;
       }
 
-      playHighlight(found.data);
+ playHighlight(found.data);
+
     });
   });
+}         
+
+// ==========================================
+// 📱 TIKTOK HIGHLIGHT FEED AUTOPLAY
+// ==========================================
+
+function initializeHighlightAutoplay() {
+  const videos = document.querySelectorAll(".highlight-reel-video");
+
+  if (!videos.length) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target;
+
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    },
+    {
+      threshold: 0.65
+    }
+  );
+
+  videos.forEach((video) => observer.observe(video));
 }
 
 function subscribeToAthletes() {
@@ -556,6 +586,8 @@ processAndRenderFilteredAthletes();
 
 renderAthleteDirectoryPage();
 renderHighlightFeedPage();
+
+initializeHighlightAutoplay();
 
 renderRankings();
 renderSchools();
@@ -904,13 +936,6 @@ const nationalDashboardRoot = document.getElementById("national-dashboard-root")
 if (nationalDashboardRoot) {
   nationalDashboardRoot.innerHTML = renderNationalDashboard();
 }
-
-refreshSubTierOptions();
-bindEvents();
-initializeLiveSportsTicker();
-initializeGearLightbox();
-initializeMediaLockerEngine();
-loadLiveGearMarketplace(); // 🔥 Moving this here makes sure your inventory loads for the public instantly!
 
 // ==========================================
 // BOOT
