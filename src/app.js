@@ -10,6 +10,9 @@ import { renderSchoolsPage } from "./pages/schools.js";
 import { renderRankingsPage } from "./pages/rankings.js";
 import { renderRecruitingPage } from "./pages/recruiting.js";
 import { renderZeusAiPage } from "./pages/zeus-ai.js";
+import { renderLiveGamesPage } from "./pages/live.js";
+import { renderMarketplacePage } from "./pages/marketplace.js";
+
 // ======================================================
 // FIREBASE IMPORTS
 // ======================================================
@@ -277,6 +280,27 @@ window.inlineDraftDispatch = (athleteId, targetSquadNum) => {
   }
 };
 
+/* ==========================================
+   LIVE GAMES PAGE
+========================================== */
+
+function renderLiveGames() {
+  const container = document.getElementById("live-root");
+  if (!container) return;
+
+  container.innerHTML = renderLiveGamesPage();
+}
+
+/* ==========================================
+   MARKETPLACE PAGE
+========================================== */
+
+function renderMarketplace() {
+  const container = document.getElementById("marketplace-root");
+  if (!container) return;
+
+  container.innerHTML = renderMarketplacePage();
+}
 window.directPurgeRow = async (e, id, name) => {
   e.stopPropagation();
   if (!isAdminProfile(currentProfile)) return;
@@ -633,9 +657,13 @@ renderHighlightFeedPage();
 
 initializeHighlightAutoplay();
 
+renderAthleteDirectoryPage();
+renderHighlightFeedPage();
 renderRankings();
 renderSchools();
 renderRecruiting();
+renderLiveGames();
+renderMarketplace();
 renderZeusAI();
 
 if (activeSelectedAthleteId) {
