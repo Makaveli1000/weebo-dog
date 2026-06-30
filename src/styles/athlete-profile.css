@@ -1,0 +1,43 @@
+.athlete-profile{
+  max-width:1200px;
+  margin:auto;
+}
+
+.profile-header{
+  display:grid;
+  grid-template-columns:350px 1fr;
+  gap:40px;
+}
+
+.profile-photo img{
+  width:100%;
+  border-radius:20px;
+}
+
+.profile-info h1{
+  color:#fff;
+  font-size:3rem;
+}
+
+.profile-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+  margin-top:40px;
+}
+
+.profile-stat{
+  background:#111827;
+  border-radius:16px;
+  padding:20px;
+  text-align:center;
+}
+
+.profile-stat h3{
+  color:#d4af37;
+  font-size:2rem;
+}
+
+.profile-stat p{
+  color:#cbd5e1;
+}
