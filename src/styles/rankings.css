@@ -1,0 +1,106 @@
+.rankings-page {
+  display: grid;
+  gap: 24px;
+}
+
+.rankings-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.rankings-filters select {
+  background: #0f172a;
+  color: white;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 800;
+}
+
+.rankings-table {
+  display: grid;
+  gap: 12px;
+}
+
+.ranking-row {
+  display: grid;
+  grid-template-columns: 80px 1.6fr 1fr 140px auto;
+  gap: 18px;
+  align-items: center;
+  padding: 18px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 95% 20%, rgba(77,184,255,0.10), transparent 24%),
+    rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+.ranking-row:hover {
+  border-color: rgba(212, 175, 55, 0.55);
+  box-shadow: 0 0 35px rgba(77,184,255,0.16);
+}
+
+.ranking-number {
+  font-size: 28px;
+  font-weight: 950;
+  color: #d4af37;
+}
+
+.ranking-athlete {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ranking-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(77,184,255,0.14);
+  color: #7dd3fc;
+  border: 1px solid rgba(77,184,255,0.35);
+  font-weight: 950;
+  font-size: 22px;
+}
+
+.ranking-athlete h3 {
+  color: white;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.ranking-athlete p,
+.ranking-meta span,
+.ranking-rating span {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.ranking-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.ranking-rating {
+  text-align: right;
+}
+
+.ranking-rating strong {
+  display: block;
+  color: #d4af37;
+  font-size: 30px;
+  font-weight: 950;
+}
+
+@media (max-width: 900px) {
+  .ranking-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-rating {
+    text-align: left;
+  }
+}

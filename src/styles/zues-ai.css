@@ -1,0 +1,65 @@
+.zeus-ai-page {
+  display: grid;
+  gap: 28px;
+}
+
+.zeus-ai-command {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  border-radius: 24px;
+  border: 1px solid rgba(77,184,255,.28);
+  background:
+    radial-gradient(circle at 90% 10%, rgba(77,184,255,.18), transparent 28%),
+    #0f172a;
+  box-shadow: 0 0 45px rgba(77,184,255,.13);
+}
+
+.zeus-ai-command h3 {
+  color: #d4af37;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.zeus-ai-command p {
+  color: #cbd5e1;
+}
+
+.zeus-ai-command textarea {
+  min-height: 140px;
+  resize: vertical;
+  padding: 16px;
+  border-radius: 16px;
+  background: #020617;
+  color: white;
+  border: 1px solid rgba(212,175,55,.2);
+}
+
+.zeus-ai-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap: 22px;
+}
+
+.zeus-ai-tool-card {
+  padding: 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(212,175,55,.2);
+  background: #0f172a;
+}
+
+.zeus-ai-icon {
+  font-size: 44px;
+  margin-bottom: 14px;
+}
+
+.zeus-ai-tool-card h3 {
+  color: white;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.zeus-ai-tool-card p {
+  color: #94a3b8;
+  margin: 10px 0 18px;
+}

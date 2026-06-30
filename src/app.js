@@ -445,6 +445,50 @@ function animateHomeCounters() {
   });
 }
 
+function renderAthleteDirectoryPage() {
+  const container = document.getElementById("athlete-directory-page");
+  if (!container) return;
+
+  container.innerHTML = renderAthletesDirectory(allAthletesCache);
+}
+
+function renderHighlightFeedPage() {
+  const container = document.getElementById("highlights-root");
+  if (!container) return;
+
+  container.innerHTML = renderHighlightFeed(allAthletesCache);
+
+  initializeHighlightAutoplay();
+}
+
+function renderSchools() {
+  const container = document.getElementById("schools-root");
+  if (!container) return;
+
+  container.innerHTML = renderSchoolsPage();
+}
+
+function renderRankings() {
+  const container = document.getElementById("rankings-root");
+  if (!container) return;
+
+  container.innerHTML = renderRankingsPage(allAthletesCache);
+}
+
+function renderRecruiting() {
+  const container = document.getElementById("recruiting-root");
+  if (!container) return;
+
+  container.innerHTML = renderRecruitingPage();
+}
+
+function renderZeusAI() {
+  const container = document.getElementById("zeus-ai-root");
+  if (!container) return;
+
+  container.innerHTML = renderZeusAiPage();
+}
+
 // ==========================================
 // FILTER MATRIX CONTROLLER
 // ==========================================
@@ -936,6 +980,44 @@ const nationalDashboardRoot = document.getElementById("national-dashboard-root")
 if (nationalDashboardRoot) {
   nationalDashboardRoot.innerHTML = renderNationalDashboard();
 }
+
+// ==========================================
+// TIKTOK FEED ACTIONS
+// ==========================================
+
+window.likeHighlight = function(id) {
+
+  const el = document.getElementById(`likes-${id}`);
+
+  if (!el) return;
+
+  let total = parseInt(el.innerText) || 0;
+
+  el.innerText = total + 1;
+
+};
+
+window.shareHighlight = function(id) {
+
+  navigator.clipboard.writeText(
+    window.location.origin + "/?highlight=" + id
+  );
+
+  alert("Highlight link copied!");
+
+};
+
+window.commentHighlight = function(id) {
+
+  alert("Comments coming in Phase 2.");
+
+};
+
+window.zeusAnalyze = function(id) {
+
+  alert("Launching Zeus AI Analysis...");
+
+};
 
 // ==========================================
 // BOOT
