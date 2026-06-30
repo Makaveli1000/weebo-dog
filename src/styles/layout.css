@@ -1,0 +1,338 @@
+/* ==========================================
+   GLOBAL LAYOUT
+========================================== */
+
+:root{
+  --bg:#020617;
+  --panel:#0f172a;
+  --panel2:#111827;
+  --gold:#d4af37;
+  --blue:#4db8ff;
+  --white:#ffffff;
+  --gray:#94a3b8;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--white);
+  font-family:Inter,Arial,sans-serif;
+  overflow-x:hidden;
+}
+
+/* ==========================================
+   APP WRAPPER
+========================================== */
+
+.app-shell{
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+
+main{
+  width:min(1600px,95%);
+  margin:auto;
+  padding:30px 0 80px;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+header{
+  position:sticky;
+  top:0;
+  z-index:9999;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:18px 40px;
+
+  background:rgba(2,6,23,.92);
+
+  backdrop-filter:blur(18px);
+
+  border-bottom:1px solid rgba(255,255,255,.06);
+
+  box-shadow:
+      0 10px 40px rgba(0,0,0,.45);
+}
+
+/* ==========================================
+   LOGO
+========================================== */
+
+.logo-area{
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+}
+
+.logo-area img{
+
+width:62px;
+
+height:62px;
+
+border-radius:50%;
+
+border:2px solid var(--gold);
+
+box-shadow:0 0 20px rgba(77,184,255,.35);
+
+}
+
+.logo-title{
+
+display:flex;
+
+flex-direction:column;
+
+}
+
+.logo-title h1{
+
+margin:0;
+
+font-size:22px;
+
+font-weight:900;
+
+}
+
+.logo-title span{
+
+color:var(--gray);
+
+font-size:12px;
+
+letter-spacing:2px;
+
+}
+
+/* ==========================================
+   NAVIGATION
+========================================== */
+
+nav{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+flex-wrap:wrap;
+
+}
+
+nav a{
+
+position:relative;
+
+padding:10px 16px;
+
+border-radius:12px;
+
+text-decoration:none;
+
+font-weight:700;
+
+font-size:14px;
+
+color:#cbd5e1;
+
+transition:.25s;
+
+}
+
+nav a:hover{
+
+background:rgba(77,184,255,.12);
+
+color:white;
+
+}
+
+nav a::after{
+
+content:"";
+
+position:absolute;
+
+left:12px;
+
+right:12px;
+
+bottom:5px;
+
+height:2px;
+
+background:linear-gradient(90deg,var(--gold),var(--blue));
+
+transform:scaleX(0);
+
+transition:.25s;
+
+}
+
+nav a:hover::after{
+
+transform:scaleX(1);
+
+}
+
+/* ==========================================
+   AUTH BUTTON
+========================================== */
+
+#header-auth-btn{
+
+padding:10px 18px;
+
+border-radius:999px;
+
+background:linear-gradient(90deg,var(--gold),#f6d365);
+
+color:black;
+
+font-weight:900;
+
+border:none;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+#header-auth-btn:hover{
+
+transform:translateY(-2px);
+
+box-shadow:0 0 25px rgba(212,175,55,.4);
+
+}
+
+/* ==========================================
+   SECTION SPACING
+========================================== */
+
+section{
+
+margin-bottom:50px;
+
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+footer{
+
+padding:40px;
+
+text-align:center;
+
+color:var(--gray);
+
+border-top:1px solid rgba(255,255,255,.05);
+
+}
+
+/* ==========================================
+   SCROLLBAR
+========================================== */
+
+::-webkit-scrollbar{
+
+width:10px;
+
+}
+
+::-webkit-scrollbar-track{
+
+background:#020617;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+background:var(--blue);
+
+border-radius:999px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+background:var(--gold);
+
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media(max-width:1000px){
+
+header{
+
+flex-direction:column;
+
+gap:20px;
+
+padding:20px;
+
+}
+
+nav{
+
+justify-content:center;
+
+}
+
+main{
+
+width:96%;
+
+}
+
+}
+
+@media(max-width:700px){
+
+.logo-title h1{
+
+font-size:18px;
+
+}
+
+nav{
+
+gap:4px;
+
+}
+
+nav a{
+
+font-size:12px;
+
+padding:8px 10px;
+
+}
+
+#header-auth-btn{
+
+width:100%;
+
+}
+
+}
