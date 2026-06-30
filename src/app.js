@@ -1,8 +1,60 @@
+// ======================================================
+// PAGE RENDER IMPORTS
+// ======================================================
+import { renderHomePage } from "./pages/home.js";
+import { renderAthletesDirectory } from "./pages/athletes.js";
+import { renderAthletePage } from "./pages/athlete.js";
+import { renderHighlightFeed } from "./pages/highlights.js";
+import { renderNationalDashboard } from "./pages/national-dashboard.js";
+import { renderSchoolsPage } from "./pages/schools.js";
+import { renderRankingsPage } from "./pages/rankings.js";
+import { renderRecruitingPage } from "./pages/recruiting.js";
+import { renderZeusAiPage } from "./pages/zeus-ai.js";
+// ======================================================
+// FIREBASE IMPORTS
+// ======================================================
+
 import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, query, onSnapshot, serverTimestamp, deleteDoc, limit, arrayUnion, getDocs } from "firebase/firestore";
-import { getDatabase, ref as rtdbRef, push, onValue, serverTimestamp as rtdbServerTimestamp, query as rtdbQuery, limitToLast } from "firebase/database";
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
+} from "firebase/auth";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  collection,
+  query,
+  onSnapshot,
+  serverTimestamp,
+  deleteDoc,
+  limit,
+  arrayUnion,
+  getDocs
+} from "firebase/firestore";
+
+import {
+  getDatabase,
+  ref as rtdbRef,
+  push,
+  onValue,
+  serverTimestamp as rtdbServerTimestamp,
+  query as rtdbQuery,
+  limitToLast
+} from "firebase/database";
+
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL
+} from "firebase/storage"; 
 
 // ==========================================
 // ⚡ CORE INFRASTRUCTURE CONFIGURATION
@@ -295,11 +347,102 @@ function updateAccessUI(profile) {
     if (loginBtn) loginBtn.textContent = "Login";
   }
   processAndRenderFilteredAthletes();
+} 
+
+// ==========================================
+// PAGE RENDERERS
+// ==========================================
+
+function renderHome() {
+  const container = document.getElementById("home-root");
+  if (!container) return;
+
+  container.innerHTML = renderHomePage();
+
+  const overlay = document.getElementById("zeus-intro-overlay");
+  const skipBtn = document.getElementById("skip-zeus-intro");
+  const line = document.getElementById("zeus-intro-line");
+
+  const lines = [
+    "Welcome to Snt.L.Mo. Sports Network...",
+    "The home of every athlete...",
+    "Every school...",
+    "Every coach...",
+    "Every recruiter...",
+    "Every fan...",
+    "Discover athletes from every city...",
+    "Watch highlights from around the country...",
+    "Explore school programs...",
+    "Track national rankings...",
+    "Connect through recruiting...",
+    "Shop exclusive team gear...",
+    "And let Zeus AI analyze the future of sports...",
+    "Greatness is not born...",
+    "It is discovered...",
+    "Now... let's discover the next generation of greatness."
+  ];
+
+  let index = 0;
+  let timer = null;
+
+  const thunder = new Audio("audio/thunder.mp3");
+  const voice = new Audio("audio/zeus-intro.mp3");
+  const music = new Audio("audio/ambient.mp3");
+
+  function closeIntro() {
+    overlay?.classList.add("hidden");
+
+    thunder.pause();
+    voice.pause();
+    music.pause();
+
+    if (timer) clearInterval(timer);
+
+    animateHomeCounters();
+  }
+
+  skipBtn?.addEventListener("click", closeIntro);
+
+  if (overlay) {
+    thunder.volume = 0.6;
+    voice.volume = 0.95;
+    music.volume = 0.25;
+
+    thunder.play().catch(() => {});
+    voice.play().catch(() => {});
+    music.play().catch(() => {});
+
+    timer = setInterval(() => {
+      index += 1;
+
+      if (line && lines[index]) {
+        line.textContent = lines[index];
+      }
+
+      if (index >= lines.length - 1) {
+        setTimeout(closeIntro, 4500);
+      }
+    }, 2800);
+  }
 }
 
-function mergeRosterScores(d) {
-  const scores = Array.isArray(d?.scores) ? d.scores : [d?.score0, d?.score1, d?.score2, d?.score3, d?.score4];
-  return scores.reduce((sum, value) => sum + safeNumber(value), 0);
+function animateHomeCounters() {
+  document.querySelectorAll(".count-up").forEach((el) => {
+    const target = Number(el.dataset.target || 0);
+    let current = 0;
+    const step = Math.max(1, Math.floor(target / 80));
+
+    const interval = setInterval(() => {
+      current += step;
+
+      if (current >= target) {
+        current = target;
+        clearInterval(interval);
+      }
+
+      el.textContent = current.toLocaleString();
+    }, 25);
+  });
 }
 
 // ==========================================
@@ -410,18 +553,30 @@ function subscribeToAthletes() {
 setText("athlete-count", allAthletesCache.length);
 
 processAndRenderFilteredAthletes();
-    
-    if (activeSelectedAthleteId) {
-      const currentSelected = allAthletesCache.find(item => item.id === activeSelectedAthleteId);
-      if (currentSelected) {
-        const uploadBadge = $("upload-count-badge");
-        if (uploadBadge) {
-          uploadBadge.textContent = `Uploads: ${currentSelected.data.videos ? currentSelected.data.videos.length : 0}`;
-        }
-      }
+
+renderAthleteDirectoryPage();
+renderHighlightFeedPage();
+
+renderRankings();
+renderSchools();
+renderRecruiting();
+renderZeusAI();
+
+if (activeSelectedAthleteId) {
+  const currentSelected = allAthletesCache.find(item => item.id === activeSelectedAthleteId);
+
+  if (currentSelected) {
+    const uploadBadge = $("upload-count-badge");
+
+    if (uploadBadge) {
+      uploadBadge.textContent =
+        `Uploads: ${currentSelected.data.videos ? currentSelected.data.videos.length : 0}`;
     }
-  }, e => console.error(e));
+  }
 }
+
+  }, e => console.error(e));
+}   
 
 // ==========================================
 // ADMINISTRATIVE UTILITY: VIDEO MANAGEMENT
@@ -743,12 +898,34 @@ function bindEvents() {
 // ==========================================
 // RUNTIME TRIGGER INITIATION
 // ==========================================
+
+const nationalDashboardRoot = document.getElementById("national-dashboard-root");
+
+if (nationalDashboardRoot) {
+  nationalDashboardRoot.innerHTML = renderNationalDashboard();
+}
+
 refreshSubTierOptions();
 bindEvents();
 initializeLiveSportsTicker();
 initializeGearLightbox();
 initializeMediaLockerEngine();
 loadLiveGearMarketplace(); // 🔥 Moving this here makes sure your inventory loads for the public instantly!
+
+// ==========================================
+// BOOT
+// ==========================================
+
+refreshSubTierOptions();
+bindEvents();
+
+renderHome();
+
+
+initializeLiveSportsTicker();
+initializeGearLightbox();
+initializeMediaLockerEngine();
+loadLiveGearMarketplace();
 
 onAuthStateChanged(auth, (user) => {
   if (user) {
@@ -759,4 +936,10 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-window.appAuth = { logIn: (e, p) => signInWithEmailAndPassword(auth, e, p), logOut: () => signOut(auth) };
+window.appAuth = {
+  logIn: (e, p) => signInWithEmailAndPassword(auth, e, p),
+  logOut: () => signOut(auth)
+};
+
+window.show = show;
+window.hide = hide;

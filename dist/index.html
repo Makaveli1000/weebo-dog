@@ -26,15 +26,24 @@
   </div>
 
   <nav class="hidden lg:flex items-center space-x-4 text-xs font-mono uppercase tracking-wider">
+
     <a href="#home" class="text-gray-400 hover:text-zeus-gold transition">Home</a>
-    <a href="#athletes" class="text-gray-400 hover:text-zeus-gold transition">Athletes</a>
+
+    <a href="#athlete-directory-page" class="text-gray-400 hover:text-zeus-gold transition">Athletes</a>
+
     <a href="#schools" class="text-gray-400 hover:text-zeus-gold transition">Schools</a>
+
     <a href="#rankings" class="text-gray-400 hover:text-zeus-gold transition">Rankings</a>
+
     <a href="#highlights" class="text-gray-400 hover:text-zeus-gold transition">Highlights</a>
+
     <a href="#recruiting" class="text-gray-400 hover:text-zeus-gold transition">Recruiting</a>
+
     <a href="#gear" class="text-gray-400 hover:text-zeus-gold transition">Gear</a>
+
     <a href="#zeus-ai" class="text-gray-400 hover:text-zeus-gold transition">Zeus AI</a>
-  </nav>
+
+</nav>
 
   <button id="header-auth-btn" class="border border-zeus-gold/40 hover:border-zeus-gold bg-zeus-goldSoft text-zeus-gold font-mono text-xs uppercase px-4 py-2 rounded transition duration-200 tracking-wider">
     Login
@@ -66,33 +75,16 @@
   <!-- ==========================================
        🏆 MAIN GRID ENVIRONMENT (UNIFIED ACTIVE LAYER)
        ========================================== -->
- <section id="home" class="max-w-grid mx-auto px-4 py-10">
+ 
+<main id="main-content" class="hidden max-w-grid mx-auto px-4 py-6">
 
-  <div class="network-hero">
-    <p class="network-kicker">National Sports Platform</p>
+<section id="home-root"></section>
 
-    <h2>Snt.L.Mo. Sports Network</h2>
+  <!-- ===========================================
+       NATIONAL DASHBOARD
+  =========================================== -->
 
-    <p class="network-slogan">The Home of Every Athlete</p>
-
-    <p class="network-description">
-      A national sports platform built for athletes, coaches, schools, recruiters, families, fans, highlights, rankings, live games, team stores, and Zeus AI scouting.
-    </p>
-
-    <div class="network-actions">
-      <a href="#athletes">Explore Athletes</a>
-      <a href="#highlights">Watch Highlights</a>
-      <a href="#recruiting">Recruiting Portal</a>
-      <a href="#gear">Shop Gear</a>
-    </div>
-
-    <div class="network-stats">
-      <div><strong id="athlete-count">0</strong><span>Athletes</span></div>
-      <div><strong id="school-count">0</strong><span>Schools</span></div>
-      <div><strong id="state-count">50</strong><span>States</span></div>
-      <div><strong id="game-count">0</strong><span>Live Games</span></div>
-    </div>
-  </div>
+  <section id="national-dashboard-root" class="network-section"></section>
 
   <section class="network-section">
     <div class="section-header">
@@ -175,70 +167,137 @@
         <p>Every athlete gets a profile with film, stats, awards, school info, and recruiting status.</p>
       </div>
     </div>
-  </section>
+  </section> 
 
   <!-- ===========================
-     ZEUS AI
-=========================== -->
-<section id="zeus-ai" class="network-section zeus-section">
-
-    <div>
-        <p class="network-kicker">Zeus AI</p>
-
-        <h3>AI Scouting. Rankings. Recruiting Reports.</h3>
-
-        <p>
-            Zeus AI will help evaluate film,
-            write scouting reports,
-            compare athletes,
-            and give players a professional recruiting profile.
-        </p>
-    </div>
-
-    <div class="zeus-panel">
-        <strong>Example Zeus Report</strong>
-
-        <p>
-            Elite acceleration.
-            Strong competitive motor.
-            High-level upside with improved technique
-            and verified game film.
-        </p>
-    </div>
-
-</section>
-
-
-<!-- ===========================
-     PLATFORM FEATURES
-=========================== -->
-
-<section id="platform-features" class="network-section">
-
+       ZEUS AI
+  =========================== -->
+  <section id="zeus-ai" class="network-section zeus-section">
+  
+      <div>
+          <p class="network-kicker">Zeus AI</p>
+  
+          <h3>AI Scouting. Rankings. Recruiting Reports.</h3>
+  
+          <p>
+              Zeus AI will help evaluate film,
+              write scouting reports,
+              compare athletes,
+              and give players a professional recruiting profile.
+          </p>
+      </div>
+  
+      <div class="zeus-panel">
+          <strong>Example Zeus Report</strong>
+  
+          <p>
+              Elite acceleration.
+              Strong competitive motor.
+              High-level upside with improved technique
+              and verified game film.
+          </p>
+      </div>
+  
+  </section>
+  
+  <!-- =====================================================
+       SNT.L.MO SPORTS NETWORK ECOSYSTEM
+  ===================================================== -->
+  
+  <section id="platform-features" class="network-section">
+  
     <div class="section-header">
-
-        <h3>Million-Dollar Platform Features</h3>
-
-        <p>
-            Built to compete with
-            Hudl,
-            MaxPreps,
-            On3,
-            247Sports,
-            Rivals,
-            and ESPN.
-        </p>
-
+      <p class="network-kicker">Built To Compete Nationally</p>
+  
+      <h3>Snt.L.Mo. Sports Network Ecosystem</h3>
+  
+      <p>
+        A full sports technology platform built for athletes, schools, coaches,
+        recruiters, families, fans, media, brands, and communities.
+      </p>
     </div>
+  
+    <div class="feature-grid">
+  
+      <div class="feature-card">
+        <h4>👤 Athlete Profile Pages</h4>
+        <p>Every athlete gets a professional page with film, stats, awards, school, class, recruiting status, and Zeus Rating.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>🎥 Highlight Feed</h4>
+        <p>A vertical TikTok-style sports feed where athletes can post clips and get discovered.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>🏫 School Pages</h4>
+        <p>Every school can showcase teams, coaches, rosters, schedules, history, rankings, and team stores.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>🤖 Zeus AI Reports</h4>
+        <p>AI scouting reports, player comparisons, strengths, weaknesses, recruiting projections, and development plans.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>📊 Rankings Engine</h4>
+        <p>Live rankings by sport, school, state, class, position, rating, highlights, and verified performance.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>🎓 Recruiting Portal</h4>
+        <p>College coaches and recruiters can search, save, compare, and contact verified athletes.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>📺 Live Games</h4>
+        <p>Game broadcasts, live scoreboards, instant replay clips, stat overlays, and event pages.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>💰 NIL Marketplace</h4>
+        <p>Athletes can connect with brands, sponsors, businesses, alumni, and community supporters.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>🛒 Team Stores</h4>
+        <p>Schools, teams, and athletes can sell apparel, tickets, digital products, and exclusive gear.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>🗺️ 50-State Coverage</h4>
+        <p>Start local, expand regional, and scale nationally with state pages, city pages, and school directories.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>🏆 Awards System</h4>
+        <p>Player of the Week, Team of the Week, All-City, All-State, Hall of Fame, and Zeus Awards.</p>
+      </div>
+  
+      <div class="feature-card">
+        <h4>📱 Mobile App Ready</h4>
+        <p>Designed for athletes, coaches, parents, fans, recruiters, media, and schools on mobile first.</p>
+      </div>
+  
+    </div>
+  
+  </section>
 
-    <div id="platform-features-grid" class="feature-grid"></div>
+  <!-- ===========================================
+       ATHLETE DIRECTORY PAGE
+  =========================================== -->
+
+  <section id="athlete-directory-page" class="network-section">
 
 </section>
 
+  <!-- ===========================================
+       ADMIN GRID
+  =========================================== -->
 
-<main id="main-content" class="hidden max-w-grid mx-auto px-4 py-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
+  <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
     
-    <!-- COLUMN 1: CONTROL TERMINAL (INPUTS & FILTERS) -->
+<!-- COLUMN 1: CONTROL TERMINAL (INPUTS & FILTERS) -->
     <div class="space-y-6">
       <!-- ATHLETE COMMAND CENTER (ADMIN DATA ENTRY PANEL) -->
       <div id="admin-panel" class="hidden border border-zeus-border bg-zeus-panel p-4 rounded-xl">
@@ -483,6 +542,10 @@
   </div> <!-- End of gear-grid-container -->
 </div>
 
+    </div> <!-- End Column 4 -->
+
+  </div> <!-- End Admin Grid -->
+
 </main>
 
   <!-- ==========================================
@@ -543,9 +606,6 @@
       </div>
     </div>
   </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-</main>
 
 <!-- ==========================
      Athlete Profile Modal
@@ -568,6 +628,7 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="module" src="./bundle.js"></script>
 
 </body>

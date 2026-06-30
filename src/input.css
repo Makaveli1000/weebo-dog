@@ -12,9 +12,10 @@
 @import "./styles/home.css";
 @import "./styles/athletes.css";
 @import "./styles/athlete-profile.css";
+@import "./styles/national-dashboard.css";
 
 /* Admin / Dashboard */
 @import "./styles/admin.css";
 
 /* Animations */
-@import "./styles/animations.css";
+@import "./styles/animations.css"; 
