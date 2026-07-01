@@ -1063,11 +1063,26 @@ initializeMediaLockerEngine();
 loadLiveGearMarketplace();
 
 onAuthStateChanged(auth, (user) => {
+  const adminPlatform = document.getElementById("admin-platform");
+
   if (user) {
     handleSignedInUser(user);
+
+    if (adminPlatform) {
+      if (isAdminProfile(currentProfile)) {
+        adminPlatform.style.display = "block";
+      } else {
+        adminPlatform.style.display = "none";
+      }
+    }
+
   } else {
     updateAccessUI(null);
     hide("loading-overlay");
+
+    if (adminPlatform) {
+      adminPlatform.style.display = "none";
+    }
   }
 });
 
