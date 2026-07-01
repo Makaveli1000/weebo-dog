@@ -1,0 +1,57 @@
+.account-setup-page {
+  display: grid;
+  gap: 28px;
+}
+
+.account-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
+  gap: 18px;
+}
+
+.account-type-card {
+  padding: 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(212,175,55,.22);
+  background:
+    radial-gradient(circle at 90% 10%, rgba(77,184,255,.12), transparent 30%),
+    #0f172a;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+}
+
+.account-type-card span {
+  font-size: 38px;
+}
+
+.account-type-card h3 {
+  margin-top: 12px;
+  color: #d4af37;
+  font-weight: 950;
+}
+
+.account-type-card p {
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.account-type-card.active {
+  border-color: #4db8ff;
+  box-shadow: 0 0 28px rgba(77,184,255,.25);
+}
+
+.account-setup-form {
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+}
+
+.account-setup-form input {
+  padding: 15px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(212,175,55,.22);
+  background: #020617;
+  color: white;
+  font-weight: 800;
+}

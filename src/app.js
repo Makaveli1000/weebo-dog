@@ -12,6 +12,7 @@ import { renderRecruitingPage } from "./pages/recruiting.js";
 import { renderZeusAiPage } from "./pages/zeus-ai.js";
 import { renderLiveGamesPage } from "./pages/live.js";
 import { renderMarketplacePage } from "./pages/marketplace.js";
+import { renderAccountSetupPage } from "./pages/account-setup.js";
 
 // ======================================================
 // FIREBASE IMPORTS
@@ -23,7 +24,8 @@ import {
   getAuth,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  createUserWithEmailAndPassword
 } from "firebase/auth";
 
 import {
@@ -31,6 +33,7 @@ import {
   doc,
   getDoc,
   addDoc,
+  setDoc,
   updateDoc,
   collection,
   query,
@@ -57,7 +60,7 @@ import {
   ref as storageRef,
   uploadBytesResumable,
   getDownloadURL
-} from "firebase/storage"; 
+} from "firebase/storage";
 
 // ==========================================
 // ⚡ CORE INFRASTRUCTURE CONFIGURATION
@@ -301,9 +304,96 @@ function renderMarketplace() {
 
   container.innerHTML = renderMarketplacePage();
 }
+
+function renderZeusAI() {
+  const container = document.getElementById("zeus-ai-root");
+  if (!container) return;
+
+  container.innerHTML = renderZeusAiPage();
+}
+
+// ==========================================
+// ACCOUNT COLLECTION MAP
+// ==========================================
+
+const ROLE_COLLECTIONS = {
+  athlete: "athletes",
+  school: "schools",
+  recruiter: "recruiters",
+  coach: "coaches",
+  parent: "parents",
+  media: "media",
+  business: "businesses",
+  fan: "fans"
+};
+
+// ==========================================
+// ACCOUNT CREATION HANDLER
+// ==========================================
+
+window.handleAccountSetup = async function(e) {
+  e.preventDefault();
+
+  const role = document.getElementById("setup-role")?.value;
+  const name = document.getElementById("setup-name")?.value.trim();
+  const email = document.getElementById("setup-email")?.value.trim();
+  const password = document.getElementById("setup-password")?.value;
+
+  const collectionName = ROLE_COLLECTIONS[role];
+
+  if (!collectionName) {
+    alert("Please select a valid account role.");
+    return;
+  }
+
+  if (!name || !email || !password) {
+    alert("Please complete name, email, and password.");
+    return;
+  }
+
+  try {
+    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = credential.user.uid;
+
+    const baseProfile = {
+      uid,
+      role,
+      name,
+      email,
+      verified: false,
+      status: "active",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    await setDoc(doc(db, collectionName, uid), {
+      ...baseProfile,
+      profileComplete: false
+    });
+
+    await setDoc(doc(db, "users", uid), {
+      ...baseProfile,
+      collectionName
+    });
+
+    alert("Account created successfully!");
+
+    e.target.reset();
+
+  } catch (err) {
+    console.error("Account creation failed:", err);
+    alert(err.message);
+  }
+};
+
+// ==========================================
+// ADMIN FUNCTIONS
+// ==========================================
+
 window.directPurgeRow = async (e, id, name) => {
   e.stopPropagation();
   if (!isAdminProfile(currentProfile)) return;
+
   if (confirm(`Are you sure you want to permanently erase ${name} from the database?`)) {
     try {
       await deleteDoc(doc(db, "athletes", id));
@@ -510,13 +600,6 @@ function renderRecruiting() {
   if (!container) return;
 
   container.innerHTML = renderRecruitingPage();
-}
-
-function renderZeusAI() {
-  const container = document.getElementById("zeus-ai-root");
-  if (!container) return;
-
-  container.innerHTML = renderZeusAiPage();
 }
 
 // ==========================================
@@ -1061,7 +1144,15 @@ refreshSubTierOptions();
 bindEvents();
 
 renderHome();
-
+renderAccountSetup();
+renderAthleteDirectoryPage();
+renderSchools();
+renderRankings();
+renderRecruiting();
+renderHighlightFeedPage();
+renderLiveGames();
+renderMarketplace();
+renderZeusAI();
 
 initializeLiveSportsTicker();
 initializeGearLightbox();
