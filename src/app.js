@@ -386,8 +386,9 @@ function renderHome() {
   const overlay = document.getElementById("zeus-intro-overlay");
   const skipBtn = document.getElementById("skip-zeus-intro");
   const line = document.getElementById("zeus-intro-line");
-
-  const lines = [
+  const skipBtnInline = document.getElementById("skip-zeus-intro-inline");
+  
+const lines = [
     "Welcome to Snt.L.Mo. Sports Network...",
     "The home of every athlete...",
     "Every school...",
@@ -426,8 +427,9 @@ function renderHome() {
   }
 
   skipBtn?.addEventListener("click", closeIntro);
-
-  if (overlay) {
+  skipBtnInline?.addEventListener("click", closeIntro);
+  
+if (overlay) {
     thunder.volume = 0.6;
     voice.volume = 0.95;
     music.volume = 0.25;
@@ -448,6 +450,10 @@ function renderHome() {
       }
     }, 2800);
   }
+
+setTimeout(() => {
+    animateHomeCounters();
+  }, 900);
 }
 
 function animateHomeCounters() {

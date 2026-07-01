@@ -1,116 +1,123 @@
-.live-page{
-display:grid;
-gap:30px;
+.live-page {
+  display: grid;
+  gap: 30px;
 }
 
-.live-hero{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(360px,1fr));
-gap:24px;
+.live-scoreboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+  gap: 18px;
 }
 
-.live-game-card{
-
-background:#0f172a;
-
-border-radius:24px;
-
-padding:28px;
-
-border:1px solid rgba(212,175,55,.2);
-
-transition:.35s;
-
+.live-scoreboard div {
+  padding: 24px;
+  border-radius: 22px;
+  background: #0f172a;
+  border: 1px solid rgba(77,184,255,.18);
+  text-align: center;
 }
 
-.live-game-card:hover{
-
-transform:translateY(-8px);
-
-box-shadow:0 20px 50px rgba(77,184,255,.25);
-
+.live-scoreboard span {
+  font-size: 34px;
 }
 
-.live-badge{
-
-display:inline-block;
-
-padding:6px 12px;
-
-background:#dc2626;
-
-border-radius:999px;
-
-font-size:12px;
-
-font-weight:900;
-
-color:white;
-
-margin-bottom:20px;
-
+.live-scoreboard strong {
+  display: block;
+  color: #d4af37;
+  font-size: 36px;
+  font-weight: 950;
+  margin-top: 8px;
 }
 
-.teams{
-
-display:grid;
-
-grid-template-columns:1fr auto 1fr;
-
-align-items:center;
-
-margin-bottom:24px;
-
+.live-scoreboard p {
+  color: #94a3b8;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 12px;
 }
 
-.team{
-
-text-align:center;
-
+.live-games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+  gap: 22px;
 }
 
-.team h2{
-
-font-size:22px;
-
-font-weight:900;
-
-color:white;
-
+.live-game-card {
+  padding: 24px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(77,184,255,.14), transparent 30%),
+    #0f172a;
+  border: 1px solid rgba(212,175,55,.18);
 }
 
-.team span{
-
-display:block;
-
-margin-top:12px;
-
-font-size:42px;
-
-font-weight:900;
-
-color:#d4af37;
-
+.live-game-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.vs{
-
-font-size:24px;
-
-font-weight:900;
-
-color:#4db8ff;
-
+.live-badge,
+.upcoming-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 950;
 }
 
-.quarter{
+.live-badge {
+  color: #fff;
+  background: #dc2626;
+  box-shadow: 0 0 20px rgba(220,38,38,.4);
+}
 
-margin-bottom:20px;
+.upcoming-badge {
+  color: #d4af37;
+  border: 1px solid rgba(212,175,55,.35);
+}
 
-text-align:center;
+.live-game-top small {
+  color: #94a3b8;
+  font-weight: 800;
+}
 
-color:#94a3b8;
+.live-matchup {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0;
+}
 
-font-weight:700;
+.live-matchup div {
+  padding: 18px;
+  border-radius: 16px;
+  background: #020617;
+  text-align: center;
+}
 
+.live-matchup strong {
+  display: block;
+  color: white;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.live-matchup span {
+  display: block;
+  color: #4db8ff;
+  font-size: 38px;
+  font-weight: 950;
+  margin-top: 8px;
+}
+
+.live-matchup p {
+  color: #d4af37;
+  font-weight: 950;
+}
+
+.live-game-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }

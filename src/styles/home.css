@@ -66,8 +66,7 @@
 }
 
 .zeus-main-image{
-
-    width:480px;
+    width:min(480px, 70vw);
 
     max-width:100%;
 
@@ -398,8 +397,7 @@
 }
 
 .mini-athlete-card{
-
-    height:170px;
+    min-height:230px;
 
     border-radius:18px;
 

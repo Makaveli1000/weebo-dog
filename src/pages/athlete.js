@@ -1,206 +1,107 @@
-function escapeHtml(value = "") {
-  return String(value).replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[char] || char));
+function statBox(label, value) {
+  return `
+    <div class="athlete-profile-stat">
+      <strong>${value || "--"}</strong>
+      <span>${label}</span>
+    </div>
+  `;
 }
 
 export function renderAthletePage(athlete = {}) {
-
   const scores = Array.isArray(athlete.scores)
     ? athlete.scores
-    : [
-        athlete.score0,
-        athlete.score1,
-        athlete.score2,
-        athlete.score3,
-        athlete.score4
-      ];
+    : [athlete.score0, athlete.score1, athlete.score2, athlete.score3, athlete.score4];
 
-  const zeusRating = scores.reduce(
-    (sum, score) => sum + (Number(score) || 0),
-    0
-  );
+  const total = scores.reduce((sum, value) => sum + (Number(value) || 0), 0);
 
   return `
-<div class="athlete-profile">
+    <section class="athlete-profile-page">
 
-<div class="profile-hero">
+      <div class="athlete-profile-hero">
 
-<div class="hero-banner"></div>
+        <div class="athlete-profile-bg"></div>
 
-<div class="profile-header">
+        <div class="athlete-profile-main">
 
-<div class="profile-photo">
+          <div class="athlete-profile-photo">
+            <img src="${athlete.photoUrl || "assets/football1.jpg"}" alt="Athlete">
+          </div>
 
-<img
-src="${escapeHtml(athlete.photo || "images/default-athlete.jpg")}"
-alt="${escapeHtml(athlete.name || "Athlete")}"
->
+          <div class="athlete-profile-info">
+            <p class="network-kicker">Verified Athlete Profile</p>
 
-</div>
+            <h1>${athlete.name || "Athlete Name"}</h1>
 
-<div class="profile-info">
+            <p class="athlete-profile-meta">
+              ${athlete.position || "Position"} • ${athlete.school || "School"} • ${athlete.sport || "Sport"}
+            </p>
 
-<span class="verified-badge">
+            <div class="athlete-profile-badges">
+              <span class="rating-badge">⚡ Zeus Rating ${total || "--"}</span>
+              <span class="verified-badge">Verified</span>
+              <span class="rating-badge">Recruiting Ready</span>
+            </div>
 
-✔ VERIFIED ATHLETE
+            <div class="athlete-profile-actions">
+              <button class="athlete-card-btn">Follow Athlete</button>
+              <button class="athlete-card-btn">Message</button>
+              <button class="athlete-card-btn">Recruit</button>
+            </div>
+          </div>
 
-</span>
+        </div>
 
-<h1>
+      </div>
 
-${escapeHtml(athlete.name || "Unknown Athlete")}
+      <div class="athlete-profile-grid">
 
-</h1>
+        <div class="athlete-profile-card highlight-card-large">
+          <h3>🎥 Highlight Hero</h3>
 
-<h3>
+          ${
+            athlete.highlightUrl
+              ? `<video src="${athlete.highlightUrl}" controls class="athlete-highlight-video"></video>`
+              : `<div class="athlete-highlight-placeholder">No highlight uploaded yet</div>`
+          }
+        </div>
 
-${escapeHtml(athlete.position || "")}
-•
-${escapeHtml(athlete.school || "")}
+        <div class="athlete-profile-card">
+          <h3>📊 Performance Stats</h3>
 
-</h3>
+          <div class="athlete-profile-stats">
+            ${statBox("Speed", scores[0])}
+            ${statBox("Power", scores[1])}
+            ${statBox("Skill", scores[2])}
+            ${statBox("IQ", scores[3])}
+            ${statBox("Impact", scores[4])}
+            ${statBox("Total", total)}
+          </div>
+        </div>
 
-<p>
+        <div class="athlete-profile-card">
+          <h3>🎓 Recruiting Status</h3>
 
-Class of ${escapeHtml(athlete.classYear || "----")}
+          <ul class="athlete-profile-list">
+            <li><strong>Class:</strong> ${athlete.classYear || "Unlisted"}</li>
+            <li><strong>Height:</strong> ${athlete.height || "Unlisted"}</li>
+            <li><strong>Weight:</strong> ${athlete.weight || "Unlisted"}</li>
+            <li><strong>Offers:</strong> ${athlete.offers || "Open"}</li>
+            <li><strong>Contact:</strong> Available to verified recruiters</li>
+          </ul>
+        </div>
 
-</p>
+        <div class="athlete-profile-card">
+          <h3>⚡ Zeus AI Scouting Snapshot</h3>
 
-<p>
+          <p>
+            ${athlete.aiSummary || "Explosive upside, strong competitive profile, and room for continued development with verified film and consistent performance tracking."}
+          </p>
 
-${escapeHtml(athlete.city || "")},
-${escapeHtml(athlete.state || "")}
+          <button class="athlete-card-btn">Generate Full Report</button>
+        </div>
 
-</p>
+      </div>
 
-<div class="zeus-rating">
-
-⚡ Zeus Rating
-
-<span>${zeusRating}</span>
-
-</div>
-
-<div class="profile-buttons">
-
-<button>Follow</button>
-
-<button>Message</button>
-
-<button>Share</button>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="profile-tabs">
-
-<button>Overview</button>
-
-<button>Highlights</button>
-
-<button>Stats</button>
-
-<button>Recruiting</button>
-
-<button>Awards</button>
-
-<button>Zeus AI</button>
-
-</div>
-
-<div class="profile-grid">
-
-<div class="profile-card">
-
-<h2>
-
-⚡ Zeus AI Report
-
-</h2>
-
-<p>
-
-Elite athletic upside with excellent competitiveness,
-strong work ethic,
-and high recruiting potential.
-
-</p>
-
-</div>
-
-<div class="profile-card">
-
-<h2>
-
-📏 Measurements
-
-</h2>
-
-<ul>
-
-<li>Height: ${escapeHtml(athlete.height || "--")}</li>
-
-<li>Weight: ${escapeHtml(athlete.weight || "--")}</li>
-
-<li>40 Time: ${escapeHtml(athlete.forty || "--")}</li>
-
-<li>Vertical: ${escapeHtml(athlete.vertical || "--")}</li>
-
-<li>Position: ${escapeHtml(athlete.position || "--")}</li>
-
-</ul>
-
-</div>
-
-<div class="profile-card">
-
-<h2>
-
-🎓 Recruiting
-
-</h2>
-
-<ul>
-
-<li>GPA: ${escapeHtml(athlete.gpa || "--")}</li>
-
-<li>Offers: ${escapeHtml(athlete.offers || "None")}</li>
-
-<li>Status: ${escapeHtml(athlete.commitment || "Open")}</li>
-
-</ul>
-
-</div>
-
-<div class="profile-card">
-
-<h2>
-
-🏆 Awards
-
-</h2>
-
-<p>
-
-${escapeHtml(athlete.awards || "No awards yet.")}
-
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-`;
+    </section>
+  `;
 }

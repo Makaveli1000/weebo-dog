@@ -108,9 +108,30 @@
   font-weight: 900;
 }
 
-.blue { background: linear-gradient(135deg,#0f52ba,#2563eb); }
-.red { background: linear-gradient(135deg,#991b1b,#dc2626); }
-.green { background: linear-gradient(135deg,#166534,#22c55e); }
-.gold { background: linear-gradient(135deg,#a16207,#facc15); }
-.purple { background: linear-gradient(135deg,#581c87,#9333ea); }
-.navy { background: linear-gradient(135deg,#1e3a8a,#2563eb); }
+.blue {
+  background: linear-gradient(135deg,#0f52ba,#2563eb);
+}
+
+.red {
+  background: linear-gradient(135deg,#991b1b,#dc2626);
+}
+
+.green {
+  background: linear-gradient(135deg,#166534,#22c55e);
+}
+
+.gold {
+  background: linear-gradient(135deg,#a16207,#facc15);
+}
+
+.purple {
+  background: linear-gradient(135deg,#581c87,#9333ea);
+}
+
+.navy {
+  background: linear-gradient(135deg,#1e3a8a,#2563eb);
+}
+
+.orange {
+  background: linear-gradient(135deg,#c2410c,#f97316);
+}

@@ -39,10 +39,10 @@ export function renderHero() {
           </div>
 
           <div class="highlight-thumbs">
-            <img src="assets/football1.jpg" alt="Football">
-            <img src="assets/football2.jpg" alt="Football">
-            <img src="assets/football3.jpg" alt="Football">
-            <img src="assets/football4.jpg" alt="Football">
+            <img src="assets/football1.jpg" alt="">
+            <img src="assets/football1.jpg" alt="">
+            <img src="assets/football1.jpg" alt="">
+            <img src="assets/football1.jpg" alt="">
           </div>
         </div>
       </aside>
