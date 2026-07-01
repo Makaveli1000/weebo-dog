@@ -5,7 +5,7 @@ import { renderSportsTabs } from "./home/sportsTabs.js";
 import { renderAthleteStrip } from "./home/athleteStrip.js";
 import { renderZeusPlayer } from "./home/zeusPlayer.js";
 
-export function renderHomePage() {
+export function renderHomePage(athletes = []) {
   return `
     <section id="home" class="cinematic-home-v2">
 
@@ -40,7 +40,7 @@ export function renderHomePage() {
 
       ${renderSportsTabs()}
 
-      ${renderAthleteStrip()}
+      ${renderAthleteStrip(athletes)}
 
       ${renderZeusPlayer()}
 

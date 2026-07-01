@@ -1,11 +1,30 @@
-export function renderAthleteStrip() {
+function athleteCard(item) {
+  const athlete = item.data || item;
+
+  return `
+    <div class="mini-athlete-card">
+      <img src="${athlete.photoUrl || "assets/football1.jpg"}" alt="">
+      <h4>${athlete.name || "Athlete"}</h4>
+      <p>${athlete.position || athlete.sport || "ATH"} • ${athlete.school || "School"}</p>
+    </div>
+  `;
+}
+
+export function renderAthleteStrip(athletes = []) {
+  const topAthletes = athletes.slice(0, 5);
+
   return `
     <div class="home-athlete-strip">
-      <div class="mini-athlete-card"><img src="assets/football1.jpg" alt="Athlete"><h4>Jayden Smith</h4><p>QB • Vashon</p></div>
-      <div class="mini-athlete-card"><img src="assets/football2.jpg" alt="Athlete"><h4>Marcus Brown</h4><p>WR • CBC</p></div>
-      <div class="mini-athlete-card"><img src="assets/football3.jpg" alt="Athlete"><h4>Isaiah Lewis</h4><p>RB • East St. Louis</p></div>
-      <div class="mini-athlete-card"><img src="assets/football4.jpg" alt="Athlete"><h4>Ty Johnson</h4><p>DB • SLUH</p></div>
-      <div class="mini-athlete-card"><img src="assets/football1.jpg" alt="Athlete"><h4>Chris Williams</h4><p>LB • De Smet</p></div>
+      ${
+        topAthletes.length
+          ? topAthletes.map(athleteCard).join("")
+          : `
+            <div class="mini-athlete-card">
+              <h4>No Athletes Yet</h4>
+              <p>Add athletes in Admin Command Center</p>
+            </div>
+          `
+      }
     </div>
   `;
 }

@@ -381,7 +381,7 @@ function renderHome() {
   const container = document.getElementById("home-root");
   if (!container) return;
 
-  container.innerHTML = renderHomePage();
+  container.innerHTML = renderHomePage(allAthletesCache);
 
   const overlay = document.getElementById("zeus-intro-overlay");
   const skipBtn = document.getElementById("skip-zeus-intro");
