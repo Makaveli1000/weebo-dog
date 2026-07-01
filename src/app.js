@@ -492,6 +492,17 @@ function animateHomeCounters() {
   });
 }
 
+// ==========================================
+// ACCOUNT SETUP PAGE
+// ==========================================
+
+function renderAccountSetup() {
+  const container = document.getElementById("account-setup-root");
+  if (!container) return;
+
+  container.innerHTML = renderAccountSetupPage();
+}
+
 function renderAthleteDirectoryPage() {
   const container = document.getElementById("athlete-directory-page");
   if (!container) return;
@@ -701,6 +712,7 @@ if (activeSelectedAthleteId) {
 // ==========================================
 // ADMINISTRATIVE UTILITY: VIDEO MANAGEMENT
 // ==========================================
+
 async function addVideoToTitan(athleteId, videoTitle, videoUrl) {
   if (!isAdminProfile(currentProfile)) {
     console.error("Access Denied: Only Admins can append video data.");
@@ -725,6 +737,7 @@ async function addVideoToTitan(athleteId, videoTitle, videoUrl) {
 // ==========================================
 // CORE BOOT SEQUENCE & AUTH LIFECYCLE
 // ==========================================
+
 async function handleSignedInUser(user) {
   currentUser = user;
   try {
@@ -743,6 +756,7 @@ async function handleSignedInUser(user) {
 // ==========================================
 // ADMINISTRATIVE PURGE ENGINE
 // ==========================================
+
 async function purgeGridDuplicates() {
   if (!isAdminProfile(currentProfile)) return;
   const statusEl = $("user-status"); const oldText = statusEl?.textContent || "";
@@ -764,6 +778,7 @@ async function purgeGridDuplicates() {
 // ==========================================
 // WAR ROOM CHAT ENGINE
 // ==========================================
+
 function renderChatMessage(message) {
   const display = $("chat-box-display"); if (!display) return;
   const row = document.createElement("div");
@@ -793,6 +808,7 @@ async function sendChatMessage() {
 // ==========================================
 // 📡 REAL-TIME SPORTS TICKER ENGINE
 // ==========================================
+
 const ST_LOUIS_TICKER_ALERTS = [
   { prefix: "🏈 [NFL]", text: "Mini-camp intensity spiking; veteran defensive sets showing +12% efficiency.", color: "text-zeus-gold" },
   { prefix: "🏀 [NBA]", text: "Finals series intensity reaching apex levels; court-side telemetry data locked.", color: "text-white" },
@@ -827,6 +843,7 @@ function initializeLiveSportsTicker() {
 // ==========================================
 // ⚙️ UNIFIED DYNAMIC MARKETPLACE GRID GENERATOR (THEMED FIX)
 // ==========================================
+
 function renderGlobalGearMarketplace(products) {
   const container = document.getElementById('gear-grid-container');
   if (!container) return;
@@ -877,6 +894,7 @@ function renderGlobalGearMarketplace(products) {
 // ==========================================
 // 🧥 APPAREL LIGHTBOX MODAL MAPPING INTERFACE ENGINE
 // ==========================================
+
 function openGearLightbox(product) {
   const modal = $("gear-lightbox-modal");
   if (!modal) return;
@@ -948,6 +966,7 @@ function initializeGearLightbox() {
 // ==========================================
 // 📡 CLOUD INVENTORY SYNC TERMINAL ENGINE (UPDATED)
 // ==========================================
+
 function loadLiveGearMarketplace() {
   const merchandiseRef = collection(db, "merchandise");
   
@@ -969,6 +988,7 @@ function loadLiveGearMarketplace() {
 // ==========================================
 // EVENT LISTENERS MATRIX BOUNDS
 // ==========================================
+
 function bindEvents() {
   $("tier-select")?.addEventListener("change", () => { refreshSubTierOptions(); processAndRenderFilteredAthletes(); });
   $("sub-tier-select")?.addEventListener("change", processAndRenderFilteredAthletes);
