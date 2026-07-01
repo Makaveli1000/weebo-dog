@@ -1,516 +1,552 @@
-.zeus-home {
-  position: relative;
-  overflow: hidden;
+/* ==========================================
+   SNT.L.MO SPORTS NETWORK
+   CINEMATIC HOME
+========================================== */
+
+.cinematic-home-v2{
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    color:#fff;
 }
 
-.zeus-home-hero {
-  position: relative;
-  min-height: 620px;
-  padding: 80px 24px;
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 70% 20%, rgba(77, 184, 255, 0.25), transparent 35%),
-    linear-gradient(135deg, rgba(3, 8, 18, 0.95), rgba(0, 0, 0, 0.95));
-  box-shadow: 0 0 60px rgba(77, 184, 255, 0.12);
+/* ==========================================
+   HERO
+========================================== */
+
+.cinematic-hero-grid{
+
+    position:relative;
+
+    display:grid;
+
+    grid-template-columns:300px 1fr 360px;
+
+    gap:24px;
+
+    min-height:700px;
+
+    padding:30px;
+
+    border-radius:30px;
+
+    overflow:hidden;
+
+    background:
+        radial-gradient(circle at center,rgba(77,184,255,.25),transparent 35%),
+        linear-gradient(180deg,rgba(5,8,20,.2),rgba(0,0,0,.96)),
+        url("../assets/storm-bg.jpg");
+
+    background-size:cover;
+
+    background-position:center;
+
+    border:1px solid rgba(77,184,255,.18);
+
+    box-shadow:0 0 60px rgba(0,0,0,.45);
+
 }
 
-.zeus-home-copy {
-  max-width: 720px;
-  position: relative;
-  z-index: 2;
+/* ==========================================
+   ZEUS
+========================================== */
+
+.zeus-center-stage{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
 }
 
-.zeus-home-copy h2 {
-  font-size: clamp(42px, 8vw, 92px);
-  font-weight: 900;
-  color: #d4af37;
-  text-transform: uppercase;
-  letter-spacing: -0.04em;
+.zeus-main-image{
+
+    width:480px;
+
+    max-width:100%;
+
+    border-radius:50%;
+
+    border:4px solid rgba(212,175,55,.5);
+
+    box-shadow:
+
+        0 0 35px rgba(77,184,255,.7),
+
+        0 0 90px rgba(77,184,255,.3);
+
 }
 
-.zeus-intro-card {
-  margin-top: 32px;
-  max-width: 560px;
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  padding: 22px;
-  border: 1px solid rgba(77, 184, 255, 0.28);
-  border-radius: 18px;
-  background: rgba(0, 0, 0, 0.55);
-  box-shadow: 0 0 40px rgba(77, 184, 255, 0.12);
+.zeus-title-lockup h1{
+
+    font-size:110px;
+
+    font-weight:900;
+
+    margin:0;
+
+    letter-spacing:-4px;
+
+    text-shadow:0 0 25px rgba(77,184,255,.7);
+
 }
 
-.zeus-orb,
-.zeus-avatar-glow {
-  width: 78px;
-  height: 78px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  font-size: 38px;
-  color: #4db8ff;
-  background: rgba(77, 184, 255, 0.12);
-  box-shadow: 0 0 35px rgba(77, 184, 255, 0.65);
-  animation: zeusPulse 2s infinite;
+.zeus-title-lockup h2{
+
+    margin-top:-18px;
+
+    color:#4db8ff;
+
+    letter-spacing:.4em;
+
+    font-size:28px;
+
 }
 
-.zeus-intro-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background:
-    radial-gradient(circle at 50% 35%, rgba(77, 184, 255, 0.22), transparent 32%),
-    radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.16), transparent 24%),
-    linear-gradient(180deg, #01040c, #000);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  transition: opacity 900ms ease, visibility 900ms ease;
+/* ==========================================
+   LEFT PANEL
+========================================== */
+
+.zeus-script-box{
+
+    padding:24px;
+
+    border-radius:22px;
+
+    backdrop-filter:blur(12px);
+
+    background:rgba(0,0,0,.55);
+
+    border:1px solid rgba(212,175,55,.22);
+
 }
 
-.zeus-intro-overlay.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+.zeus-script-box h3{
+
+    color:#d4af37;
+
+    margin-bottom:18px;
+
 }
 
-.skip-zeus-intro {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  border: 1px solid #d4af37;
-  color: #d4af37;
-  background: rgba(0, 0, 0, 0.72);
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  z-index: 20;
+.zeus-script-box p{
+
+    color:#ddd;
+
+    margin-bottom:10px;
+
+    line-height:1.7;
+
 }
 
-.lightning-flash {
-  position: absolute;
-  inset: 0;
-  background: white;
-  opacity: 0;
-  animation: lightningFlash 5.5s infinite;
+.gold-line{
+
+    color:#f8d34d!important;
+
+    font-weight:900;
+
+    font-size:22px;
+
 }
 
-.zeus-intro-content {
-  position: relative;
-  z-index: 5;
-  text-align: center;
-  max-width: 900px;
-  padding: 48px;
-  color: white;
+/* ==========================================
+   RIGHT PANELS
+========================================== */
+
+.home-side-stack{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:22px;
+
 }
 
-.zeus-intro-content h1 {
-  font-size: clamp(38px, 8vw, 96px);
-  color: #d4af37;
-  font-weight: 900;
-  letter-spacing: 0.09em;
+.home-panel{
+
+    background:rgba(0,0,0,.55);
+
+    backdrop-filter:blur(14px);
+
+    border-radius:20px;
+
+    border:1px solid rgba(77,184,255,.22);
+
+    padding:20px;
+
 }
 
-.zeus-intro-content p {
-  font-size: clamp(18px, 3vw, 34px);
-  margin-top: 20px;
+.panel-title-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:18px;
+
 }
 
-.zeus-intro-bar {
-  margin-top: 34px;
-  height: 7px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  overflow: hidden;
+.panel-title-row h3{
+
+    margin:0;
+
 }
 
-.zeus-intro-bar span {
-  display: block;
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #d4af37, #4db8ff);
-  animation: introProgress 45s linear forwards;
+.panel-title-row a{
+
+    color:#4db8ff;
+
+    text-decoration:none;
+
 }
 
-.breaking-news-ticker {
-  margin: 18px 0;
-  padding: 14px 18px;
-  border: 1px solid rgba(255, 60, 60, 0.35);
-  border-radius: 12px;
-  background: rgba(35, 0, 0, 0.55);
-  color: white;
-  display: flex;
-  gap: 22px;
-  overflow-x: auto;
-  white-space: nowrap;
+/* ==========================================
+   FEATURED HIGHLIGHT
+========================================== */
+
+.featured-highlight{
+
+    height:210px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border-radius:18px;
+
+    background:
+
+        radial-gradient(circle at center,rgba(77,184,255,.35),transparent 40%),
+
+        #071120;
+
+    font-size:24px;
+
+    font-weight:900;
+
+    position:relative;
+
 }
 
-.breaking-news-ticker strong {
-  color: #ff4d4d;
+.play-circle{
+
+    position:absolute;
+
+    width:90px;
+
+    height:90px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:40px;
+
+    background:rgba(0,0,0,.5);
+
 }
 
-@keyframes lightningFlash {
-  0%, 84%, 100% { opacity: 0; }
-  86% { opacity: 0.8; }
-  87% { opacity: 0; }
-  89% { opacity: 0.42; }
-  90% { opacity: 0; }
+.highlight-thumbs{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:8px;
+
+    margin-top:12px;
+
 }
 
-@keyframes zeusPulse {
-  0%, 100% { transform: scale(1); opacity: 0.85; }
-  50% { transform: scale(1.14); opacity: 1; }
+.highlight-thumbs div{
+
+    height:60px;
+
+    border-radius:10px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:#111827;
+
 }
 
-@keyframes introProgress {
-  from { width: 0%; }
-  to { width: 100%; }
-} .cinematic-home {
-  display: grid;
-  gap: 22px;
-  color: white;
+/* ==========================================
+   DASHBOARD
+========================================== */
+
+.dashboard-title{
+
+    text-align:center;
+
+    font-size:28px;
+
+    font-weight:900;
+
+    color:#d4af37;
+
+    letter-spacing:.25em;
+
 }
 
-.cinematic-hero {
-  position: relative;
-  min-height: 620px;
-  border-radius: 28px;
-  overflow: hidden;
-  border: 1px solid rgba(77,184,255,.32);
-  background:
-    radial-gradient(circle at 50% 28%, rgba(77,184,255,.28), transparent 32%),
-    linear-gradient(180deg, rgba(2,6,23,.4), rgba(0,0,0,.95)),
-    linear-gradient(120deg, #020617, #02040a);
-  box-shadow: 0 0 70px rgba(77,184,255,.18);
+.cinematic-stat-strip{
+
+    display:grid;
+
+    grid-template-columns:repeat(7,1fr);
+
+    gap:14px;
+
 }
 
-.cinematic-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(115deg, transparent 0%, rgba(77,184,255,.16) 45%, transparent 48%),
-    radial-gradient(circle at 70% 20%, rgba(255,255,255,.18), transparent 10%);
-  animation: cinematicLightning 5s infinite;
+.cinematic-stat-strip div{
+
+    padding:18px;
+
+    border-radius:20px;
+
+    background:#071120;
+
+    border:1px solid rgba(77,184,255,.15);
+
+    text-align:center;
+
 }
 
-.cinematic-hero::after {
-  content: "🏙";
-  position: absolute;
-  right: 40px;
-  bottom: 20px;
-  font-size: 170px;
-  opacity: .12;
+.cinematic-stat-strip strong{
+
+    display:block;
+
+    font-size:34px;
+
+    color:#fff;
+
 }
 
-.cinematic-center {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  z-index: 2;
+.cinematic-stat-strip small{
+
+    color:#41ff74;
+
 }
 
-.cinematic-zeus-img {
-  width: min(430px, 70vw);
-  height: min(430px, 70vw);
-  object-fit: cover;
-  border-radius: 999px;
-  border: 3px solid rgba(212,175,55,.55);
-  box-shadow:
-    0 0 35px rgba(77,184,255,.65),
-    0 0 80px rgba(212,175,55,.22);
-  animation: zeusGlow 2.5s infinite;
+/* ==========================================
+   SPORTS BAR
+========================================== */
+
+.sports-tab-bar{
+
+    display:flex;
+
+    overflow:auto;
+
+    gap:12px;
+
 }
 
-.cinematic-center h1 {
-  margin-top: -42px;
-  font-size: clamp(64px, 10vw, 150px);
-  font-weight: 950;
-  color: white;
-  text-shadow: 0 0 28px rgba(77,184,255,.8);
+.sports-tab-bar button{
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:14px 22px;
+
+    background:#0f172a;
+
+    color:#fff;
+
+    font-weight:800;
+
 }
 
-.cinematic-center h2 {
-  margin-top: -30px;
-  color: #4db8ff;
-  letter-spacing: .25em;
-  font-weight: 900;
+.sports-tab-bar .active{
+
+    background:#0b5fff;
+
 }
 
-.zeus-speech-card {
-  position: absolute;
-  left: 24px;
-  top: 70px;
-  width: 310px;
-  z-index: 3;
-  padding: 20px;
-  border-radius: 18px;
-  background: rgba(0,0,0,.55);
-  border: 1px solid rgba(77,184,255,.24);
-  backdrop-filter: blur(12px);
+/* ==========================================
+   ATHLETE STRIP
+========================================== */
+
+.home-athlete-strip{
+
+    display:grid;
+
+    grid-template-columns:repeat(5,1fr);
+
+    gap:16px;
+
 }
 
-.zeus-speech-card h3 {
-  color: #d4af37;
-  font-weight: 950;
-  margin-bottom: 12px;
+.mini-athlete-card{
+
+    height:170px;
+
+    border-radius:18px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:#111827;
+
+    border:1px solid rgba(77,184,255,.15);
+
 }
 
-.zeus-speech-card p {
-  color: #e5e7eb;
-  font-size: 13px;
-  line-height: 1.7;
+/* ==========================================
+   AUDIO PLAYER
+========================================== */
+
+.zeus-audio-player{
+
+    display:grid;
+
+    grid-template-columns:220px 1fr auto auto auto;
+
+    gap:20px;
+
+    align-items:center;
+
+    padding:24px;
+
+    border-radius:24px;
+
+    background:#06101d;
+
+    border:1px solid rgba(77,184,255,.2);
+
 }
 
-.live-highlights-panel {
-  position: absolute;
-  right: 24px;
-  top: 70px;
-  width: 330px;
-  z-index: 3;
-  padding: 16px;
-  border-radius: 18px;
-  background: rgba(0,0,0,.58);
-  border: 1px solid rgba(77,184,255,.28);
-  backdrop-filter: blur(12px);
+.audio-face img{
+
+    width:200px;
+
+    border-radius:20px;
+
 }
 
-.live-highlights-panel h3 {
-  color: white;
-  font-weight: 950;
-  margin-bottom: 12px;
+.audio-progress{
+
+    height:8px;
+
+    border-radius:999px;
+
+    overflow:hidden;
+
+    background:#222;
+
+    margin-top:16px;
+
 }
 
-.highlight-preview-card {
-  height: 160px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background:
-    radial-gradient(circle at center, rgba(77,184,255,.28), transparent 40%),
-    #020617;
-  font-size: 30px;
-  font-weight: 900;
+.audio-progress span{
+
+    display:block;
+
+    width:40%;
+
+    height:100%;
+
+    background:#4db8ff;
+
 }
 
-.highlight-preview-row {
-  display: grid;
-  grid-template-columns: repeat(4,1fr);
-  gap: 8px;
-  margin-top: 10px;
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media(max-width:1200px){
+
+.cinematic-hero-grid{
+
+grid-template-columns:1fr;
+
 }
 
-.highlight-preview-row span {
-  height: 55px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: rgba(15,23,42,.88);
-  border: 1px solid rgba(255,255,255,.08);
+.cinematic-stat-strip{
+
+grid-template-columns:repeat(2,1fr);
+
 }
 
-.cinematic-dashboard-title {
-  text-align: center;
-  color: #d4af37;
-  font-size: 22px;
-  font-weight: 950;
-  letter-spacing: .24em;
-  text-transform: uppercase;
+.home-athlete-strip{
+
+grid-template-columns:repeat(2,1fr);
+
 }
 
-.cinematic-dashboard {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
-  gap: 14px;
-  padding: 16px;
-  border-radius: 18px;
-  background: rgba(2,6,23,.88);
-  border: 1px solid rgba(212,175,55,.22);
+.zeus-audio-player{
+
+grid-template-columns:1fr;
+
+text-align:center;
+
 }
 
-.cinematic-dashboard div {
-  padding: 18px;
-  border-radius: 16px;
-  background: rgba(15,23,42,.88);
-  border: 1px solid rgba(77,184,255,.16);
+} .highlight-thumbs img{
+
+width:100%;
+
+height:70px;
+
+object-fit:cover;
+
+border-radius:10px;
+
 }
 
-.cinematic-dashboard span {
-  font-size: 30px;
+.mini-athlete-card img{
+
+width:100%;
+
+height:140px;
+
+object-fit:cover;
+
+border-radius:14px;
+
+margin-bottom:10px;
+
 }
 
-.cinematic-dashboard strong {
-  display: block;
-  color: #d4af37;
-  font-size: 28px;
-  font-weight: 950;
-  margin-top: 8px;
+.mini-athlete-card h4{
+
+margin:0;
+
+font-size:18px;
+
+font-weight:900;
+
 }
 
-.cinematic-dashboard p {
-  color: #cbd5e1;
-  text-transform: uppercase;
-  font-size: 12px;
-  font-weight: 900;
-}
+.mini-athlete-card p{
 
-.cinematic-news {
-  border-color: rgba(255,60,60,.4);
-  background: rgba(60,0,0,.35);
-}
+margin-top:4px;
 
-.cinematic-sports-bar {
-  display: flex;
-  gap: 10px;
-  overflow-x: auto;
-  padding: 12px;
-  border-radius: 16px;
-  background: rgba(2,6,23,.86);
-  border: 1px solid rgba(77,184,255,.18);
-}
+color:#8ecfff;
 
-.cinematic-sports-bar button {
-  white-space: nowrap;
-  padding: 12px 18px;
-  border-radius: 12px;
-  border: 1px solid rgba(77,184,255,.22);
-  background: rgba(15,23,42,.9);
-  color: white;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.cinematic-sports-bar button:first-child,
-.cinematic-sports-bar button:hover {
-  background: rgba(77,184,255,.22);
-  border-color: #4db8ff;
-  color: #7dd3fc;
-}
-
-.cinematic-zeus-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: radial-gradient(circle at center, rgba(77,184,255,.24), transparent 32%), #000;
-  display: grid;
-  place-items: center;
-  transition: opacity .9s ease, visibility .9s ease;
-}
-
-.cinematic-zeus-overlay.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.cinematic-skip {
-  position: absolute;
-  top: 26px;
-  right: 26px;
-  z-index: 4;
-  padding: 12px 18px;
-  border-radius: 10px;
-  border: 1px solid #d4af37;
-  background: rgba(0,0,0,.65);
-  color: #d4af37;
-  font-weight: 950;
-}
-
-.cinematic-lightning {
-  position: absolute;
-  inset: 0;
-  background: white;
-  opacity: 0;
-  animation: cinematicLightningFlash 5s infinite;
-}
-
-.cinematic-zeus-stage {
-  position: relative;
-  z-index: 3;
-  text-align: center;
-  max-width: 800px;
-}
-
-.zeus-face img {
-  width: 260px;
-  height: 260px;
-  object-fit: cover;
-  border-radius: 999px;
-  border: 3px solid #d4af37;
-  box-shadow: 0 0 80px rgba(77,184,255,.7);
-}
-
-.zeus-script-panel {
-  margin-top: 22px;
-}
-
-.zeus-script-panel p:last-child {
-  font-size: clamp(22px, 4vw, 38px);
-  font-weight: 900;
-}
-
-.cinematic-progress {
-  margin-top: 28px;
-  height: 7px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.2);
-  overflow: hidden;
-}
-
-.cinematic-progress span {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: linear-gradient(90deg,#d4af37,#4db8ff);
-  animation: cinematicProgress 45s linear forwards;
-}
-
-@keyframes cinematicLightning {
-  0%, 82%, 100% { opacity: 0; }
-  86% { opacity: .95; }
-  88% { opacity: .1; }
-}
-
-@keyframes cinematicLightningFlash {
-  0%, 86%, 100% { opacity: 0; }
-  88% { opacity: .7; }
-  90% { opacity: 0; }
-  92% { opacity: .35; }
-}
-
-@keyframes zeusGlow {
-  0%,100% { filter: drop-shadow(0 0 15px rgba(77,184,255,.45)); }
-  50% { filter: drop-shadow(0 0 42px rgba(77,184,255,.95)); }
-}
-
-@keyframes cinematicProgress {
-  from { width: 0; }
-  to { width: 100%; }
-}
-
-@media (max-width: 900px) {
-  .cinematic-hero {
-    min-height: 850px;
-  }
-
-  .zeus-speech-card,
-  .live-highlights-panel {
-    position: relative;
-    left: auto;
-    right: auto;
-    top: auto;
-    width: auto;
-    margin: 18px;
-  }
-
-  .cinematic-center {
-    position: relative;
-    padding: 30px 18px;
-  }
 }

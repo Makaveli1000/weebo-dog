@@ -1014,37 +1014,37 @@ if (nationalDashboardRoot) {
 // ==========================================
 
 window.likeHighlight = function(id) {
-
   const el = document.getElementById(`likes-${id}`);
-
   if (!el) return;
 
   let total = parseInt(el.innerText) || 0;
-
   el.innerText = total + 1;
-
 };
 
 window.shareHighlight = function(id) {
-
   navigator.clipboard.writeText(
     window.location.origin + "/?highlight=" + id
   );
 
   alert("Highlight link copied!");
-
 };
 
 window.commentHighlight = function(id) {
-
   alert("Comments coming in Phase 2.");
-
 };
 
 window.zeusAnalyze = function(id) {
-
   alert("Launching Zeus AI Analysis...");
+};
 
+window.toggleReelSound = function(button) {
+  const card = button.closest(".reel-card");
+  const video = card?.querySelector("video");
+
+  if (!video) return;
+
+  video.muted = !video.muted;
+  button.textContent = video.muted ? "🔇" : "🔊";
 };
 
 // ==========================================

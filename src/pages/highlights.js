@@ -1,167 +1,143 @@
-function highlightCard(video = {}) {
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[char] || char));
+}
 
+function totalScore(athlete = {}) {
+  const scores = Array.isArray(athlete.scores) ? athlete.scores : [];
+  return scores.reduce((sum, value) => sum + (Number(value) || 0), 0);
+}
+
+function videoCard(video) {
   return `
+    <article class="reel-card" data-highlight-id="${escapeHtml(video.id)}">
 
-<div class="highlight-card">
+      <video
+        class="highlight-reel-video reel-video"
+        src="${escapeHtml(video.url)}"
+        muted
+        loop
+        playsinline
+        preload="metadata">
+      </video>
 
-<div class="highlight-video">
+      <div class="reel-gradient"></div>
 
-<video
+      <div class="reel-athlete-info">
+        <span class="rating-badge">⚡ Zeus ${video.rating}</span>
 
-class="highlight-reel-video"
+        <h3>${escapeHtml(video.title)}</h3>
 
-src="${video.url || ""}"
+        <p>${escapeHtml(video.athlete)} • ${escapeHtml(video.school)} • ${escapeHtml(video.sport)}</p>
 
-playsinline
+        <button
+          class="athlete-card-btn"
+          onclick="window.openAthleteProfile && window.openAthleteProfile('${escapeHtml(video.athleteId)}')">
+          View Profile
+        </button>
+      </div>
 
-muted
+      <div class="reel-actions">
 
-loop
+        <button onclick="likeHighlight('${escapeHtml(video.id)}')">
+          ❤️
+          <span id="likes-${escapeHtml(video.id)}">${video.likes || 0}</span>
+        </button>
 
-controls
+        <button onclick="commentHighlight('${escapeHtml(video.id)}')">
+          💬
+          <span>${video.comments || 0}</span>
+        </button>
 
-poster="${video.poster || ""}"
+        <button onclick="shareHighlight('${escapeHtml(video.id)}')">
+          ↗️
+          <span>Share</span>
+        </button>
 
-></video>
+        <button onclick="zeusAnalyze('${escapeHtml(video.id)}')">
+          ⚡
+          <span>AI</span>
+        </button>
 
-</div>
+      </div>
 
-<div class="highlight-overlay">
+      <button class="reel-sound-toggle" onclick="toggleReelSound(this)">
+        🔇
+      </button>
 
-<div class="highlight-info">
-
-<h2>${video.name || "Athlete"}</h2>
-
-<p>
-
-${video.school || "School"}
-
-•
-
-${video.sport || "Sport"}
-
-</p>
-
-</div>
-
-<div class="highlight-actions">
-
-<button onclick="likeHighlight('${video.id}')">
-
-❤️
-
-<span id="likes-${video.id}">
-
-${video.likes || 0}
-
-</span>
-
-</button>
-
-<button>
-
-💬
-
-<span>
-
-${video.comments || 0}
-
-</span>
-
-</button>
-
-<button>
-
-↗
-
-Share
-
-</button>
-
-<button>
-
-⚡
-
-AI
-
-</button>
-
-</div>
-
-</div>
-
-</div>
-
-`;
-
+    </article>
+  `;
 }
 
 export function renderHighlightFeed(athletes = []) {
+  const videos = [];
 
-const videos = [];
+  athletes.forEach((item) => {
+    const athlete = item.data || item;
+    const athleteId = item.id || "";
 
-athletes.forEach((item)=>{
+    if (athlete.highlightUrl) {
+      videos.push({
+        id: `${athleteId}-main`,
+        athleteId,
+        title: "Main Highlight",
+        athlete: athlete.name || "Unknown Athlete",
+        school: athlete.school || "School Unlisted",
+        sport: athlete.sport || "Athlete",
+        rating: totalScore(athlete),
+        url: athlete.highlightUrl,
+        likes: 0,
+        comments: 0
+      });
+    }
 
-const athlete=item.data || item;
+    (athlete.videos || []).forEach((video, index) => {
+      if (!video.url) return;
 
-if(athlete.highlightUrl){
+      videos.push({
+        id: `${athleteId}-${index}`,
+        athleteId,
+        title: video.title || "Highlight",
+        athlete: athlete.name || "Unknown Athlete",
+        school: athlete.school || "School Unlisted",
+        sport: athlete.sport || "Athlete",
+        rating: totalScore(athlete),
+        url: video.url,
+        likes: video.likes || 0,
+        comments: video.comments || 0
+      });
+    });
+  });
 
-videos.push({
+  return `
+    <section class="reels-page">
 
-id:item.id,
+      <div class="section-header">
+        <p class="network-kicker">National Highlight Feed</p>
+        <h2>Discover The Next Generation</h2>
+        <p>Swipe-style athlete clips with autoplay, recruiting access, Zeus AI overlays, likes, comments, and sharing.</p>
+      </div>
 
-name:athlete.name,
+      <div class="reels-shell">
 
-school:athlete.school,
+        ${
+          videos.length
+            ? videos.map(videoCard).join("")
+            : `
+              <div class="feature-card">
+                <h3>No Highlights Yet</h3>
+                <p>Select an athlete in the Admin Grid and upload a video from the Media Locker.</p>
+              </div>
+            `
+        }
 
-sport:athlete.sport,
+      </div>
 
-url:athlete.highlightUrl,
-
-likes:0,
-
-comments:0
-
-});
-
-}
-
-});
-
-return `
-
-<section class="highlight-feed">
-
-<div class="section-header">
-
-<p class="network-kicker">
-
-National Highlight Feed
-
-</p>
-
-<h2>
-
-Discover Athletes
-
-</h2>
-
-<p>
-
-Scroll to discover the next generation of greatness.
-
-</p>
-
-</div>
-
-<div class="highlight-feed-container">
-
-${videos.map(highlightCard).join("")}
-
-</div>
-
-</section>
-
-`;
-
+    </section>
+  `;
 }
