@@ -15,6 +15,7 @@ import { renderMarketplacePage } from "./pages/marketplace.js";
 import { renderAccountSetupPage } from "./pages/account-setup.js";
 import { registerAccountSetupHandlers } from "./controllers/accountSetupController.js";
 import { registerZeusBrainHandlers } from "./controllers/zeusBrainController.js";
+import { renderZeusDashboard } from "./pages/zeusDashboard.js";
 
 // ======================================================
 // FIREBASE IMPORTS
@@ -91,7 +92,36 @@ let currentProfile = null;
 let allAthletesCache = [];
 let unsubscribeAthletes = null;
 let unsubscribeChat = null;
-let activeSelectedAthleteId = null; 
+let activeSelectedAthleteId = null;
+
+window.appState = {
+  currentUser: null,
+  currentProfile: null,
+  athletes: [],
+  activeAthleteId: null,
+  activeAthlete: null,
+  activeSchool: null,
+  activeVideo: null,
+  activeView: "home"
+};
+
+window.setActiveAthlete = function(id, athlete) {
+
+  activeSelectedAthleteId = id;
+
+  window.appState.activeAthleteId = id;
+
+  window.appState.activeAthlete = {
+    id,
+    ...athlete
+  };
+
+  window.dispatchEvent(
+    new CustomEvent("sntlmo:athlete-selected", {
+      detail: window.appState.activeAthlete
+    })
+  );
+};
 
 // DRAFT BOARD ARRAYS MEMORY NODES
 let squadA = [];
@@ -692,7 +722,9 @@ function processAndRenderFilteredAthletes() {
         uploadBadge.textContent = `Uploads: ${found.data.videos ? found.data.videos.length : 0}`;
       }
 
- playHighlight(found.data);
+window.setActiveAthlete(found.id, found.data);
+ 
+playHighlight(found.data);
 openAthleteProfile(found.id, found.data);
 
     });
@@ -735,12 +767,14 @@ function subscribeToAthletes() {
   .map(d => ({ id: d.id, data: d.data() }))
   .sort((a, b) => mergeRosterScores(b.data) - mergeRosterScores(a.data));
 
+window.appState.athletes = allAthletesCache.map(item => ({
+  id: item.id,
+  ...item.data
+}));
+
 setText("athlete-count", allAthletesCache.length);
 
 processAndRenderFilteredAthletes();
-
-renderAthleteDirectoryPage();
-renderHighlightFeedPage();
 
 initializeHighlightAutoplay();
 
@@ -799,11 +833,11 @@ async function addVideoToTitan(athleteId, videoTitle, videoUrl) {
 // ==========================================
 
 async function handleSignedInUser(user) {
-  currentUser = user;
-  try {
+  currentUser = user; 
+  window.appState.currentUser = user; try {
     const snap = await getDoc(doc(db, "users", user.uid));
     currentProfile = snap.exists() ? { uid: user.uid, email: user.email, ...snap.data() } : { uid: user.uid, email: user.email, role: "admin", nickname: "Mac10" };
-    updateAccessUI(currentProfile); 
+    window.appState.currentProfile = currentProfile; updateAccessUI(currentProfile); 
     subscribeToAthletes(); 
     subscribeToChat();
   } catch { 
@@ -1130,7 +1164,7 @@ window.commentHighlight = function(id) {
 };
 
 window.zeusAnalyze = function(id) {
-  alert("Launching Zeus AI Analysis...");
+  window.generateZeusScoutingReport();
 };
 
 window.toggleReelSound = function(button) {
@@ -1199,4 +1233,230 @@ window.appAuth = {
 };
 
 window.show = show;
-window.hide = hide;
+window.hide = hide; 
+
+// ==========================================
+// HIGHLIGHT FILM CENTER CONTROLS
+// ==========================================
+
+window.selectFilm = function(videoId) {
+
+  const athlete = window.appState.activeAthlete;
+
+  if (!athlete) return;
+
+  const videos = athlete.videos || [];
+
+  let selected = null;
+
+  if (videoId.includes("-main")) {
+
+    selected = {
+      title: "Main Highlight",
+      url: athlete.highlightUrl
+    };
+
+  } else {
+
+    const index = Number(videoId.split("-").pop());
+
+    selected = videos[index];
+
+  }
+
+  if (!selected) return;
+
+  window.appState.activeVideo = selected;
+
+  renderHighlightFeedPage();
+
+};
+
+window.likeHighlight = function(id) {
+
+  alert("👍 Likes will be connected to Firestore next.");
+
+};
+
+window.commentHighlight = function(id) {
+
+  alert("💬 Comments coming next.");
+
+};
+
+window.shareHighlight = function(id) {
+
+  navigator.clipboard.writeText(location.href);
+
+  alert("🔗 Link copied.");
+
+};
+
+window.zeusAnalyze = function(id) {
+
+  const response = document.getElementById("zeus2-response");
+
+  if (!response) return;
+
+  const athlete = window.appState.activeAthlete;
+
+  response.innerHTML = `
+    <h3 class="text-zeus-gold text-xl font-bold">
+      Zeus Film Analysis
+    </h3>
+
+    <p class="mt-3">
+
+      Athlete:
+      <strong>${athlete.name}</strong>
+
+    </p>
+
+    <p>
+
+      Speed ★★★★★
+
+    </p>
+
+    <p>
+
+      Technique ★★★★☆
+
+    </p>
+
+    <p>
+
+      Explosiveness ★★★★★
+
+    </p>
+
+    <p>
+
+      College Projection:
+      High-Level Prospect
+
+    </p>
+  `;
+  
+   response.innerHTML += renderZeusDashboard(athlete);
+
+};
+
+window.addEventListener("sntlmo:athlete-selected", (e) => {
+  const athlete = e.detail;
+
+  console.log("Zeus Active Athlete:", athlete.name);
+
+  const response = document.getElementById("zeus2-response");
+
+  if (response) {
+    response.innerHTML = `
+<h3 class="text-zeus-gold font-bold text-lg">
+${athlete.name}
+</h3>
+
+<div>${athlete.position || "ATH"} • ${athlete.school || "Unknown School"}</div>
+
+<div class="mt-2">
+⚡ Zeus Rating: ${mergeRosterScores(athlete)}
+</div>
+
+<div class="text-gray-400 mt-2">
+Ready for film analysis.
+</div>
+`;  
+   
+   }
+}); 
+
+// ==========================================
+// ZEUS SCOUTING CENTER
+// ==========================================
+
+function buildZeusScoutingReport(athlete = {}) {
+  const scores = Array.isArray(athlete.scores)
+    ? athlete.scores
+    : [
+        athlete.score0 || 0,
+        athlete.score1 || 0,
+        athlete.score2 || 0,
+        athlete.score3 || 0,
+        athlete.score4 || 0
+      ];
+
+  const total = scores.reduce((sum, v) => sum + (Number(v) || 0), 0);
+  const average = scores.length ? Math.round(total / scores.length) : 0;
+
+  const projection =
+    average >= 95 ? "★★★★★ National Power Prospect" :
+    average >= 90 ? "★★★★ High-Level College Prospect" :
+    average >= 85 ? "★★★ Regional College Prospect" :
+    average >= 75 ? "Developmental College Prospect" :
+    "Emerging Prospect";
+
+  return `
+    <div class="zeus-scouting-report">
+      <h3>⚡ ZEUS SCOUTING REPORT</h3>
+
+      <div class="zeus-scouting-header">
+        <strong>${athlete.name || "Unknown Athlete"}</strong>
+        <span>${athlete.position || "ATH"} • ${athlete.school || "Unknown School"} • ${athlete.sport || "Sport"}</span>
+      </div>
+
+      <div class="zeus-score-grid">
+        <div><span>Speed</span><strong>${scores[0] || "--"}</strong></div>
+        <div><span>Power</span><strong>${scores[1] || "--"}</strong></div>
+        <div><span>IQ</span><strong>${scores[2] || "--"}</strong></div>
+        <div><span>Technique</span><strong>${scores[3] || "--"}</strong></div>
+        <div><span>Impact</span><strong>${scores[4] || "--"}</strong></div>
+      </div>
+
+      <div class="zeus-projection-box">
+        <span>Projection</span>
+        <strong>${projection}</strong>
+      </div>
+
+      <div class="zeus-report-section">
+        <h4>Strengths</h4>
+        <p>
+          ${athlete.name || "This athlete"} shows strong competitive traits,
+          verified performance upside, and profile momentum through film,
+          rankings, and development tracking.
+        </p>
+      </div>
+
+      <div class="zeus-report-section">
+        <h4>Development Plan</h4>
+        <ul>
+          <li>Continue building verified highlight film.</li>
+          <li>Track measurable stats by season.</li>
+          <li>Add coach/recruiter notes to strengthen profile credibility.</li>
+          <li>Update offers, achievements, and academic profile.</li>
+        </ul>
+      </div>
+
+      <div class="zeus-report-section">
+        <h4>Recruiting Fit</h4>
+        <p>
+          Current projection: ${projection}. Zeus recommends continued exposure,
+          updated film, verified stats, and recruiter engagement.
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+window.generateZeusScoutingReport = function() {
+  const athlete = window.appState?.activeAthlete;
+
+  if (!athlete) {
+    alert("Select an athlete first.");
+    return;
+  }
+
+  const response = document.getElementById("zeus2-response");
+
+  if (response) {
+    response.innerHTML = buildZeusScoutingReport(athlete);
+  }
+};
