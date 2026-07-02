@@ -1149,6 +1149,9 @@ window.toggleReelSound = function(button) {
 
 refreshSubTierOptions();
 bindEvents();
+show("main-content");
+hide("paywall-content");
+hide("loading-overlay");
 
 registerAccountSetupHandlers(auth, db);
 registerZeusBrainHandlers(db);
@@ -1169,20 +1172,17 @@ initializeGearLightbox();
 initializeMediaLockerEngine();
 loadLiveGearMarketplace();
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   const adminPlatform = document.getElementById("admin-platform");
 
   if (user) {
-    handleSignedInUser(user);
+    await handleSignedInUser(user);
 
     if (adminPlatform) {
-      if (isAdminProfile(currentProfile)) {
-        adminPlatform.style.display = "block";
-      } else {
-        adminPlatform.style.display = "none";
-      }
+      adminPlatform.style.display = isAdminProfile(currentProfile)
+        ? "block"
+        : "none";
     }
-
   } else {
     updateAccessUI(null);
     hide("loading-overlay");
