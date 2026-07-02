@@ -1,105 +1,74 @@
-function statBox(label, value) {
-  return `
-    <div class="athlete-profile-stat">
-      <strong>${value || "--"}</strong>
-      <span>${label}</span>
-    </div>
-  `;
-}
-
 export function renderAthletePage(athlete = {}) {
-  const scores = Array.isArray(athlete.scores)
-    ? athlete.scores
-    : [athlete.score0, athlete.score1, athlete.score2, athlete.score3, athlete.score4];
-
-  const total = scores.reduce((sum, value) => sum + (Number(value) || 0), 0);
+  const score = athlete.zeusRating || athlete.score || athlete.total || "N/A";
+  const videos = athlete.videos || [];
 
   return `
     <section class="athlete-profile-page">
 
       <div class="athlete-profile-hero">
-
-        <div class="athlete-profile-bg"></div>
-
-        <div class="athlete-profile-main">
-
-          <div class="athlete-profile-photo">
-            <img src="${athlete.photoUrl || "assets/football1.jpg"}" alt="Athlete">
-          </div>
-
-          <div class="athlete-profile-info">
-            <p class="network-kicker">Verified Athlete Profile</p>
-
-            <h1>${athlete.name || "Athlete Name"}</h1>
-
-            <p class="athlete-profile-meta">
-              ${athlete.position || "Position"} • ${athlete.school || "School"} • ${athlete.sport || "Sport"}
-            </p>
-
-            <div class="athlete-profile-badges">
-              <span class="rating-badge">⚡ Zeus Rating ${total || "--"}</span>
-              <span class="verified-badge">Verified</span>
-              <span class="rating-badge">Recruiting Ready</span>
-            </div>
-
-            <div class="athlete-profile-actions">
-              <button class="athlete-card-btn">Follow Athlete</button>
-              <button class="athlete-card-btn">Message</button>
-              <button class="athlete-card-btn">Recruit</button>
-            </div>
-          </div>
-
+        <div class="athlete-profile-photo">
+          <img src="${athlete.photoUrl || "assets/football1.jpg"}" alt="${athlete.name || "Athlete"}">
         </div>
 
+        <div>
+          <p class="network-kicker">Verified Athlete Profile</p>
+          <h1>${athlete.name || "Unknown Athlete"}</h1>
+          <h2>${athlete.position || "ATH"} • ${athlete.schoolName || athlete.school || "School N/A"}</h2>
+
+          <div class="athlete-profile-tags">
+            <span>${athlete.sport || "Sport"}</span>
+            <span>Class ${athlete.classYear || athlete.graduationYear || "N/A"}</span>
+            <span>#${athlete.jerseyNumber || "N/A"}</span>
+            <span>${athlete.city || "City"}, ${athlete.state || "State"}</span>
+          </div>
+        </div>
+
+        <div class="athlete-rating-card">
+          <span>ZEUS RATING</span>
+          <strong>${score}</strong>
+        </div>
+      </div>
+
+      <div class="athlete-profile-tabs">
+        <button class="active">Overview</button>
+        <button>Highlights</button>
+        <button>Stats</button>
+        <button>Offers</button>
+        <button>Achievements</button>
+        <button>Photos</button>
+        <button>Schedule</button>
+        <button>Zeus AI Report</button>
       </div>
 
       <div class="athlete-profile-grid">
+        <div class="athlete-panel">
+          <h3>Vitals</h3>
+          <p><strong>Height:</strong> ${athlete.height || "N/A"}</p>
+          <p><strong>Weight:</strong> ${athlete.weight || "N/A"}</p>
+          <p><strong>Position:</strong> ${athlete.position || "N/A"}</p>
+          <p><strong>Graduation:</strong> ${athlete.graduationYear || athlete.classYear || "N/A"}</p>
+        </div>
 
-        <div class="athlete-profile-card highlight-card-large">
-          <h3>🎥 Highlight Hero</h3>
+        <div class="athlete-panel">
+          <h3>Bio</h3>
+          <p>${athlete.bio || "No athlete bio added yet."}</p>
+        </div>
 
+        <div class="athlete-panel">
+          <h3>Offers</h3>
+          <p>${Array.isArray(athlete.offers) && athlete.offers.length ? athlete.offers.join(", ") : "No offers added yet."}</p>
+        </div>
+
+        <div class="athlete-panel">
+          <h3>Highlights</h3>
           ${
-            athlete.highlightUrl
-              ? `<video src="${athlete.highlightUrl}" controls class="athlete-highlight-video"></video>`
-              : `<div class="athlete-highlight-placeholder">No highlight uploaded yet</div>`
+            videos.length
+              ? videos.map(v => `<p>🎥 ${v.title || "Highlight Video"}</p>`).join("")
+              : athlete.highlightUrl
+                ? `<p>🎥 Main Highlight Available</p>`
+                : `<p>No videos added yet.</p>`
           }
         </div>
-
-        <div class="athlete-profile-card">
-          <h3>📊 Performance Stats</h3>
-
-          <div class="athlete-profile-stats">
-            ${statBox("Speed", scores[0])}
-            ${statBox("Power", scores[1])}
-            ${statBox("Skill", scores[2])}
-            ${statBox("IQ", scores[3])}
-            ${statBox("Impact", scores[4])}
-            ${statBox("Total", total)}
-          </div>
-        </div>
-
-        <div class="athlete-profile-card">
-          <h3>🎓 Recruiting Status</h3>
-
-          <ul class="athlete-profile-list">
-            <li><strong>Class:</strong> ${athlete.classYear || "Unlisted"}</li>
-            <li><strong>Height:</strong> ${athlete.height || "Unlisted"}</li>
-            <li><strong>Weight:</strong> ${athlete.weight || "Unlisted"}</li>
-            <li><strong>Offers:</strong> ${athlete.offers || "Open"}</li>
-            <li><strong>Contact:</strong> Available to verified recruiters</li>
-          </ul>
-        </div>
-
-        <div class="athlete-profile-card">
-          <h3>⚡ Zeus AI Scouting Snapshot</h3>
-
-          <p>
-            ${athlete.aiSummary || "Explosive upside, strong competitive profile, and room for continued development with verified film and consistent performance tracking."}
-          </p>
-
-          <button class="athlete-card-btn">Generate Full Report</button>
-        </div>
-
       </div>
 
     </section>

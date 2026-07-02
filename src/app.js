@@ -405,11 +405,23 @@ async function checkAndSeedDatabase() {
 
 function updateAccessUI(profile) {
   const loginBtn = $("header-auth-btn");
-  if (hasMainAccess(profile)) { hide("paywall-content"); show("main-content"); } 
-  else { show("paywall-content"); hide("main-content"); }
 
-  if (isAdminProfile(profile)) { show("admin-panel"); show("admin-purge-btn"); checkAndSeedDatabase().catch(e => console.error(e)); } 
-  else { hide("admin-panel"); hide("admin-purge-btn"); }
+  if (hasMainAccess(profile)) {
+    hide("paywall-content");
+    show("main-content");
+  } else {
+    show("paywall-content");
+    hide("main-content");
+  }
+
+  if (isAdminProfile(profile)) {
+    show("admin-panel");
+    show("admin-purge-btn");
+    checkAndSeedDatabase().catch(e => console.error(e));
+  } else {
+    hide("admin-panel");
+    hide("admin-purge-btn");
+  }
 
   if (profile) {
     setText("user-status", `Admin: ${profile.nickname || profile.email || "Authorized"}`);
@@ -418,7 +430,22 @@ function updateAccessUI(profile) {
     setText("user-status", "The Home of Every Athlete");
     if (loginBtn) loginBtn.textContent = "Login";
   }
+
   processAndRenderFilteredAthletes();
+}
+
+function openAthleteProfile(id, athlete) {
+  const modal = document.getElementById("athlete-profile-modal");
+  const content = document.getElementById("athlete-profile-content");
+
+  if (!modal || !content) return;
+
+  content.innerHTML = renderAthletePage({
+    id,
+    ...athlete
+  });
+
+  modal.classList.remove("hidden");
 } 
 
 // ==========================================
@@ -666,6 +693,7 @@ function processAndRenderFilteredAthletes() {
       }
 
  playHighlight(found.data);
+openAthleteProfile(found.id, found.data);
 
     });
   });
