@@ -4,6 +4,7 @@ import { renderDashboard } from "./home/dashboard.js";
 import { renderSportsTabs } from "./home/sportsTabs.js";
 import { renderAthleteStrip } from "./home/athleteStrip.js";
 import { renderZeusPlayer } from "./home/zeusPlayer.js";
+import { renderZeus2 } from "./home/zeus2.js";
 
 export function renderHomePage(athletes = []) {
   return `
@@ -33,7 +34,9 @@ export function renderHomePage(athletes = []) {
       </div>
 
       ${renderHero()}
-
+      
+      ${renderZeus2()}
+      
       ${renderBreakingNews()}
 
       ${renderDashboard()}

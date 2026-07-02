@@ -1,0 +1,232 @@
+.zeus2-stage {
+  position: relative;
+  min-height: 760px;
+  overflow: hidden;
+  border-radius: 30px;
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.25);
+  color: white;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 420px;
+  gap: 24px;
+  padding: 44px;
+}
+
+.zeus2-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.85), rgba(0,0,0,.18), rgba(0,0,0,.88)),
+    url("../assets/storm-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  animation: stormMove 18s infinite alternate ease-in-out;
+}
+
+.zeus2-lightning {
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  animation: lightningFlash 5s infinite;
+}
+
+.zeus2-fog {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 80%, rgba(255,255,255,.16), transparent 35%);
+  filter: blur(20px);
+  animation: fogMove 9s infinite alternate;
+}
+
+.zeus2-copy,
+.zeus2-figure,
+.zeus2-ai-box,
+.zeus2-wave {
+  position: relative;
+  z-index: 2;
+}
+
+.zeus2-copy h1 {
+  font-size: clamp(70px, 9vw, 140px);
+  font-weight: 950;
+  color: #d4af37;
+  text-shadow: 0 0 30px rgba(212,175,55,.55);
+}
+
+.zeus2-copy h2 {
+  font-size: 34px;
+  letter-spacing: .14em;
+  margin-bottom: 34px;
+}
+
+.zeus2-copy p {
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.zeus2-gold {
+  color: #f8d34d;
+  font-weight: 900;
+}
+
+.zeus2-btn {
+  margin-top: 28px;
+  padding: 16px 30px;
+  border-radius: 12px;
+  border: 1px solid #d4af37;
+  background: rgba(0,0,0,.55);
+  color: #d4af37;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.zeus2-figure {
+  display: grid;
+  place-items: center;
+  animation: zeusCamera 8s infinite alternate ease-in-out;
+}
+
+.zeus2-figure img {
+  width: min(520px, 90%);
+  border-radius: 28px;
+  filter: drop-shadow(0 0 45px rgba(212,175,55,.7));
+}
+
+.zeus2-eyes {
+  position: absolute;
+  width: 150px;
+  height: 28px;
+  top: 245px;
+  background: radial-gradient(circle, #facc15 0 20%, transparent 35%);
+  filter: blur(8px);
+  animation: eyeGlow 1.6s infinite alternate;
+}
+
+.zeus2-mouth {
+  position: absolute;
+  bottom: 218px;
+  width: 64px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.75);
+}
+
+.zeus2-mouth.talking {
+  animation: mouthTalk .18s infinite alternate;
+}
+
+.zeus2-wave {
+  position: absolute;
+  left: 38%;
+  bottom: 70px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.zeus2-wave span {
+  width: 5px;
+  height: 35px;
+  background: #d4af37;
+  border-radius: 999px;
+  animation: wavePulse .7s infinite alternate;
+}
+
+.zeus2-wave span:nth-child(even) {
+  animation-delay: .2s;
+}
+
+.zeus2-ai-box {
+  align-self: center;
+  padding: 24px;
+  border-radius: 22px;
+  background: rgba(0,0,0,.68);
+  border: 1px solid rgba(212,175,55,.35);
+  backdrop-filter: blur(14px);
+}
+
+.zeus2-ai-box h3 {
+  color: #d4af37;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+#zeus2-response {
+  min-height: 120px;
+  margin: 18px 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(15,23,42,.8);
+  color: #e5e7eb;
+  line-height: 1.6;
+}
+
+#zeus2-question {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: #020617;
+  border: 1px solid rgba(255,255,255,.12);
+  color: white;
+}
+
+#zeus2-ask-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: #d4af37;
+  color: black;
+  font-weight: 950;
+}
+
+@keyframes lightningFlash {
+  0%, 88%, 100% { opacity: 0; }
+  90% { opacity: .65; }
+  92% { opacity: 0; }
+  94% { opacity: .3; }
+}
+
+@keyframes stormMove {
+  from { transform: scale(1); }
+  to { transform: scale(1.08) translateX(-20px); }
+}
+
+@keyframes fogMove {
+  from { transform: translateX(-40px); opacity: .35; }
+  to { transform: translateX(40px); opacity: .65; }
+}
+
+@keyframes eyeGlow {
+  from { opacity: .5; }
+  to { opacity: 1; }
+}
+
+@keyframes mouthTalk {
+  from { height: 8px; }
+  to { height: 34px; }
+}
+
+@keyframes wavePulse {
+  from { transform: scaleY(.4); }
+  to { transform: scaleY(1.6); }
+}
+
+@keyframes zeusCamera {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+
+@media (max-width: 1100px) {
+  .zeus2-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .zeus2-wave {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    justify-content: center;
+  }
+}

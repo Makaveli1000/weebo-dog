@@ -14,6 +14,7 @@ import { renderLiveGamesPage } from "./pages/live.js";
 import { renderMarketplacePage } from "./pages/marketplace.js";
 import { renderAccountSetupPage } from "./pages/account-setup.js";
 import { registerAccountSetupHandlers } from "./controllers/accountSetupController.js";
+import { registerZeusBrainHandlers } from "./controllers/zeusBrainController.js";
 
 // ======================================================
 // FIREBASE IMPORTS
@@ -171,6 +172,7 @@ function playHighlight(athlete) {
 // ==========================================
 // 📥 CLOUD STORAGE RAW MEDIA LOCKER DISPATCHER
 // ==========================================
+
 function initializeMediaLockerEngine() {
   const fileInput = $("media-locker-file-input");
   if (!fileInput) return;
@@ -346,9 +348,37 @@ window.handleAdminAddVideo = async () => {
   alert("Video payload successfully committed to user array.");
 };
 
+window.activateZeus2 = function() {
+  const mouth = document.getElementById("zeus2-mouth");
+  const response = document.getElementById("zeus2-response");
+
+  mouth?.classList.add("talking");
+
+  if (response) {
+    response.textContent =
+      "I am Zeus. I watch the grid, the rankings, the highlights, and the next generation of greatness.";
+  }
+
+  setTimeout(() => {
+    mouth?.classList.remove("talking");
+  }, 4500);
+};
+
+document.addEventListener("click", (e) => {
+  if (e.target?.id === "zeus2-speak-btn") {
+    window.activateZeus2();
+  }
+
+  if (e.target?.id === "zeus2-ask-btn") {
+    const q = document.getElementById("zeus2-question")?.value || "";
+    window.askZeusBrain(q);
+  }
+});
+
 // ==========================================
 // ST. LOUIS BASELINE INITIALIZATION SEEDS
 // ==========================================
+
 const ST_LOUIS_INITIAL_SEEDS = [
   { name: "Vashon Elite Squad", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [95, 92, 94, 96, 98], highlightUrl: "https://www.youtube.com/watch?v=ifiFShFX5Pg" },
   { name: "Soldan Prep Leader", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [88, 85, 90, 89, 91], highlightUrl: "" },
@@ -372,6 +402,7 @@ async function checkAndSeedDatabase() {
 // ==========================================
 // ACCESSIBILITY INTERFACE HANDLERS
 // ==========================================
+
 function updateAccessUI(profile) {
   const loginBtn = $("header-auth-btn");
   if (hasMainAccess(profile)) { hide("paywall-content"); show("main-content"); } 
@@ -563,6 +594,7 @@ function refreshSubTierOptions() {
 // ==========================================
 // RENDER ENGINE (DYNAMIC DECOUPLED MATRIX GENERATOR)
 // ==========================================
+
 function getFilteredAthletes() {
   const tier = $("tier-select")?.value || "all";
   const subTier = $("sub-tier-select")?.value || "all";
@@ -1091,6 +1123,7 @@ refreshSubTierOptions();
 bindEvents();
 
 registerAccountSetupHandlers(auth, db);
+registerZeusBrainHandlers(db);
 renderHome();
 
 renderAccountSetup();
