@@ -1,6 +1,13 @@
+/* =====================================================
+   ATHLETE PROFILE — PART 1
+   Profile, Hero, Tabs, Quick Stats
+===================================================== */
+
 .athlete-profile-page {
   color: white;
 }
+
+/* HERO */
 
 .athlete-profile-hero {
   display: grid;
@@ -71,6 +78,8 @@
   color: #f8d34d;
 }
 
+/* PROFILE GRID */
+
 .athlete-profile-grid {
   margin-top: 24px;
   display: grid;
@@ -97,111 +106,74 @@
   line-height: 1.6;
 }
 
-@media (max-width: 900px) {
-  .athlete-profile-hero {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
+/* TABS */
 
-  .athlete-profile-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .athlete-profile-photo img {
-    margin: auto;
-  }
-}  /* ==========================================
-   ATHLETE PROFILE TABS
-========================================== */
-
-.athlete-profile-tabs{
-
-    display:flex;
-
-    flex-wrap:wrap;
-
-    gap:14px;
-
-    margin:30px 0;
-
+.athlete-profile-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 30px 0;
 }
 
-/* ==========================================
-   ATHLETE PROFILE TABS
-========================================== */
-
-.athlete-profile-tabs button{
-
-    padding:12px 22px;
-
-    border:none;
-
-    border-radius:999px;
-
-    background:#111827;
-
-    color:white;
-
-    font-weight:900;
-
-    cursor:pointer;
-
-    transition:.25s;
-
+.athlete-profile-tabs button {
+  padding: 12px 22px;
+  border: none;
+  border-radius: 999px;
+  background: #111827;
+  color: white;
+  font-weight: 900;
+  cursor: pointer;
+  transition: .25s;
 }
 
-.athlete-profile-tabs button:hover{
-
-    background:#0b5fff;
-
+.athlete-profile-tabs button:hover {
+  background: #0b5fff;
 }
 
-.athlete-profile-tabs .active{
+.athlete-profile-tabs .active {
+  background: #d4af37;
+  color: black;
+}
 
-    background:#d4af37;
+/* QUICK STATS */
 
-    color:black;
+.athlete-quick-stats {
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  gap: 16px;
+  margin-top: 28px;
+}
 
+.quick-stat {
+  background: #0f172a;
+  border: 1px solid rgba(212,175,55,.2);
+  border-radius: 18px;
+  padding: 18px;
+  text-align: center;
+}
+
+.quick-stat span {
+  display: block;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.quick-stat strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 28px;
+  color: #d4af37;
+  font-weight: 950;
 } 
 
-/* ==========================================
-   ATHLETE QUICK STATS
-========================================== */
+/* =====================================================
+   ATHLETE PROFILE — PART 2
+   Highlight Film Center, Zeus Scouting Center, Zeus Dashboard
+===================================================== */
 
-.athlete-quick-stats{
-    display:grid;
-    grid-template-columns:repeat(5,1fr);
-    gap:16px;
-    margin-top:28px;
-}
-
-.quick-stat{
-    background:#0f172a;
-    border:1px solid rgba(212,175,55,.2);
-    border-radius:18px;
-    padding:18px;
-    text-align:center;
-}
-
-.quick-stat span{
-    display:block;
-    color:#94a3b8;
-    font-size:11px;
-    font-weight:900;
-    letter-spacing:.08em;
-}
-
-.quick-stat strong{
-    display:block;
-    margin-top:8px;
-    font-size:28px;
-    color:#d4af37;
-    font-weight:950;
-} 
-
-/* ==========================================
-   HIGHLIGHT FILM CENTER
-========================================== */
+/* HIGHLIGHT FILM CENTER */
 
 .highlight-film-center {
   padding-top: 40px;
@@ -216,7 +188,7 @@
 .film-main-panel,
 .film-side-panel {
   background: #0f172a;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(212,175,55,.2);
   border-radius: 24px;
   padding: 22px;
 }
@@ -310,15 +282,7 @@
   color: #cbd5e1;
 }
 
-@media (max-width: 900px) {
-  .film-center-grid {
-    grid-template-columns: 1fr;
-  }
-} 
-
-/* ==========================================
-   ZEUS SCOUTING CENTER
-========================================== */
+/* ZEUS SCOUTING CENTER */
 
 .zeus-scouting-report {
   background: #020617;
@@ -424,8 +388,252 @@
   list-style: disc;
 }
 
-@media (max-width: 800px) {
-  .zeus-score-grid {
-    grid-template-columns: repeat(2, 1fr);
+/* ZEUS DASHBOARD */
+
+.zeus-dashboard {
+  margin-top: 24px;
+}
+
+.zeus-header {
+  margin-bottom: 18px;
+}
+
+.zeus-header h2 {
+  color: #d4af37;
+  font-size: 26px;
+  font-weight: 950;
+}
+
+.zeus-header p {
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.zeus-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 14px;
+}
+
+.zeus-card {
+  background: #0f172a;
+  border: 1px solid rgba(212,175,55,.22);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.zeus-card h3 {
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.zeus-card div {
+  color: #f8d34d;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+/* =====================================================
+   ATHLETE PROFILE — PART 3
+   College Match Engine, Player DNA,
+   Recommendations, Responsive
+===================================================== */
+
+/* ==========================================
+   ZEUS COLLEGE MATCH ENGINE
+========================================== */
+
+.zeus-match-engine{
+  margin-top:24px;
+  background:#020617;
+  border:1px solid rgba(212,175,55,.28);
+  border-radius:22px;
+  padding:22px;
+}
+
+.zeus-match-engine h3{
+  color:#d4af37;
+  font-size:22px;
+  font-weight:950;
+  margin-bottom:18px;
+}
+
+.college-match-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding:14px 0;
+  border-top:1px solid rgba(255,255,255,.08);
+  color:white;
+  font-weight:800;
+}
+
+.college-match-row:first-of-type{
+  border-top:none;
+}
+
+.college-match-row span{
+  color:#e5e7eb;
+}
+
+.college-match-row strong{
+  color:#f8d34d;
+  white-space:nowrap;
+  font-size:15px;
+}
+
+/* ==========================================
+   ZEUS PLAYER DNA
+========================================== */
+
+.zeus-dna-panel{
+  margin-top:24px;
+  background:#0b1220;
+  border:1px solid rgba(212,175,55,.25);
+  border-radius:22px;
+  padding:22px;
+}
+
+.zeus-dna-panel h3{
+  color:#d4af37;
+  font-size:22px;
+  font-weight:950;
+  margin-bottom:18px;
+}
+
+/* ==========================================
+   ZEUS RECOMMENDATIONS
+========================================== */
+
+.zeus-recommendations{
+  margin-top:24px;
+  background:#0b1220;
+  border:1px solid rgba(212,175,55,.25);
+  border-radius:22px;
+  padding:22px;
+}
+
+.zeus-recommendations h3{
+  color:#d4af37;
+  font-size:22px;
+  font-weight:950;
+  margin-bottom:18px;
+}
+
+.zeus-recommendations .college-match-row{
+  justify-content:flex-start;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+
+.zeus-recommendations .college-match-row span{
+  color:#cbd5e1;
+  line-height:1.6;
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+.athlete-card-btn{
+  background:#d4af37;
+  color:#000;
+  border:none;
+  border-radius:12px;
+  padding:12px 18px;
+  font-weight:900;
+  cursor:pointer;
+  transition:.25s;
+}
+
+.athlete-card-btn:hover{
+  transform:translateY(-2px);
+  background:#f4cb46;
+}
+
+.athlete-card-btn:active{
+  transform:translateY(0);
+}
+
+/* ==========================================
+   SCROLLBAR
+========================================== */
+
+.zeus-match-engine::-webkit-scrollbar,
+.zeus-dna-panel::-webkit-scrollbar{
+  width:8px;
+}
+
+.zeus-match-engine::-webkit-scrollbar-thumb,
+.zeus-dna-panel::-webkit-scrollbar-thumb{
+  background:#d4af37;
+  border-radius:999px;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width:1200px){
+
+  .zeus-grid{
+    grid-template-columns:repeat(3,1fr);
   }
+
+}
+
+@media (max-width:900px){
+
+  .athlete-profile-hero{
+    grid-template-columns:1fr;
+    text-align:center;
+  }
+
+  .athlete-profile-photo img{
+    margin:auto;
+  }
+
+  .athlete-profile-grid{
+    grid-template-columns:1fr;
+  }
+
+  .athlete-quick-stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .film-center-grid{
+    grid-template-columns:1fr;
+  }
+
+  .zeus-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+}
+
+@media (max-width:640px){
+
+  .athlete-profile-tabs{
+    gap:8px;
+  }
+
+  .athlete-profile-tabs button{
+    width:100%;
+  }
+
+  .athlete-quick-stats{
+    grid-template-columns:1fr;
+  }
+
+  .zeus-grid{
+    grid-template-columns:1fr;
+  }
+
+  .college-match-row{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
 }
