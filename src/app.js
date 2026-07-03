@@ -482,7 +482,19 @@ function openAthleteProfile(id, athlete) {
   `;
 
   modal.classList.remove("hidden");
-} 
+}
+
+window.openAthleteFromDirectory = function(id) {
+  const found = allAthletesCache.find(item => item.id === id);
+
+  if (!found) {
+    alert("Athlete profile not found yet.");
+    return;
+  }
+
+  window.setActiveAthlete(found.id, found.data);
+  openAthleteProfile(found.id, found.data);
+}; 
 
 // ==========================================
 // PAGE RENDERERS
