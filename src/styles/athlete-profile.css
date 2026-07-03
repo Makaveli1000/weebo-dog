@@ -636,4 +636,24 @@
     align-items:flex-start;
   }
 
+} .zeus-report-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.zeus-report-avatar {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 999px;
+  border: 2px solid rgba(212,175,55,.55);
+  box-shadow: 0 0 22px rgba(212,175,55,.25);
+}
+
+.zeus-report-avatar-row p {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-top: 4px;
 }

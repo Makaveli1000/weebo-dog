@@ -1468,7 +1468,14 @@ function buildZeusScoutingReport(athlete = {}) {
 
   return `
     <div class="zeus-scouting-report">
+
+  <div class="zeus-report-avatar-row">
+    <img src="zeus-avatar.png" alt="Zeus Avatar" class="zeus-report-avatar">
+    <div>
       <h3>⚡ ZEUS SCOUTING REPORT</h3>
+      <p>AI scouting intelligence powered by Zeus.</p>
+    </div>
+  </div>
 
       <div class="zeus-scouting-header">
         <strong>${athlete.name || "Unknown Athlete"}</strong>
