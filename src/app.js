@@ -470,10 +470,16 @@ function openAthleteProfile(id, athlete) {
 
   if (!modal || !content) return;
 
-  content.innerHTML = renderAthletePage({
+  const activeAthlete = {
     id,
     ...athlete
-  });
+  };
+
+  content.innerHTML = `
+    ${renderAthletePage(activeAthlete)}
+    ${buildZeusScoutingReport(activeAthlete)}
+    ${renderZeusDashboard(activeAthlete)}
+  `;
 
   modal.classList.remove("hidden");
 } 
@@ -1458,5 +1464,6 @@ window.generateZeusScoutingReport = function() {
 
   if (response) {
     response.innerHTML = buildZeusScoutingReport(athlete);
+    response.innerHTML += renderZeusDashboard(athlete);
   }
 };
