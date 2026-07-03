@@ -1110,28 +1110,51 @@ function bindEvents() {
   });
 
   $("athlete-form")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    if (!isAdminProfile(currentProfile)) return;
-    const nameIn = $("athlete-name"); const sportSel = $("athlete-sport"); const hlIn = $("athlete-highlight");
-    if (!nameIn?.value.trim()) return;
+  e.preventDefault();
 
-    const tier = "pro-players";
-const sub = "pro-major";
-    const newTitan = {
-      name: nameIn.value.trim(), sport: sportSel?.value || "Football",
-      tier: tier !== "all" ? tier : "pro-players", subCategory: sub !== "all" ? sub : "pro-major",
-      scores: [safeNumber($("score-0")?.value||90), safeNumber($("score-1")?.value||90), safeNumber($("score-2")?.value||90), safeNumber($("score-3")?.value||90), safeNumber($("score-4")?.value||90)],
-      highlightUrl: hlIn?.value.trim() || "", 
-      videos: [], 
-      createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy: currentUser?.uid || "unknown"
-    };
+  const nameIn = $("athlete-name");
+  const sportSel = $("athlete-sport");
+  const hlIn = $("athlete-highlight");
 
-    try {
-      await addDoc(collection(db, "athletes"), newTitan);
-      nameIn.value = ""; if (hlIn) hlIn.value = "";
-      ["score-0", "score-1", "score-2", "score-3", "score-4"].forEach(id => { const el = $(id); if (el) el.value = ""; });
-    } catch (err) { console.error(err); }
-  });
+  if (!nameIn?.value.trim()) {
+    alert("Enter athlete name first.");
+    return;
+  }
+
+  const newTitan = {
+    name: nameIn.value.trim(),
+    sport: sportSel?.value || "Football",
+    tier: "pro-players",
+    subCategory: "pro-major",
+    scores: [
+      safeNumber($("score-0")?.value || 90),
+      safeNumber($("score-1")?.value || 90),
+      safeNumber($("score-2")?.value || 90),
+      safeNumber($("score-3")?.value || 90),
+      safeNumber($("score-4")?.value || 90)
+    ],
+    highlightUrl: hlIn?.value.trim() || "",
+    videos: [],
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    createdBy: currentUser?.uid || "unknown"
+  };
+
+  try {
+    await addDoc(collection(db, "athletes"), newTitan);
+    alert("Athlete added to grid.");
+
+    nameIn.value = "";
+    if (hlIn) hlIn.value = "";
+    ["score-0", "score-1", "score-2", "score-3", "score-4"].forEach(id => {
+      const el = $(id);
+      if (el) el.value = "";
+    });
+  } catch (err) {
+    console.error("Athlete save failed:", err);
+    alert("Athlete did not save. Check browser console.");
+  }
+});
 
   $("admin-purge-btn")?.addEventListener("click", async () => {
     if (confirm("Clean all duplicate entries off the St. Louis scoreboard?")) await purgeGridDuplicates();
