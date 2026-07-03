@@ -671,8 +671,7 @@ function refreshSubTierOptions() {
 // ==========================================
 
 function getFilteredAthletes() {
-  const tier = $("tier-select")?.value || "all";
-  const subTier = $("sub-tier-select")?.value || "all";
+   "all";
   return allAthletesCache.filter(({ data }) => {
     return (tier === "all" || data.tier === tier) && (subTier === "all" || data.subCategory === subTier);
   });
@@ -1116,7 +1115,8 @@ function bindEvents() {
     const nameIn = $("athlete-name"); const sportSel = $("athlete-sport"); const hlIn = $("athlete-highlight");
     if (!nameIn?.value.trim()) return;
 
-    const tier = $("tier-select")?.value; const sub = $("sub-tier-select")?.value;
+    const tier = "pro-players";
+const sub = "pro-major";
     const newTitan = {
       name: nameIn.value.trim(), sport: sportSel?.value || "Football",
       tier: tier !== "all" ? tier : "pro-players", subCategory: sub !== "all" ? sub : "pro-major",
