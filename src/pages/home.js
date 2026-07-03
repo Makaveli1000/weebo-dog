@@ -17,10 +17,17 @@ export function renderHomePage(athletes = []) {
         <div class="zeus-movie-stage">
           <img src="assets/zeus-avatar.png" alt="Zeus Avatar" class="zeus-movie-face">
 
-          <div class="zeus-movie-copy">
-            <p class="network-kicker">⚡ Zeus Is Speaking...</p>
-            <p id="zeus-intro-line">Welcome to Snt.L.Mo. Sports Network...</p>
-          </div>
+          <div class="zeus-home-avatar-card">
+  <img src="zeus-avatar.png" alt="Zeus Avatar" class="zeus-home-avatar-img">
+
+  <div class="zeus-home-avatar-title">
+    ZEUS
+  </div>
+
+  <div class="zeus-home-avatar-subtitle">
+    IS SPEAKING...
+  </div>
+</div>
 
           <div class="zeus-movie-progress">
             <span></span>
