@@ -1,6 +1,19 @@
 export function renderAthletePage(athlete = {}) {
-  const score = athlete.zeusRating || athlete.score || athlete.total || "N/A";
+  const score =
+    athlete.zeusRating ||
+    athlete.score ||
+    athlete.total ||
+    "N/A";
+
   const videos = athlete.videos || [];
+  const school = athlete.school || athlete.schoolName || athlete["school name"] || "School N/A";
+  const position = athlete.position || athlete.posion || "ATH";
+  const height = athlete.height || "N/A";
+  const weight = athlete.weight || "N/A";
+  const classYear = athlete.classYear || athlete.graduationYear || "N/A";
+  const jersey = athlete.jerseyNumber || "N/A";
+  const bio = athlete.bio || "No athlete bio added yet.";
+  const offers = Array.isArray(athlete.offers) ? athlete.offers : [];
 
   return `
     <section class="athlete-profile-page">
@@ -13,12 +26,12 @@ export function renderAthletePage(athlete = {}) {
         <div>
           <p class="network-kicker">Verified Athlete Profile</p>
           <h1>${athlete.name || "Unknown Athlete"}</h1>
-          <h2>${athlete.position || "ATH"} • ${athlete.schoolName || athlete.school || "School N/A"}</h2>
+          <h2>${position} • ${school}</h2>
 
           <div class="athlete-profile-tags">
             <span>${athlete.sport || "Sport"}</span>
-            <span>Class ${athlete.classYear || athlete.graduationYear || "N/A"}</span>
-            <span>#${athlete.jerseyNumber || "N/A"}</span>
+            <span>Class ${classYear}</span>
+            <span>#${jersey}</span>
             <span>${athlete.city || "City"}, ${athlete.state || "State"}</span>
           </div>
         </div>
@@ -43,20 +56,20 @@ export function renderAthletePage(athlete = {}) {
       <div class="athlete-profile-grid">
         <div class="athlete-panel">
           <h3>Vitals</h3>
-          <p><strong>Height:</strong> ${athlete.height || "N/A"}</p>
-          <p><strong>Weight:</strong> ${athlete.weight || "N/A"}</p>
-          <p><strong>Position:</strong> ${athlete.position || "N/A"}</p>
-          <p><strong>Graduation:</strong> ${athlete.graduationYear || athlete.classYear || "N/A"}</p>
+          <p><strong>Height:</strong> ${height}</p>
+          <p><strong>Weight:</strong> ${weight}</p>
+          <p><strong>Position:</strong> ${position}</p>
+          <p><strong>Graduation:</strong> ${classYear}</p>
         </div>
 
         <div class="athlete-panel">
           <h3>Bio</h3>
-          <p>${athlete.bio || "No athlete bio added yet."}</p>
+          <p>${bio}</p>
         </div>
 
         <div class="athlete-panel">
           <h3>Offers</h3>
-          <p>${Array.isArray(athlete.offers) && athlete.offers.length ? athlete.offers.join(", ") : "No offers added yet."}</p>
+          <p>${offers.length ? offers.join(", ") : "No offers added yet."}</p>
         </div>
 
         <div class="athlete-panel">
