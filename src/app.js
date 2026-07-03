@@ -252,10 +252,25 @@ function initializeMediaLockerEngine() {
 // ==========================================
 // ⚡ SCORING ENGINE
 // ==========================================
+
 function athleteTotal(athlete) {
   const scores = Array.isArray(athlete?.scores) ? athlete.scores : 
                  [athlete?.score0, athlete?.score1, athlete?.score2, athlete?.score3, athlete?.score4];
   return scores.reduce((sum, val) => sum + safeNumber(val), 0);
+}
+
+  function mergeRosterScores(athlete = {}) {
+  const scores = Array.isArray(athlete.scores)
+    ? athlete.scores
+    : [
+        athlete.score0,
+        athlete.score1,
+        athlete.score2,
+        athlete.score3,
+        athlete.score4
+      ];
+
+  return scores.reduce((sum, value) => sum + safeNumber(value), 0);
 }
 
 // ==========================================
@@ -671,10 +686,22 @@ function refreshSubTierOptions() {
 // ==========================================
 
 function getFilteredAthletes() {
-   "all";
+
+  const tier =
+    $("tier-select")?.value || "all";
+
+  const subTier =
+    $("sub-tier-select")?.value || "all";
+
   return allAthletesCache.filter(({ data }) => {
-    return (tier === "all" || data.tier === tier) && (subTier === "all" || data.subCategory === subTier);
+
+    return (
+      (tier === "all" || data.tier === tier) &&
+      (subTier === "all" || data.subCategory === subTier)
+    );
+
   });
+
 }
 
 function processAndRenderFilteredAthletes() {
@@ -790,6 +817,9 @@ window.appState.athletes = allAthletesCache.map(item => ({
 }));
 
 setText("athlete-count", allAthletesCache.length);
+
+console.log("ATHLETES LOADED:", allAthletesCache);
+console.log("FILTER VALUES:", $("tier-select")?.value, $("sub-tier-select")?.value);
 
 processAndRenderFilteredAthletes();
 
@@ -1109,17 +1139,18 @@ function bindEvents() {
     renderDraftBoards();
   });
 
+ const scores = [
+  safeNumber($("score-0")?.value || 90),
+  safeNumber($("score-1")?.value || 90),
+  safeNumber($("score-2")?.value || 90),
+  safeNumber($("score-3")?.value || 90),
+  safeNumber($("score-4")?.value || 90)
+];
+
   $("athlete-form")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const nameIn = $("athlete-name");
-  const sportSel = $("athlete-sport");
-  const hlIn = $("athlete-highlight");
-
-  if (!nameIn?.value.trim()) {
-    alert("Enter athlete name first.");
-    return;
-  }
+const zeusRating = Math.round(
+  scores.reduce((sum, value) => sum + value, 0) / scores.length
+);
 
   const newTitan = {
     name: nameIn.value.trim(),
