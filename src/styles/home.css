@@ -583,3 +583,27 @@ color:#8ecfff;
   font-weight: 900;
   letter-spacing: .08em;
 }
+
+.hero-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.hero-action-buttons button {
+  background: linear-gradient(180deg, #d4af37, #b58b15);
+  color: #000;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: .25s;
+}
+
+.hero-action-buttons button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(212,175,55,.35);
+}

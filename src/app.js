@@ -1470,6 +1470,66 @@ window.shareHighlight = function(id) {
 };
 
 // ==========================================
+// GLOBAL CLICK HELPERS
+// ==========================================
+
+window.comingSoon = function (feature = "This feature") {
+  alert(`${feature} is coming soon in the next Snt.L.Mo. update.`);
+};
+
+window.scrollToSection = function (sectionId) {
+  const el = document.getElementById(sectionId);
+  if (!el) {
+    window.comingSoon(sectionId);
+    return;
+  }
+
+  el.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+};
+
+window.openFirstAthleteProfile = function () {
+  const first = window.appState?.athletes?.[0];
+
+  if (!first) {
+    window.comingSoon("Athlete profiles");
+    return;
+  }
+
+  window.setActiveAthlete(first.id, first);
+  window.openAthleteFromDirectory(first.id);
+};
+
+window.watchFeaturedHighlight = function () {
+  const firstWithFilm =
+    (window.appState?.athletes || []).find(a =>
+      a.highlightUrl ||
+      a.highlight ||
+      (Array.isArray(a.videos) && a.videos.length)
+    );
+
+  if (!firstWithFilm) {
+    window.comingSoon("Highlight film");
+    return;
+  }
+
+  window.scrollToSection("highlights-root");
+};
+
+window.openGearVault = function () {
+  const modal = document.getElementById("gear-lightbox-modal");
+
+  if (modal) {
+    modal.classList.remove("hidden");
+    return;
+  }
+
+  window.scrollToSection("marketplace-root");
+};
+
+// ==========================================
 // ZEUS COMPARE
 // ==========================================
 

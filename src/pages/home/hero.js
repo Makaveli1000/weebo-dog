@@ -18,19 +18,54 @@ export function renderHero() {
       </aside>
 
       <section class="zeus-center-stage">
-        <img src="assets/zeus-avatar.png" alt="Zeus Avatar" class="zeus-main-image">
-        <div class="zeus-title-lockup">
-          <h1>ZEUS</h1>
-          <h2>IS SPEAKING...</h2>
-          <div class="voice-wave"></div>
-        </div>
-      </section>
+
+  <img
+    src="assets/zeus-avatar.png"
+    alt="Zeus Avatar"
+    class="zeus-main-image"
+  >
+
+  <div class="zeus-title-lockup">
+
+    <h1>ZEUS</h1>
+
+    <h2>IS SPEAKING...</h2>
+
+    <div class="voice-wave"></div>
+
+    <div class="hero-action-buttons">
+
+      <button onclick="window.scrollToSection('athlete-directory-page')">
+        🏈 Explore Athletes
+      </button>
+
+      <button onclick="window.scrollToSection('highlights-root')">
+        🎥 Watch Highlights
+      </button>
+
+      <button onclick="window.scrollToSection('rankings-root')">
+        🏆 National Rankings
+      </button>
+
+      <button onclick="window.scrollToSection('recruiting-root')">
+        🎓 Recruiting
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
 
       <aside class="home-side-stack">
         <div class="home-panel live-highlights-v2">
           <div class="panel-title-row">
             <h3>🔴 Live Highlights</h3>
-            <a href="#highlights-root">View All</a>
+            <a
+  href="javascript:void(0)"
+  onclick="window.scrollToSection('highlights-root')">
+  View All
+</a>
           </div>
 
           <div class="featured-highlight">
