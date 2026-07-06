@@ -127,12 +127,92 @@ if (average >= 90) {
     
     <section class="zeus-dashboard">
 
-      <div class="zeus-header">
-        <h2>⚡ ZEUS COMMAND CENTER</h2>
-        <p>Artificial Sports Intelligence</p>
-      </div>
+      <div class="zeus-ai-oracle">
 
-      <div class="zeus-grid">
+  <div class="zeus-ai-avatar-wrap">
+    <img src="zeus-avatar.png" alt="Zeus AI" class="zeus-ai-avatar">
+    <div class="zeus-ai-pulse"></div>
+  </div>
+
+  <div>
+    <h2>⚡ ZEUS AI</h2>
+    <p>National Recruiting Intelligence</p>
+    <small>I have analyzed this athlete.</small>
+  </div>
+
+</div>
+
+      <div class="zeus-recruiting-grade-panel">
+
+  <div class="zeus-grade-row">
+    <span>Overall Projection</span>
+    <strong>${stars}</strong>
+  </div>
+
+  <div class="zeus-grade-row">
+    <span>D-I Offer Probability</span>
+    <strong>${offerProbability}</strong>
+  </div>
+
+  <div class="zeus-grade-row">
+    <span>Recruiting Tier</span>
+    <strong>${recruitingLevel}</strong>
+  </div>
+
+  <div class="zeus-grade-row">
+    <span>Film Grade</span>
+    <strong>${filmIQ >= 90 ? "Elite" : filmIQ >= 80 ? "Strong" : "Developing"}</strong>
+  </div>
+
+  <div class="zeus-grade-row">
+    <span>Athletic Ceiling</span>
+    <strong>${athleticism >= 90 ? "A+" : athleticism >= 80 ? "A" : "B"}</strong>
+  </div>
+
+</div>
+       
+       <div class="zeus-action-center">
+
+  <h3>Recruiter Actions</h3>
+
+  <div class="zeus-action-grid">
+
+    <button
+  class="zeus-action-btn"
+  onclick="window.openZeusCompare()">
+  📊 Compare Athlete
+</button>
+
+    <button class="zeus-action-btn"
+      onclick="window.print()">
+      📄 Print Recruit PDF
+    </button>
+
+    <button class="zeus-action-btn"
+      onclick="navigator.share ? navigator.share({title: '${athlete.name}', url: location.href}) : navigator.clipboard.writeText(location.href)">
+      📤 Share Profile
+    </button>
+
+    <button class="zeus-action-btn">
+      📧 Contact Coach
+    </button>
+
+    <button class="zeus-action-btn">
+      🎥 Watch Full Film
+    </button>
+
+    <button class="zeus-action-btn">
+      📊 Compare Athlete
+    </button>
+
+  </div>
+
+</div>
+
+        <h3>Recruiter Actions</h3>
+
+
+           <div class="zeus-grid">
         <div class="zeus-card">
           <h3>🎥 Film IQ</h3>
           <div>${filmIQ}</div>

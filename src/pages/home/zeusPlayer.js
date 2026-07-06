@@ -6,11 +6,34 @@ export function renderZeusPlayer() {
       </div>
 
       <div class="audio-meta">
-        <p class="network-kicker">Cinematic Intro</p>
-        <h3>Zeus Is Speaking...</h3>
-        <p>I am Zeus... guardian of greatness. This is your platform.</p>
-        <div class="audio-progress"><span></span></div>
-      </div>
+
+  <div class="zeus-intro-avatar">
+
+    <img
+      id="zeus-avatar"
+      src="assets/zeus-avatar.gif"
+      alt="Zeus AI">
+
+    <div class="zeus-speaking-ring"></div>
+
+  </div>
+
+  <p class="network-kicker">ZEUS AI</p>
+
+  <h3>National Recruiting Intelligence</h3>
+
+  <p>
+    I am Zeus... guardian of greatness.
+    Welcome to the Snt.L.Mo. Sports Network.
+    Every athlete has a story. Every play matters.
+    Let's discover greatness.
+  </p>
+
+  <div class="audio-progress">
+    <span></span>
+  </div>
+
+</div>
 
       <button>⏸</button>
       <button>🔊</button>

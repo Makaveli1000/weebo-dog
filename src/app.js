@@ -486,15 +486,26 @@ function openAthleteProfile(id, athlete) {
   if (!modal || !content) return;
 
   const activeAthlete = {
-    id,
-    ...athlete
-  };
+  id,
+  ...athlete
+};
+
+window.activeAthlete = activeAthlete;
 
   content.innerHTML = `
-    ${renderAthletePage(activeAthlete)}
-    ${buildZeusScoutingReport(activeAthlete)}
-    ${renderZeusDashboard(activeAthlete)}
-  `;
+  <div class="recruiter-profile-layout">
+
+    <div class="recruiter-profile-main">
+      ${renderAthletePage(activeAthlete)}
+    </div>
+
+    <aside class="recruiter-zeus-sidebar">
+      ${buildZeusScoutingReport(activeAthlete)}
+      ${renderZeusDashboard(activeAthlete)}
+    </aside>
+
+  </div>
+`;
 
   modal.classList.remove("hidden");
 }
@@ -629,6 +640,24 @@ function renderAthleteDirectoryPage() {
   if (!container) return;
 
   container.innerHTML = renderAthletesDirectory(allAthletesCache);
+
+  const search = document.getElementById("athlete-directory-search");
+  const sport = document.getElementById("athlete-directory-sport");
+
+  function filterDirectory() {
+    const q = (search?.value || "").toLowerCase();
+    const selectedSport = sport?.value || "all";
+
+    document.querySelectorAll(".athlete-directory-card").forEach(card => {
+      const matchesSearch = card.dataset.search.includes(q);
+      const matchesSport = selectedSport === "all" || card.dataset.sport === selectedSport;
+
+      card.style.display = matchesSearch && matchesSport ? "block" : "none";
+    });
+  }
+
+  search?.addEventListener("input", filterDirectory);
+  sport?.addEventListener("change", filterDirectory);
 }
 
 function renderHighlightFeedPage() {
@@ -1350,6 +1379,82 @@ window.likeHighlight = function(id) {
 
 };
 
+window.askZeusScout = function (presetQuestion = "") {
+
+  const input = document.getElementById("zeus-scout-question");
+  const output = document.getElementById("zeus-scout-chat-output");
+
+  if (!output) return;
+
+  const question =
+    presetQuestion ||
+    input?.value ||
+    "";
+
+  const athlete =
+    window.activeAthlete ||
+    window.currentAthlete ||
+    {};
+
+  const name = athlete.name || "This athlete";
+  const position = athlete.position || athlete.posion || "ATH";
+  const school =
+    athlete.school ||
+    athlete.schoolName ||
+    athlete["school name"] ||
+    "Unknown School";
+
+  const score =
+    athlete.zeusRating ||
+    athlete.total ||
+    90;
+
+  let answer = "";
+
+  if (/30|summary|summarize/i.test(question)) {
+
+    answer =
+`${name} projects as a high-upside ${position} from ${school}. Zeus currently grades this athlete at ${score}. The profile shows strong athletic traits, verified film, and continued development potential. Recommended recruiting level: Power Conference / National Prospect.`;
+
+  }
+
+  else if (/strength/i.test(question)) {
+
+    answer =
+`Primary strengths include athletic ability, competitiveness, positional upside, and coachability. Zeus recommends continuing to add verified film, measurable testing, and seasonal production.`;
+
+  }
+
+  else if (/college|fit/i.test(question)) {
+
+    answer =
+`Best current program matches include Missouri, Memphis, Illinois, Kansas State, and Notre Dame based on athletic profile, projected development, and recruiting fit.`;
+
+  }
+
+  else if (/compare/i.test(question)) {
+
+    answer =
+`Zeus comparison mode is coming next. Soon recruiters will compare this athlete against any athlete on the network using Zeus ratings, testing, production, and film analysis.`;
+
+  }
+
+  else {
+
+    answer =
+`Zeus understands your question and will soon answer using full AI scouting analysis, film review, statistics, and athlete comparisons.`;
+
+  }
+
+  output.innerHTML = `
+    <strong>Zeus AI:</strong><br><br>
+    ${answer}
+  `;
+
+  if (input) input.value = "";
+
+};
+
 window.commentHighlight = function(id) {
 
   alert("💬 Comments coming next.");
@@ -1361,6 +1466,115 @@ window.shareHighlight = function(id) {
   navigator.clipboard.writeText(location.href);
 
   alert("🔗 Link copied.");
+
+};
+
+// ==========================================
+// ZEUS COMPARE
+// ==========================================
+
+window.openZeusCompare = function () {
+
+    const modal = document.getElementById("zeus-compare-modal");
+    const select = document.getElementById("zeus-compare-select");
+
+    if (!modal || !select) return;
+
+    select.innerHTML = "";
+
+    (window.appState.athletes || []).forEach(a => {
+
+        if (a.id === window.activeAthlete?.id) return;
+
+        select.innerHTML += `
+            <option value="${a.id}">
+                ${a.name}
+            </option>
+        `;
+
+    });
+
+    modal.classList.remove("hidden");
+
+};
+
+window.runZeusComparison = function () {
+
+    const id =
+        document.getElementById("zeus-compare-select").value;
+
+    const opponent =
+        (window.appState.athletes || [])
+            .find(a => a.id === id);
+
+    const current = window.activeAthlete;
+
+    if (!current || !opponent) return;
+
+    const currentRating =
+        current.zeusRating ||
+        current.total ||
+        mergeRosterScores(current);
+
+    const opponentRating =
+        opponent.zeusRating ||
+        opponent.total ||
+        mergeRosterScores(opponent);
+
+    const winner =
+        Number(currentRating) >= Number(opponentRating)
+            ? current.name
+            : opponent.name;
+
+    document.getElementById("zeus-compare-results").innerHTML = `
+
+<div class="zeus-verdict-card">
+
+<h3>⚡ Zeus Verdict</h3>
+
+<p>
+<b>${winner}</b> currently projects as the stronger prospect
+based on Zeus Rating, production, verified film,
+and overall recruiting projection.
+</p>
+
+</div>
+
+<table class="zeus-compare-table">
+
+<tr>
+<th>Category</th>
+<th>${current.name}</th>
+<th>${opponent.name}</th>
+</tr>
+
+<tr>
+<td>Zeus Rating</td>
+<td>${currentRating}</td>
+<td>${opponentRating}</td>
+</tr>
+
+<tr>
+<td>Position</td>
+<td>${current.position || "ATH"}</td>
+<td>${opponent.position || "ATH"}</td>
+</tr>
+
+<tr>
+<td>School</td>
+<td>${current.school || "N/A"}</td>
+<td>${opponent.school || "N/A"}</td>
+</tr>
+
+<tr>
+<td>Sport</td>
+<td>${current.sport || "N/A"}</td>
+<td>${opponent.sport || "N/A"}</td>
+</tr>
+
+</table>
+
+`;
 
 };
 

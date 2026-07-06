@@ -233,4 +233,71 @@ grid-template-columns:1fr;
   justify-content: space-between;
   color: #d4af37;
   font-weight: 950;
+} .athlete-directory-toolbar {
+  display: flex;
+  gap: 14px;
+  margin: 28px 0;
+  flex-wrap: wrap;
+}
+
+.athlete-directory-toolbar input,
+.athlete-directory-toolbar select {
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.25);
+  color: white;
+  border-radius: 14px;
+  padding: 13px 15px;
+  font-weight: 800;
+}
+
+.athlete-directory-toolbar input {
+  flex: 1;
+  min-width: 260px;
+}
+
+.athlete-directory-card {
+  position: relative;
+  overflow: hidden;
+  transition: .25s;
+}
+
+.athlete-directory-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(212,175,55,.65);
+  box-shadow: 0 20px 40px rgba(0,0,0,.35), 0 0 30px rgba(212,175,55,.12);
+}
+
+.athlete-directory-photo {
+  position: relative;
+}
+
+.athlete-directory-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(to top, rgba(0,0,0,.55), transparent 45%);
+}
+
+.film-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2;
+  background: #d4af37;
+  color: black;
+  font-weight: 950;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.athlete-directory-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 12px;
 }

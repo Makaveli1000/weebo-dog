@@ -135,38 +135,37 @@
   color: black;
 }
 
-/* QUICK STATS */
-
-.athlete-quick-stats {
-  display: grid;
-  grid-template-columns: repeat(5,1fr);
-  gap: 16px;
-  margin-top: 28px;
+.quick-stat{
+    background:
+      linear-gradient(180deg,#0f172a,#020617);
+    border:1px solid rgba(212,175,55,.25);
+    border-radius:20px;
+    padding:22px;
+    text-align:center;
+    transition:.25s;
 }
 
-.quick-stat {
-  background: #0f172a;
-  border: 1px solid rgba(212,175,55,.2);
-  border-radius: 18px;
-  padding: 18px;
-  text-align: center;
+.quick-stat:hover{
+    transform:translateY(-4px);
+    border-color:#d4af37;
+    box-shadow:0 12px 30px rgba(212,175,55,.18);
 }
 
-.quick-stat span {
-  display: block;
-  color: #94a3b8;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: .08em;
+.quick-stat span{
+    display:block;
+    color:#94a3b8;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.12em;
 }
 
-.quick-stat strong {
-  display: block;
-  margin-top: 8px;
-  font-size: 28px;
-  color: #d4af37;
-  font-weight: 950;
-} 
+.quick-stat strong{
+    display:block;
+    margin-top:10px;
+    font-size:30px;
+    color:#f8d34d;
+    font-weight:950;
+}
 
 /* =====================================================
    ATHLETE PROFILE — PART 2
@@ -656,4 +655,429 @@
   color: #94a3b8;
   font-size: 13px;
   margin-top: 4px;
+} 
+
+/* ==========================================
+   RECRUITER PROFILE HERO
+========================================== */
+
+.recruiter-profile-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 220px 1fr 220px;
+  gap: 28px;
+  align-items: center;
+  overflow: hidden;
+  padding: 34px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(212,175,55,.24), transparent 35%),
+    radial-gradient(circle at bottom left, rgba(59,130,246,.16), transparent 28%),
+    linear-gradient(135deg, #020617, #0f172a 55%, #030712);
+  border: 1px solid rgba(212,175,55,.32);
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+}
+
+.recruiter-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(212,175,55,.08), transparent 40%),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255,255,255,.025) 0,
+      rgba(255,255,255,.025) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  pointer-events: none;
+}
+
+.recruiter-athlete-photo {
+  position: relative;
+  z-index: 2;
+}
+
+.recruiter-athlete-photo img {
+  width: 220px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 26px;
+  border: 3px solid rgba(212,175,55,.55);
+  box-shadow: 0 0 40px rgba(212,175,55,.22);
+}
+
+.recruiter-hero-info {
+  position: relative;
+  z-index: 2;
+}
+
+.recruiter-hero-info h1 {
+  font-size: clamp(34px, 5vw, 64px);
+  font-weight: 950;
+  margin: 6px 0 0;
+  color: white;
+  letter-spacing: -0.05em;
+  line-height: .95;
+}
+
+.recruiter-hero-info h2 {
+  margin-top: 10px;
+  color: #93c5fd;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.recruiter-hero-tags,
+.recruiter-verification-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.recruiter-hero-tags span {
+  padding: 9px 13px;
+  border-radius: 999px;
+  background: rgba(15,23,42,.82);
+  border: 1px solid rgba(255,255,255,.1);
+  color: #e5e7eb;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.recruiter-verification-row span {
+  padding: 9px 13px;
+  border-radius: 12px;
+  background: rgba(212,175,55,.12);
+  border: 1px solid rgba(212,175,55,.28);
+  color: #f8d34d;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.recruiter-rating-tower {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 26px 18px;
+  border-radius: 24px;
+  background: rgba(2,6,23,.8);
+  border: 1px solid rgba(212,175,55,.42);
+  box-shadow: inset 0 0 30px rgba(212,175,55,.08);
+}
+
+.recruiter-rating-tower span {
+  color: #d4af37;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .14em;
+}
+
+.recruiter-rating-tower strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 64px;
+  color: #f8d34d;
+  line-height: 1;
+  font-weight: 950;
+}
+
+.recruiter-rating-tower small {
+  display: block;
+  margin-top: 8px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+} 
+
+.profile-video-list {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-video-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.22);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: left;
+  color: white;
+  cursor: pointer;
+  transition: .25s;
+}
+
+.profile-video-card:hover {
+  transform: translateY(-3px);
+  border-color: #d4af37;
+  box-shadow: 0 14px 30px rgba(212,175,55,.14);
+}
+
+.profile-video-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #d4af37;
+  color: black;
+  font-weight: 950;
+}
+
+.profile-video-card strong {
+  display: block;
+  font-weight: 950;
+}
+
+.profile-video-card small {
+  display: block;
+  color: #94a3b8;
+  margin-top: 3px;
+} 
+
+.offer-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+  gap: 12px;
+}
+
+.offer-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.24);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.offer-logo {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(212,175,55,.14);
+  color: #f8d34d;
+}
+
+.offer-card strong {
+  display: block;
+  color: white;
+  font-weight: 950;
+}
+
+.offer-card small {
+  color: #94a3b8;
+  font-size: 11px;
+} 
+
+.achievement-badge-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.achievement-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(212,175,55,.1);
+  border: 1px solid rgba(212,175,55,.25);
+  border-radius: 16px;
+  padding: 14px;
+  color: white;
+}
+
+.achievement-badge span {
+  font-size: 24px;
+}
+
+.achievement-badge strong {
+  font-weight: 950;
+} 
+
+.recruiter-profile-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 26px;
+  align-items: start;
+}
+
+.recruiter-profile-main {
+  min-width: 0;
+}
+
+.recruiter-zeus-sidebar {
+  position: sticky;
+  top: 90px;
+  display: grid;
+  gap: 20px;
+}
+
+.recruiter-zeus-sidebar .zeus-dashboard {
+  margin-top: 0;
+}
+
+.recruiter-zeus-sidebar .zeus-grid {
+  grid-template-columns: 1fr;
+}
+
+.recruiter-zeus-sidebar .zeus-card div {
+  font-size: 22px;
+}
+
+@media (max-width: 1100px) {
+  .recruiter-profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .recruiter-zeus-sidebar {
+    position: static;
+  }
+} 
+
+.recruiter-info-list,
+.academic-stat-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.recruiter-info-list div,
+.academic-stat-grid div {
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.2);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.recruiter-info-list span,
+.academic-stat-grid span {
+  display: block;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.recruiter-info-list strong,
+.academic-stat-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: #f8d34d;
+  font-weight: 950;
+}
+
+.recruiter-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.recruiter-profile-hero {
+  min-height: 320px;
+}
+
+.profile-film-panel {
+  grid-column: 1 / -1;
+}
+
+.profile-embedded-player {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(212,175,55,.28);
+  margin-bottom: 18px;
+}
+
+.profile-embedded-player iframe,
+.profile-embedded-player video {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.profile-film-empty {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #020617;
+  border: 1px dashed rgba(212,175,55,.28);
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-weight: 900;
+  margin-bottom: 18px;
+}
+
+/* ==========================================
+   ZEUS INTRO AVATAR
+========================================== */
+
+.zeus-intro-avatar{
+    position:relative;
+    width:170px;
+    margin:0 auto 20px;
+}
+
+.zeus-intro-avatar img{
+    width:170px;
+    height:170px;
+    object-fit:cover;
+    border-radius:50%;
+    border:3px solid #d4af37;
+    box-shadow:0 0 35px rgba(212,175,55,.45);
+}
+
+.zeus-speaking-ring{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:2px solid rgba(212,175,55,.45);
+    animation:zeusPulse 2s infinite;
+}
+
+@keyframes zeusPulse{
+
+    0%{
+        transform:scale(.95);
+        opacity:.2;
+    }
+
+    50%{
+        transform:scale(1.08);
+        opacity:1;
+    }
+
+    100%{
+        transform:scale(.95);
+        opacity:.2;
+    }
+
+}
+
+#zeus-avatar.speaking{
+    animation:zeusTalk .35s infinite alternate;
+}
+
+@keyframes zeusTalk{
+
+    from{
+        transform:scale(1);
+    }
+
+    to{
+        transform:scale(1.04);
+    }
+
 }
