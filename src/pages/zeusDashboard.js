@@ -177,33 +177,38 @@ if (average >= 90) {
 
   <div class="zeus-action-grid">
 
-    <button
-  class="zeus-action-btn"
-  onclick="window.openZeusCompare()">
+    <button class="zeus-action-btn" onclick="window.saveAthleteToWatchlist()">
+  ⭐ Save Athlete
+</button>
+
+<button class="zeus-action-btn" onclick="window.print()">
+  📄 Print Recruit PDF
+</button>
+
+<button class="zeus-action-btn"
+  onclick="navigator.share ? navigator.share({title: window.activeAthlete?.name || 'Athlete Profile', url: location.href}) : navigator.clipboard.writeText(location.href)">
+  📤 Share Profile
+</button>
+
+<button class="zeus-action-btn" onclick="window.openContactCoach()">
+  📧 Contact Coach
+</button>
+
+<button class="zeus-action-btn" onclick="window.watchFeaturedHighlight()">
+  🎥 Watch Full Film
+</button>
+
+<button class="zeus-action-btn" onclick="window.openZeusCompare()">
   📊 Compare Athlete
 </button>
 
-    <button class="zeus-action-btn"
-      onclick="window.print()">
-      📄 Print Recruit PDF
-    </button>
+<button class="zeus-action-btn" onclick="window.openRecruiterNotes()">
+  📝 Recruiter Notes
+</button>
 
-    <button class="zeus-action-btn"
-      onclick="navigator.share ? navigator.share({title: '${athlete.name}', url: location.href}) : navigator.clipboard.writeText(location.href)">
-      📤 Share Profile
-    </button>
-
-    <button class="zeus-action-btn">
-      📧 Contact Coach
-    </button>
-
-    <button class="zeus-action-btn">
-      🎥 Watch Full Film
-    </button>
-
-    <button class="zeus-action-btn">
-      📊 Compare Athlete
-    </button>
+<button class="zeus-action-btn" onclick="window.openWatchlist()">
+  📌 Watchlist
+</button>
 
   </div>
 

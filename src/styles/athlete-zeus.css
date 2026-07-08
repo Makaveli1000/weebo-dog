@@ -313,3 +313,191 @@
   color: #e5e7eb;
   line-height: 1.6;
 }
+
+/* ==========================================
+   WATCHLIST
+========================================== */
+
+.watchlist-card {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px;
+
+    margin-bottom:14px;
+
+    border-radius:18px;
+
+    background:#0f172a;
+
+    border:1px solid rgba(212,175,55,.20);
+
+}
+
+.watchlist-card h3{
+
+    margin:0;
+
+    color:white;
+
+    font-size:20px;
+
+    font-weight:900;
+
+}
+
+.watchlist-card p{
+
+    margin:6px 0;
+
+    color:#d4af37;
+
+}
+
+.watchlist-card small{
+
+    color:#94a3b8;
+
+}
+
+.watchlist-rating{
+
+    text-align:center;
+
+}
+
+.watchlist-rating span{
+
+    display:block;
+
+    color:#94a3b8;
+
+    font-size:11px;
+
+    font-weight:900;
+
+}
+
+.watchlist-rating strong{
+
+    font-size:34px;
+
+    color:#d4af37;
+
+}
+
+.empty-watchlist{
+
+    text-align:center;
+
+    padding:60px;
+
+}
+
+.empty-watchlist h3{
+
+    color:white;
+
+}
+
+.empty-watchlist p{
+
+    color:#94a3b8;
+
+}
+
+/* ==========================================
+   RECRUITER NOTES 2.0
+========================================== */
+
+.recruiter-notes-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.recruiter-notes-form label {
+  color: #d4af37;
+  font-weight: 900;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.recruiter-notes-form select,
+.recruiter-notes-form textarea,
+.notes-filter-row select {
+  width: 100%;
+  background: #0f172a;
+  color: white;
+  border: 1px solid rgba(212,175,55,.25);
+  border-radius: 14px;
+  padding: 12px;
+  font-weight: 800;
+}
+
+.recruiter-notes-form textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+.notes-divider {
+  border: 0;
+  border-top: 1px solid rgba(212,175,55,.2);
+  margin: 24px 0;
+}
+
+.notes-filter-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.recruiter-note-card {
+  background: #0f172a;
+  border: 1px solid rgba(212,175,55,.22);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.recruiter-note-card h3 {
+  color: white;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.recruiter-note-card p {
+  color: #cbd5e1;
+  margin-top: 6px;
+}
+
+.recruiter-note-card small {
+  color: #94a3b8;
+}
+
+.note-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.note-tags span {
+  background: rgba(212,175,55,.14);
+  border: 1px solid rgba(212,175,55,.25);
+  color: #f8d34d;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.note-body {
+  background: #020617;
+  border-radius: 14px;
+  padding: 14px;
+}

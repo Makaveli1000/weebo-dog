@@ -1530,6 +1530,309 @@ window.openGearVault = function () {
 };
 
 // ==========================================
+// PLATFORM BUTTON ACTION SYSTEM
+// ==========================================
+
+window.platformAction = function (action = "", label = "This feature") {
+  switch (action) {
+    case "home":
+      window.scrollToSection("home-root");
+      break;
+
+    case "athletes":
+      window.scrollToSection("athlete-directory-page");
+      break;
+
+    case "schools":
+      window.scrollToSection("schools-root");
+      break;
+
+    case "rankings":
+      window.scrollToSection("rankings-root");
+      break;
+
+    case "highlights":
+      window.scrollToSection("highlights-root");
+      break;
+
+    case "recruiting":
+      window.scrollToSection("recruiting-root");
+      break;
+
+    case "marketplace":
+      window.scrollToSection("marketplace-root");
+      break;
+
+    case "zeus":
+      window.scrollToSection("zeus-ai-root");
+      break;
+
+    case "search":
+      window.focusGlobalSearch?.();
+      break;
+
+    default:
+      window.comingSoon(label);
+  }
+};
+
+// ==========================================
+// RECRUITER WORKFLOW
+// ==========================================
+
+window.recruiterWatchlist =
+  JSON.parse(localStorage.getItem("sntlmoRecruiterWatchlist") || "[]");
+
+window.saveAthleteToWatchlist = function () {
+  const athlete = window.activeAthlete || window.appState?.activeAthlete;
+
+  if (!athlete) {
+    window.comingSoon("Save Athlete");
+    return;
+  }
+
+  const exists = window.recruiterWatchlist.some(a => a.id === athlete.id);
+
+  if (!exists) {
+    window.recruiterWatchlist.push({
+      id: athlete.id,
+      name: athlete.name,
+      sport: athlete.sport,
+      position: athlete.position || athlete.posion || "ATH",
+      school: athlete.school || athlete.schoolName || "School N/A",
+      rating: athlete.zeusRating || athlete.total || "N/A"
+    });
+
+    localStorage.setItem(
+      "sntlmoRecruiterWatchlist",
+      JSON.stringify(window.recruiterWatchlist)
+    );
+  }
+
+  alert(`${athlete.name || "Athlete"} saved to recruiter watchlist.`);
+};
+
+window.openContactCoach = function () {
+  const athlete = window.activeAthlete || window.appState?.activeAthlete;
+
+  if (!athlete) {
+    window.comingSoon("Contact Coach");
+    return;
+  }
+
+  const coachEmail = athlete.coachEmail || "";
+
+  if (coachEmail) {
+    window.location.href = `mailto:${coachEmail}?subject=Recruiting Interest: ${athlete.name || "Athlete"}`;
+  } else {
+    alert("Coach contact is not available yet for this athlete.");
+  }
+};
+
+window.openRecruiterNotes = function () {
+  const athlete = window.activeAthlete || window.appState?.activeAthlete;
+
+  if (!athlete) {
+    window.comingSoon("Recruiter Notes");
+    return;
+  }
+
+  const modal = document.getElementById("recruiter-notes-modal");
+
+  if (!modal) return;
+
+  modal.classList.remove("hidden");
+
+  window.renderRecruiterNotesBoard();
+};
+
+window.saveRecruiterNote2 = function () {
+  const athlete = window.activeAthlete || window.appState?.activeAthlete;
+
+  if (!athlete) {
+    alert("Select an athlete first.");
+    return;
+  }
+
+  const board = JSON.parse(localStorage.getItem("sntlmoRecruiterBoard") || "[]");
+
+  board.push({
+    athleteId: athlete.id,
+    athleteName: athlete.name || "Unknown Athlete",
+    sport: athlete.sport || "Sport",
+    position: athlete.position || athlete.posion || "ATH",
+    school: athlete.school || athlete.schoolName || "School N/A",
+    rating: document.getElementById("notes-rating")?.value || "★★★",
+    priority: document.getElementById("notes-priority")?.value || "Medium",
+    status: document.getElementById("notes-status")?.value || "Not Contacted",
+    note: document.getElementById("notes-text")?.value || "",
+    createdAt: new Date().toLocaleString()
+  });
+
+  localStorage.setItem("sntlmoRecruiterBoard", JSON.stringify(board));
+
+  const noteBox = document.getElementById("notes-text");
+  if (noteBox) noteBox.value = "";
+
+  window.renderRecruiterNotesBoard();
+
+  alert("Recruiter note saved.");
+};
+
+window.renderRecruiterNotesBoard = function () {
+  const results = document.getElementById("recruiter-notes-results");
+  const filter = document.getElementById("notes-filter")?.value || "all";
+
+  if (!results) return;
+
+  let board = JSON.parse(localStorage.getItem("sntlmoRecruiterBoard") || "[]");
+
+  if (filter !== "all") {
+    board = board.filter(item => item.priority === filter);
+  }
+
+  if (!board.length) {
+    results.innerHTML = `
+      <div class="empty-watchlist">
+        <h3>No Recruiter Notes Yet</h3>
+        <p>Save notes from athlete profiles to build your scouting board.</p>
+      </div>
+    `;
+    return;
+  }
+
+  results.innerHTML = board.map(item => `
+    <div class="recruiter-note-card">
+
+      <div>
+        <h3>${item.athleteName}</h3>
+        <p>${item.position} • ${item.sport} • ${item.school}</p>
+        <small>${item.createdAt}</small>
+      </div>
+
+      <div class="note-tags">
+        <span>${item.rating}</span>
+        <span>${item.priority}</span>
+        <span>${item.status}</span>
+      </div>
+
+      <p class="note-body">${item.note || "No note text added."}</p>
+
+    </div>
+  `).join("");
+};
+
+window.exportRecruiterBoard = function () {
+  const board = JSON.parse(localStorage.getItem("sntlmoRecruiterBoard") || "[]");
+
+  if (!board.length) {
+    alert("No recruiter board data to export.");
+    return;
+  }
+
+  const rows = [
+    ["Athlete", "Sport", "Position", "School", "Rating", "Priority", "Status", "Note", "Created"],
+    ...board.map(item => [
+      item.athleteName,
+      item.sport,
+      item.position,
+      item.school,
+      item.rating,
+      item.priority,
+      item.status,
+      item.note,
+      item.createdAt
+    ])
+  ];
+
+  const csv = rows.map(row =>
+    row.map(cell => `"${String(cell || "").replace(/"/g, '""')}"`).join(",")
+  ).join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "sntlmo-recruiter-board.csv";
+  a.click();
+
+  URL.revokeObjectURL(url);
+};
+
+// ==========================================
+// GLOBAL SEARCH
+// ==========================================
+
+window.runGlobalSearch = function (query = "") {
+  const box = document.getElementById("global-search-results");
+  if (!box) return;
+
+  const q = query.trim().toLowerCase();
+
+  if (!q) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+
+  const athletes = (window.appState?.athletes || [])
+    .filter(a => {
+      const searchable = `
+        ${a.name || ""}
+        ${a.school || a.schoolName || a["school name"] || ""}
+        ${a.sport || ""}
+        ${a.position || a.posion || ""}
+        ${a.city || ""}
+        ${a.state || ""}
+      `.toLowerCase();
+
+      return searchable.includes(q);
+    })
+    .slice(0, 8);
+
+  if (!athletes.length) {
+    box.innerHTML = `
+      <div class="global-search-empty">
+        No results found for <strong>${query}</strong>.
+      </div>
+    `;
+    box.classList.remove("hidden");
+    return;
+  }
+
+  box.innerHTML = athletes.map(a => `
+    <button
+      class="global-search-result"
+      onclick="
+        window.openAthleteFromDirectory('${a.id}');
+        document.getElementById('global-search-results').classList.add('hidden');
+        document.getElementById('global-search-input').value='';
+      ">
+
+      <span>👤</span>
+
+      <div>
+        <strong>${a.name || "Unknown Athlete"}</strong>
+        <small>
+          ${a.sport || "Sport"} •
+          ${a.position || a.posion || "ATH"} •
+          ${a.school || a.schoolName || a["school name"] || "School N/A"}
+        </small>
+      </div>
+
+    </button>
+  `).join("");
+
+  box.classList.remove("hidden");
+};
+
+window.openGlobalSearchResults = function (query = "") {
+  if (!query.trim()) return;
+  window.platformAction("athletes");
+};
+
+// ==========================================
 // ZEUS COMPARE
 // ==========================================
 
@@ -1799,6 +2102,28 @@ function buildZeusScoutingReport(athlete = {}) {
   `;
 }
 
+// ==========================================
+// CLOSE SEARCH WHEN CLICKING AWAY
+// ==========================================
+
+document.addEventListener("click", e => {
+
+  const search =
+    document.querySelector(".national-search-wrapper");
+
+  const results =
+    document.getElementById("global-search-results");
+
+  if (!search || !results) return;
+
+  if (!search.contains(e.target)) {
+
+    results.classList.add("hidden");
+
+  }
+
+});
+
 window.generateZeusScoutingReport = function() {
   const athlete = window.appState?.activeAthlete;
 
@@ -1813,4 +2138,107 @@ window.generateZeusScoutingReport = function() {
     response.innerHTML = buildZeusScoutingReport(athlete);
     response.innerHTML += renderZeusDashboard(athlete);
   }
+};
+
+// ==========================================
+// NATIONAL ZEUS AI CENTER
+// ==========================================
+
+window.runZeusCenterTool = function (tool = "scout") {
+  const output = document.getElementById("zeus-center-output");
+  const prompt = document.getElementById("zeus-center-prompt")?.value || "";
+  const athlete = window.activeAthlete || window.appState?.activeAthlete || {};
+
+  if (!output) return;
+
+  const name = athlete.name || "Selected Athlete";
+  const sport = athlete.sport || "Sport";
+  const position = athlete.position || athlete.posion || "ATH";
+  const school = athlete.school || athlete.schoolName || "School N/A";
+  const rating =
+    athlete.zeusRating ||
+    athlete.total ||
+    mergeRosterScores?.(athlete) ||
+    "N/A";
+
+  let title = "⚡ Zeus Scout";
+  let body = "";
+
+  if (tool === "scout") {
+    title = "🤖 Zeus Scout";
+    body = `
+      <p><strong>${name}</strong> profiles as a ${position} in ${sport} from ${school}.</p>
+      <p>Zeus currently grades this prospect at <strong>${rating}</strong>.</p>
+      <p>${prompt || "Zeus recommends continued film updates, verified measurements, coach notes, and active recruiting exposure."}</p>
+    `;
+  }
+
+  if (tool === "film") {
+    title = "🎥 AI Film Breakdown";
+    body = `
+      <p>Zeus film review focuses on burst, speed, physicality, decision-making, body control, effort, and repeatable impact plays.</p>
+      <ul>
+        <li>Explosiveness: High upside</li>
+        <li>Technique: Developing toward verified elite traits</li>
+        <li>Game Impact: Strong profile momentum</li>
+        <li>Next Step: Add full-game clips and verified timestamps</li>
+      </ul>
+    `;
+  }
+
+  if (tool === "projection") {
+    title = "📊 Recruiting Projection";
+    body = `
+      <p><strong>${name}</strong> projects as a recruitable prospect with continued exposure.</p>
+      <p>Current Zeus tier: <strong>${rating}</strong></p>
+      <p>Recommended recruiting path: camps, updated verified film, coach references, academic profile, and target-school outreach.</p>
+    `;
+  }
+
+  if (tool === "compare") {
+    title = "🏆 National Player Comparison";
+    body = `
+      <p>Use the athlete profile comparison engine to compare Zeus Rating, school, sport, position, film, testing, and recruiting projection.</p>
+      <button class="zeus-action-btn" onclick="window.openZeusCompare()">Open Zeus Compare</button>
+    `;
+  }
+
+  if (tool === "nil") {
+    title = "📈 NIL Projection";
+    body = `
+      <p>NIL outlook is based on profile visibility, highlight engagement, local market strength, school brand, athlete story, and social reach.</p>
+      <p>Zeus recommendation: build athlete merch, short-form highlights, verified bio, and sponsor-ready media kit.</p>
+    `;
+  }
+
+  if (tool === "college") {
+    title = "🎓 College Fit Predictor";
+    body = `
+      <p>Best-fit schools should match position need, region, playing style, academic fit, culture, and development path.</p>
+      <p>Starter fit examples: Missouri, Memphis, Illinois, Kansas State, Notre Dame.</p>
+    `;
+  }
+
+  if (tool === "strengths") {
+    title = "🧠 Strengths & Weaknesses";
+    body = `
+      <p><strong>Strengths:</strong> athletic upside, competitiveness, film potential, impact profile, coachability.</p>
+      <p><strong>Development Areas:</strong> verified testing, updated stats, academic profile, full-game film, recruiter notes.</p>
+    `;
+  }
+
+  if (tool === "pdf") {
+    title = "📄 AI Scouting Report PDF";
+    body = `
+      <p>Preparing printable recruiter report for <strong>${name}</strong>.</p>
+      <p>Use the browser print window to save as PDF.</p>
+    `;
+
+    setTimeout(() => window.print(), 500);
+  }
+
+  output.innerHTML = `
+    <h3>${title}</h3>
+    ${body}
+  `;
 };

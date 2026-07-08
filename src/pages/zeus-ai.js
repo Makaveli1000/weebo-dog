@@ -1,46 +1,81 @@
-function aiToolCard(icon, title, text) {
+export function renderZeusAiPage() {
   return `
-    <article class="zeus-ai-tool-card">
-      <div class="zeus-ai-icon">${icon}</div>
-      <h3>${title}</h3>
-      <p>${text}</p>
-      <button class="athlete-card-btn">Launch</button>
-    </article>
+    <section class="zeus-ai-page national-zeus-center">
+
+      <div class="section-header">
+        <p class="network-kicker">Zeus AI</p>
+        <h2>National Recruiting Intelligence Center</h2>
+        <p>
+          AI scouting, film breakdowns, recruiting projections,
+          college fit, NIL outlook, comparisons, and printable reports.
+        </p>
+      </div>
+
+      <div class="zeus-center-hero">
+
+        <div class="zeus-center-avatar">
+          <img src="zeus-avatar.png" alt="Zeus AI">
+          <span></span>
+        </div>
+
+        <div>
+          <h3>🤖 Zeus Scout</h3>
+          <p>
+            Ask Zeus to evaluate athletes, compare prospects,
+            generate scouting reports, and build recruiting plans.
+          </p>
+
+          <textarea
+            id="zeus-center-prompt"
+            placeholder="Ask Zeus: Create a scouting report for a 2027 WR with elite speed, varsity film, and D-I interest..."
+          ></textarea>
+
+          <div class="zeus-center-actions">
+            <button onclick="window.runZeusCenterTool('scout')">🤖 Zeus Scout</button>
+            <button onclick="window.runZeusCenterTool('film')">🎥 Film Breakdown</button>
+            <button onclick="window.runZeusCenterTool('projection')">📊 Projection</button>
+            <button onclick="window.runZeusCenterTool('pdf')">📄 Print Report</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="zeus-ai-tools zeus-center-tool-grid">
+
+        ${zeusToolCard("🎥", "AI Film Breakdown", "Analyze speed, technique, awareness, explosiveness, effort, and impact plays.", "film")}
+
+        ${zeusToolCard("📊", "Recruiting Projection", "Project recruiting tier, offer probability, position fit, and development timeline.", "projection")}
+
+        ${zeusToolCard("🏆", "National Player Comparison", "Compare athletes by Zeus Rating, stats, testing, film, and projection.", "compare")}
+
+        ${zeusToolCard("📈", "NIL Projection", "Estimate athlete brand value, marketability, reach, and sponsor potential.", "nil")}
+
+        ${zeusToolCard("🎓", "College Fit Predictor", "Suggest best-fit programs based on sport, position, region, rating, and profile.", "college")}
+
+        ${zeusToolCard("🧠", "Strengths & Weaknesses", "Generate a clear scouting breakdown with strengths, concerns, and next steps.", "strengths")}
+
+        ${zeusToolCard("📄", "AI Scouting Report PDF", "Prepare a printable recruiter-ready report from the active athlete profile.", "pdf")}
+
+      </div>
+
+      <div id="zeus-center-output" class="zeus-ai-response">
+        <h3>⚡ Zeus Output</h3>
+        <p>Select a Zeus tool or type a prompt to begin.</p>
+      </div>
+
+    </section>
   `;
 }
 
-export function renderZeusAiPage() {
+function zeusToolCard(icon, title, text, tool) {
   return `
-    <section class="zeus-ai-page">
-      <div class="section-header">
-        <p class="network-kicker">Zeus AI</p>
-        <h2>AI Scouting Intelligence</h2>
-        <p>Film breakdown, scouting reports, player comparisons, recruiting projections, development plans, and ranking support.</p>
-      </div>
-
-      <div class="zeus-ai-command">
-        <div>
-          <h3>Ask Zeus AI</h3>
-          <p>Generate a scouting report, compare athletes, evaluate film, or build a recruiting plan.</p>
-        </div>
-
-        <textarea placeholder="Example: Create a scouting report for a 2027 QB with arm strength, mobility, leadership, and varsity film."></textarea>
-
-        <div class="zeus-ai-actions">
-          <button class="athlete-card-btn">Generate Report</button>
-          <button class="athlete-card-btn">Analyze Film</button>
-          <button class="athlete-card-btn">Compare Players</button>
-        </div>
-      </div>
-
-      <div class="zeus-ai-tools">
-        ${aiToolCard("🎥", "Film Breakdown", "Analyze speed, technique, awareness, explosiveness, decision-making, and game impact.")}
-        ${aiToolCard("📊", "Player Comparison", "Compare athletes by sport, position, class, school, Zeus Rating, and verified film.")}
-        ${aiToolCard("🎓", "Recruiting Report", "Create college-ready summaries with strengths, weaknesses, projection notes, and fit.")}
-        ${aiToolCard("📈", "Development Plan", "Build improvement plans for athletes, trainers, coaches, and parents.")}
-        ${aiToolCard("🏆", "Ranking Support", "Use Zeus AI to assist with rating, ranking, and leaderboard movement.")}
-        ${aiToolCard("🧠", "Coach Strategy", "Generate practice plans, opponent notes, and player development guidance.")}
-      </div>
-    </section>
+    <div class="zeus-ai-tool-card">
+      <div class="zeus-ai-icon">${icon}</div>
+      <h3>${title}</h3>
+      <p>${text}</p>
+      <button onclick="window.runZeusCenterTool('${tool}')">
+        Launch
+      </button>
+    </div>
   `;
 }

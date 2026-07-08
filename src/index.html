@@ -27,53 +27,62 @@
   </div>
 
   <!-- SEARCH -->
+  <div class="national-search-wrapper">
+
   <div class="national-search">
 
     <span>🔍</span>
 
     <input
+      id="global-search-input"
       type="text"
       placeholder="Search athletes, schools, highlights..."
-      onkeydown="if(event.key==='Enter') window.comingSoon('Global Search')">
+      oninput="window.runGlobalSearch(this.value)"
+      onkeydown="if(event.key==='Enter') window.openGlobalSearchResults(this.value)">
 
   </div>
 
+  <div id="global-search-results" class="global-search-results hidden"></div>
+
+</div>
+
   <!-- MAIN NAV -->
+  
   <nav class="national-nav">
 
-    <button onclick="window.scrollToSection('home-root')">
-      Home
-    </button>
+  <button onclick="window.platformAction('home')">
+    Home
+  </button>
 
-    <button onclick="window.scrollToSection('athlete-directory-page')">
-      Athletes
-    </button>
+  <button onclick="window.platformAction('athletes')">
+    Athletes
+  </button>
 
-    <button onclick="window.scrollToSection('schools-root')">
-      Schools
-    </button>
+  <button onclick="window.platformAction('schools')">
+    Schools
+  </button>
 
-    <button onclick="window.scrollToSection('rankings-root')">
-      Rankings
-    </button>
+  <button onclick="window.platformAction('rankings')">
+    Rankings
+  </button>
 
-    <button onclick="window.scrollToSection('highlights-root')">
-      Highlights
-    </button>
+  <button onclick="window.platformAction('highlights')">
+    Highlights
+  </button>
 
-    <button onclick="window.scrollToSection('recruiting-root')">
-      Recruiting
-    </button>
+  <button onclick="window.platformAction('recruiting')">
+    Recruiting
+  </button>
 
-    <button onclick="window.scrollToSection('marketplace-root')">
-      Gear
-    </button>
+  <button onclick="window.platformAction('gear')">
+    Gear
+  </button>
 
-    <button onclick="window.scrollToSection('zeus-ai-root')">
-      Zeus AI
-    </button>
+  <button onclick="window.platformAction('zeus')">
+    Zeus AI
+  </button>
 
-  </nav>
+</nav>
 
   <!-- RIGHT SIDE -->
   <div class="national-actions">
@@ -582,6 +591,95 @@ and college fit.
 
 <div id="zeus-compare-results"></div>
 
+  <div id="watchlist-modal" class="hidden modal-overlay">
+
+  <div class="modal-card zeus-compare-card">
+
+    <button onclick="hide('watchlist-modal')" class="modal-close-btn">
+      &times;
+    </button>
+
+    <h2>📌 Recruiter Watchlist</h2>
+
+    <p>Saved athletes for recruiter review, notes, comparison, and follow-up.</p>
+
+    <div id="watchlist-results"></div>
+
+  </div>
+
+<div id="recruiter-notes-modal" class="hidden modal-overlay">
+
+  <div class="modal-card zeus-compare-card">
+
+    <button onclick="hide('recruiter-notes-modal')" class="modal-close-btn">
+      &times;
+    </button>
+
+    <h2>📝 Recruiter Notes 2.0</h2>
+
+    <p>
+      Track prospect rating, recruiting priority, contact status,
+      and private scouting notes.
+    </p>
+
+    <div class="recruiter-notes-form">
+
+      <label>Prospect Rating</label>
+      <select id="notes-rating">
+        <option value="★★★★★">★★★★★ Elite</option>
+        <option value="★★★★">★★★★ High Major</option>
+        <option value="★★★">★★★ Recruitable</option>
+        <option value="★★">★★ Developing</option>
+        <option value="★">★ Watch</option>
+      </select>
+
+      <label>Priority</label>
+      <select id="notes-priority">
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+
+      <label>Contact Status</label>
+      <select id="notes-status">
+        <option value="Not Contacted">Not Contacted</option>
+        <option value="Coach Contacted">Coach Contacted</option>
+        <option value="Family Contacted">Family Contacted</option>
+        <option value="Offer Watch">Offer Watch</option>
+        <option value="Committed Elsewhere">Committed Elsewhere</option>
+      </select>
+
+      <label>Private Scout Note</label>
+      <textarea
+        id="notes-text"
+        placeholder="Write private recruiting notes..."
+      ></textarea>
+
+      <button class="zeus-action-btn" onclick="window.saveRecruiterNote2()">
+        Save Recruiter Note
+      </button>
+
+    </div>
+
+    <hr class="notes-divider">
+
+    <div class="notes-filter-row">
+
+      <select id="notes-filter" onchange="window.renderRecruiterNotesBoard()">
+        <option value="all">All Priorities</option>
+        <option value="High">High Priority</option>
+        <option value="Medium">Medium Priority</option>
+        <option value="Low">Low Priority</option>
+      </select>
+
+      <button class="zeus-action-btn" onclick="window.exportRecruiterBoard()">
+        Export Board
+      </button>
+
+    </div>
+
+    <div id="recruiter-notes-results"></div>
+
   </div>
 
 </div>
@@ -592,14 +690,14 @@ and college fit.
 
 <div class="global-nav-system">
 
-  <button onclick="history.back()">
-    ⬅️
-    <span>Back</span>
-</button>
-
-<button onclick="window.scrollToSection('home')">
+  <button onclick="window.platformAction('home')">
     🏠
     <span>Home</span>
+</button>
+
+<button onclick="history.back()">
+    ⬅️
+    <span>Back</span>
 </button>
 
 <button onclick="window.comingSoon('Global Search')">
@@ -607,32 +705,32 @@ and college fit.
     <span>Search</span>
 </button>
 
-<button onclick="window.scrollToSection('athlete-directory-page')">
+<button onclick="window.platformAction('athletes')">
     👤
     <span>Athletes</span>
 </button>
 
-<button onclick="window.scrollToSection('schools-root')">
+<button onclick="window.platformAction('schools')">
     🏫
     <span>Schools</span>
 </button>
 
-<button onclick="window.scrollToSection('rankings-root')">
+<button onclick="window.platformAction('rankings')">
     🏆
     <span>Rankings</span>
 </button>
 
-<button onclick="window.scrollToSection('highlights-root')">
+<button onclick="window.platformAction('highlights')">
     🎥
     <span>Highlights</span>
 </button>
 
-<button onclick="window.scrollToSection('recruiting-root')">
+<button onclick="window.platformAction('recruiting')">
     🎓
     <span>Recruiting</span>
 </button>
 
-<button onclick="window.scrollToSection('zeus-ai-root')">
+<button onclick="window.platformAction('zeus')">
     🤖
     <span>Zeus AI</span>
 </button>
