@@ -393,33 +393,6 @@ window.handleAdminAddVideo = async () => {
   alert("Video payload successfully committed to user array.");
 };
 
-window.activateZeus2 = function() {
-  const mouth = document.getElementById("zeus2-mouth");
-  const response = document.getElementById("zeus2-response");
-
-  mouth?.classList.add("talking");
-
-  if (response) {
-    response.textContent =
-      "I am Zeus. I watch the grid, the rankings, the highlights, and the next generation of greatness.";
-  }
-
-  setTimeout(() => {
-    mouth?.classList.remove("talking");
-  }, 4500);
-};
-
-document.addEventListener("click", (e) => {
-  if (e.target?.id === "zeus2-speak-btn") {
-    window.activateZeus2();
-  }
-
-  if (e.target?.id === "zeus2-ask-btn") {
-    const q = document.getElementById("zeus2-question")?.value || "";
-    window.askZeusBrain(q);
-  }
-});
-
 // ==========================================
 // ST. LOUIS BASELINE INITIALIZATION SEEDS
 // ==========================================
@@ -1291,8 +1264,6 @@ hide("loading-overlay");
 registerAccountSetupHandlers(auth, db);
 registerZeusBrainHandlers(db);
 renderHome();
-
-renderAccountSetup();
 renderAthleteDirectoryPage();
 renderSchools();
 renderRankings();
