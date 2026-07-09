@@ -1,0 +1,828 @@
+/* ==========================================
+   SNT.L.MO. HIGHLIGHT FILM CENTER V2
+========================================== */
+
+.highlight-film-center{
+    display:grid;
+    gap:32px;
+}
+
+/* ==========================================
+   FEATURED PLAYER
+========================================== */
+
+.highlight-v2-featured{
+
+    display:grid;
+
+    grid-template-columns:1.65fr .85fr;
+
+    gap:26px;
+
+    align-items:start;
+
+    margin-bottom:28px;
+
+}
+
+.highlight-v2-player{
+
+    background:#020617;
+
+    border:1px solid rgba(212,175,55,.22);
+
+    border-radius:24px;
+
+    overflow:hidden;
+
+    aspect-ratio:16/9;
+
+    box-shadow:0 24px 60px rgba(0,0,0,.45);
+
+}
+
+.highlight-v2-player iframe,
+.highlight-v2-player video{
+
+    width:100%;
+
+    height:100%;
+
+    border:none;
+
+    display:block;
+
+}
+
+.highlight-v2-meta{
+
+    background:#0f172a;
+
+    border:1px solid rgba(212,175,55,.22);
+
+    border-radius:24px;
+
+    padding:26px;
+
+}
+
+.highlight-v2-meta h2{
+
+    margin:10px 0;
+
+    font-size:34px;
+
+    color:white;
+
+    font-weight:950;
+
+}
+
+.highlight-v2-meta p{
+
+    color:#cbd5e1;
+
+}
+
+.highlight-v2-stats{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+
+    margin:20px 0;
+
+}
+
+.highlight-v2-stats span,
+.highlight-v2-stats button{
+
+    background:#020617;
+
+    border:1px solid rgba(212,175,55,.18);
+
+    color:#f8d34d;
+
+    border-radius:999px;
+
+    padding:10px 14px;
+
+    font-weight:900;
+
+}
+
+.highlight-v2-stats button{
+
+    cursor:pointer;
+
+}
+
+.highlight-v2-badges{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+
+}
+
+.highlight-v2-badges span{
+
+    background:rgba(212,175,55,.12);
+
+    border:1px solid rgba(212,175,55,.25);
+
+    color:#f8d34d;
+
+    padding:8px 14px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:900;
+
+}
+
+/* ==========================================
+   CONTENT
+========================================== */
+
+.film-center-grid{
+
+    display:grid;
+
+    grid-template-columns:2fr 1fr;
+
+    gap:28px;
+
+}
+
+.film-main-panel{
+
+    display:grid;
+
+    gap:20px;
+
+}
+
+.film-side-panel{
+
+    display:grid;
+
+    gap:20px;
+
+}
+
+/* ==========================================
+   VIDEO FILTERS
+========================================== */
+
+.film-category-tabs{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+
+}
+
+.film-category-tabs button{
+
+    background:#020617;
+
+    border:1px solid rgba(212,175,55,.22);
+
+    color:#f8d34d;
+
+    border-radius:999px;
+
+    padding:10px 16px;
+
+    cursor:pointer;
+
+    font-weight:900;
+
+}
+
+/* ==========================================
+   VIDEO GRID
+========================================== */
+
+.film-card-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+
+    gap:18px;
+
+    max-height:720px;
+
+    overflow:auto;
+
+}
+
+.film-card{
+
+    background:#0f172a;
+
+    border:1px solid rgba(212,175,55,.20);
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+.film-card:hover{
+
+    transform:translateY(-4px);
+
+    border-color:#d4af37;
+
+}
+
+.film-card-thumb{
+
+    aspect-ratio:16/9;
+
+    display:grid;
+
+    place-items:center;
+
+    background:linear-gradient(135deg,#111827,#020617);
+
+    color:#f8d34d;
+
+    font-size:34px;
+
+}
+
+.film-card-body{
+
+    padding:14px;
+
+}
+
+.film-card-body strong{
+
+    display:block;
+
+    color:white;
+
+    font-size:14px;
+
+    font-weight:900;
+
+}
+
+.film-card-body small{
+
+    color:#94a3b8;
+
+}
+
+/* ==========================================
+   SIDEBAR PANELS
+========================================== */
+
+.recruiter-notes,
+.zeus-breakdown{
+
+    background:#0f172a;
+
+    border:1px solid rgba(212,175,55,.20);
+
+    border-radius:20px;
+
+    padding:20px;
+
+}
+
+.recruiter-notes h3,
+.zeus-breakdown h3{
+
+    color:#f8d34d;
+
+    margin-bottom:12px;
+
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media(max-width:1000px){
+
+.highlight-v2-featured{
+
+grid-template-columns:1fr;
+
+}
+
+.film-center-grid{
+
+grid-template-columns:1fr;
+
+}
+
+}
+
+@media(max-width:700px){
+
+.highlight-v2-meta h2{
+
+font-size:26px;
+
+}
+
+.film-card-grid{
+
+grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+
+}
+
+}
+
+.highlight-recruiter-panel,
+.highlight-zeus-panel {
+  background: #0f172a;
+  border: 1px solid rgba(212,175,55,.22);
+  border-radius: 22px;
+  padding: 20px;
+}
+
+.highlight-recruiter-panel h3,
+.highlight-zeus-panel h3 {
+  color: #f8d34d;
+  font-size: 20px;
+  font-weight: 950;
+  margin-bottom: 14px;
+}
+
+.highlight-recruiter-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.highlight-recruiter-panel button,
+.highlight-zeus-panel button {
+  width: 100%;
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.22);
+  color: white;
+  border-radius: 14px;
+  padding: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.highlight-recruiter-panel button:hover,
+.highlight-zeus-panel button:hover {
+  background: #d4af37;
+  color: black;
+}
+
+.highlight-zeus-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #020617;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.highlight-zeus-score span {
+  color: #94a3b8;
+  font-weight: 900;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.highlight-zeus-score strong {
+  color: #f8d34d;
+  font-size: 36px;
+  font-weight: 950;
+}
+
+.highlight-zeus-panel ul {
+  color: #cbd5e1;
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.film-gallery-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  margin: 10px 0 18px;
+}
+
+.film-gallery-header h3 {
+  color: white;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.film-gallery-header p {
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.film-gallery-header span {
+  background: rgba(212,175,55,.12);
+  border: 1px solid rgba(212,175,55,.25);
+  color: #f8d34d;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 900;
+}
+
+.film-card-premium {
+  position: relative;
+}
+
+.film-play-badge {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(212,175,55,.18);
+  border: 1px solid rgba(212,175,55,.35);
+}
+
+.film-card-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(2,6,23,.82);
+  border: 1px solid rgba(212,175,55,.22);
+  color: #f8d34d;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+/* ==========================================
+   ATHLETE HERO BANNER
+========================================== */
+
+.athlete-hero-banner{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+gap:30px;
+
+padding:28px;
+
+margin-bottom:28px;
+
+border-radius:24px;
+
+background:
+linear-gradient(135deg,#111827,#020617);
+
+border:1px solid rgba(212,175,55,.20);
+
+}
+
+.athlete-hero-left{
+
+display:flex;
+
+align-items:center;
+
+gap:24px;
+
+}
+
+.athlete-avatar{
+
+width:120px;
+
+height:120px;
+
+border-radius:50%;
+
+overflow:hidden;
+
+border:3px solid #d4af37;
+
+}
+
+.athlete-avatar img{
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
+}
+
+.athlete-hero-left h1{
+
+margin:8px 0;
+
+font-size:38px;
+
+font-weight:950;
+
+color:white;
+
+}
+
+.athlete-tags{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+}
+
+.athlete-tags span{
+
+padding:8px 14px;
+
+border-radius:999px;
+
+background:#020617;
+
+border:1px solid rgba(212,175,55,.18);
+
+color:#f8d34d;
+
+font-weight:900;
+
+}
+
+.athlete-hero-right{
+
+display:flex;
+
+gap:18px;
+
+}
+
+.hero-stat{
+
+text-align:center;
+
+background:#020617;
+
+padding:16px;
+
+border-radius:18px;
+
+min-width:120px;
+
+}
+
+.hero-stat span{
+
+display:block;
+
+font-size:11px;
+
+color:#94a3b8;
+
+font-weight:900;
+
+text-transform:uppercase;
+
+}
+
+.hero-stat strong{
+
+display:block;
+
+margin-top:6px;
+
+font-size:28px;
+
+color:#f8d34d;
+
+font-weight:950;
+
+}
+
+@media(max-width:900px){
+
+.athlete-hero-banner{
+
+flex-direction:column;
+
+align-items:flex-start;
+
+}
+
+.athlete-hero-right{
+
+width:100%;
+
+justify-content:space-between;
+
+}
+
+}
+
+/* ==========================================
+   ZEUS FILM BREAKDOWN DASHBOARD
+========================================== */
+
+.zeus-film-dashboard {
+  background:
+    radial-gradient(circle at top right, rgba(212,175,55,.18), transparent 30%),
+    #0f172a;
+  border: 1px solid rgba(212,175,55,.24);
+  border-radius: 26px;
+  padding: 26px;
+  margin: 28px 0;
+}
+
+.zeus-film-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.zeus-film-header h3 {
+  color: white;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.zeus-film-overall {
+  text-align: center;
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.2);
+  border-radius: 18px;
+  padding: 14px 22px;
+}
+
+.zeus-film-overall span {
+  display: block;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.zeus-film-overall strong {
+  color: #f8d34d;
+  font-size: 38px;
+  font-weight: 950;
+}
+
+.zeus-film-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.film-metric-card {
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.18);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.film-metric-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.film-metric-top span {
+  color: white;
+  font-weight: 900;
+}
+
+.film-metric-top strong {
+  color: #f8d34d;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.film-metric-bar {
+  height: 10px;
+  background: #111827;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.film-metric-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,#d4af37,#f8d34d);
+  border-radius: 999px;
+}
+
+@media(max-width:700px) {
+  .zeus-film-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .zeus-film-overall {
+    width: 100%;
+  }
+}
+
+/* ==========================================
+   COLLEGE MATCH ENGINE
+========================================== */
+
+.college-match-engine {
+  background: #0f172a;
+  border: 1px solid rgba(212,175,55,.24);
+  border-radius: 26px;
+  padding: 26px;
+  margin: 28px 0;
+}
+
+.college-match-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.college-match-header h3 {
+  color: white;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.college-match-header span {
+  background: rgba(212,175,55,.12);
+  border: 1px solid rgba(212,175,55,.25);
+  color: #f8d34d;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 900;
+}
+
+.college-match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.college-match-card {
+  background: #020617;
+  border: 1px solid rgba(212,175,55,.18);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.college-match-card strong {
+  display: block;
+  color: white;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.college-match-card span {
+  display: block;
+  color: #f8d34d;
+  margin-top: 4px;
+  font-weight: 900;
+}
+
+.college-match-bar {
+  height: 10px;
+  background: #111827;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 14px;
+}
+
+.college-match-bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg,#d4af37,#f8d34d);
+}
