@@ -179,39 +179,192 @@
      ADMIN PLATFORM
 ========================================== -->
 
-<div id="admin-platform" class="hidden">
+<div id="admin-platform" class="hidden"></div>
 
-  <section id="admin-tools" class="network-section">
+    <div class="admin-tabs">
 
-    <div class="section-header">
+      <button class="active" onclick="window.switchAdminTab('athletes')">
+        👤 Athletes
+      </button>
 
-      <p class="network-kicker">Admin Tools</p>
+      <button onclick="window.switchAdminTab('videos')">
+        🎥 Videos
+      </button>
 
-      <h2>Platform Control Center</h2>
+      <button onclick="window.switchAdminTab('draft')">
+        🧢 Draft Room
+      </button>
 
-      <p>
-        Athlete management,
-        media uploads,
-        war room,
-        gear vault,
-        and platform administration.
-      </p>
+      <button onclick="window.switchAdminTab('media')">
+        📁 Media
+      </button>
+
+      <button onclick="window.switchAdminTab('analytics')">
+        📊 Analytics
+      </button>
+
+      <button onclick="window.switchAdminTab('settings')">
+        ⚙️ Settings
+      </button>
+
+    </div>
+
+    <div class="admin-tab-panel active" id="admin-tab-athletes">
+
+  <div class="admin-panel-card">
+
+    <h3>👤 Athlete Command Center</h3>
+
+    <p>
+      Create athlete profiles, upload recruiting information,
+      manage rankings, and control the national athlete database.
+    </p>
+
+    <!-- ==========================================
+         ATHLETE COMMAND CENTER
+    ========================================== -->
+
+    <!-- Paste your EXISTING Athlete Command Center here -->
+
+    <!-- Starts with -->
+
+    <!-- Athlete Command Center -->
+
+    <!-- Titan Athlete Name -->
+
+    <!-- Sport -->
+
+    <!-- Highlight URL -->
+
+    <!-- Photo URL -->
+
+    <!-- Position -->
+
+    <!-- School -->
+
+    <!-- City -->
+
+    <!-- State -->
+
+    <!-- Height -->
+
+    <!-- Weight -->
+
+    <!-- Class -->
+
+    <!-- Bio -->
+
+    <!-- Offers -->
+
+    <!-- Achievements -->
+
+    <!-- Attr 1-5 -->
+
+    <!-- Commit Titan -->
+
+    <!-- ==========================================
+         GRID FILTERS
+    ========================================== -->
+
+    <!-- Paste your EXISTING Grid Filters here -->
+
+    <!-- Select Tier -->
+
+    <!-- Refine View -->
+
+    <!-- ==========================================
+         CURRENT APEX PREDATOR
+    ========================================== -->
+
+    <!-- Paste your EXISTING Apex Predator Card here -->
+
+    <!-- Jackie Joyner Kersey -->
+
+    <!-- ==========================================
+         ATHLETE MATRIX
+    ========================================== -->
+
+    <!-- Paste your EXISTING Matrix Table here -->
+
+    <!-- Athlete Name -->
+
+    <!-- Composite -->
+
+    <!-- Draft A -->
+
+    <!-- Draft B -->
+
+  </div>
+
+</div>
+
+    <div class="admin-tab-panel" id="admin-tab-videos">
+
+      <div class="admin-panel-card">
+        <h3>🎥 Video Management</h3>
+        <p>Add highlight videos, organize playlists, attach film to athletes, and manage uploaded media.</p>
+
+        <div id="admin-video-tools-slot"></div>
+      </div>
+
+    </div>
+
+    <div class="admin-tab-panel" id="admin-tab-draft">
+
+      <div class="admin-panel-card">
+        <h3>🧢 Draft Room</h3>
+        <p>Build Team St. Louis Elite, Regional Challengers, and future showcase rosters.</p>
+
+        <div id="admin-draft-tools-slot"></div>
+      </div>
+
+    </div>
+
+    <div class="admin-tab-panel" id="admin-tab-media">
+
+      <div class="admin-panel-card">
+        <h3>📁 Media Locker</h3>
+        <p>Upload videos, manage cloud assets, and connect film to the athlete network.</p>
+
+        <div id="admin-media-tools-slot"></div>
+      </div>
+
+    </div>
+
+    <div class="admin-tab-panel" id="admin-tab-analytics">
+
+      <div class="admin-panel-card">
+        <h3>📊 Platform Analytics</h3>
+        <p>Track athletes, highlights, recruiters, uploads, watchlists, engagement, and Zeus AI reports.</p>
+
+        <div class="admin-analytics-grid">
+
+          <div><span>Athletes</span><strong id="admin-athlete-count">0</strong></div>
+          <div><span>Videos</span><strong id="admin-video-count">0</strong></div>
+          <div><span>Recruiters</span><strong>25K+</strong></div>
+          <div><span>Reports</span><strong>18K+</strong></div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="admin-tab-panel" id="admin-tab-settings">
+
+      <div class="admin-panel-card">
+        <h3>⚙️ Platform Settings</h3>
+        <p>Configure access, roles, visibility, platform modes, and future subscription tools.</p>
+
+        <button class="zeus-action-btn" onclick="window.comingSoon('Admin Settings')">
+          Open Settings
+        </button>
+      </div>
 
     </div>
 
   </section>
 
-  <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
-
-      <!-- Athlete Command Center -->
-
-      <!-- War Room -->
-
-      <!-- Media Locker -->
-
-      <!-- Gear Vault -->
-
-  </div>
+</div>
 
   <!-- ===========================================
        ADMIN GRID

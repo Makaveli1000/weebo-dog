@@ -1,6 +1,7 @@
 // ======================================================
 // PAGE RENDER IMPORTS
 // ======================================================
+import { renderAdminPage } from "./pages/admin.js";
 import { renderHomePage } from "./pages/home.js";
 import { renderAthletesDirectory } from "./pages/athletes.js";
 import { renderAthletePage } from "./pages/athlete.js";
@@ -663,6 +664,11 @@ function renderRecruiting() {
   container.innerHTML = renderRecruitingPage();
 }
 
+function bindEvents() {
+  $("tier-select")?.addEventListener("change", () => { refreshSubTierOptions(); processAndRenderFilteredAthletes(); });
+  $("sub-tier-select")?.addEventListener("change", processAndRenderFilteredAthletes);
+}
+
 // ==========================================
 // FILTER MATRIX CONTROLLER
 // ==========================================
@@ -1132,12 +1138,17 @@ function loadLiveGearMarketplace() {
 // EVENT LISTENERS MATRIX BOUNDS
 // ==========================================
 
-function bindEvents() {
-  $("tier-select")?.addEventListener("change", () => { refreshSubTierOptions(); processAndRenderFilteredAthletes(); });
-  $("sub-tier-select")?.addEventListener("change", processAndRenderFilteredAthletes);
+function renderAdmin() {
+  const root = document.getElementById("admin-platform");
+  if (!root) return;
 
-  $("reset-draft-btn")?.addEventListener("click", () => {
-    squadA = []; squadB = [];
+  root.innerHTML = renderAdminPage();
+}
+
+  function initializeAdminEvents() {
+
+$("reset-draft-btn")?.addEventListener(() => {    
+squadA = []; squadB = [];
     renderDraftBoards();
   });
 
@@ -1272,6 +1283,8 @@ renderHighlightFeedPage();
 renderLiveGames();
 renderMarketplace();
 renderZeusAI();
+renderAdmin();
+initializeAdminEvents();
 
 initializeLiveSportsTicker();
 initializeGearLightbox();
@@ -1279,8 +1292,11 @@ initializeMediaLockerEngine();
 loadLiveGearMarketplace();
 
 onAuthStateChanged(auth, async (user) => {
-  const adminPlatform = document.getElementById("admin-platform");
 
+  renderAdmin();
+
+const adminPlatform =
+document.getElementById("admin-platform");
   if (user) {
     await handleSignedInUser(user);
 

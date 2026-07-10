@@ -1,0 +1,381 @@
+<!-- ==========================================
+     ADMIN CENTER MODULE
+========================================== -->
+
+<section class="admin-dashboard-v2">
+
+  <div class="admin-dashboard-header">
+
+    <div>
+      <p class="network-kicker">Admin Center</p>
+      <h2>Snt.L.Mo. Platform Control Center</h2>
+      <p>
+        Manage athletes, videos, draft boards, media uploads,
+        analytics, and platform settings from one clean dashboard.
+      </p>
+    </div>
+
+    <div class="admin-dashboard-status">
+      <span>ADMIN MODE</span>
+      <strong>ACTIVE</strong>
+    </div>
+
+  </div>
+
+  <div class="admin-tabs">
+
+    <button class="active" onclick="window.switchAdminTab('athletes')">
+      👤 Athletes
+    </button>
+
+    <button onclick="window.switchAdminTab('videos')">
+      🎥 Videos
+    </button>
+
+    <button onclick="window.switchAdminTab('draft')">
+      🧢 Draft Room
+    </button>
+
+    <button onclick="window.switchAdminTab('media')">
+      📁 Media
+    </button>
+
+    <button onclick="window.switchAdminTab('analytics')">
+      📊 Analytics
+    </button>
+
+    <button onclick="window.switchAdminTab('settings')">
+      ⚙️ Settings
+    </button>
+
+  </div>
+
+<!-- ==========================================
+     TAB: ATHLETES
+========================================== -->
+
+<div class="admin-tab-panel active" id="admin-tab-athletes">
+
+  <div class="admin-panel-card">
+
+    <h3>👤 Athlete Command Center</h3>
+
+    <p>
+      Add athletes, update recruiting profiles, manage scores,
+      and control the national athlete database.
+    </p>
+
+    <div class="admin-clean-grid">
+
+      <div class="admin-tool-card">
+        <h4>Athlete Form</h4>
+        <p>Create new athlete profiles and update existing athlete data.</p>
+
+        <div id="admin-athlete-form-mount"></div>
+      </div>
+
+      <div class="admin-tool-card">
+        <h4>Grid Filters</h4>
+        <p>Filter athletes by tier, category, sport, and recruiting level.</p>
+
+        <div id="admin-filters-mount"></div>
+      </div>
+
+      <div class="admin-tool-card admin-wide">
+        <h4>Current Apex Predator</h4>
+        <p>Top-rated athlete currently leading the Zeus evaluation matrix.</p>
+
+        <div id="admin-apex-mount"></div>
+      </div>
+
+      <div class="admin-tool-card admin-wide">
+        <h4>St. Louis Metric Evaluation Matrix</h4>
+        <p>Live synced athlete table powered by your database.</p>
+
+        <div id="admin-matrix-mount"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ==========================================
+     TAB: VIDEOS
+========================================== -->
+
+<div class="admin-tab-panel" id="admin-tab-videos">
+
+  <div class="admin-panel-card">
+
+    <h3>🎥 Video Management</h3>
+
+    <p>
+      Upload highlight film, organize playlists, connect videos
+      to athlete profiles, and manage recruiting media.
+    </p>
+
+    <div class="admin-clean-grid">
+
+      <div class="admin-tool-card">
+
+        <h4>Playlist Entry</h4>
+
+        <p>
+          Add YouTube or uploaded video links directly to an athlete.
+        </p>
+
+        <div id="admin-playlist-form-mount"></div>
+
+      </div>
+
+      <div class="admin-tool-card">
+
+        <h4>Media Queue</h4>
+
+        <p>
+          Pending highlight uploads waiting for review.
+        </p>
+
+        <div id="admin-media-queue"></div>
+
+      </div>
+
+      <div class="admin-tool-card admin-wide">
+
+        <h4>Video Library</h4>
+
+        <p>
+          Every highlight stored inside the Snt.L.Mo. media vault.
+        </p>
+
+        <div id="admin-video-library"></div>
+
+      </div>
+
+      <div class="admin-tool-card admin-wide">
+
+        <h4>Featured Highlight Preview</h4>
+
+        <p>
+          Review the currently selected athlete's featured film.
+        </p>
+
+        <div id="admin-highlight-preview"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ==========================================
+     TAB: DRAFT ROOM
+========================================== -->
+
+<div class="admin-tab-panel" id="admin-tab-draft">
+
+  <div class="admin-panel-card">
+
+    <h3>🧢 Live War Room</h3>
+
+    <p>
+      Build recruiting boards, Team St. Louis Elite,
+      Regional Challengers, and future showcase rosters.
+    </p>
+
+    <div class="admin-clean-grid">
+
+      <div class="admin-tool-card admin-wide">
+
+        <h4>Draft Board</h4>
+
+        <div id="admin-draft-board"></div>
+
+      </div>
+
+      <div class="admin-tool-card">
+
+        <h4>Team St. Louis Elite</h4>
+
+        <div id="admin-team-a"></div>
+
+      </div>
+
+      <div class="admin-tool-card">
+
+        <h4>Regional Challengers</h4>
+
+        <div id="admin-team-b"></div>
+
+      </div>
+
+      <div class="admin-tool-card admin-wide">
+
+        <h4>War Room Chat</h4>
+
+        <div id="admin-war-room-chat"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ==========================================
+     TAB: MEDIA
+========================================== -->
+
+<div class="admin-tab-panel" id="admin-tab-media">
+
+  <div class="admin-panel-card">
+
+    <h3>📁 Media Locker</h3>
+
+    <p>
+      Upload videos, manage cloud assets, organize files,
+      and attach media to athlete profiles.
+    </p>
+
+    <div class="admin-clean-grid">
+
+      <div class="admin-tool-card admin-wide">
+
+        <h4>Media Upload</h4>
+
+        <div id="admin-media-upload"></div>
+
+      </div>
+
+      <div class="admin-tool-card">
+
+        <h4>Upload Status</h4>
+
+        <div id="admin-upload-status"></div>
+
+      </div>
+
+      <div class="admin-tool-card">
+
+        <h4>Storage Stats</h4>
+
+        <div id="admin-storage-stats"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ==========================================
+     TAB: ANALYTICS
+========================================== -->
+
+<div class="admin-tab-panel" id="admin-tab-analytics">
+
+  <div class="admin-panel-card">
+
+    <h3>📊 Platform Analytics</h3>
+
+    <p>
+      Track athletes, videos, recruiters, uploads,
+      watchlists, engagement, and Zeus AI reports.
+    </p>
+
+    <div class="admin-analytics-grid">
+
+      <div>
+        <span>Athletes</span>
+        <strong id="admin-athlete-count">0</strong>
+      </div>
+
+      <div>
+        <span>Videos</span>
+        <strong id="admin-video-count">0</strong>
+      </div>
+
+      <div>
+        <span>Recruiters</span>
+        <strong>25K+</strong>
+      </div>
+
+      <div>
+        <span>Zeus Reports</span>
+        <strong>18K+</strong>
+      </div>
+
+      <div>
+        <span>Watchlists</span>
+        <strong>4.8K</strong>
+      </div>
+
+      <div>
+        <span>College Matches</span>
+        <strong>12K+</strong>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ==========================================
+     TAB: SETTINGS
+========================================== -->
+
+<div class="admin-tab-panel" id="admin-tab-settings">
+
+  <div class="admin-panel-card">
+
+    <h3>⚙️ Platform Settings</h3>
+
+    <p>
+      Manage platform visibility, data cleanup,
+      access controls, and future subscription tools.
+    </p>
+
+    <div class="admin-clean-grid">
+
+      <div class="admin-tool-card">
+
+        <h4>Data Cleanup</h4>
+
+        <p>Remove duplicates and clean database records.</p>
+
+        <button
+          id="admin-purge-btn"
+          class="zeus-action-btn">
+          ⚠️ Clear Duplicates
+        </button>
+
+      </div>
+
+      <div class="admin-tool-card">
+
+        <h4>Platform Controls</h4>
+
+        <p>Coming soon: public/private mode, subscriptions, and roles.</p>
+
+        <button
+          class="zeus-action-btn"
+          onclick="window.comingSoon('Platform Settings')">
+          Open Settings
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+</section>
