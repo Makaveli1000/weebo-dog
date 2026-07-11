@@ -69,6 +69,7 @@ import {
 // ==========================================
 // ⚡ CORE INFRASTRUCTURE CONFIGURATION
 // ==========================================
+
 const firebaseConfig = {
   apiKey: "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
   authDomain: "sntlmoexclusivesportsgrid.firebaseapp.com",

@@ -109,3 +109,299 @@
     grid-column: auto;
   }
 }
+
+/* ==========================================
+   ATHLETE ACADEMICS
+========================================== */
+
+.academic-info-panel {
+  grid-column: 1 / -1;
+}
+
+.academic-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.academic-stat-card {
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: #020617;
+}
+
+.academic-stat-card span {
+  display: block;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.academic-stat-card strong {
+  display: block;
+  margin-top: 6px;
+  color: white;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.academic-honors-section {
+  margin-top: 22px;
+}
+
+.academic-honors-section h4 {
+  color: #f8d34d;
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.academic-honors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.academic-honor-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 13px;
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 14px;
+  background: rgba(212, 175, 55, 0.06);
+}
+
+.academic-honor-card strong {
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.academic-empty-message {
+  margin-top: 10px;
+  color: #64748b;
+}
+
+@media (max-width: 800px) {
+  .academic-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .academic-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+   ATHLETE TIMELINE
+========================================== */
+
+.athlete-timeline-panel {
+  grid-column: 1 / -1;
+}
+
+.athlete-timeline {
+  display: grid;
+  gap: 0;
+}
+
+.athlete-timeline-item {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 14px;
+  min-height: 100px;
+}
+
+.athlete-timeline-marker {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.athlete-timeline-marker span {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 50%;
+  background: #020617;
+  font-size: 17px;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.08);
+}
+
+.athlete-timeline-marker i {
+  position: absolute;
+  top: 40px;
+  bottom: 0;
+  width: 2px;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(212, 175, 55, 0.45),
+      rgba(212, 175, 55, 0.05)
+    );
+}
+
+.athlete-timeline-content {
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 23, 42, 0.92),
+      rgba(2, 6, 23, 0.98)
+    );
+}
+
+.athlete-timeline-content small {
+  display: block;
+  color: #f8d34d;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.athlete-timeline-content strong {
+  display: block;
+  margin-top: 5px;
+  color: white;
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.athlete-timeline-content p {
+  margin-top: 7px;
+  color: #94a3b8;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+@media (max-width: 520px) {
+  .athlete-timeline-item {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .athlete-timeline-marker span {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+  }
+
+  .athlete-timeline-marker i {
+    top: 34px;
+  }
+}
+
+/* ==========================================
+   ATHLETE OFFERS
+========================================== */
+
+.athlete-offers-panel {
+  grid-column: 1 / -1;
+}
+
+.athlete-offer-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(230px, 1fr)
+  );
+  gap: 14px;
+}
+
+.athlete-offer-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 23, 42, 0.94),
+      rgba(2, 6, 23, 0.98)
+    );
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.athlete-offer-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+.athlete-offer-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.07);
+  font-size: 21px;
+}
+
+.athlete-offer-copy strong {
+  display: block;
+  color: white;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.athlete-offer-copy span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.athlete-offer-status {
+  padding: 6px 9px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.athlete-offer-status.is-offer {
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(212, 175, 55, 0.1);
+  color: #f8d34d;
+}
+
+.athlete-offer-status.is-interest {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.85);
+  color: #cbd5e1;
+}
+
+@media (max-width: 520px) {
+  .athlete-offer-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .athlete-offer-status {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
