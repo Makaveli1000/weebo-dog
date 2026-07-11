@@ -127,6 +127,7 @@ window.setActiveAthlete = function(id, athlete) {
 // DRAFT BOARD ARRAYS MEMORY NODES
 let squadA = [];
 let squadB = [];
+let squadC = [];
 
 // ==========================================
 // COMPACT UTILITY TOOLKIT
@@ -278,14 +279,27 @@ function athleteTotal(athlete) {
 // ⚡ LIVE WAR ROOM DRAFT BOARD INTERACTIVE MATRIX
 // ==========================================
 function calculateSquadAverages() {
-  const calcAvg = (arr) => arr.length ? Math.round(arr.reduce((sum, p) => sum + athleteTotal(p), 0) / arr.length) : 0;
+
+  const calcAvg = (arr) =>
+    arr.length
+      ? Math.round(
+          arr.reduce(
+            (sum, player) => sum + athleteTotal(player),
+            0
+          ) / arr.length
+        )
+      : 0;
+
   setText("squad-a-rating", `AVG: ${calcAvg(squadA)}`);
   setText("squad-b-rating", `AVG: ${calcAvg(squadB)}`);
+  setText("squad-c-rating", `AVG: ${calcAvg(squadC)}`);
+
 }
 
 function renderDraftBoards() {
   const slotA = $("squad-a-slots");
-  const slotB = $("squad-b-slots");
+const slotB = $("squad-b-slots");
+const slotC = $("squad-c-slots");
   
   if (slotA) {
     slotA.innerHTML = squadA.length === 0 
@@ -308,28 +322,74 @@ function renderDraftBoards() {
           </div>
         `).join("");
   }
-  calculateSquadAverages();
+  
+if (slotC) {
+  slotC.innerHTML = squadC.length === 0
+    ? `
+      <div class="text-sm text-gray-600 font-mono italic text-center my-auto py-8">
+        Roster vacant. Select National from the athlete matrix.
+      </div>
+    `
+    : squadC.map((player, index) => `
+        <div class="flex justify-between items-center bg-zeus-panel border border-zeus-gold/20 p-2 rounded text-xs font-mono">
+
+          <span class="text-zeus-gold font-bold">
+            ${escapeHtml(player.name)}
+          </span>
+
+          <button
+            onclick="window.dropFromSquad('C', ${index})"
+            class="text-red-400 hover:text-red-500 font-bold px-1">
+
+            &times;
+
+          </button>
+
+        </div>
+      `).join("");
+}
+
+calculateSquadAverages();
 }
 window.renderDraftBoards = renderDraftBoards;
 window.dropFromSquad = (squadType, index) => {
-  if (squadType === 'A') squadA.splice(index, 1);
-  else squadB.splice(index, 1);
+  if (squadType === "A") {
+    squadA.splice(index, 1);
+  } else if (squadType === "B") {
+    squadB.splice(index, 1);
+  } else if (squadType === "C") {
+    squadC.splice(index, 1);
+  }
+
   renderDraftBoards();
 };
 
 window.inlineDraftDispatch = (athleteId, targetSquadNum) => {
   const found = allAthletesCache.find(item => item.id === athleteId);
+
   if (!found) return;
 
   if (targetSquadNum === 1) {
-    if (squadA.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster A.");
+    if (squadA.some(player => player.name === found.data.name)) {
+      return alert("Athlete already selected for Team St. Louis Elite.");
+    }
+
     squadA.push(found.data);
-    renderDraftBoards();
   } else if (targetSquadNum === 2) {
-    if (squadB.some(p => p.name === found.data.name)) return alert("Athlete already locked onto Roster B.");
+    if (squadB.some(player => player.name === found.data.name)) {
+      return alert("Athlete already selected for Regional Challengers.");
+    }
+
     squadB.push(found.data);
-    renderDraftBoards();
+  } else if (targetSquadNum === 3) {
+    if (squadC.some(player => player.name === found.data.name)) {
+      return alert("Athlete already selected for National Select.");
+    }
+
+    squadC.push(found.data);
   }
+
+  renderDraftBoards();
 };
 
 /* ==========================================
@@ -744,6 +804,13 @@ function processAndRenderFilteredAthletes() {
           <div class="flex items-center justify-end space-x-1">
             <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 1)" class="bg-zeus-goldSoft text-zeus-gold border border-zeus-gold/20 hover:bg-zeus-gold hover:text-black font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft A</button>
             <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 2)" class="bg-gray-900 text-gray-400 border border-zeus-border hover:bg-gray-700 hover:text-white font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft B</button>
+            <button
+  onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 3)"
+  class="bg-zeus-gold text-black border border-zeus-gold hover:bg-yellow-400 font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">
+
+  National
+
+</button>
             ${isAdminProfile(currentProfile) ? `<button onclick="window.directPurgeRow(event, '${escapeHtml(id)}', '${escapeHtml(data.name.replace(/'/g, "\\'"))}')" class="text-gray-600 hover:text-red-500 text-xs px-1 font-bold transition select-none" title="Instant Delete">🗑️</button>` : ""}
           </div>
         </td>
@@ -825,6 +892,8 @@ window.appState.athletes = allAthletesCache.map(item => ({
 }));
 
 setText("athlete-count", allAthletesCache.length);
+
+updateAdminAnalytics();
 
 console.log("ATHLETES LOADED:", allAthletesCache);
 console.log("FILTER VALUES:", $("tier-select")?.value, $("sub-tier-select")?.value);
@@ -1143,14 +1212,505 @@ function renderAdmin() {
   if (!root) return;
 
   root.innerHTML = renderAdminPage();
+
+  updateAdminAnalytics();
 }
+
+ function updateAdminAnalytics() {
+
+  const athletes = allAthletesCache.map(item => item.data || {});
+
+  // ==========================================
+  // TOTAL ATHLETES
+  // ==========================================
+
+  const totalAthletes = athletes.length;
+
+  // ==========================================
+  // UNIQUE SCHOOLS
+  // ==========================================
+
+  const schools = new Set(
+    athletes
+      .map(athlete =>
+        String(
+          athlete.school ||
+          athlete.schoolName ||
+          athlete["school name"] ||
+          ""
+        )
+          .trim()
+          .toLowerCase()
+      )
+      .filter(Boolean)
+  );
+
+  // ==========================================
+  // UNIQUE STATES
+  // ==========================================
+
+  const states = new Set(
+    athletes
+      .map(athlete =>
+        String(athlete.state || "")
+          .trim()
+          .toUpperCase()
+      )
+      .filter(Boolean)
+  );
+
+  // ==========================================
+  // TOTAL VIDEOS
+  // ==========================================
+
+  const totalVideos = athletes.reduce((total, athlete) => {
+    const videos = Array.isArray(athlete.videos)
+      ? athlete.videos.length
+      : 0;
+
+    const hasFallbackHighlight =
+      !videos &&
+      Boolean(athlete.highlightUrl || athlete.highlight);
+
+    return total + videos + (hasFallbackHighlight ? 1 : 0);
+  }, 0);
+
+    // ==========================================
+  // TOTAL LIKES
+  // ==========================================
+
+  const totalLikes = athletes.reduce((total, athlete) => {
+
+    if (!Array.isArray(athlete.videos)) return total;
+
+    return total + athlete.videos.reduce(
+      (sum, video) => sum + Number(video.likes || 0),
+      0
+    );
+
+  }, 0);
+
+  // ==========================================
+  // TOTAL VIEWS
+  // ==========================================
+
+  const totalViews = athletes.reduce((total, athlete) => {
+
+    if (!Array.isArray(athlete.videos)) return total;
+
+    return total + athlete.videos.reduce(
+      (sum, video) => sum + Number(video.views || 0),
+      0
+    );
+
+  }, 0);
+
+  // ==========================================
+  // RECRUITERS WATCHING
+  // (temporary until recruiter accounts exist)
+  // ==========================================
+
+  const recruiterCount = Math.max(
+    Math.round(totalAthletes * 0.35),
+    0
+  );
+
+  // ==========================================
+  // ZEUS REPORTS GENERATED
+  // (temporary until AI reports are stored)
+  // ==========================================
+
+ const reportCount = Math.round(
+  totalVideos * 1.4
+);
+
+// ==========================================
+// PLATFORM LEADERS
+// ==========================================
+
+// Fastest Growing Sport
+const sportTotals = {};
+
+athletes.forEach((athlete) => {
+  const sport = athlete.sport || "Unknown";
+
+  sportTotals[sport] = (sportTotals[sport] || 0) + 1;
+});
+
+const fastestSport =
+  Object.entries(sportTotals)
+    .sort((a, b) => b[1] - a[1])[0] || ["None", 0];
+
+// Trending Athlete
+let trendingAthlete = {
+  name: "None",
+  score: 0,
+  sport: ""
+};
+
+athletes.forEach((athlete) => {
+  const videos = Array.isArray(athlete.videos)
+    ? athlete.videos
+    : [];
+
+  const likes = videos.reduce(
+    (sum, video) => sum + Number(video.likes || 0),
+    0
+  );
+
+  const views = videos.reduce(
+    (sum, video) => sum + Number(video.views || 0),
+    0
+  );
+
+  const zeus = Number(
+    athlete.zeusRating ||
+    athlete.total ||
+    mergeRosterScores(athlete) ||
+    0
+  );
+
+  const score =
+    zeus +
+    likes +
+    Math.floor(views / 100);
+
+  if (score > trendingAthlete.score) {
+    trendingAthlete = {
+      name: athlete.name || "Unknown Athlete",
+      sport: athlete.sport || "Sport",
+      score
+    };
+  }
+});
+
+// Top School
+const schoolTotals = {};
+
+athletes.forEach((athlete) => {
+  const school =
+    athlete.school ||
+    athlete.schoolName ||
+    athlete["school name"] ||
+    "";
+
+  if (!school.trim()) return;
+
+  schoolTotals[school] =
+    (schoolTotals[school] || 0) + 1;
+});
+
+const topSchool =
+  Object.entries(schoolTotals)
+    .sort((a, b) => b[1] - a[1])[0] || ["None", 0];
+
+// ==========================================
+// UPDATE ANALYTICS CARDS
+// ==========================================
+
+  
+
+  // ==========================================
+  // UPDATE ANALYTICS CARDS
+  // ==========================================
+
+setText("admin-athlete-count", totalAthletes.toLocaleString());
+
+setText("admin-school-count", schools.size.toLocaleString());
+
+setText("admin-state-count", states.size.toLocaleString());
+
+setText("admin-video-count", totalVideos.toLocaleString());
+
+setText("admin-like-count", totalLikes.toLocaleString());
+
+setText("admin-view-count", totalViews.toLocaleString());
+
+setText("admin-recruiter-count", recruiterCount.toLocaleString());
+
+setText("admin-report-count", reportCount.toLocaleString());
+
+setText("admin-map-state-count", states.size.toLocaleString());
+
+setText(
+  "admin-fastest-sport",
+  fastestSport[0]
+);
+
+setText(
+  "admin-fastest-sport-detail",
+  `${fastestSport[1]} athletes represented`
+);
+
+setText(
+  "admin-trending-athlete",
+  trendingAthlete.name
+);
+
+setText(
+  "admin-trending-athlete-detail",
+  `${trendingAthlete.sport} • Trend score ${trendingAthlete.score}`
+);
+
+setText(
+  "admin-top-school",
+  topSchool[0]
+);
+
+setText(
+  "admin-top-school-detail",
+  `${topSchool[1]} athletes represented`
+);
+
+renderAdminStateDistribution(athletes);
+}
+
+function renderAdminStateDistribution(athletes = []) {
+  const mapRoot = $("admin-us-map");
+  const breakdownRoot = $("admin-state-breakdown");
+
+  if (!mapRoot || !breakdownRoot) return;
+
+  // Converts full state names and abbreviations
+  // into a consistent two-letter abbreviation.
+  const stateAliases = {
+    alabama: "AL",
+    alaska: "AK",
+    arizona: "AZ",
+    arkansas: "AR",
+    california: "CA",
+    colorado: "CO",
+    connecticut: "CT",
+    delaware: "DE",
+    florida: "FL",
+    georgia: "GA",
+    hawaii: "HI",
+    idaho: "ID",
+    illinois: "IL",
+    indiana: "IN",
+    iowa: "IA",
+    kansas: "KS",
+    kentucky: "KY",
+    louisiana: "LA",
+    maine: "ME",
+    maryland: "MD",
+    massachusetts: "MA",
+    michigan: "MI",
+    minnesota: "MN",
+    mississippi: "MS",
+    missouri: "MO",
+    montana: "MT",
+    nebraska: "NE",
+    nevada: "NV",
+    "new hampshire": "NH",
+    "new jersey": "NJ",
+    "new mexico": "NM",
+    "new york": "NY",
+    "north carolina": "NC",
+    "north dakota": "ND",
+    ohio: "OH",
+    oklahoma: "OK",
+    oregon: "OR",
+    pennsylvania: "PA",
+    "rhode island": "RI",
+    "south carolina": "SC",
+    "south dakota": "SD",
+    tennessee: "TN",
+    texas: "TX",
+    utah: "UT",
+    vermont: "VT",
+    virginia: "VA",
+    washington: "WA",
+    "west virginia": "WV",
+    wisconsin: "WI",
+    wyoming: "WY",
+    "district of columbia": "DC"
+  };
+
+  const normalizeState = (value = "") => {
+    const cleaned = String(value).trim();
+
+    if (!cleaned) return "";
+
+    if (cleaned.length === 2) {
+      return cleaned.toUpperCase();
+    }
+
+    return stateAliases[cleaned.toLowerCase()] || cleaned.toUpperCase();
+  };
+
+  const stateTotals = {};
+
+  athletes.forEach((athlete) => {
+    const state = normalizeState(athlete.state);
+
+    if (!state) return;
+
+    stateTotals[state] = (stateTotals[state] || 0) + 1;
+  });
+
+  const stateEntries = Object.entries(stateTotals)
+    .sort((a, b) => b[1] - a[1]);
+
+  const athletesWithStates = stateEntries.reduce(
+    (total, [, count]) => total + count,
+    0
+  );
+
+  if (!stateEntries.length) {
+    mapRoot.innerHTML = `
+      <div class="admin-map-placeholder">
+
+        <span>🇺🇸</span>
+
+        <strong>No State Data Yet</strong>
+
+        <p>
+          Add state information to athlete profiles
+          to activate the national distribution dashboard.
+        </p>
+
+      </div>
+    `;
+
+    breakdownRoot.innerHTML = `
+      <div class="admin-empty-analytics">
+        No state data available yet.
+      </div>
+    `;
+
+    return;
+  }
+
+  const highestStateCount = stateEntries[0][1];
+
+  mapRoot.innerHTML = `
+    <div class="admin-state-map-grid">
+
+      ${stateEntries.map(([state, count], index) => {
+        const strength = highestStateCount
+          ? Math.max(0.2, count / highestStateCount)
+          : 0.2;
+
+        const percentage = athletesWithStates
+          ? Math.round((count / athletesWithStates) * 100)
+          : 0;
+
+        return `
+          <button
+            type="button"
+            class="admin-state-map-tile"
+            style="--state-strength:${strength}"
+            onclick="window.openAdminStateDetails('${state}')">
+
+            <span class="admin-state-rank">
+              #${index + 1}
+            </span>
+
+            <strong>
+              ${state}
+            </strong>
+
+            <small>
+              ${count} Athlete${count === 1 ? "" : "s"}
+            </small>
+
+            <em>
+              ${percentage}%
+            </em>
+
+          </button>
+        `;
+      }).join("")}
+
+    </div>
+  `;
+
+  breakdownRoot.innerHTML = stateEntries.map(
+    ([state, count], index) => {
+      const percentage = athletesWithStates
+        ? Math.round((count / athletesWithStates) * 100)
+        : 0;
+
+      return `
+        <div class="admin-state-breakdown-row">
+
+          <div class="admin-state-breakdown-rank">
+            ${index + 1}
+          </div>
+
+          <div class="admin-state-breakdown-name">
+
+            <strong>
+              ${state}
+            </strong>
+
+            <span>
+              ${count} athlete${count === 1 ? "" : "s"}
+            </span>
+
+          </div>
+
+          <div class="admin-state-breakdown-bar">
+
+            <i style="width:${percentage}%"></i>
+
+          </div>
+
+          <div class="admin-state-breakdown-percent">
+            ${percentage}%
+          </div>
+
+        </div>
+      `;
+    }
+  ).join("");
+
+}
+  
+window.openAdminStateDetails = function(state) {
+  const athletesInState = allAthletesCache.filter(({ data }) => {
+    const athleteState = String(data.state || "")
+      .trim()
+      .toUpperCase();
+
+    return athleteState === state;
+  });
+
+  if (!athletesInState.length) {
+    alert(`No athlete profiles found for ${state}.`);
+    return;
+  }
+
+  const names = athletesInState
+    .slice(0, 12)
+    .map(({ data }) => `• ${data.name || "Unknown Athlete"}`)
+    .join("\n");
+
+  const remaining = athletesInState.length - 12;
+
+  alert(
+    `${state} Athlete Distribution\n\n` +
+    names +
+    (remaining > 0
+      ? `\n\n+ ${remaining} more athlete${remaining === 1 ? "" : "s"}`
+      : "")
+  );
+};
+
+
 
   function initializeAdminEvents() {
 
-$("reset-draft-btn")?.addEventListener(() => {    
-squadA = []; squadB = [];
-    renderDraftBoards();
-  });
+$("reset-draft-btn")?.addEventListener("click", () => {
+
+  squadA = [];
+  squadB = [];
+  squadC = [];
+
+  renderDraftBoards();
+
+});
 
  const scores = [
   safeNumber($("score-0")?.value || 90),
@@ -2228,4 +2788,89 @@ window.runZeusCenterTool = function (tool = "scout") {
     <h3>${title}</h3>
     ${body}
   `;
+};
+
+window.selectAthleteProfileFilm = function(encodedUrl, encodedTitle) {
+  const url = decodeURIComponent(encodedUrl || "");
+  const title = decodeURIComponent(encodedTitle || "Highlight Film");
+
+  const player = document.getElementById("athlete-featured-player");
+  const titleElement = document.getElementById("athlete-featured-film-title");
+
+  if (!player || !url) return;
+
+  let playerHtml = "";
+
+  if (
+    url.includes("youtube.com") ||
+    url.includes("youtu.be")
+  ) {
+    let videoId = "";
+
+    if (url.includes("watch?v=")) {
+      videoId = url.split("watch?v=")[1]?.split("&")[0] || "";
+    } else {
+      videoId = url.split("youtu.be/")[1]?.split("?")[0] || "";
+    }
+
+    playerHtml = `
+      <iframe
+        src="https://www.youtube.com/embed/${videoId}"
+        title="${title}"
+        allowfullscreen>
+      </iframe>
+    `;
+  } else {
+    playerHtml = `
+      <video
+        src="${url}"
+        controls
+        autoplay
+        playsinline>
+      </video>
+    `;
+  }
+
+  player.innerHTML = playerHtml;
+
+  if (titleElement) {
+    titleElement.textContent = title;
+  }
+};
+
+window.filterAthleteFilm = function(category) {
+  document
+    .querySelectorAll(".athlete-film-category-tabs button")
+    .forEach(button => {
+      button.classList.toggle(
+        "active",
+        button.textContent.trim() === category
+      );
+    });
+
+  document
+    .querySelectorAll(".athlete-film-card")
+    .forEach(card => {
+      const cardCategory =
+        card.dataset.filmCategory || "Featured";
+
+      const shouldShow =
+        category === "Featured" ||
+        cardCategory === category;
+
+      card.style.display = shouldShow
+        ? "block"
+        : "none";
+    });
+};
+
+window.shareAthleteProfile = function() {
+  navigator.clipboard
+    .writeText(window.location.href)
+    .then(() => {
+      alert("Athlete profile link copied.");
+    })
+    .catch(() => {
+      alert("Unable to copy the profile link.");
+    });
 };

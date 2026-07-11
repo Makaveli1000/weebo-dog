@@ -1,0 +1,111 @@
+/* ==========================================
+   ATHLETE MEASUREMENTS
+========================================== */
+
+.athlete-measurements-grid {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.athlete-panel-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.athlete-panel-heading h3 {
+  margin: 2px 0 0;
+  color: white;
+  font-size: 23px;
+  font-weight: 950;
+}
+
+.athlete-measurement-badge {
+  padding: 7px 10px;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.09);
+  color: #f8d34d;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+}
+
+.athlete-vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.athlete-vital-card {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: #020617;
+}
+
+.athlete-vital-card-wide {
+  grid-column: 1 / -1;
+}
+
+.athlete-vital-card span,
+.testing-stat-card span {
+  display: block;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.athlete-vital-card strong,
+.testing-stat-card strong {
+  display: block;
+  margin-top: 6px;
+  color: white;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.testing-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.testing-stat-card {
+  padding: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 23, 42, 0.94),
+      rgba(2, 6, 23, 0.98)
+    );
+}
+
+.testing-stat-card strong {
+  color: #f8d34d;
+}
+
+@media (max-width: 850px) {
+  .athlete-measurements-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .athlete-vitals-grid,
+  .testing-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .athlete-vital-card-wide {
+    grid-column: auto;
+  }
+}

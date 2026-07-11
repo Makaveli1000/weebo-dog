@@ -243,65 +243,7 @@ export function renderAdminPage() {
   </div>
 
 </div>
-
-          <div class="admin-grid-filter-section">
-
-  <h4 class="text-zeus-gold font-black uppercase tracking-wider mb-3">
-
-    Grid Filters
-
-  </h4>
-
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-    <div>
-
-      <label class="text-xs text-gray-400 uppercase">
-
-        Select Tier
-
-      </label>
-
-      <select
-        id="tier-filter"
-        class="w-full mt-2 bg-zeus-black border border-zeus-border rounded p-3 text-white">
-
-        <option value="all">
-
-          All Tiers
-
-        </option>
-
-      </select>
-
-    </div>
-
-    <div>
-
-      <label class="text-xs text-gray-400 uppercase">
-
-        Refine View
-
-      </label>
-
-      <select
-        id="subcategory-filter"
-        class="w-full mt-2 bg-zeus-black border border-zeus-border rounded p-3 text-white">
-
-        <option value="all">
-
-          All Sub-Categories
-
-        </option>
-
-      </select>
-
-    </div>
-
-  </div>
-
-</div>
-
+         
           <hr class="notes-divider">
 
           <div class="border border-zeus-gold/20 bg-zeus-goldSoft p-4 rounded-xl flex items-center justify-between shadow-zeus-soft">
@@ -309,7 +251,7 @@ export function renderAdminPage() {
   <div>
 
     <span class="text-[10px] font-mono text-zeus-gold uppercase tracking-widest block">
-      Current Apex Predator
+      Current Apex Athlete
     </span>
 
     <span
@@ -342,10 +284,75 @@ export function renderAdminPage() {
 
           <hr class="notes-divider">
 
-          <div id="admin-matrix-root"></div>
+          <div class="border border-zeus-border bg-zeus-black rounded-xl overflow-hidden">
+
+  <div class="p-4 border-b border-zeus-border bg-zeus-panel/50 flex flex-wrap gap-3 justify-between items-center">
+
+    <span class="text-xs font-black text-white uppercase tracking-wider font-mono">
+      Zeus National Athlete Evaluation Matrix
+    </span>
+
+    <span
+      id="grid-count-badge"
+      class="text-[10px] font-mono bg-zeus-panel text-gray-400 px-2 py-0.5 rounded uppercase border border-zeus-border">
+
+      0 Active Athletes
+
+    </span>
+
+  </div>
+
+  <div class="overflow-x-auto">
+
+    <table class="w-full text-left border-collapse border-spacing-0">
+
+      <thead>
+
+        <tr class="bg-zeus-panel text-gray-500 text-[10px] uppercase font-mono tracking-wider border-b border-zeus-border">
+
+          <th class="p-3 font-medium">
+            Athlete Name
+          </th>
+
+          <th class="p-3 text-center font-medium">
+            Primary Attribute
+          </th>
+
+          <th class="p-3 text-center font-medium">
+            Performance Tier
+          </th>
+
+          <th class="p-3 text-center font-medium">
+            Total Composite
+          </th>
+
+          <th class="p-3 text-center font-medium">
+            Discipline
+          </th>
+
+          <th class="p-3 text-right font-medium">
+            Roster Actions
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody
+        id="match-grid-body"
+        class="text-sm font-mono divide-y divide-zeus-border">
+
+        <!-- Filled by Firebase -->
+
+      </tbody>
+
+        </table>
+
+  </div>
+
+</div>
 
         </div>
-
       </div>
 
       <!-- ==========================================
@@ -365,48 +372,294 @@ export function renderAdminPage() {
             and connect videos to athlete profiles.
           </p>
 
-          <div id="admin-playlist-root"></div>
+          <div class="admin-video-entry">
+
+  <div class="admin-tool-card">
+
+    <h4 class="text-zeus-gold font-black uppercase tracking-wider">
+      Playlist Entry
+    </h4>
+
+    <p class="text-gray-400 text-sm mt-2 mb-4">
+      Select an athlete from the evaluation matrix, then add a YouTube
+      or storage video URL to that athlete’s playlist.
+    </p>
+
+    <label
+      for="new-vid-title"
+      class="block text-xs text-gray-500 uppercase tracking-wider mb-1">
+      Video Title
+    </label>
+
+    <input
+      type="text"
+      id="new-vid-title"
+      placeholder="Example: Senior Season Highlights"
+      class="w-full bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white mb-3">
+
+    <label
+      for="new-vid-url"
+      class="block text-xs text-gray-500 uppercase tracking-wider mb-1">
+      YouTube or Storage URL
+    </label>
+
+    <input
+      type="text"
+      id="new-vid-url"
+      placeholder="https://youtube.com/... or Firebase storage URL"
+      class="w-full bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white mb-4">
+
+    <button
+      type="button"
+      onclick="window.handleAdminAddVideo()"
+      class="w-full bg-zeus-gold text-black font-black py-3 rounded uppercase tracking-wider">
+
+      Add Video to Athlete
+
+    </button>
+
+  </div>
+
+</div>
 
           <hr class="notes-divider">
 
-          <div id="admin-highlight-theater-root"></div>
+          <div
+  id="highlight-theater"
+  class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-3">
+
+  <div class="flex flex-wrap gap-3 justify-between items-center">
+
+    <div>
+
+      <h4 class="text-xs font-black tracking-wider text-zeus-gold uppercase font-mono">
+        Featured Highlight Preview
+      </h4>
+
+      <p class="text-xs text-gray-500 mt-1">
+        Select an athlete from the evaluation matrix to preview their film.
+      </p>
+
+    </div>
+
+    <span
+      id="now-playing-title"
+      class="text-[10px] font-mono text-gray-500 uppercase truncate max-w-[300px]">
+
+      Select an athlete to play
+
+    </span>
+
+  </div>
+
+  <div class="aspect-video w-full rounded-lg overflow-hidden bg-black/60 border border-zeus-border flex items-center justify-center relative p-2">
+
+    <div
+      id="video-placeholder"
+      class="text-center p-6 space-y-2 absolute inset-0 flex flex-col items-center justify-center bg-zeus-black/90 z-10 transition-opacity duration-300">
+
+      <span class="text-4xl">
+        🎥
+      </span>
+
+      <strong class="block text-sm text-white uppercase tracking-wider">
+        No Highlight Selected
+      </strong>
+
+      <span class="block text-xs text-gray-500">
+        Choose an athlete from the Athletes tab.
+      </span>
+
+    </div>
+
+    <div
+      id="theater-media-viewport"
+      class="w-full h-full flex items-center justify-center">
+    </div>
+
+  </div>
+
+</div>
 
         </div>
 
       </div>
 
       <!-- ==========================================
-           DRAFT ROOM
-      ========================================== -->
+     DRAFT ROOM
+========================================== -->
 
-      <div
-        class="admin-tab-panel"
-        id="admin-tab-draft">
+<div
+  class="admin-tab-panel"
+  id="admin-tab-draft">
 
-        <div class="admin-panel-card">
+  <div class="admin-panel-card">
 
-          <h3>🧢 Draft Room</h3>
+    <h3>🧢 National Draft Room</h3>
 
-          <p>
-            Build showcase rosters, compare teams,
-            and manage the live War Room board.
+    <p>
+      Build local, regional, and national showcase rosters
+      from the Zeus National Athlete Evaluation Matrix.
+    </p>
+
+    <div
+      id="roster-builder-vault"
+      class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-5">
+
+      <div class="flex flex-wrap gap-4 justify-between items-center border-b border-zeus-border/60 pb-4">
+
+        <div>
+
+          <h4 class="text-sm font-black tracking-wider text-zeus-gold uppercase font-mono">
+            Live National Draft Board
+          </h4>
+
+          <p class="text-xs text-gray-500 mt-1">
+            Use Draft A, Draft B, or National from the athlete matrix.
           </p>
 
-          <div id="admin-draft-root"></div>
+        </div>
 
-          <hr class="notes-divider">
+        <button
+          id="reset-draft-btn"
+          type="button"
+          class="bg-red-950/40 hover:bg-zeus-red border border-red-900/60 hover:border-red-500 text-red-400 hover:text-white font-mono text-xs font-bold uppercase px-4 py-2 rounded transition">
 
-          <div id="admin-chat-root"></div>
+          Reset All Rosters
+
+        </button>
+
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+        <!-- TEAM ST. LOUIS ELITE -->
+
+        <div class="bg-zeus-black/50 border border-zeus-border rounded-xl p-4 space-y-3">
+
+          <div class="flex justify-between items-center border-b border-zeus-border/40 pb-3">
+
+            <div>
+              <span class="block text-sm font-black text-white uppercase tracking-tight">
+                ⚜️ Team St. Louis Elite
+              </span>
+
+              <small class="text-gray-500">
+                Local Elite Roster
+              </small>
+            </div>
+
+            <span
+              id="squad-a-rating"
+              class="text-xs font-bold bg-zeus-goldSoft text-zeus-gold px-2 py-1 rounded border border-zeus-gold/20">
+
+              AVG: 0
+
+            </span>
+
+          </div>
+
+          <div
+            id="squad-a-slots"
+            class="space-y-2 min-h-[200px] flex flex-col justify-start">
+
+            <div class="text-sm text-gray-600 font-mono italic text-center my-auto py-8">
+              Roster vacant. Select Draft A from the athlete matrix.
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- REGIONAL CHALLENGERS -->
+
+        <div class="bg-zeus-black/50 border border-zeus-border rounded-xl p-4 space-y-3">
+
+          <div class="flex justify-between items-center border-b border-zeus-border/40 pb-3">
+
+            <div>
+              <span class="block text-sm font-black text-white uppercase tracking-tight">
+                🚀 Regional Challengers
+              </span>
+
+              <small class="text-gray-500">
+                Regional Showcase Roster
+              </small>
+            </div>
+
+            <span
+              id="squad-b-rating"
+              class="text-xs font-bold bg-gray-900 text-gray-400 px-2 py-1 rounded border border-zeus-border">
+
+              AVG: 0
+
+            </span>
+
+          </div>
+
+          <div
+            id="squad-b-slots"
+            class="space-y-2 min-h-[200px] flex flex-col justify-start">
+
+            <div class="text-sm text-gray-600 font-mono italic text-center my-auto py-8">
+              Roster vacant. Select Draft B from the athlete matrix.
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- NATIONAL SELECT -->
+
+        <div class="bg-zeus-black/50 border border-zeus-gold/30 rounded-xl p-4 space-y-3 shadow-zeus-soft">
+
+          <div class="flex justify-between items-center border-b border-zeus-gold/20 pb-3">
+
+            <div>
+              <span class="block text-sm font-black text-zeus-gold uppercase tracking-tight">
+                🇺🇸 National Select
+              </span>
+
+              <small class="text-gray-500">
+                National Prospect Roster
+              </small>
+            </div>
+
+            <span
+              id="squad-c-rating"
+              class="text-xs font-bold bg-zeus-goldSoft text-zeus-gold px-2 py-1 rounded border border-zeus-gold/20">
+
+              AVG: 0
+
+            </span>
+
+          </div>
+
+          <div
+            id="squad-c-slots"
+            class="space-y-2 min-h-[200px] flex flex-col justify-start">
+
+            <div class="text-sm text-gray-600 font-mono italic text-center my-auto py-8">
+              Roster vacant. Select National from the athlete matrix.
+            </div>
+
+          </div>
 
         </div>
 
       </div>
 
-      <!-- ==========================================
-           MEDIA
-      ========================================== -->
+    </div>
 
-      <div
+  </div>
+
+</div>
+
+<!-- ==========================================
+     MEDIA
+========================================== -->
+      
+       <div
         class="admin-tab-panel"
         id="admin-tab-media">
 
@@ -426,49 +679,332 @@ export function renderAdminPage() {
       </div>
 
       <!-- ==========================================
-           ANALYTICS
-      ========================================== -->
+     ZEUS NATIONAL ANALYTICS CENTER
+========================================== -->
 
-      <div
-        class="admin-tab-panel"
-        id="admin-tab-analytics">
+<div
+  class="admin-tab-panel"
+  id="admin-tab-analytics">
 
-        <div class="admin-panel-card">
+  <div class="admin-panel-card">
 
-          <h3>📊 Platform Analytics</h3>
+    <div class="admin-analytics-header">
 
-          <p>
-            Track athletes, videos, recruiters,
-            Zeus reports, watchlists, and platform growth.
+      <div>
+
+        <p class="network-kicker">
+          Zeus Intelligence Network
+        </p>
+
+        <h3>
+          📊 Zeus National Analytics Center
+        </h3>
+
+        <p>
+          Live platform intelligence covering athletes, schools,
+          states, highlights, recruiting activity, and national growth.
+        </p>
+
+      </div>
+
+      <div class="admin-analytics-status">
+
+        <span>LIVE DATA</span>
+
+        <strong>
+          ● CONNECTED
+        </strong>
+
+      </div>
+
+    </div>
+
+    <!-- ==========================================
+         PRIMARY ANALYTICS CARDS
+    ========================================== -->
+
+    <div class="admin-analytics-grid admin-analytics-grid-large">
+
+      <div class="admin-analytics-card">
+
+        <span class="admin-analytics-icon">
+          👥
+        </span>
+
+        <div>
+          <small>Total Athletes</small>
+
+          <strong id="admin-athlete-count">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="admin-analytics-card">
+
+        <span class="admin-analytics-icon">
+          🏫
+        </span>
+
+        <div>
+          <small>Schools</small>
+
+          <strong id="admin-school-count">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="admin-analytics-card">
+
+        <span class="admin-analytics-icon">
+          🗺️
+        </span>
+
+        <div>
+          <small>States Represented</small>
+
+          <strong id="admin-state-count">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="admin-analytics-card">
+
+        <span class="admin-analytics-icon">
+          🎥
+        </span>
+
+        <div>
+          <small>Videos Uploaded</small>
+
+          <strong id="admin-video-count">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="admin-analytics-card">
+
+        <span class="admin-analytics-icon">
+          ❤️
+        </span>
+
+        <div>
+          <small>Total Likes</small>
+
+          <strong id="admin-like-count">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="admin-analytics-card">
+
+        <span class="admin-analytics-icon">
+          👀
+        </span>
+
+        <div>
+          <small>Total Views</small>
+
+          <strong id="admin-view-count">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="admin-analytics-card">
+
+        <span class="admin-analytics-icon">
+          🎓
+        </span>
+
+        <div>
+          <small>Recruiters Watching</small>
+
+          <strong id="admin-recruiter-count">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="admin-analytics-card">
+
+        <span class="admin-analytics-icon">
+          📄
+        </span>
+
+        <div>
+          <small>Zeus AI Reports</small>
+
+          <strong id="admin-report-count">
+            0
+          </strong>
+        </div>
+
+      </div>
+
+    </div>
+
+    <hr class="notes-divider">
+
+    <!-- ==========================================
+         PLATFORM LEADERS
+    ========================================== -->
+
+    <div class="admin-insight-grid">
+
+      <div class="admin-insight-card">
+
+        <span class="admin-insight-icon">
+          📈
+        </span>
+
+        <small>
+          Fastest Growing Sport
+        </small>
+
+        <strong id="admin-fastest-sport">
+          Loading...
+        </strong>
+
+        <p id="admin-fastest-sport-detail">
+          Analyzing athlete growth.
+        </p>
+
+      </div>
+
+      <div class="admin-insight-card">
+
+        <span class="admin-insight-icon">
+          🔥
+        </span>
+
+        <small>
+          Trending Athlete
+        </small>
+
+        <strong id="admin-trending-athlete">
+          Loading...
+        </strong>
+
+        <p id="admin-trending-athlete-detail">
+          Analyzing ratings, film, and engagement.
+        </p>
+
+      </div>
+
+      <div class="admin-insight-card">
+
+        <span class="admin-insight-icon">
+          🏆
+        </span>
+
+        <small>
+          Top School
+        </small>
+
+        <strong id="admin-top-school">
+          Loading...
+        </strong>
+
+        <p id="admin-top-school-detail">
+          Calculating athlete representation.
+        </p>
+
+      </div>
+
+    </div>
+
+    <hr class="notes-divider">
+
+    <!-- ==========================================
+         NATIONAL ATHLETE MAP
+    ========================================== -->
+
+    <div class="admin-national-map-card">
+
+      <div class="admin-national-map-header">
+
+        <div>
+
+          <p class="network-kicker">
+            National Athlete Distribution
           </p>
 
-          <div class="admin-analytics-grid">
+          <h3>
+            🌎 United States Athlete Map
+          </h3>
 
-            <div>
-              <span>Athletes</span>
-              <strong id="admin-athlete-count">0</strong>
-            </div>
+          <p>
+            Track athlete representation across every state
+            connected to the Snt.L.Mo. Sports Network.
+          </p>
 
-            <div>
-              <span>Videos</span>
-              <strong id="admin-video-count">0</strong>
-            </div>
+        </div>
 
-            <div>
-              <span>Recruiters</span>
-              <strong>25K+</strong>
-            </div>
+        <div class="admin-map-total">
 
-            <div>
-              <span>Zeus Reports</span>
-              <strong>18K+</strong>
-            </div>
+          <span>
+            States Active
+          </span>
 
-          </div>
+          <strong id="admin-map-state-count">
+            0
+          </strong>
 
         </div>
 
       </div>
+
+      <div
+        id="admin-us-map"
+        class="admin-us-map">
+
+        <div class="admin-map-placeholder">
+
+          <span>
+            🇺🇸
+          </span>
+
+          <strong>
+            National Athlete Map
+          </strong>
+
+          <p>
+            Athlete locations will appear here as state data loads.
+          </p>
+
+        </div>
+
+      </div>
+
+      <div
+        id="admin-state-breakdown"
+        class="admin-state-breakdown">
+
+        <div class="admin-empty-analytics">
+
+          No state data available yet.
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
       <!-- ==========================================
            SETTINGS

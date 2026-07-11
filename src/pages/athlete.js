@@ -1,3 +1,7 @@
+import { renderAthleteRecruiting } from "../components/athleteRecruiting.js";
+import { renderZeusScoreCard } from "../components/zeusScoreCard.js";
+import { renderAthleteMeasurements } from "../components/athleteMeasurements.js";
+
 function getVideoUrl(athlete = {}, videos = []) {
   if (videos.length && videos[0]?.url) return videos[0].url;
   return athlete.highlightUrl || athlete.highlight || "";
@@ -77,6 +81,27 @@ export function renderAthletePage(athlete = {}) {
 
   const mainVideoUrl = getVideoUrl(athlete, videos);
   const embedVideoUrl = getEmbedVideoUrl(mainVideoUrl);
+
+const featuredVideo =
+  videos[0] ||
+  (mainVideoUrl
+    ? {
+        title: "Main Highlight Film",
+        url: mainVideoUrl
+      }
+    : null);
+
+const videoCount =
+  videos.length ||
+  (mainVideoUrl ? 1 : 0);
+
+const videoCategories = [
+  "Featured",
+  "Game Film",
+  "Camp Film",
+  "Workout",
+  "Interviews"
+];
   
   const coverImage =
   athlete.coverImage ||
@@ -94,63 +119,165 @@ const seasonStats = [
   ["INTs", stats.interceptions || athlete.interceptions || "N/A"]
 ];
 
-const testing = athlete.testing || {};
+const athletePhoto =
+  athlete.photoUrl ||
+  athlete.photo ||
+  athlete.image ||
+  "assets/football1.jpg";
 
-const athleticTesting = [
-  ["40 Yard", testing.forty || athlete.forty || "N/A"],
-  ["Vertical", testing.vertical || athlete.vertical || "N/A"],
-  ["Shuttle", testing.shuttle || athlete.shuttle || "N/A"],
-  ["Bench", testing.bench || athlete.bench || "N/A"],
-  ["Wingspan", testing.wingspan || athlete.wingspan || "N/A"],
-  ["Hand Size", testing.handSize || athlete.handSize || "N/A"]
-];
+const starRating =
+  Number(score) >= 480
+    ? 5
+    : Number(score) >= 450
+      ? 4
+      : Number(score) >= 400
+        ? 3
+        : 2;
+
+const starDisplay =
+  "★".repeat(starRating) +
+  "☆".repeat(5 - starRating);
 
   return `
     <section class="athlete-profile-page">
 
-      <div class="recruiter-profile-hero">
+      <div class="recruiter-profile-hero athlete-profile-hero-v3">
 
-        <div
-  class="recruiter-hero-bg"
-  style="background-image:
-    linear-gradient(90deg, rgba(2,6,23,.96), rgba(2,6,23,.72), rgba(2,6,23,.95)),
-    url('${coverImage}');
-  "
-></div>
+  <div
+    class="recruiter-hero-bg"
+    style="
+      background-image:
+        linear-gradient(
+          90deg,
+          rgba(2,6,23,.98) 0%,
+          rgba(2,6,23,.82) 45%,
+          rgba(2,6,23,.95) 100%
+        ),
+        url('${coverImage}');
+    ">
+  </div>
 
-        <div class="recruiter-athlete-photo">
-          <img src="${athlete.photoUrl || "assets/football1.jpg"}" alt="${athlete.name || "Athlete"}">
-        </div>
+  <div class="athlete-hero-v3-content">
 
-        <div class="recruiter-hero-info">
-          <p class="network-kicker">Verified Athlete Profile</p>
+    <!-- ==========================================
+         ATHLETE PHOTO
+    ========================================== -->
 
-          <h1>${athlete.name || "Unknown Athlete"}</h1>
+    <div class="athlete-hero-v3-photo-wrap">
 
-          <h2>${position} • ${school}</h2>
+      <div class="athlete-hero-v3-photo">
 
-          <div class="recruiter-hero-tags">
-            <span>${athlete.sport || "Sport"}</span>
-            <span>Class ${classYear}</span>
-            <span>#${jersey}</span>
-            <span>${height} • ${weight}</span>
-            <span>${city}, ${state}</span>
-          </div>
-
-          <div class="recruiter-verification-row">
-            <span>✅ Verified Athlete</span>
-            <span>${hasFilm ? "🎥 Film Available" : "🎥 Film Pending"}</span>
-            <span>🤖 Zeus AI Ready</span>
-          </div>
-        </div>
-
-        <div class="recruiter-rating-tower">
-          <span>ZEUS RATING</span>
-          <strong>${score}</strong>
-          <small>Recruiting Projection</small>
-        </div>
+        <img
+          src="${athletePhoto}"
+          alt="${athlete.name || "Athlete"}">
 
       </div>
+
+      <div class="athlete-verified-badge">
+        ✓ VERIFIED
+      </div>
+
+    </div>
+
+    <!-- ==========================================
+         ATHLETE IDENTITY
+    ========================================== -->
+
+    <div class="athlete-hero-v3-identity">
+
+      <div class="athlete-hero-v3-eyebrow">
+
+        <span>
+          ${starDisplay}
+        </span>
+
+        <strong>
+          Verified National Athlete
+        </strong>
+
+      </div>
+
+      <h1>
+        ${athlete.name || "Unknown Athlete"}
+      </h1>
+
+      <h2>
+        ${position} • ${school}
+      </h2>
+
+      <p class="athlete-hero-v3-location">
+        ${city}, ${state} • Class of ${classYear}
+      </p>
+
+      <div class="athlete-hero-v3-tags">
+
+        <span>
+          ${athlete.sport || "Sport"}
+        </span>
+
+        <span>
+          ${height}
+        </span>
+
+        <span>
+          ${weight}
+        </span>
+
+        <span>
+          #${jersey}
+        </span>
+
+        <span>
+          ${hasFilm ? "🎥 Verified Film" : "🎥 Film Pending"}
+        </span>
+
+      </div>
+
+      <div class="athlete-hero-v3-actions">
+
+        <button
+          type="button"
+          onclick="window.saveAthleteToWatchlist()">
+
+          ⭐ Save Athlete
+
+        </button>
+
+        <button
+          type="button"
+          onclick="window.openRecruiterNotes()">
+
+          📝 Recruiter Notes
+
+        </button>
+
+        <button
+          type="button"
+          onclick="window.openContactCoach()">
+
+          📧 Contact Coach
+
+        </button>
+
+        <button
+          type="button"
+          onclick="window.generateZeusScoutingReport()">
+
+          📄 Zeus Report
+
+        </button>
+
+      </div>
+
+    </div>
+
+${renderZeusScoreCard(athlete)}    
+
+  </div>
+
+</div>
+
+${renderAthleteRecruiting(athlete)}
 
       <div class="athlete-quick-stats">
 
@@ -207,23 +334,12 @@ const athleticTesting = [
         <button>Zeus AI Report</button>
       </div>
 
-      <div class="athlete-profile-grid">
+<div class="athlete-profile-grid">
 
-        <div class="athlete-panel">
-          <h3>Vitals</h3>
+  ${renderAthleteMeasurements(athlete)}
 
-          <p><strong>Height:</strong> ${height}</p>
-          <p><strong>Weight:</strong> ${weight}</p>
-          <p><strong>Position:</strong> ${position}</p>
-          <p><strong>Graduation:</strong> ${classYear}</p>
-          <p><strong>School:</strong> ${school}</p>
-          <p><strong>Jersey:</strong> #${jersey}</p>
-          <p><strong>Location:</strong> ${city}, ${state}</p>
-
-        </div>
-
-        <div class="athlete-panel">
-  <h3>Biography</h3>
+  <div class="athlete-panel">
+    <h3>Biography</h3>      
 
   <p>${bio}</p>
 
@@ -237,23 +353,6 @@ const athleticTesting = [
 
     ${seasonStats.map(([label, value]) => `
       <div class="season-stat-card">
-        <span>${label}</span>
-        <strong>${value}</strong>
-      </div>
-    `).join("")}
-
-  </div>
-
-</div>
-
-<div class="athlete-panel athletic-testing-panel">
-
-  <h3>Athletic Testing</h3>
-
-  <div class="testing-stat-grid">
-
-    ${athleticTesting.map(([label, value]) => `
-      <div class="testing-stat-card">
         <span>${label}</span>
         <strong>${value}</strong>
       </div>
@@ -393,60 +492,241 @@ const athleticTesting = [
 
         </div>
 
-        <div class="athlete-panel athlete-highlight-panel profile-film-panel">
-  <h3>Highlight Film</h3>
+        <div class="athlete-panel athlete-film-room">
+
+  <div class="athlete-film-room-header">
+
+    <div>
+      <p class="network-kicker">Recruiter Film Center</p>
+      <h3>Highlight Film Room</h3>
+      <p>
+        Verified game film, training clips, interviews,
+        and recruiting highlights.
+      </p>
+    </div>
+
+    <div class="athlete-film-count">
+      <span>Videos</span>
+      <strong>${videoCount}</strong>
+    </div>
+
+  </div>
+
+  <div class="athlete-film-category-tabs">
+
+    ${videoCategories.map((category, index) => `
+      <button
+        type="button"
+        class="${index === 0 ? "active" : ""}"
+        onclick="window.filterAthleteFilm('${category}')">
+
+        ${category}
+
+      </button>
+    `).join("")}
+
+  </div>
 
   ${
-    embedVideoUrl
+    featuredVideo
       ? `
-        <div class="profile-embedded-player">
+        <div class="athlete-featured-film">
+
+          <div
+            id="athlete-featured-player"
+            class="athlete-featured-player">
+
+            ${
+              getEmbedVideoUrl(featuredVideo.url).includes("youtube.com/embed")
+                ? `
+                  <iframe
+                    src="${getEmbedVideoUrl(featuredVideo.url)}"
+                    title="${featuredVideo.title || "Featured Highlight"}"
+                    allowfullscreen>
+                  </iframe>
+                `
+                : `
+                  <video
+                    src="${featuredVideo.url}"
+                    controls
+                    playsinline>
+                  </video>
+                `
+            }
+
+          </div>
+
+          <div class="athlete-featured-film-info">
+
+            <p class="network-kicker">
+              Featured Film
+            </p>
+
+            <h4 id="athlete-featured-film-title">
+              ${featuredVideo.title || "Main Highlight Film"}
+            </h4>
+
+            <p>
+              ${athlete.name || "Athlete"} •
+              ${athlete.sport || "Sport"} •
+              ${school}
+            </p>
+
+            <div class="athlete-film-badges">
+
+              <span>✅ Verified Film</span>
+              <span>🤖 Zeus Ready</span>
+              <span>🎓 Recruiter View</span>
+
+            </div>
+
+            <div class="athlete-film-actions">
+
+              <button
+                type="button"
+                onclick="window.generateZeusScoutingReport()">
+
+                🤖 Analyze Film
+
+              </button>
+
+              <button
+                type="button"
+                onclick="window.saveAthleteToWatchlist()">
+
+                ⭐ Save Athlete
+
+              </button>
+
+              <button
+                type="button"
+                onclick="window.shareAthleteProfile?.()">
+
+                📤 Share Profile
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="athlete-film-library-header">
+
+          <div>
+            <h4>Film Library</h4>
+            <p>Select any clip to load it into the featured player.</p>
+          </div>
+
+          <span>
+            ${videoCount} Clip${videoCount === 1 ? "" : "s"}
+          </span>
+
+        </div>
+
+        <div class="athlete-film-library">
+
           ${
-            embedVideoUrl.includes("youtube.com/embed")
-              ? `<iframe src="${embedVideoUrl}" allowfullscreen></iframe>`
-              : `<video src="${embedVideoUrl}" controls></video>`
+            videos.length
+              ? videos.map((video, index) => `
+                  <button
+                    type="button"
+                    class="athlete-film-card"
+                    data-film-category="${video.category || "Featured"}"
+                    onclick="window.selectAthleteProfileFilm(
+                      '${encodeURIComponent(video.url || "")}',
+                      '${encodeURIComponent(video.title || `Highlight ${index + 1}`)}'
+                    )">
+
+                    <div class="athlete-film-thumb">
+
+                      <span class="athlete-film-play">
+                        ▶
+                      </span>
+
+                      <span class="athlete-film-tag">
+                        ${video.category || athlete.sport || "Film"}
+                      </span>
+
+                    </div>
+
+                    <div class="athlete-film-card-copy">
+
+                      <strong>
+                        ${video.title || `Highlight ${index + 1}`}
+                      </strong>
+
+                      <small>
+                        ${video.views || 0} views •
+                        ${video.likes || 0} likes
+                      </small>
+
+                    </div>
+
+                  </button>
+                `).join("")
+              : `
+                  <button
+                    type="button"
+                    class="athlete-film-card"
+                    data-film-category="Featured"
+                    onclick="window.selectAthleteProfileFilm(
+                      '${encodeURIComponent(mainVideoUrl)}',
+                      '${encodeURIComponent("Main Highlight Film")}'
+                    )">
+
+                    <div class="athlete-film-thumb">
+
+                      <span class="athlete-film-play">
+                        ▶
+                      </span>
+
+                      <span class="athlete-film-tag">
+                        Featured
+                      </span>
+
+                    </div>
+
+                    <div class="athlete-film-card-copy">
+
+                      <strong>
+                        Main Highlight Film
+                      </strong>
+
+                      <small>
+                        Verified athlete film
+                      </small>
+
+                    </div>
+
+                  </button>
+                `
           }
+
         </div>
       `
-      : `<div class="profile-film-empty">No film loaded yet.</div>`
+      : `
+        <div class="athlete-film-empty">
+
+          <span>🎥</span>
+
+          <h4>No Film Available</h4>
+
+                  <p>
+          Highlight film has not been added to this athlete profile yet.
+        </p>
+
+      </div>
+    `
   }
 
-  <div class="profile-video-list">
-    ${
-      videos.length
-        ? videos.map((video, index) => `
-          <button
-            class="profile-video-card"
-            onclick="window.open('${video.url}', '_blank')">
-
-            <span class="profile-video-icon">▶</span>
-
-            <div>
-              <strong>${video.title || "Highlight Film"}</strong>
-              <small>Open recruiter film clip</small>
-            </div>
-          </button>
-        `).join("")
-        : athlete.highlightUrl
-          ? `
-            <button
-              class="profile-video-card"
-              onclick="window.open('${athlete.highlightUrl}', '_blank')">
-
-              <span class="profile-video-icon">▶</span>
-
-              <div>
-                <strong>Main Highlight Film</strong>
-                <small>Open verified athlete video</small>
-              </div>
-            </button>
-          `
-          : `<p>No highlight videos have been added yet.</p>`
-    }
-  </div>
 </div>
 
       </div>
 
     </section>
+
   `;
+
 }
