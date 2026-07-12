@@ -3,6 +3,8 @@
 // ======================================================
 import { renderAdminPage } from "./pages/admin.js";
 import { renderHomePage } from "./pages/home.js";
+import { renderSportsFeedPage } from "./pages/feed.js";
+import { initializeSportsFeed } from "./feed/feedController.js";
 import { renderAthletesDirectory } from "./pages/athletes.js";
 import { renderAthletePage } from "./pages/athlete.js";
 import { renderHighlightFeed } from "./pages/highlights.js";
@@ -561,11 +563,24 @@ window.openAthleteFromDirectory = function(id) {
 // PAGE RENDERERS
 // ==========================================
 
+function renderSportsFeed() {
+  const container = document.getElementById("home-root");
+
+  if (!container) return;
+
+  container.innerHTML =
+    renderSportsFeedPage(allAthletesCache);
+
+  initializeSportsFeed();
+}
+
 function renderHome() {
   const container = document.getElementById("home-root");
   if (!container) return;
 
   container.innerHTML = renderHomePage(allAthletesCache);
+
+  initializeHomeSportFilters();
 
   const overlay = document.getElementById("zeus-intro-overlay");
   const skipBtn = document.getElementById("skip-zeus-intro");
@@ -1805,10 +1820,6 @@ window.shareHighlight = function(id) {
   alert("Highlight link copied!");
 };
 
-window.commentHighlight = function(id) {
-  alert("Comments coming in Phase 2.");
-};
-
 window.zeusAnalyze = function(id) {
   window.generateZeusScoutingReport();
 };
@@ -2003,12 +2014,6 @@ window.askZeusScout = function (presetQuestion = "") {
 
 };
 
-window.commentHighlight = function(id) {
-
-  alert("💬 Comments coming next.");
-
-};
-
 window.shareHighlight = function(id) {
 
   navigator.clipboard.writeText(location.href);
@@ -2084,6 +2089,12 @@ window.openGearVault = function () {
 window.platformAction = function (action = "", label = "This feature") {
   switch (action) {
     case "home":
+      renderHome();
+      window.scrollToSection("home-root");
+      break;
+
+    case "feed":
+      renderSportsFeed();
       window.scrollToSection("home-root");
       break;
 
@@ -2875,3 +2886,122 @@ window.shareAthleteProfile = function() {
       alert("Unable to copy the profile link.");
     });
 };
+
+function normalizeHomeSport(value = "") {
+  const cleanedSport = String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/\s+/g, " ");
+
+  const sportAliases = {
+    football: "football",
+
+    "girls flag": "girls flag football",
+    "girl flag football": "girls flag football",
+    "girls flag football": "girls flag football",
+    "flag football": "girls flag football",
+
+    basketball: "basketball",
+
+    baseball: "baseball",
+
+    softball: "softball",
+
+    soccer: "soccer",
+
+    volleyball: "volleyball",
+
+    track: "track and field",
+    "track field": "track and field",
+    "track and field": "track and field",
+
+    wrestling: "wrestling",
+
+    boxing: "boxing",
+
+    hockey: "hockey",
+
+    swimming: "swimming",
+    swim: "swimming",
+
+    golf: "golf",
+
+    lacrosse: "lacrosse",
+
+    cheer: "cheer",
+    cheerleading: "cheer",
+
+    dance: "dance",
+
+    "all sports": "all sports",
+    all: "all sports"
+  };
+
+  return sportAliases[cleanedSport] || cleanedSport;
+}
+
+function initializeHomeSportFilters() {
+  const tabBar = document.getElementById("home-sports-tabs");
+
+  if (!tabBar) return;
+
+  const buttons = Array.from(
+    tabBar.querySelectorAll("[data-sport]")
+  );
+
+  const athleteCards = Array.from(
+    document.querySelectorAll("[data-athlete-card]")
+  );
+
+  const emptyMessage = document.getElementById(
+    "home-athlete-filter-empty"
+  );
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const selectedSport =
+        button.dataset.sport || "All Sports";
+
+      const normalizedSelected =
+        normalizeHomeSport(selectedSport);
+
+      let visibleCount = 0;
+
+      buttons.forEach((item) => {
+        item.classList.toggle(
+          "active",
+          item === button
+        );
+      });
+
+      athleteCards.forEach((card) => {
+        const athleteSport =
+          normalizeHomeSport(
+            card.dataset.athleteSport || ""
+          );
+
+        const showCard =
+          normalizedSelected === "all sports" ||
+          athleteSport === normalizedSelected;
+
+        card.hidden = !showCard;
+
+        if (showCard) {
+          visibleCount += 1;
+        }
+      });
+
+      if (emptyMessage) {
+        emptyMessage.classList.toggle(
+          "hidden",
+          visibleCount > 0
+        );
+      }
+    });
+  });
+}
+
+window.initializeHomeSportFilters =
+  initializeHomeSportFilters;
+

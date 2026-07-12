@@ -607,3 +607,158 @@ color:#8ecfff;
   transform: translateY(-3px);
   box-shadow: 0 15px 30px rgba(212,175,55,.35);
 }
+
+/* ==========================================
+   SPORTS SOCIAL FEED
+========================================== */
+
+.sports-feed-list {
+  display: grid;
+  gap: 28px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.sports-feed-post {
+  scroll-margin-top: 90px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 24px;
+  background: #020617;
+}
+
+.sports-feed-post[hidden] {
+  display: none;
+}
+
+.sports-feed-video {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 9 / 16;
+  max-height: 760px;
+  background: black;
+}
+
+.sports-feed-video video,
+.sports-feed-video iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: contain;
+}
+
+.sports-feed-post-body {
+  padding: 18px;
+}
+
+.sports-feed-actions,
+.sports-feed-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.sports-feed-actions button,
+.sports-feed-reactions button {
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: #0f172a;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.sports-feed-actions button.active,
+.sports-feed-reactions button.active {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.15);
+  color: #f8d34d;
+}
+
+.sports-feed-comments {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: #030712;
+}
+
+.sports-feed-comments.hidden {
+  display: none;
+}
+
+.sports-feed-comments-list {
+  display: grid;
+  gap: 10px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.sports-feed-comment {
+  padding: 10px;
+  border-radius: 12px;
+  background: #0f172a;
+}
+
+.sports-feed-comment strong {
+  color: #f8d34d;
+  font-size: 11px;
+}
+
+.sports-feed-comment p {
+  margin-top: 4px;
+  color: #e5e7eb;
+  font-size: 13px;
+}
+
+.sports-feed-comments form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.sports-feed-comments input {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 11px;
+  background: #020617;
+  color: white;
+}
+
+.sports-feed-comments form button {
+  padding: 11px 15px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 11px;
+  background: rgba(212, 175, 55, 0.12);
+  color: #f8d34d;
+  font-weight: 900;
+}
+
+.sports-feed-load-marker {
+  padding: 30px;
+  color: #64748b;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .sports-feed-list {
+    gap: 16px;
+  }
+
+  .sports-feed-post {
+    border-radius: 16px;
+  }
+
+  .sports-feed-video {
+    max-height: calc(100vh - 160px);
+  }
+
+  .sports-feed-post-body {
+    padding: 14px;
+  }
+}

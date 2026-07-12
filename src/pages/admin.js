@@ -80,11 +80,18 @@ export function renderAdminPage() {
       id="athlete-sport"
       class="w-full bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
 
-      <option value="Basketball">Basketball</option>
       <option value="Football">Football</option>
-      <option value="Track">Track / Speed</option>
-      <option value="Hockey">Hockey</option>
+      <option value="Basketball">Basketball</option>
       <option value="Baseball">Baseball</option>
+      <option value="Softball">Softball</option>
+      <option value="Soccer">Soccer</option>
+      <option value="Volleyball">Volleyball</option>
+      <option value="Track">Track & Field</option>
+      <option value="Cross Country">Cross Country</option>
+      <option value="Wrestling">Wrestling</option>
+      <option value="Boxing">Boxing</option>
+      <option value="Swimming">Swimming</option>
+      <option value="Hockey">Hockey</option>
 
     </select>
 
