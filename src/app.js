@@ -1920,12 +1920,91 @@ const zeusRating = Math.round(
     if (confirm("Clean all duplicate entries off the St. Louis scoreboard?")) await purgeGridDuplicates();
   });
   $("header-auth-btn")?.addEventListener("click", async () => { if (currentUser) await signOut(auth); else show("login-modal"); });
-  $("modal-submit-login")?.addEventListener("click", async () => {
-    const e = $("login-email")?.value.trim(); const p = $("login-pass")?.value.trim();
-    if (!e || !p) return;
-    try { await signInWithEmailAndPassword(auth, e, p); hide("login-modal"); } catch { alert("Authorization Denied"); }
-  });
-  $("login-pass")?.addEventListener("keydown", async (e) => { if (e.key === "Enter") $("modal-submit-login")?.click(); });
+  $("modal-submit-login")?.addEventListener(
+  "click",
+  async () => {
+    const email =
+      $("login-email")?.value.trim() || "";
+
+    const password =
+      $("login-pass")?.value || "";
+
+    if (!email || !password) {
+      alert("Enter your email and password.");
+      return;
+    }
+
+    const loginButton =
+      $("modal-submit-login");
+
+    if (loginButton) {
+      loginButton.disabled = true;
+      loginButton.textContent = "Verifying...";
+    }
+
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      hide("login-modal");
+    } catch (error) {
+      console.error(
+        "Firebase login failed:",
+        error
+      );
+
+      const errorCode =
+        error?.code || "unknown-error";
+
+      const messages = {
+        "auth/invalid-credential":
+          "The email or password is incorrect.",
+
+        "auth/user-not-found":
+          "No account was found for this email.",
+
+        "auth/wrong-password":
+          "The password is incorrect.",
+
+        "auth/invalid-email":
+          "The email address is not valid.",
+
+        "auth/too-many-requests":
+          "Too many login attempts. Wait a few minutes and try again.",
+
+        "auth/user-disabled":
+          "This Firebase account has been disabled.",
+
+        "auth/network-request-failed":
+          "The login request could not reach Firebase. Check your internet connection.",
+
+        "auth/operation-not-allowed":
+          "Email and password login is not enabled in Firebase Authentication."
+      };
+
+      alert(
+        messages[errorCode] ||
+        `Login failed: ${errorCode}`
+      );
+    } finally {
+      if (loginButton) {
+        loginButton.disabled = false;
+        loginButton.textContent = "Verify Authority";
+      }
+    }
+  }
+);
+  $("login-pass")?.addEventListener(
+  "keydown",
+  async (e) => {
+    if (e.key === "Enter") {
+      $("modal-submit-login")?.click();
+    }
+  }
+);
   $("send-chat-btn")?.addEventListener("click", sendChatMessage);
   $("chat-message-input")?.addEventListener("keydown", async (e) => { if (e.key === "Enter") await sendChatMessage(); });
 }
