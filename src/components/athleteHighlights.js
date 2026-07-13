@@ -174,31 +174,39 @@ export function renderAthleteHighlights(athlete = {}) {
 
                 <div class="athlete-film-actions">
 
-                  <button
-                    type="button"
-                    onclick="window.generateZeusScoutingReport?.()">
+  <button
+    type="button"
+    onclick="window.generateZeusScoutingReport?.()">
 
-                    Analyze Film
+    Analyze Film
 
-                  </button>
+  </button>
 
-                  <button
-                    type="button"
-                    onclick="window.saveAthleteToWatchlist?.()">
+  <button
+    type="button"
+    onclick="window.saveAthleteToWatchlist?.()">
 
-                    Save Athlete
+    Save Athlete
 
-                  </button>
+  </button>
 
-                  <button
-                    type="button"
-                    onclick="window.shareAthleteProfile?.()">
+  <button
+    type="button"
+    onclick="window.shareAthleteProfile?.()">
 
-                    Share Profile
+    Share Profile
 
-                  </button>
+  </button>
 
-                </div>
+  <button
+    type="button"
+    onclick="window.openAthleteSportsFeed?.('${athlete.id || ""}')">
+
+    View Feed Videos
+
+  </button>
+
+</div>
 
               </div>
 

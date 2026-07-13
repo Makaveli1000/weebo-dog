@@ -275,8 +275,14 @@ function renderFeedPost(post = {}) {
       class="sports-feed-post"
       data-feed-post
       data-feed-post-id="${escapeFeedHtml(post.id)}"
+      data-feed-athlete-id="${escapeFeedHtml(post.athleteId)}"
       data-feed-sport="${escapeFeedHtml(post.sport)}"
       data-feed-category="${escapeFeedHtml(post.category)}"
+      data-feed-created-at="${
+        post.createdAt?.seconds
+          ? post.createdAt.seconds * 1000
+          : Date.parse(post.createdAt || "") || 0
+      }"
       data-trending-score="${calculateTrendingScore(post)}">
 
       <div class="sports-feed-video">
@@ -455,14 +461,114 @@ function renderFeedPost(post = {}) {
 
         </div>
 
+<div class="sports-feed-profile-link">
+
+  <button
+    type="button"
+    data-feed-open-athlete
+    data-athlete-id="${escapeFeedHtml(post.athleteId)}">
+
+    👤 View ${escapeFeedHtml(post.athleteName)}'s Profile
+
+  </button>
+
+</div>
       </div>
 
     </article>
   `;
 }
 
-export function renderSportsFeedPage(athletes = []) {
-  const posts = createFeedPosts(athletes)
+export function renderSportsFeedPage(
+  athletes = [],
+  storedFeedPosts = []
+) {
+  const athletePosts =
+  createFeedPosts(athletes);
+
+const firebasePosts = Array.isArray(
+  storedFeedPosts
+)
+  ? storedFeedPosts.map((post) => ({
+      id: post.id || "",
+
+      athleteId:
+        post.athleteId || "",
+
+      athleteName:
+        post.athleteName ||
+        post.uploaderName ||
+        "Sports Creator",
+
+      athletePhoto:
+        post.athletePhoto ||
+        "assets/football1.jpg",
+
+      school:
+        post.schoolName ||
+        "School Not Listed",
+
+      sport:
+        post.sport ||
+        "Sport",
+
+      state:
+        post.state ||
+        "",
+
+      title:
+        post.title ||
+        "Sports Video",
+
+      category:
+        post.category ||
+        "Highlight",
+
+      url:
+        post.videoUrl ||
+        post.url ||
+        "",
+
+      likes:
+        Number(post.likes || 0),
+
+      views:
+        Number(post.viewCount || post.views || 0),
+
+      comments:
+        Number(post.commentCount || 0),
+
+      shares:
+        Number(post.shareCount || post.shares || 0),
+
+      createdAt:
+        post.createdAt ||
+        null,
+
+      hashtags:
+        Array.isArray(post.hashtags)
+          ? post.hashtags
+          : []
+    }))
+  : [];
+
+const firebaseUrls = new Set(
+  firebasePosts
+    .map((post) => post.url)
+    .filter(Boolean)
+);
+
+const legacyPostsWithoutDuplicates =
+  athletePosts.filter(
+    (post) =>
+      !firebaseUrls.has(post.url)
+  );
+
+const posts = [
+  ...firebasePosts,
+  ...legacyPostsWithoutDuplicates
+]
+  .filter((post) => post.url)
     .sort(
       (a, b) =>
         calculateTrendingScore(b) -
@@ -599,14 +705,338 @@ export function renderSportsFeedPage(athletes = []) {
 
 </div>
 
-<div
-  id="sports-feed-load-marker"
-  class="sports-feed-load-marker">
+      <div
+        id="sports-feed-load-marker"
+        class="sports-feed-load-marker">
 
-  Loading more sports content...
+        Loading more sports content...
 
-</div>
+      </div>
 
-</section>
-`;
+      <!-- ==========================================
+           SPORTS FEED UPLOAD MODAL
+      ========================================== -->
+
+      <div
+        id="feed-upload-modal"
+        class="feed-upload-modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="feed-upload-modal-title">
+
+        <div class="feed-upload-modal-backdrop"></div>
+
+        <div class="feed-upload-modal-card">
+
+          <div class="feed-upload-modal-header">
+
+            <div>
+
+              <p class="network-kicker">
+                Creator Studio
+              </p>
+
+              <h2 id="feed-upload-modal-title">
+                Upload Sports Video
+              </h2>
+
+              <p>
+                Upload one video and connect it to the
+                Sports Feed, athlete profile, school page,
+                rankings, and recruiting system.
+              </p>
+
+            </div>
+
+            <button
+              type="button"
+              class="feed-upload-close-btn"
+              data-close-feed-upload
+              aria-label="Close upload form">
+
+              ×
+
+            </button>
+
+          </div>
+
+          <form
+            id="feed-upload-form"
+            class="feed-upload-form">
+
+            <!-- VIDEO FILE -->
+
+            <label class="feed-upload-field feed-upload-field-full">
+
+              <span>
+                Video File
+              </span>
+
+              <input
+                type="file"
+                id="feed-upload-file"
+                accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"
+                required>
+
+              <small>
+                MP4, WebM, or MOV. Maximum size: 250 MB.
+              </small>
+
+            </label>
+
+            <!-- TITLE -->
+
+            <label class="feed-upload-field feed-upload-field-full">
+
+              <span>
+                Video Title
+              </span>
+
+              <input
+                type="text"
+                id="feed-upload-title"
+                maxlength="120"
+                placeholder="Example: Game-Winning Touchdown"
+                required>
+
+            </label>
+
+            <!-- DESCRIPTION -->
+
+            <label class="feed-upload-field feed-upload-field-full">
+
+              <span>
+                Description
+              </span>
+
+              <textarea
+                id="feed-upload-description"
+                maxlength="600"
+                placeholder="Describe the play, workout, interview, or sports moment."></textarea>
+
+            </label>
+
+            <div class="feed-upload-grid">
+
+              <!-- CATEGORY -->
+
+              <label class="feed-upload-field">
+
+                <span>
+                  Category
+                </span>
+
+                <select
+                  id="feed-upload-category"
+                  required>
+
+                  <option value="Highlight">
+                    🎥 Highlight
+                  </option>
+
+                  <option value="Workout">
+                    💪 Workout
+                  </option>
+
+                  <option value="Training">
+                    🏋 Training
+                  </option>
+
+                  <option value="Sports Comedy">
+                    😂 Sports Comedy
+                  </option>
+
+                  <option value="Interview">
+                    🎙 Interview
+                  </option>
+
+                  <option value="Team Hype">
+                    📣 Team Hype
+                  </option>
+
+                  <option value="Championship">
+                    🏆 Championship
+                  </option>
+
+                  <option value="Trick Shot">
+                    🎯 Trick Shot
+                  </option>
+
+                  <option value="Film Breakdown">
+                    📚 Film Breakdown
+                  </option>
+
+                </select>
+
+              </label>
+
+              <!-- ATHLETE -->
+
+              <label class="feed-upload-field">
+
+                <span>
+                  Connect Athlete
+                </span>
+
+                <select id="feed-upload-athlete">
+
+                  <option value="">
+                    No athlete selected
+                  </option>
+
+                </select>
+
+              </label>
+
+              <!-- SPORT -->
+
+              <label class="feed-upload-field">
+
+                <span>
+                  Sport
+                </span>
+
+                <select
+                  id="feed-upload-sport"
+                  required>
+
+                  <option value="">
+                    Select Sport
+                  </option>
+
+                  <option value="Football">Football</option>
+                  <option value="Girls Flag Football">Girls Flag Football</option>
+                  <option value="Basketball">Basketball</option>
+                  <option value="Baseball">Baseball</option>
+                  <option value="Softball">Softball</option>
+                  <option value="Soccer">Soccer</option>
+                  <option value="Volleyball">Volleyball</option>
+                  <option value="Track & Field">Track & Field</option>
+                  <option value="Cross Country">Cross Country</option>
+                  <option value="Wrestling">Wrestling</option>
+                  <option value="Boxing">Boxing</option>
+                  <option value="Hockey">Hockey</option>
+                  <option value="Swimming">Swimming</option>
+                  <option value="Tennis">Tennis</option>
+                  <option value="Golf">Golf</option>
+                  <option value="Lacrosse">Lacrosse</option>
+                  <option value="Bowling">Bowling</option>
+                  <option value="Gymnastics">Gymnastics</option>
+                  <option value="Cheer">Cheer</option>
+                  <option value="Dance">Dance</option>
+                  <option value="Weightlifting">Weightlifting</option>
+
+                </select>
+
+              </label>
+
+              <!-- SCHOOL -->
+
+              <label class="feed-upload-field">
+
+                <span>
+                  School or Team
+                </span>
+
+                <input
+                  type="text"
+                  id="feed-upload-school"
+                  maxlength="120"
+                  placeholder="Example: Vashon High School">
+
+              </label>
+
+              <!-- STATE -->
+
+              <label class="feed-upload-field">
+
+                <span>
+                  State
+                </span>
+
+                <input
+                  type="text"
+                  id="feed-upload-state"
+                  maxlength="30"
+                  placeholder="Example: Missouri or MO">
+
+              </label>
+
+              <!-- HASHTAGS -->
+
+              <label class="feed-upload-field">
+
+                <span>
+                  Hashtags
+                </span>
+
+                <input
+                  type="text"
+                  id="feed-upload-hashtags"
+                  maxlength="240"
+                  placeholder="#Football #Touchdown #ClassOf2027">
+
+              </label>
+
+            </div>
+
+            <!-- UPLOAD PROGRESS -->
+
+            <div class="feed-upload-progress-area">
+
+              <div class="feed-upload-progress-heading">
+
+                <span>
+                  Upload Progress
+                </span>
+
+                <strong id="feed-upload-progress-text">
+                  Ready to upload
+                </strong>
+
+              </div>
+
+              <progress
+                id="feed-upload-progress"
+                value="0"
+                max="100">
+
+                0%
+
+              </progress>
+
+            </div>
+
+            <!-- ACTIONS -->
+
+            <div class="feed-upload-actions">
+
+              <button
+                type="button"
+                class="feed-upload-cancel-btn"
+                data-close-feed-upload>
+
+                Cancel
+
+              </button>
+
+              <button
+                type="submit"
+                class="feed-upload-submit-btn">
+
+                Upload Video
+
+              </button>
+
+            </div>
+
+          </form>
+
+        </div>
+
+      </div>
+
+    </section>
+  `;
 }
+

@@ -1,0 +1,34 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "warRoomMessages": {
+      ".read": "auth != null",
+      "$messageId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['text', 'uid', 'createdAt']) && newData.child('uid').val() == auth.uid && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 500"
+      }
+    },
+
+    "liveGameChats": {
+      "$gameId": {
+        ".read": true,
+        "$messageId": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['text', 'uid', 'createdAt']) && newData.child('uid').val() == auth.uid && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 300"
+        }
+      }
+    },
+
+    "teamChats": {
+      "$teamId": {
+        ".read": "auth != null",
+        "$messageId": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['text', 'uid', 'createdAt']) && newData.child('uid').val() == auth.uid && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 500"
+        }
+      }
+    }
+  }
+}

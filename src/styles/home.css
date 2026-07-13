@@ -762,3 +762,251 @@ color:#8ecfff;
     padding: 14px;
   }
 }
+
+/* ==========================================
+   FEED TO ATHLETE PROFILE
+========================================== */
+
+.sports-feed-profile-link {
+  margin-top: 16px;
+}
+
+.sports-feed-profile-link button {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 13px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(212, 175, 55, 0.14),
+      rgba(212, 175, 55, 0.05)
+    );
+  color: #f8d34d;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.sports-feed-profile-link button:hover {
+  transform: translateY(-2px);
+  border-color: #d4af37;
+  background: #d4af37;
+  color: #020617;
+}
+
+/* ==========================================
+   SPORTS FEED UPLOAD MODAL
+========================================== */
+
+.feed-upload-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.feed-upload-modal.hidden {
+  display: none;
+}
+
+.feed-upload-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+}
+
+.feed-upload-modal-card {
+  position: relative;
+  z-index: 2;
+  width: min(820px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 24px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 23, 42, 0.98),
+      rgba(2, 6, 23, 0.99)
+    );
+  box-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.7);
+}
+
+.feed-upload-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.feed-upload-modal-header h2 {
+  margin-top: 4px;
+  color: white;
+  font-size: 26px;
+  font-weight: 950;
+}
+
+.feed-upload-modal-header > div > p:last-child {
+  margin-top: 7px;
+  max-width: 600px;
+  color: #94a3b8;
+  line-height: 1.55;
+}
+
+.feed-upload-close-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: #020617;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.feed-upload-form {
+  padding: 24px;
+}
+
+.feed-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.feed-upload-field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.feed-upload-field-full {
+  width: 100%;
+}
+
+.feed-upload-field span {
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.feed-upload-field input,
+.feed-upload-field select,
+.feed-upload-field textarea {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: #020617;
+  color: white;
+}
+
+.feed-upload-field textarea {
+  min-height: 105px;
+  resize: vertical;
+}
+
+.feed-upload-field small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.feed-upload-progress-area {
+  margin-top: 8px;
+  padding: 15px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 14px;
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.feed-upload-progress-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 10px;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.feed-upload-progress-heading strong {
+  color: #f8d34d;
+}
+
+#feed-upload-progress {
+  width: 100%;
+  height: 12px;
+}
+
+.feed-upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.feed-upload-actions button {
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.feed-upload-cancel-btn {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0f172a;
+  color: #cbd5e1;
+}
+
+.feed-upload-submit-btn {
+  border: 1px solid #d4af37;
+  background: #d4af37;
+  color: #020617;
+}
+
+.feed-upload-submit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 650px) {
+  .feed-upload-modal {
+    padding: 10px;
+  }
+
+  .feed-upload-modal-card {
+    max-height: 96vh;
+    border-radius: 18px;
+  }
+
+  .feed-upload-modal-header,
+  .feed-upload-form {
+    padding: 18px;
+  }
+
+  .feed-upload-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feed-upload-actions {
+    display: grid;
+  }
+
+  .feed-upload-actions button {
+    width: 100%;
+  }
+}

@@ -1,5 +1,7 @@
 import { renderAthleteRecruiting } from "../components/athleteRecruiting.js";
 import { renderZeusScoreCard } from "../components/zeusScoreCard.js";
+import { renderAthleteHero } from "../components/athleteHero.js";
+import { renderAthleteVerification } from "../components/athleteVerification.js";
 import { renderAthleteMeasurements } from "../components/athleteMeasurements.js";
 import { renderAthleteAchievements } from "../components/athleteAchievements.js";
 import { renderAthleteAcademics } from "../components/athleteAcademics.js";
@@ -254,9 +256,15 @@ ${renderZeusScoreCard(athlete)}
 
 </div>
 
-${renderAthleteRecruiting(athlete)}
+${renderAthleteHero(athlete)}
 
-${renderAthleteQuickStats(athlete)}      
+${renderAthleteQuickStats(athlete)}
+
+${renderAthleteVerification(athlete)}
+
+${renderAthleteMeasurements(athlete)}
+
+${renderAthleteVideos(athlete)}      
 
       <div class="athlete-profile-tabs">
         <button class="active">Overview</button>

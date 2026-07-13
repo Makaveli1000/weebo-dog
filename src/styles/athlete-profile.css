@@ -1081,3 +1081,96 @@
     }
 
 }
+
+/* ==========================================
+   ATHLETE PROFILE 3.0
+   VERIFIED DATA
+========================================== */
+
+.athlete-verification-panel{
+    margin-top:32px;
+}
+
+.athlete-verification-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:18px;
+    margin-top:22px;
+}
+
+.athlete-verification-item{
+    display:flex;
+    align-items:center;
+    gap:18px;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    background:#101010;
+
+    border:1px solid #262626;
+}
+
+.athlete-verification-icon{
+    width:42px;
+    height:42px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:50%;
+
+    font-size:22px;
+    font-weight:900;
+}
+
+.athlete-verification-item.is-verified
+.athlete-verification-icon{
+
+    background:#16a34a;
+    color:white;
+
+}
+
+.athlete-verification-item.is-pending
+.athlete-verification-icon{
+
+    background:#444;
+    color:white;
+
+}
+
+.athlete-verification-item strong{
+
+    display:block;
+    color:white;
+
+}
+
+.athlete-verification-item small{
+
+    color:#9ca3af;
+
+}
+
+.athlete-verification-item em{
+
+    margin-left:auto;
+
+    color:#d4af37;
+
+    font-style:normal;
+
+    font-weight:800;
+
+}
+
+.athlete-verification-notice{
+
+    margin-top:18px;
+
+    color:#9ca3af;
+
+}

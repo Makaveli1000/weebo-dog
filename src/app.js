@@ -5,6 +5,7 @@ import { renderAdminPage } from "./pages/admin.js";
 import { renderHomePage } from "./pages/home.js";
 import { renderSportsFeedPage } from "./pages/feed.js";
 import { initializeSportsFeed } from "./feed/feedController.js";
+import { subscribeToFeedPosts } from "./feed/feedRepository.js";
 import { renderAthletesDirectory } from "./pages/athletes.js";
 import { renderAthletePage } from "./pages/athlete.js";
 import { renderHighlightFeed } from "./pages/highlights.js";
@@ -91,11 +92,17 @@ const storage = getStorage(app);
 // ==========================================
 // APPLICATION GLOBAL STATE MEMORY
 // ==========================================
+
 let currentUser = null;
 let currentProfile = null;
+
 let allAthletesCache = [];
+let allFeedPostsCache = [];
+
 let unsubscribeAthletes = null;
+let unsubscribeFeedPosts = null;
 let unsubscribeChat = null;
+
 let activeSelectedAthleteId = null;
 
 window.appState = {
@@ -410,11 +417,85 @@ function renderLiveGames() {
    MARKETPLACE PAGE
 ========================================== */
 
+function initializeMarketplaceFilters() {
+  const tabs = document.getElementById(
+    "marketplace-tabs"
+  );
+
+  const grid = document.getElementById(
+    "marketplace-grid"
+  );
+
+  const emptyState = document.getElementById(
+    "marketplace-empty"
+  );
+
+  if (!tabs || !grid) return;
+
+  const buttons = Array.from(
+    tabs.querySelectorAll(
+      "[data-marketplace-filter]"
+    )
+  );
+
+  const cards = Array.from(
+    grid.querySelectorAll(
+      "[data-marketplace-item]"
+    )
+  );
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const selectedFilter =
+        button.dataset.marketplaceFilter ||
+        "All";
+
+      buttons.forEach((item) => {
+        item.classList.toggle(
+          "active",
+          item === button
+        );
+      });
+
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const category =
+          card.dataset.marketplaceCategory ||
+          "";
+
+        const shouldShow =
+          selectedFilter === "All" ||
+          category === selectedFilter;
+
+        card.hidden = !shouldShow;
+
+        if (shouldShow) {
+          visibleCount += 1;
+        }
+      });
+
+      if (emptyState) {
+        emptyState.classList.toggle(
+          "hidden",
+          visibleCount > 0
+        );
+      }
+    });
+  });
+}
+
 function renderMarketplace() {
-  const container = document.getElementById("marketplace-root");
+  const container = document.getElementById(
+    "marketplace-root"
+  );
+
   if (!container) return;
 
-  container.innerHTML = renderMarketplacePage();
+  container.innerHTML =
+    renderMarketplacePage();
+
+  initializeMarketplaceFilters();
 }
 
 function renderZeusAI() {
@@ -564,14 +645,30 @@ window.openAthleteFromDirectory = function(id) {
 // ==========================================
 
 function renderSportsFeed() {
-  const container = document.getElementById("home-root");
+  const container = document.getElementById(
+    "home-root"
+  );
 
   if (!container) return;
 
   container.innerHTML =
-    renderSportsFeedPage(allAthletesCache);
+    renderSportsFeedPage(
+      allAthletesCache,
+      allFeedPostsCache
+    );
 
-  initializeSportsFeed();
+  initializeSportsFeed({
+    db,
+    storage,
+    currentUser,
+    currentProfile,
+    isAdminProfile,
+    athletes: allAthletesCache,
+
+    onUploaded: () => {
+      // Firestore subscription will refresh the Feed.
+    }
+  });
 }
 
 function renderHome() {
@@ -943,6 +1040,35 @@ if (activeSelectedAthleteId) {
   }, e => console.error(e));
 }   
 
+function subscribeToSportsFeed() {
+  if (unsubscribeFeedPosts) return;
+
+  unsubscribeFeedPosts = subscribeToFeedPosts(
+    db,
+    (posts) => {
+      allFeedPostsCache = Array.isArray(posts)
+        ? posts
+        : [];
+
+      window.appState.feedPosts =
+        allFeedPostsCache;
+
+      const feedIsOpen =
+        document.getElementById(
+          "sports-feed-page"
+        );
+
+      if (feedIsOpen) {
+        renderSportsFeed();
+      }
+    },
+    {
+      maxResults: 100,
+      status: "published"
+    }
+  );
+}
+
 // ==========================================
 // ADMINISTRATIVE UTILITY: VIDEO MANAGEMENT
 // ==========================================
@@ -973,12 +1099,26 @@ async function addVideoToTitan(athleteId, videoTitle, videoUrl) {
 // ==========================================
 
 async function handleSignedInUser(user) {
-  currentUser = user; 
-  window.appState.currentUser = user; try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    currentProfile = snap.exists() ? { uid: user.uid, email: user.email, ...snap.data() } : { uid: user.uid, email: user.email, role: "admin", nickname: "Mac10" };
-    window.appState.currentProfile = currentProfile; updateAccessUI(currentProfile); 
-    subscribeToAthletes(); 
+  currentUser = user;
+  window.appState.currentUser = user;
+
+  try {
+    const snap = await getDoc(
+      doc(db, "users", user.uid)
+    );
+
+    currentProfile = snap.exists()
+      ? snap.data()
+      : {
+          uid: user.uid,
+          email: user.email,
+          role: "fan",
+          nickname: user.email || "Sports Fan"
+        };
+
+        window.appState.currentProfile = currentProfile; updateAccessUI(currentProfile); 
+    subscribeToAthletes();
+    subscribeToSportsFeed();
     subscribeToChat();
   } catch { 
     updateAccessUI(null); 
@@ -1847,6 +1987,7 @@ hide("loading-overlay");
 registerAccountSetupHandlers(auth, db);
 registerZeusBrainHandlers(db);
 renderHome();
+subscribeToSportsFeed();
 renderAthleteDirectoryPage();
 renderSchools();
 renderRankings();

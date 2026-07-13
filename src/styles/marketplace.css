@@ -65,3 +65,13 @@
   font-size: 28px;
   margin-bottom: 14px;
 }
+
+.market-product-card[hidden] {
+  display: none;
+}
+
+.marketplace-tabs button.active {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.14);
+  color: #f8d34d;
+}
