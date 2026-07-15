@@ -119,46 +119,106 @@ export function renderAdminPage() {
       placeholder="School Name"
       class="w-full bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-
-      <input
-        type="text"
-        id="athlete-city"
-        placeholder="City"
-        class="bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
-
-      <input
-        type="text"
-        id="athlete-state"
-        placeholder="State"
-        class="bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
-
-    </div>
-
     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
 
-      <input
-        type="text"
-        id="athlete-height"
-        placeholder="Height"
-        class="bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
+  <input
+    type="text"
+    id="athlete-height"
+    placeholder="Height"
+    class="bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
 
-      <input
-        type="text"
-        id="athlete-weight"
-        placeholder="Weight"
-        class="bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
+  <input
+    type="text"
+    id="athlete-weight"
+    placeholder="Weight"
+    class="bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
 
-      <input
-        type="text"
-        id="athlete-class-year"
-        placeholder="Class Year"
-        class="bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
+  <input
+    type="text"
+    id="athlete-class-year"
+    placeholder="Class Year"
+    class="bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
 
-    </div>
+</div>
 
-    <textarea
-      id="athlete-bio"
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+  <label class="grid gap-1">
+
+    <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider">
+      Recruiting Status
+    </span>
+
+    <select
+      id="athlete-recruiting-status"
+      class="w-full bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white focus:outline-none focus:border-zeus-gold">
+
+      <option value="Open">
+        Open to Recruitment
+      </option>
+
+      <option value="Interest">
+        Receiving Interest
+      </option>
+
+      <option value="Offered">
+        Offers Received
+      </option>
+
+      <option value="Visiting">
+        Taking Visits
+      </option>
+
+      <option value="Committed">
+        Committed
+      </option>
+
+      <option value="Signed">
+        Signed
+      </option>
+
+      <option value="Transfer Portal">
+        Transfer Portal
+      </option>
+
+      <option value="Professional">
+        Professional
+      </option>
+
+    </select>
+
+  </label>
+
+  <label class="grid gap-1">
+
+    <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider">
+      Athlete Level
+    </span>
+
+    <select
+      id="athlete-tier"
+      class="w-full bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white focus:outline-none focus:border-zeus-gold">
+
+      <option value="highschool">
+        High School
+      </option>
+
+      <option value="college">
+        College
+      </option>
+
+      <option value="pro-players">
+        Professional Athlete
+      </option>
+
+    </select>
+
+  </label>
+
+</div>
+
+<textarea
+  id="athlete-bio"
       placeholder="Athlete Bio / Scouting Notes"
       class="w-full bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white min-h-[110px]"></textarea>
 
@@ -174,32 +234,148 @@ export function renderAdminPage() {
       placeholder="Achievements (comma separated)"
       class="w-full bg-zeus-black border border-zeus-border rounded p-3 text-sm text-white">
 
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+<div class="admin-score-section">
 
-      <input type="number" id="score-0" placeholder="Attr 1" min="0" max="100"
-        class="bg-zeus-black border border-zeus-border rounded p-2 text-center text-sm text-white">
+  <div class="admin-score-heading">
 
-      <input type="number" id="score-1" placeholder="Attr 2" min="0" max="100"
-        class="bg-zeus-black border border-zeus-border rounded p-2 text-center text-sm text-white">
+    <div>
+      <span>
+        Zeus Evaluation Scores
+      </span>
 
-      <input type="number" id="score-2" placeholder="Attr 3" min="0" max="100"
-        class="bg-zeus-black border border-zeus-border rounded p-2 text-center text-sm text-white">
-
-      <input type="number" id="score-3" placeholder="Attr 4" min="0" max="100"
-        class="bg-zeus-black border border-zeus-border rounded p-2 text-center text-sm text-white">
-
-      <input type="number" id="score-4" placeholder="Attr 5" min="0" max="100"
-        class="bg-zeus-black border border-zeus-border rounded p-2 text-center text-sm text-white">
-
+      <small>
+        Score each category from 0–100.
+      </small>
     </div>
 
-    <button
-      type="submit"
-      class="w-full bg-zeus-gold text-black font-black py-3 rounded uppercase tracking-wider">
+    <strong>
+      500 Maximum
+    </strong>
 
-      Commit Titan to Grid
+  </div>
 
-    </button>
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+
+    <label class="admin-score-field">
+
+      <span>
+        Athleticism
+      </span>
+
+      <small>
+        Speed, strength, explosion
+      </small>
+
+      <input
+        type="number"
+        id="score-0"
+        placeholder="0–100"
+        min="0"
+        max="100">
+
+    </label>
+
+    <label class="admin-score-field">
+
+      <span>
+        Production
+      </span>
+
+      <small>
+        Stats, impact, consistency
+      </small>
+
+      <input
+        type="number"
+        id="score-1"
+        placeholder="0–100"
+        min="0"
+        max="100">
+
+    </label>
+
+    <label class="admin-score-field">
+
+      <span>
+        Technique
+      </span>
+
+      <small>
+        Skill and position fundamentals
+      </small>
+
+      <input
+        type="number"
+        id="score-2"
+        placeholder="0–100"
+        min="0"
+        max="100">
+
+    </label>
+
+    <label class="admin-score-field">
+
+      <span>
+        Sports IQ
+      </span>
+
+      <small>
+        Awareness and decision-making
+      </small>
+
+      <input
+        type="number"
+        id="score-3"
+        placeholder="0–100"
+        min="0"
+        max="100">
+
+    </label>
+
+    <label class="admin-score-field">
+
+      <span>
+        Intangibles
+      </span>
+
+      <small>
+        Leadership, effort, character
+      </small>
+
+      <input
+        type="number"
+        id="score-4"
+        placeholder="0–100"
+        min="0"
+        max="100">
+
+    </label>
+
+  </div>
+
+</div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+  <button
+    type="submit"
+    id="athlete-submit-btn"
+    class="w-full bg-zeus-gold text-black font-black py-3 rounded uppercase tracking-wider">
+
+    Commit Titan to Grid
+
+  </button>
+
+  <button
+    type="button"
+    id="cancel-athlete-edit-btn"
+    class="hidden w-full bg-gray-900 text-gray-300 border border-zeus-border hover:border-red-700 hover:text-red-300 font-black py-3 rounded uppercase tracking-wider transition">
+
+    Cancel Edit
+
+  </button>
+
+</div>
 
   </form>
 
@@ -209,141 +385,327 @@ export function renderAdminPage() {
 
           <div class="border border-zeus-border bg-zeus-panel p-4 rounded-xl space-y-4">
 
-  <h3 class="text-xs font-black tracking-wider text-gray-400 uppercase font-mono">
-    Grid Filters
-  </h3>
+  <div class="flex flex-wrap items-center justify-between gap-3">
 
-  <div>
+    <div>
 
-    <label class="block text-[10px] font-mono text-gray-600 uppercase tracking-wider mb-1">
-      Select Tier
+      <h3 class="text-xs font-black tracking-wider text-gray-300 uppercase font-mono">
+        Recruiting Grid Filters
+      </h3>
+
+      <p class="text-[10px] text-gray-600 mt-1">
+        Refine the Zeus athlete matrix by level, sport,
+        position, class, and recruiting status.
+      </p>
+
+    </div>
+
+    <button
+      type="button"
+      id="reset-athlete-filters-btn"
+      class="border border-zeus-border bg-zeus-black hover:border-zeus-gold text-gray-400 hover:text-zeus-gold px-3 py-2 rounded text-[9px] font-black uppercase tracking-wider transition">
+
+      Reset Filters
+
+    </button>
+
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+
+    <!-- LEVEL / TIER -->
+
+    <label class="grid gap-1">
+
+      <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider">
+        Athlete Level
+      </span>
+
+      <select
+        id="tier-select"
+        class="w-full bg-zeus-black border border-zeus-border rounded p-2.5 text-xs text-white focus:outline-none focus:border-zeus-gold">
+
+        <option value="all">
+          All Levels
+        </option>
+
+        <option value="highschool">
+          High School
+        </option>
+
+        <option value="college">
+          College
+        </option>
+
+        <option value="pro-players">
+          Professional Athletes
+        </option>
+
+      </select>
+
     </label>
 
-    <select
-      id="tier-select"
-      class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white focus:outline-none focus:border-zeus-gold">
+    <!-- SPORT -->
 
-      <option value="all">All Tiers</option>
-      <option value="highschool">St. Louis High Schools</option>
-      <option value="college">Colleges (Local & National)</option>
-      <option value="pro-teams">St. Louis Home Pro Teams</option>
-      <option value="pro-players">Locals in the Pros (Domestic & Global)</option>
+    <label class="grid gap-1">
 
-    </select>
+      <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider">
+        Sport
+      </span>
+
+      <select
+        id="admin-sport-filter"
+        class="w-full bg-zeus-black border border-zeus-border rounded p-2.5 text-xs text-white focus:outline-none focus:border-zeus-gold">
+
+        <option value="all">All Sports</option>
+        <option value="Football">Football</option>
+        <option value="Girls Flag Football">Girls Flag Football</option>
+        <option value="Basketball">Basketball</option>
+        <option value="Baseball">Baseball</option>
+        <option value="Softball">Softball</option>
+        <option value="Soccer">Soccer</option>
+        <option value="Volleyball">Volleyball</option>
+        <option value="Track & Field">Track & Field</option>
+        <option value="Cross Country">Cross Country</option>
+        <option value="Wrestling">Wrestling</option>
+        <option value="Boxing">Boxing</option>
+        <option value="Hockey">Hockey</option>
+        <option value="Swimming">Swimming</option>
+        <option value="Tennis">Tennis</option>
+        <option value="Golf">Golf</option>
+        <option value="Lacrosse">Lacrosse</option>
+        <option value="Bowling">Bowling</option>
+        <option value="Gymnastics">Gymnastics</option>
+        <option value="Cheer">Cheer</option>
+        <option value="Dance">Dance</option>
+        <option value="Weightlifting">Weightlifting</option>
+
+      </select>
+
+    </label>
+
+    <!-- POSITION -->
+
+    <label class="grid gap-1">
+
+      <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider">
+        Position
+      </span>
+
+      <input
+        type="text"
+        id="admin-position-filter"
+        placeholder="QB, WR, PG, C..."
+        class="w-full bg-zeus-black border border-zeus-border rounded p-2.5 text-xs text-white focus:outline-none focus:border-zeus-gold">
+
+    </label>
+
+    <!-- CLASS -->
+
+    <label class="grid gap-1">
+
+      <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider">
+        Class Year
+      </span>
+
+      <input
+        type="text"
+        id="admin-class-filter"
+        placeholder="2027, 2028, College, Pro..."
+        class="w-full bg-zeus-black border border-zeus-border rounded p-2.5 text-xs text-white focus:outline-none focus:border-zeus-gold">
+
+    </label>
+
+    <!-- RECRUITING STATUS -->
+
+    <label class="grid gap-1">
+
+      <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider">
+        Recruiting Status
+      </span>
+
+      <select
+        id="admin-recruiting-filter"
+        class="w-full bg-zeus-black border border-zeus-border rounded p-2.5 text-xs text-white focus:outline-none focus:border-zeus-gold">
+
+        <option value="all">All Statuses</option>
+        <option value="Open">Open</option>
+        <option value="Offered">Offered</option>
+        <option value="Visiting">Visiting</option>
+        <option value="Committed">Committed</option>
+        <option value="Signed">Signed</option>
+        <option value="Transfer Portal">Transfer Portal</option>
+        <option value="Professional">Professional</option>
+
+      </select>
+
+    </label>
+
+    <!-- FILM -->
+
+    <label class="grid gap-1">
+
+      <span class="text-[10px] font-mono text-gray-600 uppercase tracking-wider">
+        Film Availability
+      </span>
+
+      <select
+        id="admin-film-filter"
+        class="w-full bg-zeus-black border border-zeus-border rounded p-2.5 text-xs text-white focus:outline-none focus:border-zeus-gold">
+
+        <option value="all">All Athletes</option>
+        <option value="with-film">With Film</option>
+        <option value="without-film">Without Film</option>
+
+      </select>
+
+    </label>
 
   </div>
 
-  <div>
+  <!-- Keep this hidden for old code compatibility -->
 
-    <label class="block text-[10px] font-mono text-gray-600 uppercase tracking-wider mb-1">
-      Refine View
-    </label>
+  <select
+    id="sub-tier-select"
+    class="hidden"
+    aria-hidden="true">
 
-    <select
-      id="sub-tier-select"
-      class="w-full bg-zeus-black border border-zeus-border rounded p-2 text-xs text-white focus:outline-none focus:border-zeus-gold">
+    <option value="all">
+      All Sub-Categories
+    </option>
 
-      <option value="all">All Sub-Categories</option>
-
-    </select>
-
-  </div>
+  </select>
 
 </div>
          
           <hr class="notes-divider">
 
-          <div class="border border-zeus-gold/20 bg-zeus-goldSoft p-4 rounded-xl flex items-center justify-between shadow-zeus-soft">
+          <div class="apex-athlete-card border border-zeus-gold/20 bg-zeus-goldSoft p-4 rounded-xl shadow-zeus-soft">
 
-  <div>
+  <div class="apex-athlete-main">
 
-    <span class="text-[10px] font-mono text-zeus-gold uppercase tracking-widest block">
-      Current Apex Athlete
-    </span>
+    <div
+      id="apex-athlete-avatar"
+      class="apex-athlete-avatar">
 
-    <span
-      id="apex-predator-name"
-      class="text-xl font-black text-white uppercase tracking-tight">
+      👤
 
-      Loading Grid Apex...
+    </div>
 
-    </span>
+    <div class="apex-athlete-copy">
+
+      <span class="text-[10px] font-mono text-zeus-gold uppercase tracking-widest block">
+        Current Apex Athlete
+      </span>
+
+      <strong
+        id="apex-predator-name"
+        class="text-xl font-black text-white uppercase tracking-tight">
+
+        Loading Grid Apex...
+
+      </strong>
+
+      <div class="apex-athlete-meta">
+
+        <span id="apex-athlete-school">
+          School N/A
+        </span>
+
+        <span id="apex-athlete-sport-position">
+          Sport • ATH
+        </span>
+
+        <span id="apex-athlete-class">
+          Class N/A
+        </span>
+
+      </div>
+
+    </div>
 
   </div>
 
-  <div class="text-right">
+  <div class="apex-athlete-rating">
 
     <span class="text-[10px] font-mono text-gray-500 uppercase block">
       Apex Rating
     </span>
 
-    <span
+    <strong
       id="apex-predator-score"
-      class="text-xl font-mono font-black text-zeus-gold">
+      class="text-2xl font-mono font-black text-zeus-gold">
 
       ---
 
-    </span>
+    </strong>
+
+    <button
+      type="button"
+      id="apex-view-profile-btn"
+      class="apex-view-profile-btn">
+
+      View Profile
+
+    </button>
 
   </div>
 
 </div>
 
-          <hr class="notes-divider">
-
-          <div class="border border-zeus-border bg-zeus-black rounded-xl overflow-hidden">
-
-  <div class="p-4 border-b border-zeus-border bg-zeus-panel/50 flex flex-wrap gap-3 justify-between items-center">
-
-    <span class="text-xs font-black text-white uppercase tracking-wider font-mono">
-      Zeus National Athlete Evaluation Matrix
-    </span>
-
-    <span
-      id="grid-count-badge"
-      class="text-[10px] font-mono bg-zeus-panel text-gray-400 px-2 py-0.5 rounded uppercase border border-zeus-border">
-
-      0 Active Athletes
-
-    </span>
-
-  </div>
-
   <div class="overflow-x-auto">
 
-    <table class="w-full text-left border-collapse border-spacing-0">
+  <table
+    id="zeus-athlete-matrix"
+    class="w-full text-left border-collapse border-spacing-0">
 
       <thead>
 
-        <tr class="bg-zeus-panel text-gray-500 text-[10px] uppercase font-mono tracking-wider border-b border-zeus-border">
+<tr class="bg-zeus-panel text-gray-500 text-[10px] uppercase font-mono tracking-wider border-b border-zeus-border">
 
-          <th class="p-3 font-medium">
-            Athlete Name
-          </th>
+<th class="p-3 text-left">
+👤 Athlete
+</th>
 
-          <th class="p-3 text-center font-medium">
-            Primary Attribute
-          </th>
+<th class="p-3 text-left">
+🏫 School
+</th>
 
-          <th class="p-3 text-center font-medium">
-            Performance Tier
-          </th>
+<th class="p-3 text-center">
+🏈 Sport
+</th>
 
-          <th class="p-3 text-center font-medium">
-            Total Composite
-          </th>
+<th class="p-3 text-center">
+🎯 Position
+</th>
 
-          <th class="p-3 text-center font-medium">
-            Discipline
-          </th>
+<th class="p-3 text-center">
+🎓 Class
+</th>
 
-          <th class="p-3 text-right font-medium">
-            Roster Actions
-          </th>
+<th class="p-3 text-center">
+⭐ Zeus Rating
+</th>
 
-        </tr>
+<th class="p-3 text-center">
+🎥 Film
+</th>
 
-      </thead>
+<th class="p-3 text-center">
+🎓 Offers
+</th>
+
+<th class="p-3 text-center">
+📡 Recruiting Status
+</th>
+
+<th class="p-3 text-right">
+⚙️ Actions
+</th>
+
+</tr>
+
+</thead>
 
       <tbody
         id="match-grid-body"

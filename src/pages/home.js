@@ -16,7 +16,7 @@ export function renderHomePage(athletes = []) {
           <img src="assets/zeus-avatar.png" alt="Zeus Avatar" class="zeus-movie-face">
 
           <div class="zeus-home-avatar-card">
-  <img src="zeus-avatar.png" alt="Zeus Avatar" class="zeus-home-avatar-img">
+  <img src="assets/zeus-avatar.png" alt="Zeus Avatar" class="zeus-home-avatar-img">
 
   <div class="zeus-home-avatar-title">
     ZEUS

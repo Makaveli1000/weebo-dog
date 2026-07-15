@@ -35,21 +35,37 @@ export function renderHero() {
 
     <div class="hero-action-buttons">
 
-      <button onclick="window.scrollToSection('athlete-directory-page')">
-        🏈 Explore Athletes
-      </button>
+      <button
+  type="button"
+  onclick="window.platformAction?.('athletes')">
 
-      <button onclick="window.scrollToSection('highlights-root')">
-        🎥 Watch Highlights
-      </button>
+  🏈 Explore Athletes
 
-      <button onclick="window.scrollToSection('rankings-root')">
-        🏆 National Rankings
-      </button>
+</button>
 
-      <button onclick="window.scrollToSection('recruiting-root')">
-        🎓 Recruiting
-      </button>
+<button
+  type="button"
+  onclick="window.platformAction?.('highlights')">
+
+  🎥 Watch Highlights
+
+</button>
+
+<button
+  type="button"
+  onclick="window.platformAction?.('rankings')">
+
+  🏆 National Rankings
+
+</button>
+
+<button
+  type="button"
+  onclick="window.platformAction?.('recruiting')">
+
+  🎓 Recruiting
+
+</button>
 
     </div>
 

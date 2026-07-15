@@ -1,11 +1,10 @@
 // ======================================================
 // PAGE RENDER IMPORTS
 // ======================================================
+
 import { renderAdminPage } from "./pages/admin.js";
 import { renderHomePage } from "./pages/home.js";
 import { renderSportsFeedPage } from "./pages/feed.js";
-import { initializeSportsFeed } from "./feed/feedController.js";
-import { subscribeToFeedPosts } from "./feed/feedRepository.js";
 import { renderAthletesDirectory } from "./pages/athletes.js";
 import { renderAthletePage } from "./pages/athlete.js";
 import { renderHighlightFeed } from "./pages/highlights.js";
@@ -17,9 +16,26 @@ import { renderZeusAiPage } from "./pages/zeus-ai.js";
 import { renderLiveGamesPage } from "./pages/live.js";
 import { renderMarketplacePage } from "./pages/marketplace.js";
 import { renderAccountSetupPage } from "./pages/account-setup.js";
-import { registerAccountSetupHandlers } from "./controllers/accountSetupController.js";
-import { registerZeusBrainHandlers } from "./controllers/zeusBrainController.js";
 import { renderZeusDashboard } from "./pages/zeusDashboard.js";
+
+// ======================================================
+// CONTROLLER / REPOSITORY IMPORTS
+// ======================================================
+
+import { initializeSportsFeed } from "./feed/feedController.js";
+import { subscribeToFeedPosts } from "./feed/feedRepository.js";
+
+import {
+  registerAccountSetupHandlers
+} from "./controllers/accountSetupController.js";
+
+import {
+  registerZeusBrainHandlers
+} from "./controllers/zeusBrainController.js";
+
+import {
+  normalizeAthleteRecord
+} from "./utils/normalizeAthlete.js";
 
 // ======================================================
 // FIREBASE IMPORTS
@@ -69,29 +85,49 @@ import {
   getDownloadURL
 } from "firebase/storage";
 
-// ==========================================
-// ⚡ CORE INFRASTRUCTURE CONFIGURATION
-// ==========================================
+// ======================================================
+// FIREBASE CONFIGURATION
+// ======================================================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
-  authDomain: "sntlmoexclusivesportsgrid.firebaseapp.com",
-  projectId: "sntlmoexclusivesportsgrid",
-  storageBucket: "sntlmoexclusivesportsgrid.firebasestorage.app",
-  messagingSenderId: "735791748207",
-  appId: "1:735791748207:web:74fd6412684db238b6e99a",
-  databaseURL: "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/"
+  apiKey:
+    "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
+
+  authDomain:
+    "sntlmoexclusivesportsgrid.firebaseapp.com",
+
+  projectId:
+    "sntlmoexclusivesportsgrid",
+
+  storageBucket:
+    "sntlmoexclusivesportsgrid.firebasestorage.app",
+
+  messagingSenderId:
+    "735791748207",
+
+  appId:
+    "1:735791748207:web:74fd6412684db238b6e99a",
+
+  databaseURL:
+    "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/"
 };
 
 const app = initializeApp(firebaseConfig);
+
 const auth = getAuth(app);
-const db = getFirestore(app, "(default)");
+
+const db = getFirestore(
+  app,
+  "(default)"
+);
+
 const rtdb = getDatabase(app);
+
 const storage = getStorage(app);
 
-// ==========================================
-// APPLICATION GLOBAL STATE MEMORY
-// ==========================================
+// ======================================================
+// APPLICATION STATE
+// ======================================================
 
 let currentUser = null;
 let currentProfile = null;
@@ -104,20 +140,34 @@ let unsubscribeFeedPosts = null;
 let unsubscribeChat = null;
 
 let activeSelectedAthleteId = null;
+let editingAthleteId = null;
+
+let squadA = [];
+let squadB = [];
+let squadC = [];
 
 window.appState = {
   currentUser: null,
   currentProfile: null,
+
   athletes: [],
+
   activeAthleteId: null,
   activeAthlete: null,
   activeSchool: null,
   activeVideo: null,
+
   activeView: "home"
 };
 
-window.setActiveAthlete = function(id, athlete) {
+// ======================================================
+// ACTIVE ATHLETE STATE
+// ======================================================
 
+window.setActiveAthlete = function (
+  id,
+  athlete = {}
+) {
   activeSelectedAthleteId = id;
 
   window.appState.activeAthleteId = id;
@@ -128,309 +178,1115 @@ window.setActiveAthlete = function(id, athlete) {
   };
 
   window.dispatchEvent(
-    new CustomEvent("sntlmo:athlete-selected", {
-      detail: window.appState.activeAthlete
-    })
+    new CustomEvent(
+      "sntlmo:athlete-selected",
+      {
+        detail:
+          window.appState.activeAthlete
+      }
+    )
   );
 };
 
-// DRAFT BOARD ARRAYS MEMORY NODES
-let squadA = [];
-let squadB = [];
-let squadC = [];
+// ======================================================
+// SHARED UTILITIES
+// ======================================================
 
-// ==========================================
-// COMPACT UTILITY TOOLKIT
-// ==========================================
-const $ = (id) => document.getElementById(id);
+const $ = (id) =>
+  document.getElementById(id);
 
-function escapeHtml(v = "") {
-  return String(v).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[c] || c));
+function escapeHtml(value = "") {
+  return String(value ?? "")
+    .replace(
+      /[&<>"']/g,
+      (character) => {
+        const entities = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        };
+
+        return (
+          entities[character] ||
+          character
+        );
+      }
+    );
 }
 
-function show(id) { $(id)?.classList.remove("hidden"); }
-function hide(id) { $(id)?.classList.add("hidden"); }
-function safeNumber(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
-function isAdminProfile(profile) { return profile?.role === "admin" || profile?.role === "editor"; }
-function hasMainAccess(profile) { return isAdminProfile(profile) || profile?.isPro === true; }
-function setText(id, text) { const el = $(id); if (el) el.textContent = text; }
-const isFirebaseStorageUrl = (url) => url.includes("firebasestorage") || url.includes(".appspot.com");
+function show(id) {
+  $(id)?.classList.remove("hidden");
+}
+
+function hide(id) {
+  $(id)?.classList.add("hidden");
+}
+
+function safeNumber(value) {
+  const number = Number(value);
+
+  return Number.isFinite(number)
+    ? number
+    : 0;
+}
+
+function setText(id, text = "") {
+  const element = $(id);
+
+  if (element) {
+    element.textContent =
+      String(text ?? "");
+  }
+}
+
+function isAdminProfile(profile) {
+  return (
+    profile?.role === "admin" ||
+    profile?.role === "editor"
+  );
+}
+
+function hasMainAccess(profile) {
+  return (
+    isAdminProfile(profile) ||
+    profile?.isPro === true
+  );
+}
+
+function isFirebaseStorageUrl(value = "") {
+  const url =
+    String(value || "");
+
+  return (
+    url.includes("firebasestorage") ||
+    url.includes(".appspot.com")
+  );
+}
 
 window.show = show;
 window.hide = hide;
 
-// ==========================================
-// 🎥 DUAL-VIEW PORT MEDIA THEATER CONTROLLER
-// ==========================================
-function getEmbedUrl(url) {
-  if (url.includes("youtube.com/watch?v=")) return url.replace("watch?v=", "embed/");
-  if (url.includes("youtu.be/")) return url.replace("youtu.be/", "youtube.com/embed/");
-  return url;
+// ======================================================
+// VIDEO URL HELPERS
+// ======================================================
+
+function getYouTubeVideoId(value = "") {
+  const url =
+    String(value || "").trim();
+
+  if (!url) {
+    return "";
+  }
+
+  try {
+    const parsedUrl =
+      new URL(
+        url,
+        window.location.origin
+      );
+
+    if (
+      parsedUrl.hostname.includes(
+        "youtu.be"
+      )
+    ) {
+      return parsedUrl.pathname
+        .replace(/^\/+/, "")
+        .split("/")[0];
+    }
+
+    if (
+      parsedUrl.hostname.includes(
+        "youtube.com"
+      )
+    ) {
+      if (
+        parsedUrl.pathname.startsWith(
+          "/embed/"
+        )
+      ) {
+        return parsedUrl.pathname
+          .split("/embed/")[1]
+          ?.split("/")[0] || "";
+      }
+
+      if (
+        parsedUrl.pathname.startsWith(
+          "/shorts/"
+        )
+      ) {
+        return parsedUrl.pathname
+          .split("/shorts/")[1]
+          ?.split("/")[0] || "";
+      }
+
+      return (
+        parsedUrl.searchParams.get("v") ||
+        ""
+      );
+    }
+  } catch (error) {
+    console.warn(
+      "Unable to parse video URL:",
+      value,
+      error
+    );
+  }
+
+  return "";
 }
 
-function playHighlight(athlete) {
-  const viewport = $("theater-media-viewport");
-  const placeholder = $("video-placeholder");
-  const titleBadge = $("now-playing-title");
-  if (!viewport || !placeholder) return;
+function getEmbedUrl(value = "") {
+  const videoId =
+    getYouTubeVideoId(value);
 
-  const videoList = athlete.videos || (athlete.highlightUrl ? [{ title: "Main Highlight", url: athlete.highlightUrl }] : []);
-  if (videoList.length === 0) {
-    viewport.innerHTML = "";
-    placeholder.classList.remove("hidden");
-    if (titleBadge) titleBadge.textContent = "Select a row to play";
+  if (!videoId) {
+    return String(value || "");
+  }
+
+  return (
+    `https://www.youtube.com/embed/` +
+    `${encodeURIComponent(videoId)}`
+  );
+}
+
+function normalizeAthleteVideos(
+  athlete = {}
+) {
+  const videos = Array.isArray(
+    athlete.videos
+  )
+    ? athlete.videos
+        .map((video, index) => {
+          if (typeof video === "string") {
+            return {
+              title:
+                `Highlight ${index + 1}`,
+              url: video
+            };
+          }
+
+          return {
+            title:
+              video?.title ||
+              `Highlight ${index + 1}`,
+
+            url:
+              video?.url ||
+              video?.videoUrl ||
+              ""
+          };
+        })
+        .filter((video) =>
+          Boolean(video.url)
+        )
+    : [];
+
+  const fallbackHighlight =
+    athlete.highlightUrl ||
+    athlete.highlight ||
+    athlete.higlightightUrl ||
+    "";
+
+  if (
+    videos.length === 0 &&
+    fallbackHighlight
+  ) {
+    videos.push({
+      title: "Main Highlight",
+      url: fallbackHighlight
+    });
+  }
+
+  return videos;
+}
+
+// ======================================================
+// DUAL-VIEW MEDIA THEATER
+// ======================================================
+
+function playHighlight(
+  athlete = {}
+) {
+  const viewport =
+    $("theater-media-viewport");
+
+  const placeholder =
+    $("video-placeholder");
+
+  const titleBadge =
+    $("now-playing-title");
+
+  if (!viewport || !placeholder) {
     return;
   }
-  placeholder.classList.add("hidden");
 
-  window.switchVideo = (index) => {
-    const v = videoList[index];
-    const url = v.url;
-    if (titleBadge) titleBadge.textContent = `Playing: ${v.title}`;
+  const videoList =
+    normalizeAthleteVideos(athlete);
 
-    let menuHtml = videoList.length > 1 ? `
-      <div class="absolute top-0 left-0 w-full bg-zeus-panel/90 p-2 flex space-x-2 overflow-x-auto z-20">
-        ${videoList.map((item, i) => `
-          <button onclick="window.switchVideo(${i})" class="text-[9px] ${i === index ? 'bg-zeus-gold text-black' : 'bg-gray-800 text-white'} px-2 py-1 rounded font-bold uppercase whitespace-nowrap">
-            ${item.title}
-          </button>
-        `).join("")}
-      </div>
-    ` : "";
+  if (!videoList.length) {
+    viewport.innerHTML = "";
 
-    if (url.includes("youtube.com") || url.includes("youtu.be")) {
-      let videoId = url.split("v=")[1] || url.split("/").pop();
-      if (videoId.includes("?")) videoId = videoId.split("?")[0];
-      viewport.innerHTML = menuHtml + `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1" class="w-full h-full" allowfullscreen></iframe>`;
-    } else {
-      viewport.innerHTML = menuHtml + `<video src="${url}" controls autoplay muted playsinline class="w-full h-full bg-black"></video>`;
+    placeholder.classList.remove(
+      "hidden"
+    );
+
+    if (titleBadge) {
+      titleBadge.textContent =
+        "Select a row to play";
     }
+
+    return;
+  }
+
+  placeholder.classList.add(
+    "hidden"
+  );
+
+  window.switchVideo = function (
+    index = 0
+  ) {
+    const selectedVideo =
+      videoList[index];
+
+    if (!selectedVideo) {
+      return;
+    }
+
+    const title =
+      selectedVideo.title ||
+      `Highlight ${index + 1}`;
+
+    const url =
+      selectedVideo.url || "";
+
+    if (!url) {
+      return;
+    }
+
+    if (titleBadge) {
+      titleBadge.textContent =
+        `Playing: ${title}`;
+    }
+
+    const playlistMarkup =
+      videoList.length > 1
+        ? `
+            <div
+              class="absolute top-0 left-0 z-20 flex w-full gap-2 overflow-x-auto bg-zeus-panel/90 p-2">
+
+              ${videoList
+                .map(
+                  (
+                    video,
+                    videoIndex
+                  ) => `
+                    <button
+                      type="button"
+                      onclick="window.switchVideo(${videoIndex})"
+                      class="${
+                        videoIndex === index
+                          ? "bg-zeus-gold text-black"
+                          : "bg-gray-800 text-white"
+                      } whitespace-nowrap rounded px-2 py-1 text-[9px] font-bold uppercase">
+
+                      ${escapeHtml(
+                        video.title ||
+                        `Highlight ${videoIndex + 1}`
+                      )}
+
+                    </button>
+                  `
+                )
+                .join("")}
+
+            </div>
+          `
+        : "";
+
+    const youtubeId =
+      getYouTubeVideoId(url);
+
+    if (youtubeId) {
+      const embedUrl =
+        getEmbedUrl(url);
+
+      viewport.innerHTML = `
+        ${playlistMarkup}
+
+        <iframe
+          src="${escapeHtml(
+            `${embedUrl}?autoplay=1&mute=1&playsinline=1`
+          )}"
+          title="${escapeHtml(title)}"
+          class="h-full w-full"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      `;
+
+      return;
+    }
+
+    viewport.innerHTML = `
+      ${playlistMarkup}
+
+      <video
+        src="${escapeHtml(url)}"
+        class="h-full w-full bg-black"
+        controls
+        autoplay
+        muted
+        playsinline>
+
+        Your browser does not support
+        this video format.
+
+      </video>
+    `;
   };
+
   window.switchVideo(0);
 }
 
-// ==========================================
-// 📥 CLOUD STORAGE RAW MEDIA LOCKER DISPATCHER
-// ==========================================
+// ======================================================
+// CLOUD STORAGE MEDIA LOCKER
+// ======================================================
+
+let mediaLockerInitialized = false;
 
 function initializeMediaLockerEngine() {
-  const fileInput = $("media-locker-file-input");
-  if (!fileInput) return;
+  if (mediaLockerInitialized) {
+    return;
+  }
 
-  fileInput.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const fileInput =
+    $("media-locker-file-input");
 
-    if (!isAdminProfile(currentProfile)) return alert("Admin access denied.");
-    if (!activeSelectedAthleteId) return alert("Select an athlete row first.");
+  if (!fileInput) {
+    return;
+  }
 
-    const subLabel = $("upload-progress-sub");
-    if (subLabel) subLabel.textContent = "UPLOADING MEDIA BLOCKS...";
+  mediaLockerInitialized = true;
 
-    const storagePath = `highlights/${activeSelectedAthleteId}/${Date.now()}_${file.name}`;
-    const uploadTask = uploadBytesResumable(storageRef(storage, storagePath), file);
+  fileInput.addEventListener(
+    "change",
+    async (event) => {
+      const file =
+        event.target.files?.[0];
 
-    uploadTask.on('state_changed', null, 
-      (error) => {
-        console.error("Upload process rejected:", error);
-        alert("Upload failed.");
-      }, 
-      async () => {
-        try {
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          const titanRef = doc(db, "athletes", activeSelectedAthleteId);
-          
-          await updateDoc(titanRef, { 
-            highlightUrl: downloadUrl,
-            videos: arrayUnion({
-              title: file.name.split('.').slice(0, -1).join('.') || "Uploaded Video",
-              url: downloadUrl,
-              createdAt: new Date().toISOString()
-            })
-          });
-          
-          if (subLabel) subLabel.textContent = "UPLOAD MATRIX SECURE.";
-          alert("Media permanently attached to athlete grid profiles.");
-        } catch (err) {
-          console.error("Failed to commit video data:", err);
-        }
+      if (!file) {
+        return;
       }
-    );
-  });
-}
 
-// ==========================================
-// ⚡ SCORING ENGINE
-// ==========================================
+      if (!isAdminProfile(currentProfile)) {
+        alert("Admin access denied.");
+        fileInput.value = "";
+        return;
+      }
 
-function athleteTotal(athlete) {
-  const scores = Array.isArray(athlete?.scores) ? athlete.scores : 
-                 [athlete?.score0, athlete?.score1, athlete?.score2, athlete?.score3, athlete?.score4];
-  return scores.reduce((sum, val) => sum + safeNumber(val), 0);
-}
+      if (!activeSelectedAthleteId) {
+        alert(
+          "Select an athlete row first."
+        );
 
-  function mergeRosterScores(athlete = {}) {
-  const scores = Array.isArray(athlete.scores)
-    ? athlete.scores
-    : [
-        athlete.score0,
-        athlete.score1,
-        athlete.score2,
-        athlete.score3,
-        athlete.score4
+        fileInput.value = "";
+        return;
+      }
+
+      const allowedVideoTypes = [
+        "video/mp4",
+        "video/webm",
+        "video/quicktime"
       ];
 
-  return scores.reduce((sum, value) => sum + safeNumber(value), 0);
+      if (
+        file.type &&
+        !allowedVideoTypes.includes(
+          file.type
+        )
+      ) {
+        alert(
+          "Select an MP4, WebM, or MOV video file."
+        );
+
+        fileInput.value = "";
+        return;
+      }
+
+      const maximumFileSize =
+        500 * 1024 * 1024;
+
+      if (file.size > maximumFileSize) {
+        alert(
+          "This video is larger than 500 MB."
+        );
+
+        fileInput.value = "";
+        return;
+      }
+
+      const subLabel =
+        $("upload-progress-sub");
+
+      const uploadBadge =
+        $("upload-count-badge");
+
+      if (subLabel) {
+        subLabel.textContent =
+          "PREPARING VIDEO UPLOAD...";
+      }
+
+      const safeFileName =
+        file.name
+          .replace(
+            /[^a-zA-Z0-9._-]/g,
+            "_"
+          );
+
+      const storagePath =
+        `highlights/` +
+        `${activeSelectedAthleteId}/` +
+        `${Date.now()}_` +
+        `${safeFileName}`;
+
+      const uploadReference =
+        storageRef(
+          storage,
+          storagePath
+        );
+
+      const uploadTask =
+        uploadBytesResumable(
+          uploadReference,
+          file,
+          {
+            contentType:
+              file.type ||
+              "video/mp4",
+
+            customMetadata: {
+              athleteId:
+                activeSelectedAthleteId,
+
+              uploadedBy:
+                currentUser?.uid ||
+                "unknown",
+
+              originalFileName:
+                file.name
+            }
+          }
+        );
+
+      uploadTask.on(
+        "state_changed",
+
+        (snapshot) => {
+          const progress =
+            snapshot.totalBytes
+              ? Math.round(
+                  (
+                    snapshot.bytesTransferred /
+                    snapshot.totalBytes
+                  ) * 100
+                )
+              : 0;
+
+          if (subLabel) {
+            subLabel.textContent =
+              `UPLOADING VIDEO: ${progress}%`;
+          }
+        },
+
+        (error) => {
+          console.error(
+            "Upload process rejected:",
+            error
+          );
+
+          if (subLabel) {
+            subLabel.textContent =
+              "UPLOAD FAILED.";
+          }
+
+          alert(
+            "Video upload failed. Check the browser console."
+          );
+
+          fileInput.value = "";
+        },
+
+        async () => {
+          try {
+            const downloadUrl =
+              await getDownloadURL(
+                uploadTask.snapshot.ref
+              );
+
+            const athleteReference =
+              doc(
+                db,
+                "athletes",
+                activeSelectedAthleteId
+              );
+
+            const videoTitle =
+              file.name
+                .split(".")
+                .slice(0, -1)
+                .join(".")
+                .trim() ||
+              "Uploaded Video";
+
+            const videoRecord = {
+              title: videoTitle,
+              url: downloadUrl,
+              storagePath,
+              fileName: file.name,
+              mimeType:
+                file.type ||
+                "video/mp4",
+              sizeBytes:
+                Number(file.size || 0),
+              uploadedBy:
+                currentUser?.uid ||
+                "unknown",
+              createdAt:
+                new Date()
+                  .toISOString()
+            };
+
+            await updateDoc(
+              athleteReference,
+              {
+                highlightUrl:
+                  downloadUrl,
+
+                videos:
+                  arrayUnion(
+                    videoRecord
+                  ),
+
+                updatedAt:
+                  serverTimestamp()
+              }
+            );
+
+            if (subLabel) {
+              subLabel.textContent =
+                "UPLOAD MATRIX SECURE.";
+            }
+
+            if (uploadBadge) {
+              const selectedAthlete =
+                allAthletesCache.find(
+                  (item) =>
+                    item.id ===
+                    activeSelectedAthleteId
+                );
+
+              const currentVideoCount =
+                Array.isArray(
+                  selectedAthlete
+                    ?.data
+                    ?.videos
+                )
+                  ? selectedAthlete
+                      .data
+                      .videos
+                      .length
+                  : 0;
+
+              uploadBadge.textContent =
+                `Uploads: ${
+                  currentVideoCount + 1
+                }`;
+            }
+
+            alert(
+              "Video successfully attached to the athlete profile."
+            );
+          } catch (error) {
+            console.error(
+              "Failed to commit video data:",
+              error
+            );
+
+            if (subLabel) {
+              subLabel.textContent =
+                "DATABASE SAVE FAILED.";
+            }
+
+            alert(
+              "The video uploaded, but the athlete profile could not be updated."
+            );
+          } finally {
+            fileInput.value = "";
+          }
+        }
+      );
+    }
+  );
 }
 
-// ==========================================
-// ⚡ LIVE WAR ROOM DRAFT BOARD INTERACTIVE MATRIX
-// ==========================================
+// ======================================================
+// ATHLETE SCORING ENGINE
+// ======================================================
+
+function getAthleteScores(
+  athlete = {}
+) {
+  if (
+    Array.isArray(athlete.scores)
+  ) {
+    return athlete.scores.map(
+      safeNumber
+    );
+  }
+
+  return [
+    athlete.score0,
+    athlete.score1,
+    athlete.score2,
+    athlete.score3,
+    athlete.score4
+  ].map(safeNumber);
+}
+
+function athleteTotal(
+  athlete = {}
+) {
+  return getAthleteScores(
+    athlete
+  ).reduce(
+    (total, score) =>
+      total + score,
+    0
+  );
+}
+
+function mergeRosterScores(
+  athlete = {}
+) {
+  return athleteTotal(athlete);
+}
+
+// ======================================================
+// WAR ROOM DRAFT BOARD
+// ======================================================
+
+function calculateSquadAverage(
+  squad = []
+) {
+  if (!Array.isArray(squad)) {
+    return 0;
+  }
+
+  if (!squad.length) {
+    return 0;
+  }
+
+  const total =
+    squad.reduce(
+      (sum, athlete) =>
+        sum +
+        athleteTotal(athlete),
+      0
+    );
+
+  return Math.round(
+    total / squad.length
+  );
+}
+
 function calculateSquadAverages() {
+  setText(
+    "squad-a-rating",
+    `AVG: ${calculateSquadAverage(
+      squadA
+    )}`
+  );
 
-  const calcAvg = (arr) =>
-    arr.length
-      ? Math.round(
-          arr.reduce(
-            (sum, player) => sum + athleteTotal(player),
-            0
-          ) / arr.length
-        )
-      : 0;
+  setText(
+    "squad-b-rating",
+    `AVG: ${calculateSquadAverage(
+      squadB
+    )}`
+  );
 
-  setText("squad-a-rating", `AVG: ${calcAvg(squadA)}`);
-  setText("squad-b-rating", `AVG: ${calcAvg(squadB)}`);
-  setText("squad-c-rating", `AVG: ${calcAvg(squadC)}`);
+  setText(
+    "squad-c-rating",
+    `AVG: ${calculateSquadAverage(
+      squadC
+    )}`
+  );
+}
 
+function renderEmptyDraftMessage(
+  message
+) {
+  return `
+    <div
+      class="my-auto py-6 text-center font-mono text-[11px] italic text-gray-600">
+
+      ${escapeHtml(message)}
+
+    </div>
+  `;
+}
+
+function renderDraftPlayer(
+  player = {},
+  squadType,
+  index
+) {
+  const name =
+    player.name ||
+    "Unknown Athlete";
+
+  const rating =
+    athleteTotal(player);
+
+  const nameClass =
+    squadType === "A"
+      ? "text-white"
+      : squadType === "B"
+        ? "text-gray-300"
+        : "text-zeus-gold";
+
+  const borderClass =
+    squadType === "C"
+      ? "border-zeus-gold/20"
+      : "border-zeus-border/40";
+
+  return `
+    <div
+      class="flex items-center justify-between rounded border ${borderClass} bg-zeus-panel p-2 font-mono text-xs">
+
+      <div class="min-w-0">
+
+        <span
+          class="block truncate font-bold ${nameClass}">
+
+          ${escapeHtml(name)}
+
+        </span>
+
+        <small
+          class="text-[9px] text-gray-600">
+
+          Zeus ${rating}
+
+        </small>
+
+      </div>
+
+      <button
+        type="button"
+        onclick="window.dropFromSquad('${escapeHtml(
+          squadType
+        )}', ${index})"
+        class="px-2 font-bold text-red-400 transition hover:text-red-500"
+        aria-label="Remove ${escapeHtml(
+          name
+        )} from squad">
+
+        &times;
+
+      </button>
+
+    </div>
+  `;
+}
+
+function renderSquadSlot(
+  slotId,
+  squadType,
+  squad,
+  emptyMessage
+) {
+  const slot =
+    $(slotId);
+
+  if (!slot) {
+    return;
+  }
+
+  if (!squad.length) {
+    slot.innerHTML =
+      renderEmptyDraftMessage(
+        emptyMessage
+      );
+
+    return;
+  }
+
+  slot.innerHTML =
+    squad
+      .map(
+        (player, index) =>
+          renderDraftPlayer(
+            player,
+            squadType,
+            index
+          )
+      )
+      .join("");
 }
 
 function renderDraftBoards() {
-  const slotA = $("squad-a-slots");
-const slotB = $("squad-b-slots");
-const slotC = $("squad-c-slots");
-  
-  if (slotA) {
-    slotA.innerHTML = squadA.length === 0 
-      ? `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Select an athlete above to draft.</div>`
-      : squadA.map((p, idx) => `
-          <div class="flex justify-between items-center bg-zeus-panel border border-zeus-border/40 p-2 rounded text-xs font-mono">
-            <span class="text-white font-bold">${escapeHtml(p.name)}</span>
-            <button onclick="window.dropFromSquad('A', ${idx})" class="text-red-400 hover:text-red-500 font-bold px-1">&times;</button>
-          </div>
-        `).join("");
-  }
-  
-  if (slotB) {
-    slotB.innerHTML = squadB.length === 0 
-      ? `<div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">Roster vacant. Select an athlete above to draft.</div>`
-      : squadB.map((p, idx) => `
-          <div class="flex justify-between items-center bg-zeus-panel border border-zeus-border/40 p-2 rounded text-xs font-mono">
-            <span class="text-gray-300">${escapeHtml(p.name)}</span>
-            <button onclick="window.dropFromSquad('B', ${idx})" class="text-red-400 hover:text-red-500 font-bold px-1">&times;</button>
-          </div>
-        `).join("");
-  }
-  
-if (slotC) {
-  slotC.innerHTML = squadC.length === 0
-    ? `
-      <div class="text-sm text-gray-600 font-mono italic text-center my-auto py-8">
-        Roster vacant. Select National from the athlete matrix.
-      </div>
-    `
-    : squadC.map((player, index) => `
-        <div class="flex justify-between items-center bg-zeus-panel border border-zeus-gold/20 p-2 rounded text-xs font-mono">
+  renderSquadSlot(
+    "squad-a-slots",
+    "A",
+    squadA,
+    "Roster vacant. Select an athlete above to draft."
+  );
 
-          <span class="text-zeus-gold font-bold">
-            ${escapeHtml(player.name)}
-          </span>
+  renderSquadSlot(
+    "squad-b-slots",
+    "B",
+    squadB,
+    "Roster vacant. Select an athlete above to draft."
+  );
 
-          <button
-            onclick="window.dropFromSquad('C', ${index})"
-            class="text-red-400 hover:text-red-500 font-bold px-1">
+  renderSquadSlot(
+    "squad-c-slots",
+    "C",
+    squadC,
+    "Roster vacant. Select National from the athlete matrix."
+  );
 
-            &times;
-
-          </button>
-
-        </div>
-      `).join("");
+  calculateSquadAverages();
 }
 
-calculateSquadAverages();
-}
-window.renderDraftBoards = renderDraftBoards;
-window.dropFromSquad = (squadType, index) => {
+function getSquadByType(
+  squadType
+) {
   if (squadType === "A") {
-    squadA.splice(index, 1);
-  } else if (squadType === "B") {
-    squadB.splice(index, 1);
-  } else if (squadType === "C") {
-    squadC.splice(index, 1);
+    return squadA;
   }
+
+  if (squadType === "B") {
+    return squadB;
+  }
+
+  if (squadType === "C") {
+    return squadC;
+  }
+
+  return null;
+}
+
+function getSquadLabel(
+  squadType
+) {
+  if (squadType === "A") {
+    return "Team St. Louis Elite";
+  }
+
+  if (squadType === "B") {
+    return "Regional Challengers";
+  }
+
+  if (squadType === "C") {
+    return "National Select";
+  }
+
+  return "this squad";
+}
+
+function athleteAlreadyDrafted(
+  squad = [],
+  athleteId,
+  athlete = {}
+) {
+  return squad.some(
+    (player) => {
+      const sameId =
+        athleteId &&
+        player.id === athleteId;
+
+      const sameNameAndSport =
+        String(
+          player.name || ""
+        )
+          .trim()
+          .toLowerCase() ===
+          String(
+            athlete.name || ""
+          )
+            .trim()
+            .toLowerCase() &&
+        String(
+          player.sport || ""
+        )
+          .trim()
+          .toLowerCase() ===
+          String(
+            athlete.sport || ""
+          )
+            .trim()
+            .toLowerCase();
+
+      return (
+        sameId ||
+        sameNameAndSport
+      );
+    }
+  );
+}
+
+window.renderDraftBoards =
+  renderDraftBoards;
+
+window.dropFromSquad = function (
+  squadType,
+  index
+) {
+  const squad =
+    getSquadByType(squadType);
+
+  if (!squad) {
+    return;
+  }
+
+  const safeIndex =
+    Number(index);
+
+  if (
+    !Number.isInteger(
+      safeIndex
+    ) ||
+    safeIndex < 0 ||
+    safeIndex >= squad.length
+  ) {
+    return;
+  }
+
+  squad.splice(
+    safeIndex,
+    1
+  );
 
   renderDraftBoards();
 };
 
-window.inlineDraftDispatch = (athleteId, targetSquadNum) => {
-  const found = allAthletesCache.find(item => item.id === athleteId);
+window.inlineDraftDispatch =
+  function (
+    athleteId,
+    targetSquadNumber
+  ) {
+    const athleteRecord =
+      allAthletesCache.find(
+        (item) =>
+          item.id === athleteId
+      );
 
-  if (!found) return;
+    if (!athleteRecord) {
+      alert(
+        "Athlete profile was not found."
+      );
 
-  if (targetSquadNum === 1) {
-    if (squadA.some(player => player.name === found.data.name)) {
-      return alert("Athlete already selected for Team St. Louis Elite.");
+      return;
     }
 
-    squadA.push(found.data);
-  } else if (targetSquadNum === 2) {
-    if (squadB.some(player => player.name === found.data.name)) {
-      return alert("Athlete already selected for Regional Challengers.");
+    const athlete =
+      {
+        id:
+          athleteRecord.id,
+
+        ...athleteRecord.data
+      };
+
+    const squadType =
+      Number(targetSquadNumber) === 1
+        ? "A"
+        : Number(
+              targetSquadNumber
+            ) === 2
+          ? "B"
+          : Number(
+                targetSquadNumber
+              ) === 3
+            ? "C"
+            : "";
+
+    const squad =
+      getSquadByType(
+        squadType
+      );
+
+    if (!squad) {
+      alert(
+        "Invalid draft destination."
+      );
+
+      return;
     }
 
-    squadB.push(found.data);
-  } else if (targetSquadNum === 3) {
-    if (squadC.some(player => player.name === found.data.name)) {
-      return alert("Athlete already selected for National Select.");
+    if (
+      athleteAlreadyDrafted(
+        squad,
+        athleteId,
+        athlete
+      )
+    ) {
+      alert(
+        `Athlete already selected for ${getSquadLabel(
+          squadType
+        )}.`
+      );
+
+      return;
     }
 
-    squadC.push(found.data);
-  }
+    squad.push(athlete);
 
-  renderDraftBoards();
-};
+    renderDraftBoards();
+  };
 
-/* ==========================================
-   LIVE GAMES PAGE
-========================================== */
+// ======================================================
+// LIVE GAMES
+// ======================================================
 
 function renderLiveGames() {
-  const container = document.getElementById("live-root");
-  if (!container) return;
+  const container =
+    document.getElementById("live-root");
 
-  container.innerHTML = renderLiveGamesPage();
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML =
+    renderLiveGamesPage();
 }
 
-/* ==========================================
-   MARKETPLACE PAGE
-========================================== */
+// ======================================================
+// MARKETPLACE
+// ======================================================
 
 function initializeMarketplaceFilters() {
-  const tabs = document.getElementById(
-    "marketplace-tabs"
-  );
+  const tabs =
+    document.getElementById(
+      "marketplace-tabs"
+    );
 
-  const grid = document.getElementById(
-    "marketplace-grid"
-  );
+  const grid =
+    document.getElementById(
+      "marketplace-grid"
+    );
 
-  const emptyState = document.getElementById(
-    "marketplace-empty"
-  );
+  const emptyState =
+    document.getElementById(
+      "marketplace-empty"
+    );
 
-  if (!tabs || !grid) return;
+  if (!tabs || !grid) {
+    return;
+  }
 
   const buttons = Array.from(
     tabs.querySelectorAll(
@@ -445,52 +1301,60 @@ function initializeMarketplaceFilters() {
   );
 
   buttons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const selectedFilter =
-        button.dataset.marketplaceFilter ||
-        "All";
+    button.addEventListener(
+      "click",
+      () => {
+        const selectedFilter =
+          button.dataset
+            .marketplaceFilter ||
+          "All";
 
-      buttons.forEach((item) => {
-        item.classList.toggle(
-          "active",
-          item === button
+        buttons.forEach(
+          (currentButton) => {
+            currentButton.classList.toggle(
+              "active",
+              currentButton === button
+            );
+          }
         );
-      });
 
-      let visibleCount = 0;
+        let visibleCount = 0;
 
-      cards.forEach((card) => {
-        const category =
-          card.dataset.marketplaceCategory ||
-          "";
+        cards.forEach((card) => {
+          const category =
+            card.dataset
+              .marketplaceCategory ||
+            "";
 
-        const shouldShow =
-          selectedFilter === "All" ||
-          category === selectedFilter;
+          const shouldShow =
+            selectedFilter === "All" ||
+            category === selectedFilter;
 
-        card.hidden = !shouldShow;
+          card.hidden = !shouldShow;
 
-        if (shouldShow) {
-          visibleCount += 1;
-        }
-      });
+          if (shouldShow) {
+            visibleCount += 1;
+          }
+        });
 
-      if (emptyState) {
-        emptyState.classList.toggle(
+        emptyState?.classList.toggle(
           "hidden",
           visibleCount > 0
         );
       }
-    });
+    );
   });
 }
 
 function renderMarketplace() {
-  const container = document.getElementById(
-    "marketplace-root"
-  );
+  const container =
+    document.getElementById(
+      "marketplace-root"
+    );
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   container.innerHTML =
     renderMarketplacePage();
@@ -498,78 +1362,289 @@ function renderMarketplace() {
   initializeMarketplaceFilters();
 }
 
-function renderZeusAI() {
-  const container = document.getElementById("zeus-ai-root");
-  if (!container) return;
+// ======================================================
+// ZEUS AI
+// ======================================================
 
-  container.innerHTML = renderZeusAiPage();
+function renderZeusAI() {
+  const container =
+    document.getElementById(
+      "zeus-ai-root"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML =
+    renderZeusAiPage();
+
+  registerZeusBrainHandlers?.();
 }
 
-// ==========================================
-// ADMIN FUNCTIONS
-// ==========================================
+// ======================================================
+// ADMIN ACTIONS
+// ======================================================
 
-window.directPurgeRow = async (e, id, name) => {
-  e.stopPropagation();
-  if (!isAdminProfile(currentProfile)) return;
+window.directPurgeRow =
+  async function (
+    event,
+    athleteId,
+    athleteName = "this athlete"
+  ) {
+    event?.stopPropagation();
 
-  if (confirm(`Are you sure you want to permanently erase ${name} from the database?`)) {
-    try {
-      await deleteDoc(doc(db, "athletes", id));
-      if (activeSelectedAthleteId === id) activeSelectedAthleteId = null;
-    } catch (err) {
-      console.error("Purge system rejected:", err);
+    if (
+      !isAdminProfile(currentProfile)
+    ) {
+      alert("Admin access denied.");
+      return;
     }
-  }
-};
 
-window.handleAdminAddVideo = async () => {
-  const titleEl = $("new-vid-title");
-  const urlEl = $("new-vid-url");
-  const title = titleEl?.value.trim();
-  const url = urlEl?.value.trim();
+    const confirmed =
+      window.confirm(
+        `Are you sure you want to permanently erase ${athleteName} from the database?`
+      );
 
-  if (!activeSelectedAthleteId) return alert("Select an athlete profile row first from the matrix.");
-  if (!title || !url) return alert("Please specify both a valid title and URL string.");
+    if (!confirmed) {
+      return;
+    }
 
-  await addVideoToTitan(activeSelectedAthleteId, title, url);
-  titleEl.value = "";
-  urlEl.value = "";
-  alert("Video payload successfully committed to user array.");
-};
+    try {
+      await deleteDoc(
+        doc(
+          db,
+          "athletes",
+          athleteId
+        )
+      );
 
-// ==========================================
-// ST. LOUIS BASELINE INITIALIZATION SEEDS
-// ==========================================
+      if (
+        activeSelectedAthleteId ===
+        athleteId
+      ) {
+        activeSelectedAthleteId =
+          null;
+
+        window.appState
+          .activeAthleteId = null;
+
+        window.appState
+          .activeAthlete = null;
+      }
+    } catch (error) {
+      console.error(
+        "Purge system rejected:",
+        error
+      );
+
+      alert(
+        "The athlete could not be deleted."
+      );
+    }
+  };
+
+window.handleAdminAddVideo =
+  async function () {
+    const titleElement =
+      $("new-vid-title");
+
+    const urlElement =
+      $("new-vid-url");
+
+    const title =
+      titleElement
+        ?.value
+        .trim() || "";
+
+    const url =
+      urlElement
+        ?.value
+        .trim() || "";
+
+    if (
+      !isAdminProfile(currentProfile)
+    ) {
+      alert("Admin access denied.");
+      return;
+    }
+
+    if (!activeSelectedAthleteId) {
+      alert(
+        "Select an athlete profile row first from the matrix."
+      );
+
+      return;
+    }
+
+    if (!title || !url) {
+      alert(
+        "Enter both a video title and a valid URL."
+      );
+
+      return;
+    }
+
+    try {
+      await addVideoToTitan(
+        activeSelectedAthleteId,
+        title,
+        url
+      );
+
+      if (titleElement) {
+        titleElement.value = "";
+      }
+
+      if (urlElement) {
+        urlElement.value = "";
+      }
+
+      alert(
+        "Video successfully added to the athlete profile."
+      );
+    } catch (error) {
+      console.error(
+        "Video save failed:",
+        error
+      );
+
+      alert(
+        "The video could not be saved."
+      );
+    }
+  };
+
+// ======================================================
+// INITIAL ATHLETE SEED DATA
+// ======================================================
 
 const ST_LOUIS_INITIAL_SEEDS = [
-  { name: "Vashon Elite Squad", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [95, 92, 94, 96, 98], highlightUrl: "https://www.youtube.com/watch?v=ifiFShFX5Pg" },
-  { name: "Soldan Prep Leader", sport: "Basketball", tier: "highschool", subCategory: "phsl", scores: [88, 85, 90, 89, 91], highlightUrl: "" },
-  { name: "CBC Cadet Core", sport: "Football", tier: "highschool", subCategory: "mcc", scores: [94, 96, 95, 93, 97], highlightUrl: "" },
-  { name: "SLUH Jr. Billikens", sport: "Track", tier: "highschool", subCategory: "mcc", scores: [89, 92, 91, 90, 94], highlightUrl: "" },
-  { name: "Macler Cody (Mac10)", sport: "Football", tier: "pro-players", subCategory: "pro-cfl-alt", scores: [98, 97, 99, 96, 98], highlightUrl: "" },
-  { name: "David Freese (Lafayette HS)", sport: "Baseball", tier: "pro-players", subCategory: "pro-major", scores: [95, 94, 96, 92, 95], highlightUrl: "" },
-  { name: "Pat Maroon (Oakville HS)", sport: "Hockey", tier: "pro-players", subCategory: "pro-major", scores: [93, 95, 94, 91, 96], highlightUrl: "" },
-  { name: "Bradley Beal (Chaminade)", sport: "Basketball", tier: "pro-players", subCategory: "pro-major", scores: [97, 98, 96, 95, 99], highlightUrl: "" }
+  {
+    name: "Vashon Elite Squad",
+    sport: "Basketball",
+    tier: "highschool",
+    subCategory: "phsl",
+    scores: [95, 92, 94, 96, 98],
+    highlightUrl:
+      "https://www.youtube.com/watch?v=ifiFShFX5Pg",
+    recordType: "athlete"
+  },
+  {
+    name: "Soldan Prep Leader",
+    sport: "Basketball",
+    tier: "highschool",
+    subCategory: "phsl",
+    scores: [88, 85, 90, 89, 91],
+    highlightUrl: "",
+    recordType: "athlete"
+  },
+  {
+    name: "CBC Cadet Core",
+    sport: "Football",
+    tier: "highschool",
+    subCategory: "mcc",
+    scores: [94, 96, 95, 93, 97],
+    highlightUrl: "",
+    recordType: "athlete"
+  },
+  {
+    name: "SLUH Jr. Billikens",
+    sport: "Track & Field",
+    tier: "highschool",
+    subCategory: "mcc",
+    scores: [89, 92, 91, 90, 94],
+    highlightUrl: "",
+    recordType: "athlete"
+  },
+  {
+    name: "Macler Cody (Mac10)",
+    sport: "Football",
+    tier: "pro-players",
+    subCategory: "pro-cfl-alt",
+    scores: [98, 97, 99, 96, 98],
+    highlightUrl: "",
+    recordType: "athlete"
+  },
+  {
+    name: "David Freese (Lafayette HS)",
+    sport: "Baseball",
+    tier: "pro-players",
+    subCategory: "pro-major",
+    scores: [95, 94, 96, 92, 95],
+    highlightUrl: "",
+    recordType: "athlete"
+  },
+  {
+    name: "Pat Maroon (Oakville HS)",
+    sport: "Hockey",
+    tier: "pro-players",
+    subCategory: "pro-major",
+    scores: [93, 95, 94, 91, 96],
+    highlightUrl: "",
+    recordType: "athlete"
+  },
+  {
+    name: "Bradley Beal (Chaminade)",
+    sport: "Basketball",
+    tier: "pro-players",
+    subCategory: "pro-major",
+    scores: [97, 98, 96, 95, 99],
+    highlightUrl: "",
+    recordType: "athlete"
+  }
 ];
 
 async function checkAndSeedDatabase() {
-  const existingSnap = await getDocs(query(collection(db, "athletes"), limit(1)));
-  if (!existingSnap.empty) return;
-  const athletesRef = collection(db, "athletes");
-  for (const titan of ST_LOUIS_INITIAL_SEEDS) {
-    await addDoc(athletesRef, { ...titan, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy: "auto_init" });
+  const existingSnapshot =
+    await getDocs(
+      query(
+        collection(db, "athletes"),
+        limit(1)
+      )
+    );
+
+  if (!existingSnapshot.empty) {
+    return;
+  }
+
+  const athletesCollection =
+    collection(db, "athletes");
+
+  for (
+    const athlete of
+    ST_LOUIS_INITIAL_SEEDS
+  ) {
+    await addDoc(
+      athletesCollection,
+      {
+        ...athlete,
+        videos: [],
+        createdAt:
+          serverTimestamp(),
+        updatedAt:
+          serverTimestamp(),
+        createdBy:
+          "auto_init"
+      }
+    );
   }
 }
 
-// ==========================================
-// ACCESSIBILITY INTERFACE HANDLERS
-// ==========================================
+// ======================================================
+// ACCESS AND AUTHENTICATION UI
+// ======================================================
 
-function updateAccessUI(profile) {
-  const loginBtn = $("header-auth-btn");
+function updateAccessUI(
+  profile
+) {
+  const loginButton =
+    $("header-auth-btn");
 
-  if (hasMainAccess(profile)) {
+  const hasAccess =
+    hasMainAccess(profile);
+
+  if (hasAccess) {
     hide("paywall-content");
     show("main-content");
   } else {
@@ -577,79 +1652,160 @@ function updateAccessUI(profile) {
     hide("main-content");
   }
 
-  if (isAdminProfile(profile)) {
+  const isAdmin =
+    isAdminProfile(profile);
+
+  if (isAdmin) {
     show("admin-panel");
     show("admin-purge-btn");
-    checkAndSeedDatabase().catch(e => console.error(e));
+
+    checkAndSeedDatabase()
+      .catch((error) => {
+        console.error(
+          "Database seed check failed:",
+          error
+        );
+      });
   } else {
     hide("admin-panel");
     hide("admin-purge-btn");
   }
 
   if (profile) {
-    setText("user-status", `Admin: ${profile.nickname || profile.email || "Authorized"}`);
-    if (loginBtn) loginBtn.textContent = "Logout";
+    setText(
+      "user-status",
+      `Admin: ${
+        profile.nickname ||
+        profile.email ||
+        "Authorized"
+      }`
+    );
+
+    if (loginButton) {
+      loginButton.textContent =
+        "Logout";
+    }
   } else {
-    setText("user-status", "The Home of Every Athlete");
-    if (loginBtn) loginBtn.textContent = "Login";
+    setText(
+      "user-status",
+      "The Home of Every Athlete"
+    );
+
+    if (loginButton) {
+      loginButton.textContent =
+        "Login";
+    }
   }
 
   processAndRenderFilteredAthletes();
 }
 
-function openAthleteProfile(id, athlete) {
-  const modal = document.getElementById("athlete-profile-modal");
-  const content = document.getElementById("athlete-profile-content");
+// ======================================================
+// ATHLETE PROFILE MODAL
+// ======================================================
 
-  if (!modal || !content) return;
+function openAthleteProfile(
+  athleteId,
+  athlete = {}
+) {
+  const modal =
+    document.getElementById(
+      "athlete-profile-modal"
+    );
 
-  const activeAthlete = {
-  id,
-  ...athlete
-};
+  const content =
+    document.getElementById(
+      "athlete-profile-content"
+    );
 
-window.activeAthlete = activeAthlete;
-
-  content.innerHTML = `
-  <div class="recruiter-profile-layout">
-
-    <div class="recruiter-profile-main">
-      ${renderAthletePage(activeAthlete)}
-    </div>
-
-    <aside class="recruiter-zeus-sidebar">
-      ${buildZeusScoutingReport(activeAthlete)}
-      ${renderZeusDashboard(activeAthlete)}
-    </aside>
-
-  </div>
-`;
-
-  modal.classList.remove("hidden");
-}
-
-window.openAthleteFromDirectory = function(id) {
-  const found = allAthletesCache.find(item => item.id === id);
-
-  if (!found) {
-    alert("Athlete profile not found yet.");
+  if (!modal || !content) {
     return;
   }
 
-  window.setActiveAthlete(found.id, found.data);
-  openAthleteProfile(found.id, found.data);
-}; 
+  const activeAthlete = {
+    id: athleteId,
+    ...athlete
+  };
 
-// ==========================================
-// PAGE RENDERERS
-// ==========================================
+  window.activeAthlete =
+    activeAthlete;
 
-function renderSportsFeed() {
-  const container = document.getElementById(
-    "home-root"
+  window.setActiveAthlete(
+    athleteId,
+    athlete
   );
 
-  if (!container) return;
+  content.innerHTML = `
+    <div class="recruiter-profile-layout">
+
+      <div class="recruiter-profile-main">
+
+        ${renderAthletePage(
+          activeAthlete
+        )}
+
+      </div>
+
+      <aside class="recruiter-zeus-sidebar">
+
+        ${
+          typeof buildZeusScoutingReport ===
+          "function"
+            ? buildZeusScoutingReport(
+                activeAthlete
+              )
+            : ""
+        }
+
+        ${renderZeusDashboard(
+          activeAthlete
+        )}
+
+      </aside>
+
+    </div>
+  `;
+
+  modal.classList.remove(
+    "hidden"
+  );
+}
+
+window.openAthleteFromDirectory =
+  function (athleteId) {
+    const found =
+      allAthletesCache.find(
+        (item) =>
+          item.id === athleteId
+      );
+
+    if (!found) {
+      alert(
+        "Athlete profile not found."
+      );
+
+      return;
+    }
+
+    openAthleteProfile(
+      found.id,
+      found.data
+    );
+  };
+
+// ======================================================
+// PAGE RENDERERS
+// ======================================================
+
+function renderSportsFeed() {
+  const container =
+    document.getElementById(
+      "home-root"
+    );
+
+  if (!container) {
+    return;
+  }
 
   container.innerHTML =
     renderSportsFeedPage(
@@ -663,28 +1819,46 @@ function renderSportsFeed() {
     currentUser,
     currentProfile,
     isAdminProfile,
-    athletes: allAthletesCache,
+    athletes:
+      allAthletesCache,
 
     onUploaded: () => {
-      // Firestore subscription will refresh the Feed.
+      // Firestore subscription
+      // refreshes the feed.
     }
   });
 }
 
 function renderHome() {
-  const container = document.getElementById("home-root");
-  if (!container) return;
+  const container =
+    document.getElementById(
+      "home-root"
+    );
 
-  container.innerHTML = renderHomePage(allAthletesCache);
+  if (!container) {
+    return;
+  }
 
-  initializeHomeSportFilters();
+  container.innerHTML =
+    renderHomePage(
+      allAthletesCache
+    );
 
-  const overlay = document.getElementById("zeus-intro-overlay");
-  const skipBtn = document.getElementById("skip-zeus-intro");
-  const line = document.getElementById("zeus-intro-line");
-  const skipBtnInline = document.getElementById("skip-zeus-intro-inline");
-  
-const lines = [
+  initializeHomeSportFilters?.();
+
+  const overlay =
+    $("zeus-intro-overlay");
+
+  const skipButton =
+    $("skip-zeus-intro");
+
+  const inlineSkipButton =
+    $("skip-zeus-intro-inline");
+
+  const introLine =
+    $("zeus-intro-line");
+
+  const introLines = [
     "Welcome to Snt.L.Mo. Sports Network...",
     "The home of every athlete...",
     "Every school...",
@@ -703,29 +1877,67 @@ const lines = [
     "Now... let's discover the next generation of greatness."
   ];
 
-  let index = 0;
-  let timer = null;
+  let introIndex = 0;
+  let introTimer = null;
+  let closeTimer = null;
 
-  const thunder = new Audio("audio/thunder.mp3");
-  const voice = new Audio("audio/zeus-intro.mp3");
-  const music = new Audio("audio/ambient.mp3");
+  const thunder =
+    new Audio(
+      "audio/thunder.mp3"
+    );
+
+  const voice =
+    new Audio(
+      "audio/zeus-intro.mp3"
+    );
+
+  const music =
+    new Audio(
+      "audio/ambient.mp3"
+    );
+
+  function stopIntroAudio() {
+    [thunder, voice, music]
+      .forEach((audio) => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+  }
 
   function closeIntro() {
-    overlay?.classList.add("hidden");
+    overlay?.classList.add(
+      "hidden"
+    );
 
-    thunder.pause();
-    voice.pause();
-    music.pause();
+    stopIntroAudio();
 
-    if (timer) clearInterval(timer);
+    if (introTimer) {
+      clearInterval(introTimer);
+      introTimer = null;
+    }
+
+    if (closeTimer) {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    }
 
     animateHomeCounters();
   }
 
-  skipBtn?.addEventListener("click", closeIntro);
-  skipBtnInline?.addEventListener("click", closeIntro);
-  
-if (overlay) {
+  skipButton?.addEventListener(
+    "click",
+    closeIntro,
+    { once: true }
+  );
+
+  inlineSkipButton
+    ?.addEventListener(
+      "click",
+      closeIntro,
+      { once: true }
+    );
+
+  if (overlay) {
     thunder.volume = 0.6;
     voice.volume = 0.95;
     music.volume = 0.25;
@@ -734,984 +1946,3439 @@ if (overlay) {
     voice.play().catch(() => {});
     music.play().catch(() => {});
 
-    timer = setInterval(() => {
-      index += 1;
+    introTimer =
+      window.setInterval(
+        () => {
+          introIndex += 1;
 
-      if (line && lines[index]) {
-        line.textContent = lines[index];
-      }
+          if (
+            introLine &&
+            introLines[introIndex]
+          ) {
+            introLine.textContent =
+              introLines[introIndex];
+          }
 
-      if (index >= lines.length - 1) {
-        setTimeout(closeIntro, 4500);
-      }
-    }, 2800);
+          if (
+            introIndex >=
+            introLines.length - 1
+          ) {
+            clearInterval(
+              introTimer
+            );
+
+            introTimer = null;
+
+            closeTimer =
+              window.setTimeout(
+                closeIntro,
+                4500
+              );
+          }
+        },
+        2800
+      );
   }
 
-setTimeout(() => {
-    animateHomeCounters();
-  }, 900);
+  window.setTimeout(
+    animateHomeCounters,
+    900
+  );
 }
 
 function animateHomeCounters() {
-  document.querySelectorAll(".count-up").forEach((el) => {
-    const target = Number(el.dataset.target || 0);
-    let current = 0;
-    const step = Math.max(1, Math.floor(target / 80));
+  document
+    .querySelectorAll(
+      ".count-up"
+    )
+    .forEach((element) => {
+      const target =
+        Number(
+          element.dataset.target ||
+          0
+        );
 
-    const interval = setInterval(() => {
-      current += step;
-
-      if (current >= target) {
-        current = target;
-        clearInterval(interval);
+      if (!Number.isFinite(target)) {
+        return;
       }
 
-      el.textContent = current.toLocaleString();
-    }, 25);
+      let current = 0;
+
+      const step =
+        Math.max(
+          1,
+          Math.floor(
+            target / 80
+          )
+        );
+
+      const interval =
+        window.setInterval(
+          () => {
+            current += step;
+
+            if (current >= target) {
+              current = target;
+
+              clearInterval(
+                interval
+              );
+            }
+
+            element.textContent =
+              current.toLocaleString();
+          },
+          25
+        );
+    });
+}
+
+function renderSchools() {
+  const container =
+    document.getElementById(
+      "schools-root"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML =
+    renderSchoolsPage();
+}
+
+function renderAccountSetup() {
+  const container =
+    document.getElementById(
+      "account-setup-root"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML =
+    renderAccountSetupPage();
+
+  registerAccountSetupHandlers?.({
+    auth,
+    db,
+    currentUser,
+    currentProfile
   });
 }
 
-// ==========================================
-// ACCOUNT SETUP PAGE
-// ==========================================
-
-function renderAccountSetup() {
-  const container = document.getElementById("account-setup-root");
-  if (!container) return;
-
-  container.innerHTML = renderAccountSetupPage();
-}
-
 function renderAthleteDirectoryPage() {
-  const container = document.getElementById("athlete-directory-page");
-  if (!container) return;
+  const container =
+    document.getElementById(
+      "athlete-directory-page"
+    );
 
-  container.innerHTML = renderAthletesDirectory(allAthletesCache);
-
-  const search = document.getElementById("athlete-directory-search");
-  const sport = document.getElementById("athlete-directory-sport");
-
-  function filterDirectory() {
-    const q = (search?.value || "").toLowerCase();
-    const selectedSport = sport?.value || "all";
-
-    document.querySelectorAll(".athlete-directory-card").forEach(card => {
-      const matchesSearch = card.dataset.search.includes(q);
-      const matchesSport = selectedSport === "all" || card.dataset.sport === selectedSport;
-
-      card.style.display = matchesSearch && matchesSport ? "block" : "none";
-    });
+  if (!container) {
+    return;
   }
 
-  search?.addEventListener("input", filterDirectory);
-  sport?.addEventListener("change", filterDirectory);
+  container.innerHTML =
+    renderAthletesDirectory(
+      allAthletesCache
+    );
+
+  const searchInput =
+    $("athlete-directory-search");
+
+  const sportFilter =
+    $("athlete-directory-sport");
+
+  function filterDirectory() {
+    const searchQuery =
+      (
+        searchInput?.value ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+    const selectedSport =
+      sportFilter?.value ||
+      "all";
+
+    document
+      .querySelectorAll(
+        ".athlete-directory-card"
+      )
+      .forEach((card) => {
+        const searchValue =
+          String(
+            card.dataset.search ||
+            ""
+          ).toLowerCase();
+
+        const cardSport =
+          card.dataset.sport ||
+          "";
+
+        const matchesSearch =
+          !searchQuery ||
+          searchValue.includes(
+            searchQuery
+          );
+
+        const matchesSport =
+          selectedSport === "all" ||
+          cardSport === selectedSport;
+
+        card.hidden =
+          !(
+            matchesSearch &&
+            matchesSport
+          );
+      });
+  }
+
+  searchInput?.addEventListener(
+    "input",
+    filterDirectory
+  );
+
+  sportFilter?.addEventListener(
+    "change",
+    filterDirectory
+  );
 }
 
 function renderHighlightFeedPage() {
-  const container = document.getElementById("highlights-root");
-  if (!container) return;
+  const container =
+    document.getElementById(
+      "highlights-root"
+    );
 
-  container.innerHTML = renderHighlightFeed(allAthletesCache);
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML =
+    renderHighlightFeed(
+      allAthletesCache
+    );
 
   initializeHighlightAutoplay();
 }
 
-function renderSchools() {
-  const container = document.getElementById("schools-root");
-  if (!container) return;
+function initializeRankingsFilters() {
+  const sportFilter =
+    $("rankings-sport-filter");
 
-  container.innerHTML = renderSchoolsPage();
+  const classFilter =
+    $("rankings-class-filter");
+
+  const searchInput =
+    $("rankings-search-input");
+
+  const tableBody =
+    $("rankings-table-body");
+
+  const emptyState =
+    $("rankings-empty-state");
+
+  if (!tableBody) {
+    return;
+  }
+
+  const rows = Array.from(
+    tableBody.querySelectorAll(
+      "[data-ranking-row]"
+    )
+  );
+
+  function applyRankingsFilters() {
+    const selectedSport =
+      sportFilter?.value ||
+      "all";
+
+    const selectedClass =
+      classFilter?.value ||
+      "all";
+
+    const searchQuery =
+      (
+        searchInput?.value ||
+        ""
+      )
+        .trim()
+        .toLowerCase();
+
+    let visibleCount = 0;
+
+    rows.forEach((row) => {
+      const rowSport =
+        row.dataset
+          .rankingSport ||
+        "";
+
+      const rowClass =
+        row.dataset
+          .rankingClass ||
+        "";
+
+      const rowName =
+        row.dataset
+          .rankingName ||
+        "";
+
+      const rowText =
+        (
+          row.textContent ||
+          ""
+        ).toLowerCase();
+
+      const matchesSport =
+        selectedSport === "all" ||
+        rowSport === selectedSport;
+
+      const matchesClass =
+        selectedClass === "all" ||
+        rowClass === selectedClass;
+
+      const matchesSearch =
+        !searchQuery ||
+        rowName
+          .toLowerCase()
+          .includes(searchQuery) ||
+        rowText.includes(
+          searchQuery
+        );
+
+      const shouldShow =
+        matchesSport &&
+        matchesClass &&
+        matchesSearch;
+
+      row.hidden = !shouldShow;
+
+      if (shouldShow) {
+        visibleCount += 1;
+      }
+    });
+
+    emptyState?.classList.toggle(
+      "hidden",
+      visibleCount > 0
+    );
+
+    tableBody
+      .closest(
+        ".rankings-table-wrapper"
+      )
+      ?.classList.toggle(
+        "hidden",
+        visibleCount === 0
+      );
+  }
+
+  sportFilter?.addEventListener(
+    "change",
+    applyRankingsFilters
+  );
+
+  classFilter?.addEventListener(
+    "change",
+    applyRankingsFilters
+  );
+
+  searchInput?.addEventListener(
+    "input",
+    applyRankingsFilters
+  );
+
+  applyRankingsFilters();
 }
 
 function renderRankings() {
-  const container = document.getElementById("rankings-root");
-  if (!container) return;
+  const container =
+    document.getElementById(
+      "rankings-root"
+    );
 
-  container.innerHTML = renderRankingsPage(allAthletesCache);
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML =
+    renderRankingsPage(
+      allAthletesCache
+    );
+
+  initializeRankingsFilters();
 }
 
 function renderRecruiting() {
-  const container = document.getElementById("recruiting-root");
-  if (!container) return;
+  const container =
+    document.getElementById(
+      "recruiting-root"
+    );
 
-  container.innerHTML = renderRecruitingPage();
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML =
+    renderRecruitingPage();
 }
+
+// ======================================================
+// BASIC FILTER EVENT BINDINGS
+// ======================================================
+
+let basicEventsBound = false;
 
 function bindEvents() {
-  $("tier-select")?.addEventListener("change", () => { refreshSubTierOptions(); processAndRenderFilteredAthletes(); });
-  $("sub-tier-select")?.addEventListener("change", processAndRenderFilteredAthletes);
+  if (basicEventsBound) {
+    return;
+  }
+
+  basicEventsBound = true;
+
+  $("tier-select")
+    ?.addEventListener(
+      "change",
+      () => {
+        refreshSubTierOptions();
+        processAndRenderFilteredAthletes();
+      }
+    );
+
+  $("sub-tier-select")
+    ?.addEventListener(
+      "change",
+      processAndRenderFilteredAthletes
+    );
 }
 
-// ==========================================
+// ======================================================
 // FILTER MATRIX CONTROLLER
-// ==========================================
+// ======================================================
+
 const SUB_TIER_OPTIONS = {
-  all: [["all", "All Sub-Categories"]],
-  highschool: [["all", "All St. Louis High Schools"], ["phsl", "Public High League"], ["mcc", "Metro Catholic Conference"], ["suburban", "Suburban Programs"], ["independent", "Independent Programs"]],
-  college: [["all", "All Colleges"], ["local-college", "Local Colleges"], ["national-college", "National Colleges"]],
-  "pro-teams": [["all", "All St. Louis Home Pro Teams"], ["mlb", "Cardinals / MLB"], ["nhl", "Blues / NHL"], ["mls", "CITY SC / MLS"], ["ufl", "Battlehawks / UFL"]],
-  "pro-players": [["all", "All Locals in the Pros"], ["pro-major", "Major Pro Leagues"], ["pro-cfl-alt", "CFL / Alt Pro"], ["pro-global", "Global Pros"]]
+  all: [
+    ["all", "All Sub-Categories"]
+  ],
+
+  highschool: [
+    ["all", "All High Schools"],
+    ["phsl", "Public High League"],
+    ["mcc", "Metro Catholic Conference"],
+    ["suburban", "Suburban Programs"],
+    ["independent", "Independent Programs"]
+  ],
+
+  college: [
+    ["all", "All Colleges"],
+    ["local-college", "Local Colleges"],
+    ["national-college", "National Colleges"]
+  ],
+
+  "pro-teams": [
+    ["all", "All Professional Teams"],
+    ["mlb", "MLB"],
+    ["nhl", "NHL"],
+    ["mls", "MLS"],
+    ["ufl", "UFL"]
+  ],
+
+  "pro-players": [
+    ["all", "All Professional Athletes"],
+    ["pro-major", "Major Professional Leagues"],
+    ["pro-cfl-alt", "CFL / Alternative Pro"],
+    ["pro-global", "Global Professionals"]
+  ]
 };
 
 function refreshSubTierOptions() {
-  const tierSelect = $("tier-select");
-  const subTierSelect = $("sub-tier-select");
-  if (!tierSelect || !subTierSelect) return;
-  const selectedTier = tierSelect.value || "all";
-  const options = SUB_TIER_OPTIONS[selectedTier] || SUB_TIER_OPTIONS.all;
-  subTierSelect.innerHTML = options.map(([v, l]) => `<option value="${escapeHtml(v)}">${escapeHtml(l)}</option>`).join("");
+  const tierSelect =
+    $("tier-select");
+
+  const subTierSelect =
+    $("sub-tier-select");
+
+  if (!tierSelect || !subTierSelect) {
+    return;
+  }
+
+  const previousValue =
+    subTierSelect.value || "all";
+
+  const selectedTier =
+    tierSelect.value || "all";
+
+  const options =
+    SUB_TIER_OPTIONS[selectedTier] ||
+    SUB_TIER_OPTIONS.all;
+
+  subTierSelect.innerHTML =
+    options
+      .map(
+        ([value, label]) => `
+          <option value="${escapeHtml(value)}">
+            ${escapeHtml(label)}
+          </option>
+        `
+      )
+      .join("");
+
+  const previousValueStillExists =
+    options.some(
+      ([value]) =>
+        value === previousValue
+    );
+
+  subTierSelect.value =
+    previousValueStillExists
+      ? previousValue
+      : "all";
 }
 
-// ==========================================
-// RENDER ENGINE (DYNAMIC DECOUPLED MATRIX GENERATOR)
-// ==========================================
+// ======================================================
+// ATHLETE FILTER HELPERS
+// ======================================================
+
+function normalizeFilterValue(
+  value = ""
+) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeAthleteOffers(
+  value
+) {
+  if (Array.isArray(value)) {
+    return value
+      .map((offer) =>
+        String(offer ?? "").trim()
+      )
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((offer) =>
+        offer.trim()
+      )
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function getAthleteRecruitingStatus(
+  athlete = {}
+) {
+  if (
+    athlete.recruitingStatus ||
+    athlete.commitmentStatus
+  ) {
+    return (
+      athlete.recruitingStatus ||
+      athlete.commitmentStatus
+    );
+  }
+
+  if (
+    athlete.signedSchool ||
+    athlete.signingDate
+  ) {
+    return "Signed";
+  }
+
+  if (
+    athlete.committedSchool ||
+    athlete.committedTo ||
+    athlete.commitment
+  ) {
+    return "Committed";
+  }
+
+  if (
+    athlete.transferPortal === true ||
+    athlete.inTransferPortal === true
+  ) {
+    return "Transfer Portal";
+  }
+
+  if (
+    athlete.tier === "pro-players" ||
+    athlete.professional === true
+  ) {
+    return "Professional";
+  }
+
+  if (
+    normalizeAthleteOffers(
+      athlete.offers
+    ).length
+  ) {
+    return "Offered";
+  }
+
+  return "Open";
+}
+
+function athleteHasFilm(
+  athlete = {}
+) {
+  return Boolean(
+    (
+      Array.isArray(athlete.videos) &&
+      athlete.videos.length > 0
+    ) ||
+    athlete.highlightUrl ||
+    athlete.highlight ||
+    athlete.higlightightUrl
+  );
+}
+
+function getRecruitingStatusClasses(
+  status = ""
+) {
+  switch (
+    normalizeFilterValue(status)
+  ) {
+    case "signed":
+      return (
+        "bg-gray-800 text-gray-200 " +
+        "border-gray-600"
+      );
+
+    case "committed":
+      return (
+        "bg-purple-950/50 text-purple-300 " +
+        "border-purple-800"
+      );
+
+    case "offered":
+      return (
+        "bg-blue-950/50 text-blue-300 " +
+        "border-blue-800"
+      );
+
+    case "visiting":
+      return (
+        "bg-yellow-950/40 text-yellow-300 " +
+        "border-yellow-800"
+      );
+
+    case "transfer portal":
+      return (
+        "bg-orange-950/50 text-orange-300 " +
+        "border-orange-800"
+      );
+
+    case "professional":
+      return (
+        "bg-red-950/50 text-red-300 " +
+        "border-red-800"
+      );
+
+    default:
+      return (
+        "bg-green-950/40 text-green-300 " +
+        "border-green-800"
+      );
+  }
+}
+
+// ======================================================
+// FILTER ATHLETE DATABASE
+// ======================================================
 
 function getFilteredAthletes() {
+  const selectedTier =
+    $("tier-select")?.value ||
+    "all";
 
-  const tier =
-    $("tier-select")?.value || "all";
+  const selectedSubTier =
+    $("sub-tier-select")?.value ||
+    "all";
 
-  const subTier =
-    $("sub-tier-select")?.value || "all";
+  const selectedSport =
+    $("admin-sport-filter")?.value ||
+    "all";
 
-  return allAthletesCache.filter(({ data }) => {
-
-    return (
-      (tier === "all" || data.tier === tier) &&
-      (subTier === "all" || data.subCategory === subTier)
+  const positionQuery =
+    normalizeFilterValue(
+      $("admin-position-filter")?.value
     );
 
-  });
+  const classQuery =
+    normalizeFilterValue(
+      $("admin-class-filter")?.value
+    );
 
-}
+  const recruitingFilter =
+    $("admin-recruiting-filter")?.value ||
+    "all";
 
-function processAndRenderFilteredAthletes() {
-  const gridBody = $("match-grid-body");
-  if (!gridBody) return;
-  const filteredAthletes = getFilteredAthletes();
+  const filmFilter =
+    $("admin-film-filter")?.value ||
+    "all";
 
-  if (!filteredAthletes.length) {
-    gridBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">No athletes active for this filter.</td></tr>`;
-    setText("apex-predator-name", "No Apex Selected"); setText("apex-predator-score", "---"); setText("grid-count-badge", "0 Active");
-    return;
-  }
+  return allAthletesCache.filter(
+    (item) => {
+      const athlete =
+        item?.data || {};
 
-  gridBody.innerHTML = filteredAthletes.map(({ id, data }) => {
-    const hasHighlight = Boolean((data.videos && data.videos.length > 0) || data.highlightUrl || data.highlight);
-    const isSelected = activeSelectedAthleteId === id;
-    const trackingClass = isSelected ? "bg-zeus-gold/10 border-l-2 border-zeus-gold" : "border-t border-zeus-border";
-    
-    return `
-      <tr class="${trackingClass} hover:bg-zeus-gold/5 cursor-pointer transition" data-athlete-id="${escapeHtml(id)}">
-        <td class="p-3 font-bold text-white whitespace-nowrap">
-          <div class="flex items-center space-x-2">
-            <span>${escapeHtml(data.name)}</span>
-            ${hasHighlight ? `<span class="bg-zeus-goldSoft text-zeus-gold text-[9px] px-1.5 py-0.5 rounded border border-zeus-gold/20 font-bold uppercase tracking-wider shrink-0">Video</span>` : ""}
-          </div>
-        </td>
-        <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[0])}</td>
-        <td class="p-3 text-center text-gray-300">${safeNumber(data.scores?.[1])}</td>
-        <td class="p-3 text-center font-black text-zeus-gold">${mergeRosterScores(data)}</td>
-        <td class="p-3 text-center text-gray-400 uppercase text-xs">${escapeHtml(data.sport)}</td>
-        <td class="p-3 text-right" onclick="event.stopPropagation()">
-          <div class="flex items-center justify-end space-x-1">
-            <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 1)" class="bg-zeus-goldSoft text-zeus-gold border border-zeus-gold/20 hover:bg-zeus-gold hover:text-black font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft A</button>
-            <button onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 2)" class="bg-gray-900 text-gray-400 border border-zeus-border hover:bg-gray-700 hover:text-white font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">Draft B</button>
-            <button
-  onclick="window.inlineDraftDispatch('${escapeHtml(id)}', 3)"
-  class="bg-zeus-gold text-black border border-zeus-gold hover:bg-yellow-400 font-mono text-[9px] px-1.5 py-0.5 rounded uppercase font-bold transition">
-
-  National
-
-</button>
-            ${isAdminProfile(currentProfile) ? `<button onclick="window.directPurgeRow(event, '${escapeHtml(id)}', '${escapeHtml(data.name.replace(/'/g, "\\'"))}')" class="text-gray-600 hover:text-red-500 text-xs px-1 font-bold transition select-none" title="Instant Delete">🗑️</button>` : ""}
-          </div>
-        </td>
-      </tr>`;
-  }).join("");
-
-  const leader = filteredAthletes[0].data;
-  setText("apex-predator-name", leader.name || "Unknown Titan");
-  setText("apex-predator-score", mergeRosterScores(leader));
-  setText("grid-count-badge", `${filteredAthletes.length} Active`);
-
-  gridBody.querySelectorAll("tr[data-athlete-id]").forEach((row) => {
-    row.addEventListener("click", () => {
-      const id = row.getAttribute("data-athlete-id");
-      const found = allAthletesCache.find(item => item.id === id);
-      if (!found) return;
-
-      activeSelectedAthleteId = id;
-      
-      gridBody.querySelectorAll("tr").forEach(tr => tr.classList.remove("bg-zeus-gold/10", "border-l-2", "border-zeus-gold"));
-      row.classList.add("bg-zeus-gold/10", "border-l-2", "border-zeus-gold");
-
-      setText("upload-progress-sub", `BOUNDING TARGET: ${found.data.name.substring(0, 15)}...`);
-      $("media-locker-container")?.classList.add("border-zeus-gold", "shadow-[0_0_15px_rgba(212,175,55,0.15)]");
-
-      const uploadBadge = $("upload-count-badge");
-      if (uploadBadge) {
-        uploadBadge.textContent = `Uploads: ${found.data.videos ? found.data.videos.length : 0}`;
+      if (
+        athlete.recordType &&
+        athlete.recordType !== "athlete"
+      ) {
+        return false;
       }
 
-window.setActiveAthlete(found.id, found.data);
- 
-playHighlight(found.data);
-openAthleteProfile(found.id, found.data);
+      const athleteTier =
+        athlete.tier || "";
 
-    });
-  });
-}         
+      const athleteSubTier =
+        athlete.subCategory || "";
 
-// ==========================================
-// 📱 TIKTOK HIGHLIGHT FEED AUTOPLAY
-// ==========================================
+      const athleteSport =
+        athlete.sport || "";
 
-function initializeHighlightAutoplay() {
-  const videos = document.querySelectorAll(".highlight-reel-video");
-
-  if (!videos.length) return;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        const video = entry.target;
-
-        if (entry.isIntersecting) {
-          video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
-      });
-    },
-    {
-      threshold: 0.65
-    }
-  );
-
-  videos.forEach((video) => observer.observe(video));
-}
-
-function subscribeToAthletes() {
-  if (unsubscribeAthletes) return;
-  unsubscribeAthletes = onSnapshot(query(collection(db, "athletes"), limit(120)), (snap) => {
-    allAthletesCache = snap.docs
-  .map(d => ({ id: d.id, data: d.data() }))
-  .sort((a, b) => mergeRosterScores(b.data) - mergeRosterScores(a.data));
-
-window.appState.athletes = allAthletesCache.map(item => ({
-  id: item.id,
-  ...item.data
-}));
-
-setText("athlete-count", allAthletesCache.length);
-
-updateAdminAnalytics();
-
-console.log("ATHLETES LOADED:", allAthletesCache);
-console.log("FILTER VALUES:", $("tier-select")?.value, $("sub-tier-select")?.value);
-
-processAndRenderFilteredAthletes();
-
-initializeHighlightAutoplay();
-
-renderAthleteDirectoryPage();
-renderHighlightFeedPage();
-renderRankings();
-renderSchools();
-renderRecruiting();
-renderLiveGames();
-renderMarketplace();
-renderZeusAI();
-
-if (activeSelectedAthleteId) {
-  const currentSelected = allAthletesCache.find(item => item.id === activeSelectedAthleteId);
-
-  if (currentSelected) {
-    const uploadBadge = $("upload-count-badge");
-
-    if (uploadBadge) {
-      uploadBadge.textContent =
-        `Uploads: ${currentSelected.data.videos ? currentSelected.data.videos.length : 0}`;
-    }
-  }
-}
-
-  }, e => console.error(e));
-}   
-
-function subscribeToSportsFeed() {
-  if (unsubscribeFeedPosts) return;
-
-  unsubscribeFeedPosts = subscribeToFeedPosts(
-    db,
-    (posts) => {
-      allFeedPostsCache = Array.isArray(posts)
-        ? posts
-        : [];
-
-      window.appState.feedPosts =
-        allFeedPostsCache;
-
-      const feedIsOpen =
-        document.getElementById(
-          "sports-feed-page"
+      const athletePosition =
+        normalizeFilterValue(
+          athlete.position ||
+          athlete.posion ||
+          athlete.role
         );
 
-      if (feedIsOpen) {
-        renderSportsFeed();
-      }
-    },
-    {
-      maxResults: 100,
-      status: "published"
+      const athleteClass =
+        normalizeFilterValue(
+          athlete.classYear ||
+          athlete.graduationYear ||
+          athlete.gradYear
+        );
+
+      const recruitingStatus =
+        getAthleteRecruitingStatus(
+          athlete
+        );
+
+      const hasFilm =
+        athleteHasFilm(athlete);
+
+      const matchesTier =
+        selectedTier === "all" ||
+        athleteTier === selectedTier;
+
+      const matchesSubTier =
+        selectedSubTier === "all" ||
+        athleteSubTier ===
+          selectedSubTier;
+
+      const matchesSport =
+        selectedSport === "all" ||
+        athleteSport === selectedSport;
+
+      const matchesPosition =
+        !positionQuery ||
+        athletePosition.includes(
+          positionQuery
+        );
+
+      const matchesClass =
+        !classQuery ||
+        athleteClass.includes(
+          classQuery
+        );
+
+      const matchesRecruiting =
+        recruitingFilter === "all" ||
+        recruitingStatus ===
+          recruitingFilter;
+
+      const matchesFilm =
+        filmFilter === "all" ||
+        (
+          filmFilter === "with-film" &&
+          hasFilm
+        ) ||
+        (
+          filmFilter === "without-film" &&
+          !hasFilm
+        );
+
+      return (
+        matchesTier &&
+        matchesSubTier &&
+        matchesSport &&
+        matchesPosition &&
+        matchesClass &&
+        matchesRecruiting &&
+        matchesFilm
+      );
     }
   );
 }
 
-// ==========================================
-// ADMINISTRATIVE UTILITY: VIDEO MANAGEMENT
-// ==========================================
+// ======================================================
+// APEX ATHLETE PANEL
+// ======================================================
 
-async function addVideoToTitan(athleteId, videoTitle, videoUrl) {
-  if (!isAdminProfile(currentProfile)) {
-    console.error("Access Denied: Only Admins can append video data.");
+function clearApexAthlete() {
+  setText(
+    "apex-predator-name",
+    "No Apex Selected"
+  );
+
+  setText(
+    "apex-predator-score",
+    "---"
+  );
+
+  setText(
+    "apex-athlete-school",
+    "School N/A"
+  );
+
+  setText(
+    "apex-athlete-sport-position",
+    "Sport • Position"
+  );
+
+  setText(
+    "apex-athlete-class",
+    "Class N/A"
+  );
+
+  const apexAvatar =
+    $("apex-athlete-avatar");
+
+  if (apexAvatar) {
+    apexAvatar.innerHTML = "👤";
+  }
+
+  const profileButton =
+    $("apex-view-profile-btn");
+
+  if (profileButton) {
+    profileButton.onclick = null;
+    profileButton.disabled = true;
+  }
+}
+
+function updateApexAthlete(
+  athleteRecord
+) {
+  if (!athleteRecord) {
+    clearApexAthlete();
     return;
   }
 
-  const titanRef = doc(db, "athletes", athleteId);
-  try {
-    await updateDoc(titanRef, {
-      videos: arrayUnion({
-        title: videoTitle,
-        url: videoUrl,
-        createdAt: new Date().toISOString()
-      })
-    });
-    console.log("Video bound to Titan successfully.");
-  } catch (err) {
-    console.error("Titan binding failed:", err);
-  }
-}
+  const athlete =
+    athleteRecord.data || {};
 
-// ==========================================
-// CORE BOOT SEQUENCE & AUTH LIFECYCLE
-// ==========================================
+  const athleteId =
+    athleteRecord.id || "";
 
-async function handleSignedInUser(user) {
-  currentUser = user;
-  window.appState.currentUser = user;
-
-  try {
-    const snap = await getDoc(
-      doc(db, "users", user.uid)
-    );
-
-    currentProfile = snap.exists()
-      ? snap.data()
-      : {
-          uid: user.uid,
-          email: user.email,
-          role: "fan",
-          nickname: user.email || "Sports Fan"
-        };
-
-        window.appState.currentProfile = currentProfile; updateAccessUI(currentProfile); 
-    subscribeToAthletes();
-    subscribeToSportsFeed();
-    subscribeToChat();
-  } catch { 
-    updateAccessUI(null); 
-  } finally { 
-    hide("loading-overlay"); 
-  }
-}
-
-// ==========================================
-// ADMINISTRATIVE PURGE ENGINE
-// ==========================================
-
-async function purgeGridDuplicates() {
-  if (!isAdminProfile(currentProfile)) return;
-  const statusEl = $("user-status"); const oldText = statusEl?.textContent || "";
-  if (statusEl) statusEl.textContent = "Purging Extras...";
-  try {
-    const snap = await getDocs(collection(db, "athletes"));
-    const seen = new Set(); let deletedCount = 0;
-    for (const d of snap.docs) {
-      const n = String(d.data().name || "").trim().toLowerCase();
-      if (!n) continue;
-      if (seen.has(n)) { await deleteDoc(doc(db, "athletes", d.id)); deletedCount++; } 
-      else seen.add(n);
-    }
-    if (statusEl) statusEl.textContent = `Cleaned ${deletedCount} rows`;
-    setTimeout(() => { if (statusEl) statusEl.textContent = oldText; }, 3000);
-  } catch (e) { console.error(e); }
-}
-
-// ==========================================
-// WAR ROOM CHAT ENGINE
-// ==========================================
-
-function renderChatMessage(message) {
-  const display = $("chat-box-display"); if (!display) return;
-  const row = document.createElement("div");
-  row.className = "text-gray-300 text-[11px] font-mono leading-relaxed animate-feed-slide";
-  row.innerHTML = `<span class="text-zeus-gold font-bold">[${escapeHtml(message.nickname || message.email || "User")}]:</span> <span>${escapeHtml(message.text || "")}</span>`;
-  display.appendChild(row); display.scrollTop = display.scrollHeight;
-}
-
-function subscribeToChat() {
-  if (unsubscribeChat) return;
-  unsubscribeChat = onValue(rtdbQuery(rtdbRef(rtdb, "warRoomMessages"), limitToLast(40)), (snap) => {
-    const display = $("chat-box-display"); if (!display) return;
-    display.innerHTML = `<div class="text-gray-600">[System]: Connection secure. Welcome to the Admin War Room.</div>`;
-    snap.forEach(child => { renderChatMessage(child.val()); });
-  }, e => console.error(e));
-}
-
-async function sendChatMessage() {
-  const input = $("chat-message-input"); const text = input?.value.trim();
-  if (!text || !currentUser || !currentProfile) return;
-  try {
-    await push(rtdbRef(rtdb, "warRoomMessages"), { text, uid: currentUser.uid, email: currentUser.email || "", nickname: currentProfile.nickname || currentProfile.email || "User", createdAt: rtdbServerTimestamp() });
-    input.value = "";
-  } catch (e) { console.error(e); }
-}
-
-// ==========================================
-// 📡 REAL-TIME SPORTS TICKER ENGINE
-// ==========================================
-
-const ST_LOUIS_TICKER_ALERTS = [
-  { prefix: "🏈 [NFL]", text: "Mini-camp intensity spiking; veteran defensive sets showing +12% efficiency.", color: "text-zeus-gold" },
-  { prefix: "🏀 [NBA]", text: "Finals series intensity reaching apex levels; court-side telemetry data locked.", color: "text-white" },
-  { prefix: "⚾ [MLB]", text: "Mid-season pitching rotation adjusted for high-heat summer weather.", color: "text-gray-300" },
-  { prefix: "🏒 [NHL]", text: "Stanley Cup playoffs entering high-stakes overtime simulation mode.", color: "text-white" },
-  { prefix: "⚽ [MLS]", text: "CITY SC maintaining aggressive high-press transition against defensive lines.", color: "text-zeus-gold" },
-  { prefix: "🎾 [ATP/WTA]", text: "Grand Slam circuit updates: baseline rally duration trending upwards.", color: "text-gray-400" },
-  { prefix: "🎓 [COLLEGE]", text: "Spring camp drills concluding; incoming roster depth charts finalized.", color: "text-zeus-gold" },
-  { prefix: "🦅 [CFL]", text: "Pre-season training camp coverage hitting peak operational velocity.", color: "text-zeus-gold" },
-  { prefix: "🚨 [SYSTEM]", text: "Cross-league data ingestion: All global sports tickers synchronized.", color: "text-red-400" }
-];
-
-function initializeLiveSportsTicker() {
-  const container = $("live-feed-container");
-  if (!container) return;
-  container.innerHTML = `<div class="text-zeus-gold/80 animate-feed-slide">🛰️ [SYSTEM]: Global Feed Sync active...</div>`;
-
-  setInterval(() => {
-    const alert = ST_LOUIS_TICKER_ALERTS[Math.floor(Math.random() * ST_LOUIS_TICKER_ALERTS.length)];
-    const alertRow = document.createElement("div");
-    alertRow.className = `animate-feed-slide pt-1 font-mono text-xs border-t border-zeus-border/40 mt-1 flex flex-col sm:flex-row sm:space-x-2 ${alert.color}`;
-    alertRow.innerHTML = `
-      <span class="font-bold shrink-0">${alert.prefix}</span>
-      <span class="text-gray-300">${alert.text}</span>
-    `;
-    container.appendChild(alertRow);
-    container.scrollTop = container.scrollHeight;
-    if (container.children.length > 20) { container.removeChild(container.firstChild); }
-  }, 3000); 
-}
-
-// ==========================================
-// ⚙️ UNIFIED DYNAMIC MARKETPLACE GRID GENERATOR (THEMED FIX)
-// ==========================================
-
-function renderGlobalGearMarketplace(products) {
-  const container = document.getElementById('gear-grid-container');
-  if (!container) return;
-  
-  container.innerHTML = ''; // This safely clears out your hardcoded backup hoodies!
-
-  products.forEach(product => {
-    const isAffiliate = product.isExternal === true;
-    const productString = JSON.stringify(product).replace(/"/g, '&quot;');
-    
-    // Formats price safely whether it's stored as a double or text string
-    const priceFormatted = !isNaN(product.price) ? Number(product.price).toFixed(2) : "0.00";
-    
-    const cardHtml = `
-      <div class="border border-zeus-border bg-zeus-black/60 rounded-xl p-3 flex flex-col justify-between group hover:border-zeus-gold/30 transition">
-        <div>
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="text-[8px] text-gray-500 font-mono uppercase tracking-wider">${product.location || 'US Shipping'}</span>
-            <span class="px-2 py-0.5 text-[8px] font-mono font-bold rounded bg-zeus-goldSoft text-zeus-gold border border-zeus-gold/20 uppercase tracking-wide">
-              ${isAffiliate ? product.storeName : "Snt.L.Mo. Exclusive"}
-            </span>
-          </div>
-          
-          <div class="w-full aspect-square bg-zeus-panel rounded border border-zeus-border flex items-center justify-center p-2 overflow-hidden relative">
-            <img src="${product.image}" alt="${product.name || product.title}" class="w-full h-full object-cover absolute inset-0" />
-          </div>
-          
-          <div class="mt-2">
-            <h3 class="text-[10px] font-bold text-white tracking-tight truncate" title="${product.name || product.title}">
-              ${product.name || product.title}
-            </h3>
-            <p class="text-zeus-gold font-mono font-black text-xs mt-0.5">$${priceFormatted}</p>
-          </div>
-        </div>
-
-        <button 
-          onclick="openGearLightbox(${productString})"
-          class="w-full mt-3 bg-zeus-panel hover:bg-zeus-gold text-gray-400 hover:text-black font-mono text-[9px] font-bold uppercase px-2 py-1.5 rounded transition border border-zeus-border"
-        >
-          View Details
-        </button>
-      </div>
-    `;
-    container.insertAdjacentHTML('beforeend', cardHtml);
-  });
-}
-
-// ==========================================
-// 🧥 APPAREL LIGHTBOX MODAL MAPPING INTERFACE ENGINE
-// ==========================================
-
-function openGearLightbox(product) {
-  const modal = $("gear-lightbox-modal");
-  if (!modal) return;
-
-  const productName = product.name || product.title;
-  const productPrice = typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price;
-  
-  setText("lightbox-title", productName);
-  setText("lightbox-price", productPrice);
-  
-  const subText = product.isExternal 
-    ? `Available via ${product.storeName} (${product.location || 'Global'})` 
-    : (product.sub || '"Dominate Today" Edition');
-  setText("lightbox-sub", subText);
-  
-  const iconEl = $("lightbox-icon");
-  if (iconEl) {
-    iconEl.textContent = product.isExternal ? "👟" : (product.icon || "🧥");
-  }
-
-  const checkoutBtn = $("lightbox-checkout-btn");
-  if (checkoutBtn) {
-    checkoutBtn.dataset.productPayload = JSON.stringify(product);
-    
-    if (product.isExternal) {
-      checkoutBtn.textContent = `Buy via ${product.storeName}`;
-      checkoutBtn.className = "w-full py-3 rounded-lg bg-white text-black font-black uppercase tracking-wider text-xs transition-all cursor-pointer text-center block";
-    } else {
-      checkoutBtn.textContent = "Secure Local Checkout";
-      checkoutBtn.className = "w-full py-3 rounded-lg bg-gold text-black font-black uppercase tracking-wider text-xs transition-all hover:bg-amber-400 cursor-pointer text-center block";
-    }
-  }
-
-  modal.classList.remove("hidden");
-}
-
-function initializeGearLightbox() {
-  $("gear-view-tee")?.addEventListener("click", () => {
-    openGearLightbox({ name: "Wolverines Premium Tee", sub: '"Outwork Yesterday" Edition', price: 30.00, isExternal: false, stripePriceId: "price_tee_123", icon: "👕" });
-  });
-
-  $("gear-view-hoodie")?.addEventListener("click", () => {
-    openGearLightbox({ name: "Snt.L.Mo Elite Hoodie", sub: '"Dominate Today" Heavyweight', price: 65.00, isExternal: false, stripePriceId: "price_1QxXYZ123456", icon: "🧥" });
-  });
-
-  const closeBtn = $("gear-lightbox-close");
-  closeBtn?.addEventListener("click", () => {
-    $("gear-lightbox-modal")?.classList.add("hidden");
-  });
-
-  $("lightbox-checkout-btn")?.addEventListener("click", (e) => {
-    const payloadRaw = e.currentTarget.dataset.productPayload;
-    if (!payloadRaw) return;
-
-    const product = JSON.parse(payloadRaw);
-
-    if (product.isExternal) {
-      window.open(product.affiliateUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      if (typeof redirectToStripeCheckout === 'function') {
-        redirectToStripeCheckout(product.stripePriceId);
-      } else {
-        alert(`Launching checkout node for ${product.name || product.title}...`);
-      }
-    }
-  });
-}
-
-// ==========================================
-// 📡 CLOUD INVENTORY SYNC TERMINAL ENGINE (UPDATED)
-// ==========================================
-
-function loadLiveGearMarketplace() {
-  const merchandiseRef = collection(db, "merchandise");
-  
-  onSnapshot(merchandiseRef, (snapshot) => {
-    const productsArray = [];
-    
-    snapshot.forEach((doc) => {
-      productsArray.push({ id: doc.id, ...doc.data() });
-    });
-
-    if (productsArray.length > 0) {
-      renderGlobalGearMarketplace(productsArray);
-    }
-  }, (error) => {
-    console.error("Firestore synchronizer pipeline blocked:", error);
-  });
-}
-
-// ==========================================
-// EVENT LISTENERS MATRIX BOUNDS
-// ==========================================
-
-function renderAdmin() {
-  const root = document.getElementById("admin-platform");
-  if (!root) return;
-
-  root.innerHTML = renderAdminPage();
-
-  updateAdminAnalytics();
-}
-
- function updateAdminAnalytics() {
-
-  const athletes = allAthletesCache.map(item => item.data || {});
-
-  // ==========================================
-  // TOTAL ATHLETES
-  // ==========================================
-
-  const totalAthletes = athletes.length;
-
-  // ==========================================
-  // UNIQUE SCHOOLS
-  // ==========================================
-
-  const schools = new Set(
-    athletes
-      .map(athlete =>
-        String(
-          athlete.school ||
-          athlete.schoolName ||
-          athlete["school name"] ||
-          ""
-        )
-          .trim()
-          .toLowerCase()
-      )
-      .filter(Boolean)
-  );
-
-  // ==========================================
-  // UNIQUE STATES
-  // ==========================================
-
-  const states = new Set(
-    athletes
-      .map(athlete =>
-        String(athlete.state || "")
-          .trim()
-          .toUpperCase()
-      )
-      .filter(Boolean)
-  );
-
-  // ==========================================
-  // TOTAL VIDEOS
-  // ==========================================
-
-  const totalVideos = athletes.reduce((total, athlete) => {
-    const videos = Array.isArray(athlete.videos)
-      ? athlete.videos.length
-      : 0;
-
-    const hasFallbackHighlight =
-      !videos &&
-      Boolean(athlete.highlightUrl || athlete.highlight);
-
-    return total + videos + (hasFallbackHighlight ? 1 : 0);
-  }, 0);
-
-    // ==========================================
-  // TOTAL LIKES
-  // ==========================================
-
-  const totalLikes = athletes.reduce((total, athlete) => {
-
-    if (!Array.isArray(athlete.videos)) return total;
-
-    return total + athlete.videos.reduce(
-      (sum, video) => sum + Number(video.likes || 0),
-      0
-    );
-
-  }, 0);
-
-  // ==========================================
-  // TOTAL VIEWS
-  // ==========================================
-
-  const totalViews = athletes.reduce((total, athlete) => {
-
-    if (!Array.isArray(athlete.videos)) return total;
-
-    return total + athlete.videos.reduce(
-      (sum, video) => sum + Number(video.views || 0),
-      0
-    );
-
-  }, 0);
-
-  // ==========================================
-  // RECRUITERS WATCHING
-  // (temporary until recruiter accounts exist)
-  // ==========================================
-
-  const recruiterCount = Math.max(
-    Math.round(totalAthletes * 0.35),
-    0
-  );
-
-  // ==========================================
-  // ZEUS REPORTS GENERATED
-  // (temporary until AI reports are stored)
-  // ==========================================
-
- const reportCount = Math.round(
-  totalVideos * 1.4
-);
-
-// ==========================================
-// PLATFORM LEADERS
-// ==========================================
-
-// Fastest Growing Sport
-const sportTotals = {};
-
-athletes.forEach((athlete) => {
-  const sport = athlete.sport || "Unknown";
-
-  sportTotals[sport] = (sportTotals[sport] || 0) + 1;
-});
-
-const fastestSport =
-  Object.entries(sportTotals)
-    .sort((a, b) => b[1] - a[1])[0] || ["None", 0];
-
-// Trending Athlete
-let trendingAthlete = {
-  name: "None",
-  score: 0,
-  sport: ""
-};
-
-athletes.forEach((athlete) => {
-  const videos = Array.isArray(athlete.videos)
-    ? athlete.videos
-    : [];
-
-  const likes = videos.reduce(
-    (sum, video) => sum + Number(video.likes || 0),
-    0
-  );
-
-  const views = videos.reduce(
-    (sum, video) => sum + Number(video.views || 0),
-    0
-  );
-
-  const zeus = Number(
-    athlete.zeusRating ||
-    athlete.total ||
-    mergeRosterScores(athlete) ||
-    0
-  );
-
-  const score =
-    zeus +
-    likes +
-    Math.floor(views / 100);
-
-  if (score > trendingAthlete.score) {
-    trendingAthlete = {
-      name: athlete.name || "Unknown Athlete",
-      sport: athlete.sport || "Sport",
-      score
-    };
-  }
-});
-
-// Top School
-const schoolTotals = {};
-
-athletes.forEach((athlete) => {
   const school =
     athlete.school ||
     athlete.schoolName ||
     athlete["school name"] ||
-    "";
+    "School N/A";
 
-  if (!school.trim()) return;
+  const sport =
+    athlete.sport ||
+    "Sport";
 
-  schoolTotals[school] =
-    (schoolTotals[school] || 0) + 1;
-});
+  const position =
+    athlete.position ||
+    athlete.posion ||
+    athlete.role ||
+    "ATH";
 
-const topSchool =
-  Object.entries(schoolTotals)
-    .sort((a, b) => b[1] - a[1])[0] || ["None", 0];
+  const classYear =
+    athlete.classYear ||
+    athlete.graduationYear ||
+    athlete.gradYear ||
+    "Class N/A";
 
-// ==========================================
-// UPDATE ANALYTICS CARDS
-// ==========================================
+  setText(
+    "apex-predator-name",
+    athlete.name ||
+    "Unknown Athlete"
+  );
 
-  
+  setText(
+    "apex-predator-score",
+    mergeRosterScores(athlete)
+  );
 
-  // ==========================================
-  // UPDATE ANALYTICS CARDS
-  // ==========================================
+  setText(
+    "apex-athlete-school",
+    school
+  );
 
-setText("admin-athlete-count", totalAthletes.toLocaleString());
+  setText(
+    "apex-athlete-sport-position",
+    `${sport} • ${position}`
+  );
 
-setText("admin-school-count", schools.size.toLocaleString());
+  setText(
+    "apex-athlete-class",
+    classYear
+  );
 
-setText("admin-state-count", states.size.toLocaleString());
+  const apexAvatar =
+    $("apex-athlete-avatar");
 
-setText("admin-video-count", totalVideos.toLocaleString());
+  if (apexAvatar) {
+    const photoUrl =
+      athlete.photoUrl ||
+      athlete.profilePhoto ||
+      "";
 
-setText("admin-like-count", totalLikes.toLocaleString());
+    apexAvatar.innerHTML =
+      photoUrl
+        ? `
+            <img
+              src="${escapeHtml(photoUrl)}"
+              alt="${escapeHtml(
+                athlete.name ||
+                "Athlete"
+              )}"
+              class="h-full w-full object-cover">
+          `
+        : "👤";
+  }
 
-setText("admin-view-count", totalViews.toLocaleString());
+  const profileButton =
+    $("apex-view-profile-btn");
 
-setText("admin-recruiter-count", recruiterCount.toLocaleString());
+  if (profileButton) {
+    profileButton.disabled = false;
 
-setText("admin-report-count", reportCount.toLocaleString());
-
-setText("admin-map-state-count", states.size.toLocaleString());
-
-setText(
-  "admin-fastest-sport",
-  fastestSport[0]
-);
-
-setText(
-  "admin-fastest-sport-detail",
-  `${fastestSport[1]} athletes represented`
-);
-
-setText(
-  "admin-trending-athlete",
-  trendingAthlete.name
-);
-
-setText(
-  "admin-trending-athlete-detail",
-  `${trendingAthlete.sport} • Trend score ${trendingAthlete.score}`
-);
-
-setText(
-  "admin-top-school",
-  topSchool[0]
-);
-
-setText(
-  "admin-top-school-detail",
-  `${topSchool[1]} athletes represented`
-);
-
-renderAdminStateDistribution(athletes);
+    profileButton.onclick =
+      () => {
+        window
+          .openAthleteFromDirectory
+          ?.(athleteId);
+      };
+  }
 }
 
-function renderAdminStateDistribution(athletes = []) {
-  const mapRoot = $("admin-us-map");
-  const breakdownRoot = $("admin-state-breakdown");
+// ======================================================
+// ATHLETE MATRIX ROW
+// ======================================================
 
-  if (!mapRoot || !breakdownRoot) return;
+function renderAdminAthleteRow(
+  athleteRecord
+) {
+  const id =
+    athleteRecord.id || "";
 
-  // Converts full state names and abbreviations
-  // into a consistent two-letter abbreviation.
-  const stateAliases = {
-    alabama: "AL",
-    alaska: "AK",
-    arizona: "AZ",
-    arkansas: "AR",
-    california: "CA",
-    colorado: "CO",
-    connecticut: "CT",
-    delaware: "DE",
-    florida: "FL",
-    georgia: "GA",
-    hawaii: "HI",
-    idaho: "ID",
-    illinois: "IL",
-    indiana: "IN",
-    iowa: "IA",
-    kansas: "KS",
-    kentucky: "KY",
-    louisiana: "LA",
-    maine: "ME",
-    maryland: "MD",
-    massachusetts: "MA",
-    michigan: "MI",
-    minnesota: "MN",
-    mississippi: "MS",
-    missouri: "MO",
-    montana: "MT",
-    nebraska: "NE",
-    nevada: "NV",
-    "new hampshire": "NH",
-    "new jersey": "NJ",
-    "new mexico": "NM",
-    "new york": "NY",
-    "north carolina": "NC",
-    "north dakota": "ND",
-    ohio: "OH",
-    oklahoma: "OK",
-    oregon: "OR",
-    pennsylvania: "PA",
-    "rhode island": "RI",
-    "south carolina": "SC",
-    "south dakota": "SD",
-    tennessee: "TN",
-    texas: "TX",
-    utah: "UT",
-    vermont: "VT",
-    virginia: "VA",
-    washington: "WA",
-    "west virginia": "WV",
-    wisconsin: "WI",
-    wyoming: "WY",
-    "district of columbia": "DC"
-  };
+  const athlete =
+    athleteRecord.data || {};
 
-  const normalizeState = (value = "") => {
-    const cleaned = String(value).trim();
+  const athleteName =
+    athlete.name ||
+    "Unnamed Athlete";
 
-    if (!cleaned) return "";
+  const school =
+    athlete.school ||
+    athlete.schoolName ||
+    athlete["school name"] ||
+    "School N/A";
 
-    if (cleaned.length === 2) {
-      return cleaned.toUpperCase();
+  const sport =
+    athlete.sport ||
+    "Sport N/A";
+
+  const position =
+    athlete.position ||
+    athlete.posion ||
+    athlete.role ||
+    "ATH";
+
+  const classYear =
+    athlete.classYear ||
+    athlete.graduationYear ||
+    athlete.gradYear ||
+    "N/A";
+
+  const zeusRating =
+    mergeRosterScores(athlete);
+
+  const offers =
+    normalizeAthleteOffers(
+      athlete.offers
+    );
+
+  const recruitingStatus =
+    getAthleteRecruitingStatus(
+      athlete
+    );
+
+  const statusClasses =
+    getRecruitingStatusClasses(
+      recruitingStatus
+    );
+
+  const hasFilm =
+    athleteHasFilm(athlete);
+
+  const verified =
+    Boolean(
+      athlete.verified ||
+      athlete.isVerified ||
+      athlete.profileVerified
+    );
+
+  const photoUrl =
+    athlete.photoUrl ||
+    athlete.profilePhoto ||
+    "assets/football1.jpg";
+
+  const isSelected =
+    activeSelectedAthleteId === id;
+
+  const rowClasses =
+    isSelected
+      ? (
+          "bg-zeus-gold/10 " +
+          "border-l-2 " +
+          "border-zeus-gold"
+        )
+      : (
+          "border-t " +
+          "border-zeus-border"
+        );
+
+  const cityState =
+    [
+      athlete.city,
+      athlete.state
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+  return `
+    <tr
+      class="${rowClasses} cursor-pointer transition hover:bg-zeus-gold/5"
+      data-athlete-id="${escapeHtml(id)}">
+
+      <td class="min-w-[210px] p-3">
+
+        <div class="flex items-center gap-3">
+
+          <img
+            src="${escapeHtml(photoUrl)}"
+            alt="${escapeHtml(athleteName)}"
+            class="h-10 w-10 rounded-full border border-zeus-border bg-zeus-panel object-cover">
+
+          <div class="min-w-0">
+
+            <div class="flex items-center gap-1.5">
+
+              <strong class="truncate text-xs text-white">
+                ${escapeHtml(athleteName)}
+              </strong>
+
+              ${
+                verified
+                  ? `
+                      <span
+                        class="text-[10px] text-green-400"
+                        title="Verified Athlete">
+
+                        ✓
+
+                      </span>
+                    `
+                  : ""
+              }
+
+            </div>
+
+            <small class="block text-[9px] uppercase tracking-wide text-gray-600">
+              ${
+                escapeHtml(cityState) ||
+                "Location N/A"
+              }
+            </small>
+
+          </div>
+
+        </div>
+
+      </td>
+
+      <td class="min-w-[160px] p-3">
+        <span class="text-xs text-gray-300">
+          ${escapeHtml(school)}
+        </span>
+      </td>
+
+      <td class="whitespace-nowrap p-3 text-center">
+        <span class="text-xs font-bold text-white">
+          ${escapeHtml(sport)}
+        </span>
+      </td>
+
+      <td class="p-3 text-center">
+        <span
+          class="inline-flex min-w-[38px] justify-center rounded border border-zeus-border bg-zeus-panel px-2 py-1 text-[10px] font-bold uppercase text-gray-300">
+
+          ${escapeHtml(position)}
+
+        </span>
+      </td>
+
+      <td class="p-3 text-center">
+        <span class="text-xs text-gray-300">
+          ${escapeHtml(classYear)}
+        </span>
+      </td>
+
+      <td class="p-3 text-center">
+        <strong class="text-sm font-black text-zeus-gold">
+          ${zeusRating}
+        </strong>
+      </td>
+
+      <td class="p-3 text-center">
+
+        ${
+          hasFilm
+            ? `
+                <button
+                  type="button"
+                  data-athlete-film="${escapeHtml(id)}"
+                  class="inline-flex items-center gap-1 rounded border border-zeus-gold/20 bg-zeus-goldSoft px-2 py-1 text-[9px] font-bold uppercase text-zeus-gold transition hover:bg-zeus-gold hover:text-black">
+
+                  🎥 Film
+
+                </button>
+              `
+            : `
+                <span class="text-[10px] uppercase text-gray-700">
+                  None
+                </span>
+              `
+        }
+
+      </td>
+
+      <td class="p-3 text-center">
+        <span
+          class="inline-flex min-w-[32px] justify-center rounded border border-zeus-border bg-zeus-panel px-2 py-1 text-[10px] font-black text-gray-300">
+
+          ${offers.length}
+
+        </span>
+      </td>
+
+      <td class="min-w-[120px] p-3 text-center">
+        <span
+          class="inline-flex rounded border px-2 py-1 text-[9px] font-bold uppercase tracking-wide ${statusClasses}">
+
+          ${escapeHtml(
+            recruitingStatus
+          )}
+
+        </span>
+      </td>
+
+      <td class="min-w-[240px] p-3 text-right">
+
+        <div class="flex flex-wrap items-center justify-end gap-1">
+
+          <button
+            type="button"
+            data-athlete-view="${escapeHtml(id)}"
+            class="rounded border border-zeus-border bg-zeus-panel px-2 py-1 font-mono text-[9px] font-bold uppercase text-gray-300 transition hover:border-zeus-gold hover:text-zeus-gold">
+
+            View
+
+          </button>
+
+          <button
+            type="button"
+            data-athlete-edit="${escapeHtml(id)}"
+            class="rounded border border-blue-900/60 bg-blue-950/40 px-2 py-1 font-mono text-[9px] font-bold uppercase text-blue-300 transition hover:bg-blue-800 hover:text-white">
+
+            Edit
+
+          </button>
+
+          <button
+            type="button"
+            data-athlete-draft="1"
+            data-athlete-id="${escapeHtml(id)}"
+            class="rounded border border-zeus-gold/20 bg-zeus-goldSoft px-2 py-1 font-mono text-[9px] font-bold uppercase text-zeus-gold transition hover:bg-zeus-gold hover:text-black">
+
+            Draft A
+
+          </button>
+
+          <button
+            type="button"
+            data-athlete-draft="2"
+            data-athlete-id="${escapeHtml(id)}"
+            class="rounded border border-zeus-border bg-gray-900 px-2 py-1 font-mono text-[9px] font-bold uppercase text-gray-400 transition hover:bg-gray-700 hover:text-white">
+
+            Draft B
+
+          </button>
+
+          <button
+            type="button"
+            data-athlete-draft="3"
+            data-athlete-id="${escapeHtml(id)}"
+            class="rounded border border-zeus-gold bg-zeus-gold px-2 py-1 font-mono text-[9px] font-bold uppercase text-black transition hover:bg-yellow-400">
+
+            National
+
+          </button>
+
+        </div>
+
+      </td>
+
+    </tr>
+  `;
+}
+
+// ======================================================
+// ATHLETE MATRIX RENDERER
+// ======================================================
+
+function processAndRenderFilteredAthletes() {
+  const gridBody =
+    $("match-grid-body");
+
+  if (!gridBody) {
+    return;
+  }
+
+  const filteredAthletes =
+    getFilteredAthletes();
+
+  setText(
+    "grid-count-badge",
+    `${filteredAthletes.length} Active Athletes`
+  );
+
+  if (!filteredAthletes.length) {
+    gridBody.innerHTML = `
+      <tr>
+
+        <td
+          colspan="10"
+          class="p-8 text-center">
+
+          <div class="flex flex-col items-center gap-2">
+
+            <span class="text-3xl">
+              👤
+            </span>
+
+            <strong class="text-sm text-white">
+              No athletes found
+            </strong>
+
+            <p class="text-xs text-gray-500">
+              No athlete profiles match
+              the selected filters.
+            </p>
+
+          </div>
+
+        </td>
+
+      </tr>
+    `;
+
+    clearApexAthlete();
+    return;
+  }
+
+  const sortedAthletes =
+    [...filteredAthletes].sort(
+      (first, second) =>
+        mergeRosterScores(
+          second.data
+        ) -
+        mergeRosterScores(
+          first.data
+        )
+    );
+
+  updateApexAthlete(
+    sortedAthletes[0]
+  );
+
+  gridBody.innerHTML =
+    sortedAthletes
+      .map(renderAdminAthleteRow)
+      .join("");
+
+  gridBody.onclick = (
+    event
+  ) => {
+    const viewButton =
+      event.target.closest(
+        "[data-athlete-view]"
+      );
+
+    if (viewButton) {
+      event.stopPropagation();
+
+      window
+        .openAthleteFromDirectory
+        ?.(viewButton.dataset.athleteView);
+
+      return;
     }
 
-    return stateAliases[cleaned.toLowerCase()] || cleaned.toUpperCase();
+    const editButton =
+      event.target.closest(
+        "[data-athlete-edit]"
+      );
+
+    if (editButton) {
+      event.stopPropagation();
+
+      window
+        .editAthleteFromGrid
+        ?.(editButton.dataset.athleteEdit);
+
+      return;
+    }
+
+    const filmButton =
+      event.target.closest(
+        "[data-athlete-film]"
+      );
+
+    if (filmButton) {
+      event.stopPropagation();
+
+      const athleteId =
+        filmButton.dataset.athleteFilm;
+
+      const record =
+        allAthletesCache.find(
+          (item) =>
+            item.id === athleteId
+        );
+
+      if (record) {
+        activeSelectedAthleteId =
+          athleteId;
+
+        window.setActiveAthlete(
+          record.id,
+          record.data
+        );
+
+        playHighlight(record.data);
+      }
+
+      return;
+    }
+
+    const draftButton =
+      event.target.closest(
+        "[data-athlete-draft]"
+      );
+
+    if (draftButton) {
+      event.stopPropagation();
+
+      window.inlineDraftDispatch?.(
+        draftButton.dataset.athleteId,
+        Number(
+          draftButton.dataset
+            .athleteDraft
+        )
+      );
+
+      return;
+    }
+
+    const row =
+      event.target.closest(
+        "tr[data-athlete-id]"
+      );
+
+    if (!row) {
+      return;
+    }
+
+    const athleteId =
+      row.dataset.athleteId;
+
+    const record =
+      allAthletesCache.find(
+        (item) =>
+          item.id === athleteId
+      );
+
+    if (!record) {
+      return;
+    }
+
+    activeSelectedAthleteId =
+      athleteId;
+
+    gridBody
+      .querySelectorAll(
+        "tr[data-athlete-id]"
+      )
+      .forEach((currentRow) => {
+        currentRow.classList.remove(
+          "bg-zeus-gold/10",
+          "border-l-2",
+          "border-zeus-gold"
+        );
+      });
+
+    row.classList.add(
+      "bg-zeus-gold/10",
+      "border-l-2",
+      "border-zeus-gold"
+    );
+
+    setText(
+      "upload-progress-sub",
+      `BOUNDING TARGET: ${
+        (
+          record.data.name ||
+          "Athlete"
+        ).substring(0, 20)
+      }`
+    );
+
+    const mediaLocker =
+      $("media-locker-container");
+
+    mediaLocker?.classList.add(
+      "border-zeus-gold",
+      "shadow-[0_0_15px_rgba(212,175,55,0.15)]"
+    );
+
+    const videoCount =
+      Array.isArray(
+        record.data.videos
+      )
+        ? record.data.videos.length
+        : athleteHasFilm(
+              record.data
+            )
+          ? 1
+          : 0;
+
+    setText(
+      "upload-count-badge",
+      `Uploads: ${videoCount}`
+    );
+
+    window.setActiveAthlete(
+      record.id,
+      record.data
+    );
+
+    playHighlight(record.data);
   };
+}
+               
+// ======================================================
+// HIGHLIGHT AUTOPLAY
+// ======================================================
+
+let highlightObserver = null;
+
+function initializeHighlightAutoplay() {
+  if (highlightObserver) {
+    highlightObserver.disconnect();
+  }
+
+  const videos = Array.from(
+    document.querySelectorAll(
+      ".highlight-reel-video"
+    )
+  );
+
+  if (!videos.length) {
+    return;
+  }
+
+  highlightObserver =
+    new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const video =
+            entry.target;
+
+          if (
+            entry.isIntersecting
+          ) {
+            video
+              .play()
+              .catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      {
+        threshold: 0.65
+      }
+    );
+
+  videos.forEach((video) => {
+    highlightObserver.observe(video);
+  });
+}
+
+// ======================================================
+// ATHLETE DATA NORMALIZATION
+// ======================================================
+
+function buildAthleteDuplicateKey(
+  athlete = {}
+) {
+  const normalize = (
+    value = ""
+  ) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  return [
+    normalize(athlete.name),
+    normalize(athlete.sport),
+    normalize(
+      athlete.school ||
+      athlete.schoolName ||
+      athlete["school name"]
+    ),
+    normalize(
+      athlete.classYear ||
+      athlete.graduationYear ||
+      athlete.gradYear
+    )
+  ].join("|");
+}
+
+function buildUniqueAthleteCache(
+  records = []
+) {
+  const uniqueAthletes =
+    new Map();
+
+  records.forEach((item) => {
+    const athlete =
+      item?.data || {};
+
+    if (
+      athlete.recordType &&
+      athlete.recordType !==
+        "athlete"
+    ) {
+      return;
+    }
+
+    const duplicateKey =
+      buildAthleteDuplicateKey(
+        athlete
+      );
+
+    const existing =
+      uniqueAthletes.get(
+        duplicateKey
+      );
+
+    if (!existing) {
+      uniqueAthletes.set(
+        duplicateKey,
+        item
+      );
+
+      return;
+    }
+
+    const existingScore =
+      mergeRosterScores(
+        existing.data
+      );
+
+    const incomingScore =
+      mergeRosterScores(
+        athlete
+      );
+
+    if (
+      incomingScore >
+      existingScore
+    ) {
+      uniqueAthletes.set(
+        duplicateKey,
+        item
+      );
+    }
+  });
+
+  return Array.from(
+    uniqueAthletes.values()
+  ).sort(
+    (first, second) =>
+      mergeRosterScores(
+        second.data
+      ) -
+      mergeRosterScores(
+        first.data
+      )
+  );
+}
+
+function refreshAthleteDependentViews() {
+  processAndRenderFilteredAthletes();
+
+  renderAthleteDirectoryPage();
+  renderHighlightFeedPage();
+  renderRankings();
+  renderSchools();
+  renderRecruiting();
+  renderLiveGames();
+  renderMarketplace();
+  renderZeusAI();
+
+  updateAdminAnalytics();
+
+  setText(
+    "athlete-count",
+    allAthletesCache.length
+  );
+
+  if (!activeSelectedAthleteId) {
+    return;
+  }
+
+  const selectedRecord =
+    allAthletesCache.find(
+      (item) =>
+        item.id ===
+        activeSelectedAthleteId
+    );
+
+  if (!selectedRecord) {
+    activeSelectedAthleteId =
+      null;
+
+    window.appState
+      .activeAthleteId = null;
+
+    window.appState
+      .activeAthlete = null;
+
+    setText(
+      "upload-count-badge",
+      "Uploads: 0"
+    );
+
+    return;
+  }
+
+  const videoCount =
+    Array.isArray(
+      selectedRecord.data.videos
+    )
+      ? selectedRecord
+          .data
+          .videos
+          .length
+      : athleteHasFilm(
+            selectedRecord.data
+          )
+        ? 1
+        : 0;
+
+  setText(
+    "upload-count-badge",
+    `Uploads: ${videoCount}`
+  );
+}
+
+// ======================================================
+// FIRESTORE ATHLETE SUBSCRIPTION
+// ======================================================
+
+function subscribeToAthletes() {
+  if (unsubscribeAthletes) {
+    return;
+  }
+
+  const athletesQuery =
+    query(
+      collection(
+        db,
+        "athletes"
+      ),
+      limit(120)
+    );
+
+  unsubscribeAthletes =
+    onSnapshot(
+      athletesQuery,
+
+      (snapshot) => {
+        const loadedAthletes =
+          snapshot.docs.map(
+            (athleteDocument) => ({
+              id:
+                athleteDocument.id,
+
+              data:
+                normalizeAthleteRecord(
+                  athleteDocument.data(),
+                  athleteDocument.id
+                )
+            })
+          );
+
+        allAthletesCache =
+          buildUniqueAthleteCache(
+            loadedAthletes
+          );
+
+        window.appState.athletes =
+          allAthletesCache.map(
+            (item) => ({
+              id: item.id,
+              ...item.data
+            })
+          );
+
+        console.log(
+          "ATHLETES LOADED:",
+          allAthletesCache
+        );
+
+        refreshAthleteDependentViews();
+      },
+
+      (error) => {
+        console.error(
+          "Unable to subscribe to athletes:",
+          error
+        );
+      }
+    );
+}
+
+// ======================================================
+// SPORTS FEED SUBSCRIPTION
+// ======================================================
+
+function subscribeToSportsFeed() {
+  if (unsubscribeFeedPosts) {
+    return;
+  }
+
+  unsubscribeFeedPosts =
+    subscribeToFeedPosts(
+      db,
+
+      (posts) => {
+        allFeedPostsCache =
+          Array.isArray(posts)
+            ? posts
+            : [];
+
+        window.appState.feedPosts =
+          allFeedPostsCache;
+
+        const feedPage =
+          document.getElementById(
+            "sports-feed-page"
+          );
+
+        if (feedPage) {
+          renderSportsFeed();
+        }
+      },
+
+      {
+        maxResults: 100,
+        status: "published"
+      }
+    );
+}
+
+// ======================================================
+// ADMIN VIDEO MANAGEMENT
+// ======================================================
+
+async function addVideoToTitan(
+  athleteId,
+  videoTitle,
+  videoUrl
+) {
+  if (
+    !isAdminProfile(
+      currentProfile
+    )
+  ) {
+    throw new Error(
+      "Admin access denied."
+    );
+  }
+
+  const normalizedTitle =
+    String(
+      videoTitle || ""
+    ).trim();
+
+  const normalizedUrl =
+    String(
+      videoUrl || ""
+    ).trim();
+
+  if (
+    !athleteId ||
+    !normalizedTitle ||
+    !normalizedUrl
+  ) {
+    throw new Error(
+      "Athlete ID, video title, and URL are required."
+    );
+  }
+
+  const athleteReference =
+    doc(
+      db,
+      "athletes",
+      athleteId
+    );
+
+  await updateDoc(
+    athleteReference,
+    {
+      videos:
+        arrayUnion({
+          title:
+            normalizedTitle,
+
+          url:
+            normalizedUrl,
+
+          createdAt:
+            new Date()
+              .toISOString(),
+
+          createdBy:
+            currentUser?.uid ||
+            "unknown"
+        }),
+
+      updatedAt:
+        serverTimestamp()
+    }
+  );
+}
+
+// ======================================================
+// AUTHENTICATED USER LIFECYCLE
+// ======================================================
+
+async function handleSignedInUser(
+  user
+) {
+  currentUser = user;
+
+  window.appState.currentUser =
+    user;
+
+  try {
+    const profileSnapshot =
+      await getDoc(
+        doc(
+          db,
+          "users",
+          user.uid
+        )
+      );
+
+    currentProfile =
+      profileSnapshot.exists()
+        ? profileSnapshot.data()
+        : {
+            uid: user.uid,
+            email:
+              user.email || "",
+            role: "fan",
+            nickname:
+              user.displayName ||
+              user.email ||
+              "Sports Fan"
+          };
+
+    window.appState.currentProfile =
+      currentProfile;
+
+    updateAccessUI(
+      currentProfile
+    );
+
+    subscribeToAthletes();
+    subscribeToSportsFeed();
+    subscribeToChat();
+  } catch (error) {
+    console.error(
+      "Signed-in user initialization failed:",
+      error
+    );
+
+    currentProfile = null;
+
+    window.appState.currentProfile =
+      null;
+
+    updateAccessUI(null);
+  } finally {
+    hide("loading-overlay");
+  }
+}
+
+// ======================================================
+// DUPLICATE ATHLETE PURGE
+// ======================================================
+
+function getDuplicateCleanupKey(
+  athlete = {}
+) {
+  return buildAthleteDuplicateKey(
+    athlete
+  );
+}
+
+async function purgeGridDuplicates() {
+  if (
+    !isAdminProfile(
+      currentProfile
+    )
+  ) {
+    alert("Admin access denied.");
+    return;
+  }
+
+  const confirmed =
+    window.confirm(
+      "Remove duplicate athlete profiles from the database?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const statusElement =
+    $("user-status");
+
+  const previousText =
+    statusElement?.textContent ||
+    "";
+
+  if (statusElement) {
+    statusElement.textContent =
+      "Purging duplicates...";
+  }
+
+  try {
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "athletes"
+        )
+      );
+
+    const savedRecords =
+      new Map();
+
+    const deleteTasks = [];
+
+    snapshot.docs.forEach(
+      (athleteDocument) => {
+        const athlete =
+          athleteDocument.data();
+
+        const key =
+          getDuplicateCleanupKey(
+            athlete
+          );
+
+        if (!key.replace(/\|/g, "")) {
+          return;
+        }
+
+        const existing =
+          savedRecords.get(key);
+
+        if (!existing) {
+          savedRecords.set(
+            key,
+            {
+              id:
+                athleteDocument.id,
+
+              score:
+                mergeRosterScores(
+                  athlete
+                )
+            }
+          );
+
+          return;
+        }
+
+        const incomingScore =
+          mergeRosterScores(
+            athlete
+          );
+
+        if (
+          incomingScore >
+          existing.score
+        ) {
+          deleteTasks.push(
+            deleteDoc(
+              doc(
+                db,
+                "athletes",
+                existing.id
+              )
+            )
+          );
+
+          savedRecords.set(
+            key,
+            {
+              id:
+                athleteDocument.id,
+
+              score:
+                incomingScore
+            }
+          );
+        } else {
+          deleteTasks.push(
+            deleteDoc(
+              doc(
+                db,
+                "athletes",
+                athleteDocument.id
+              )
+            )
+          );
+        }
+      }
+    );
+
+    await Promise.all(
+      deleteTasks
+    );
+
+    if (statusElement) {
+      statusElement.textContent =
+        `Cleaned ${deleteTasks.length} duplicate profiles`;
+    }
+  } catch (error) {
+    console.error(
+      "Duplicate purge failed:",
+      error
+    );
+
+    if (statusElement) {
+      statusElement.textContent =
+        "Duplicate purge failed";
+    }
+
+    alert(
+      "Duplicate cleanup failed. Check the browser console."
+    );
+  } finally {
+    window.setTimeout(
+      () => {
+        if (statusElement) {
+          statusElement.textContent =
+            previousText;
+        }
+      },
+      3000
+    );
+  }
+}
+
+// ======================================================
+// WAR ROOM CHAT
+// ======================================================
+
+function renderChatMessage(
+  message = {}
+) {
+  const display =
+    $("chat-box-display");
+
+  if (!display) {
+    return;
+  }
+
+  const nickname =
+    message.nickname ||
+    message.email ||
+    "User";
+
+  const text =
+    message.text || "";
+
+  const row =
+    document.createElement(
+      "div"
+    );
+
+  row.className =
+    "animate-feed-slide " +
+    "font-mono text-[11px] " +
+    "leading-relaxed text-gray-300";
+
+  row.innerHTML = `
+    <span class="font-bold text-zeus-gold">
+      [${escapeHtml(nickname)}]:
+    </span>
+
+    <span>
+      ${escapeHtml(text)}
+    </span>
+  `;
+
+  display.appendChild(row);
+
+  display.scrollTop =
+    display.scrollHeight;
+}
+
+function subscribeToChat() {
+  if (unsubscribeChat) {
+    return;
+  }
+
+  const messagesQuery =
+    rtdbQuery(
+      rtdbRef(
+        rtdb,
+        "warRoomMessages"
+      ),
+      limitToLast(40)
+    );
+
+  unsubscribeChat =
+    onValue(
+      messagesQuery,
+
+      (snapshot) => {
+        const display =
+          $("chat-box-display");
+
+        if (!display) {
+          return;
+        }
+
+        display.innerHTML = `
+          <div class="text-gray-600">
+            [System]: Connection secure.
+            Welcome to the Admin War Room.
+          </div>
+        `;
+
+        snapshot.forEach(
+          (childSnapshot) => {
+            renderChatMessage(
+              childSnapshot.val()
+            );
+          }
+        );
+      },
+
+      (error) => {
+        console.error(
+          "Chat subscription failed:",
+          error
+        );
+      }
+    );
+}
+
+async function sendChatMessage() {
+  const input =
+    $("chat-message-input");
+
+  const text =
+    input?.value
+      .trim() || "";
+
+  if (
+    !text ||
+    !currentUser ||
+    !currentProfile
+  ) {
+    return;
+  }
+
+  try {
+    await push(
+      rtdbRef(
+        rtdb,
+        "warRoomMessages"
+      ),
+      {
+        text,
+
+        uid:
+          currentUser.uid,
+
+        email:
+          currentUser.email ||
+          "",
+
+        nickname:
+          currentProfile.nickname ||
+          currentProfile.email ||
+          "User",
+
+        createdAt:
+          rtdbServerTimestamp()
+      }
+    );
+
+    if (input) {
+      input.value = "";
+    }
+  } catch (error) {
+    console.error(
+      "Chat message failed:",
+      error
+    );
+
+    alert(
+      "Your chat message could not be sent."
+    );
+  }
+}
+
+// ======================================================
+// REAL-TIME SPORTS TICKER
+// ======================================================
+
+const ST_LOUIS_TICKER_ALERTS = [
+  {
+    prefix: "🏈 [NFL]",
+    text:
+      "Mini-camp intensity spiking; veteran defensive sets showing +12% efficiency.",
+    color: "text-zeus-gold"
+  },
+  {
+    prefix: "🏀 [NBA]",
+    text:
+      "Finals series intensity reaching apex levels; court-side telemetry data locked.",
+    color: "text-white"
+  },
+  {
+    prefix: "⚾ [MLB]",
+    text:
+      "Mid-season pitching rotation adjusted for high-heat summer weather.",
+    color: "text-gray-300"
+  },
+  {
+    prefix: "🏒 [NHL]",
+    text:
+      "Stanley Cup playoffs entering high-stakes overtime simulation mode.",
+    color: "text-white"
+  },
+  {
+    prefix: "⚽ [MLS]",
+    text:
+      "CITY SC maintaining aggressive high-press transition against defensive lines.",
+    color: "text-zeus-gold"
+  },
+  {
+    prefix: "🎾 [ATP/WTA]",
+    text:
+      "Grand Slam circuit updates: baseline rally duration trending upward.",
+    color: "text-gray-400"
+  },
+  {
+    prefix: "🎓 [COLLEGE]",
+    text:
+      "Spring camp drills concluding; incoming roster depth charts finalized.",
+    color: "text-zeus-gold"
+  },
+  {
+    prefix: "🦅 [CFL]",
+    text:
+      "Pre-season training camp coverage hitting peak operational velocity.",
+    color: "text-zeus-gold"
+  },
+  {
+    prefix: "🚨 [SYSTEM]",
+    text:
+      "Cross-league data ingestion: all global sports tickers synchronized.",
+    color: "text-red-400"
+  }
+];
+
+let liveTickerInterval = null;
+
+function initializeLiveSportsTicker() {
+  const container =
+    $("live-feed-container");
+
+  if (!container) {
+    return;
+  }
+
+  if (liveTickerInterval) {
+    clearInterval(
+      liveTickerInterval
+    );
+
+    liveTickerInterval = null;
+  }
+
+  container.innerHTML = `
+    <div class="animate-feed-slide text-zeus-gold/80">
+      🛰️ [SYSTEM]: Global Feed Sync active...
+    </div>
+  `;
+
+  liveTickerInterval =
+    window.setInterval(
+      () => {
+        const item =
+          ST_LOUIS_TICKER_ALERTS[
+            Math.floor(
+              Math.random() *
+              ST_LOUIS_TICKER_ALERTS.length
+            )
+          ];
+
+        if (!item) {
+          return;
+        }
+
+        const alertRow =
+          document.createElement(
+            "div"
+          );
+
+        alertRow.className = [
+          "animate-feed-slide",
+          "mt-1",
+          "flex",
+          "flex-col",
+          "border-t",
+          "border-zeus-border/40",
+          "pt-1",
+          "font-mono",
+          "text-xs",
+          "sm:flex-row",
+          "sm:space-x-2",
+          item.color
+        ].join(" ");
+
+        alertRow.innerHTML = `
+          <span class="shrink-0 font-bold">
+            ${escapeHtml(item.prefix)}
+          </span>
+
+          <span class="text-gray-300">
+            ${escapeHtml(item.text)}
+          </span>
+        `;
+
+        container.appendChild(
+          alertRow
+        );
+
+        while (
+          container.children.length >
+          20
+        ) {
+          container.removeChild(
+            container.firstElementChild
+          );
+        }
+
+        container.scrollTop =
+          container.scrollHeight;
+      },
+      3000
+    );
+}
+
+// ======================================================
+// MARKETPLACE PRODUCT HELPERS
+// ======================================================
+
+function normalizeMarketplaceProduct(
+  product = {}
+) {
+  const name =
+    product.name ||
+    product.title ||
+    "Untitled Product";
+
+  const numericPrice =
+    Number(product.price);
+
+  return {
+    ...product,
+
+    name,
+
+    price:
+      Number.isFinite(
+        numericPrice
+      )
+        ? numericPrice
+        : 0,
+
+    image:
+      product.image ||
+      product.imageUrl ||
+      "assets/gear-placeholder.png",
+
+    location:
+      product.location ||
+      "US Shipping",
+
+    storeName:
+      product.storeName ||
+      "Snt.L.Mo. Exclusive",
+
+    isExternal:
+      product.isExternal === true
+  };
+}
+
+function formatMarketplacePrice(
+  price
+) {
+  const numericPrice =
+    Number(price);
+
+  return Number.isFinite(
+    numericPrice
+  )
+    ? `$${numericPrice.toFixed(2)}`
+    : "$0.00";
+}
+
+// ======================================================
+// MARKETPLACE GRID
+// ======================================================
+
+function renderGlobalGearMarketplace(
+  products = []
+) {
+  const container =
+    $("gear-grid-container");
+
+  if (!container) {
+    return;
+  }
+
+  const normalizedProducts =
+    Array.isArray(products)
+      ? products.map(
+          normalizeMarketplaceProduct
+        )
+      : [];
+
+  if (
+    !normalizedProducts.length
+  ) {
+    container.innerHTML = `
+      <div class="col-span-full rounded-xl border border-zeus-border bg-zeus-black/60 p-8 text-center">
+
+        <span class="text-3xl">
+          🛍️
+        </span>
+
+        <strong class="mt-3 block text-sm text-white">
+          No marketplace items available
+        </strong>
+
+        <p class="mt-1 text-xs text-gray-500">
+          Products will appear here when inventory is published.
+        </p>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML =
+    normalizedProducts
+      .map(
+        (product, index) => `
+          <article
+            class="group flex flex-col justify-between rounded-xl border border-zeus-border bg-zeus-black/60 p-3 transition hover:border-zeus-gold/30"
+            data-marketplace-card="${index}">
+
+            <div>
+
+              <div class="mb-2 flex items-center justify-between gap-2">
+
+                <span class="font-mono text-[8px] uppercase tracking-wider text-gray-500">
+                  ${escapeHtml(
+                    product.location
+                  )}
+                </span>
+
+                <span
+                  class="rounded border border-zeus-gold/20 bg-zeus-goldSoft px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-wide text-zeus-gold">
+
+                  ${
+                    product.isExternal
+                      ? escapeHtml(
+                          product.storeName
+                        )
+                      : "Snt.L.Mo. Exclusive"
+                  }
+
+                </span>
+
+              </div>
+
+              <div
+                class="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded border border-zeus-border bg-zeus-panel p-2">
+
+                <img
+                  src="${escapeHtml(
+                    product.image
+                  )}"
+                  alt="${escapeHtml(
+                    product.name
+                  )}"
+                  class="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy">
+
+              </div>
+
+              <div class="mt-2">
+
+                <h3
+                  class="truncate text-[10px] font-bold tracking-tight text-white"
+                  title="${escapeHtml(
+                    product.name
+                  )}">
+
+                  ${escapeHtml(
+                    product.name
+                  )}
+
+                </h3>
+
+                <p class="mt-0.5 font-mono text-xs font-black text-zeus-gold">
+                  ${formatMarketplacePrice(
+                    product.price
+                  )}
+                </p>
+
+              </div>
+
+            </div>
+
+            <button
+              type="button"
+              data-marketplace-open="${index}"
+              class="mt-3 w-full rounded border border-zeus-border bg-zeus-panel px-2 py-1.5 font-mono text-[9px] font-bold uppercase text-gray-400 transition hover:bg-zeus-gold hover:text-black">
+
+              View Details
+
+            </button>
+
+          </article>
+        `
+      )
+      .join("");
+
+  container.onclick = (
+    event
+  ) => {
+    const button =
+      event.target.closest(
+        "[data-marketplace-open]"
+      );
+
+    if (!button) {
+      return;
+    }
+
+    const productIndex =
+      Number(
+        button.dataset
+          .marketplaceOpen
+      );
+
+    const product =
+      normalizedProducts[
+        productIndex
+      ];
+
+    if (product) {
+      openGearLightbox(
+        product
+      );
+    }
+  };
+}
+
+// ======================================================
+// MARKETPLACE LIGHTBOX
+// ======================================================
+
+function openGearLightbox(
+  product = {}
+) {
+  const modal =
+    $("gear-lightbox-modal");
+
+  if (!modal) {
+    return;
+  }
+
+  const normalizedProduct =
+    normalizeMarketplaceProduct(
+      product
+    );
+
+  setText(
+    "lightbox-title",
+    normalizedProduct.name
+  );
+
+  setText(
+    "lightbox-price",
+    formatMarketplacePrice(
+      normalizedProduct.price
+    )
+  );
+
+  const subtitle =
+    normalizedProduct.isExternal
+      ? `Available via ${
+          normalizedProduct.storeName
+        } (${
+          normalizedProduct.location ||
+          "Global"
+        })`
+      : (
+          normalizedProduct.sub ||
+          '"Dominate Today" Edition'
+        );
+
+  setText(
+    "lightbox-sub",
+    subtitle
+  );
+
+  const iconElement =
+    $("lightbox-icon");
+
+  if (iconElement) {
+    iconElement.textContent =
+      normalizedProduct.isExternal
+        ? "👟"
+        : (
+            normalizedProduct.icon ||
+            "🧥"
+          );
+  }
+
+  const checkoutButton =
+    $("lightbox-checkout-btn");
+
+  if (checkoutButton) {
+    checkoutButton.dataset
+      .productPayload =
+      JSON.stringify(
+        normalizedProduct
+      );
+
+    checkoutButton.textContent =
+      normalizedProduct.isExternal
+        ? `Buy via ${
+            normalizedProduct.storeName
+          }`
+        : "Secure Local Checkout";
+
+    checkoutButton.className =
+      normalizedProduct.isExternal
+        ? (
+            "block w-full cursor-pointer rounded-lg " +
+            "bg-white py-3 text-center text-xs font-black " +
+            "uppercase tracking-wider text-black transition-all"
+          )
+        : (
+            "block w-full cursor-pointer rounded-lg " +
+            "bg-zeus-gold py-3 text-center text-xs font-black " +
+            "uppercase tracking-wider text-black transition-all " +
+            "hover:bg-yellow-400"
+          );
+  }
+
+  modal.classList.remove(
+    "hidden"
+  );
+}
+
+let gearLightboxInitialized =
+  false;
+
+function initializeGearLightbox() {
+  if (gearLightboxInitialized) {
+    return;
+  }
+
+  gearLightboxInitialized =
+    true;
+
+  $("gear-view-tee")
+    ?.addEventListener(
+      "click",
+      () => {
+        openGearLightbox({
+          name:
+            "Wolverines Premium Tee",
+
+          sub:
+            '"Outwork Yesterday" Edition',
+
+          price: 30,
+
+          isExternal: false,
+
+          stripePriceId:
+            "price_tee_123",
+
+          icon: "👕"
+        });
+      }
+    );
+
+  $("gear-view-hoodie")
+    ?.addEventListener(
+      "click",
+      () => {
+        openGearLightbox({
+          name:
+            "Snt.L.Mo Elite Hoodie",
+
+          sub:
+            '"Dominate Today" Heavyweight',
+
+          price: 65,
+
+          isExternal: false,
+
+          stripePriceId:
+            "price_1QxXYZ123456",
+
+          icon: "🧥"
+        });
+      }
+    );
+
+  $("gear-lightbox-close")
+    ?.addEventListener(
+      "click",
+      () => {
+        $("gear-lightbox-modal")
+          ?.classList.add(
+            "hidden"
+          );
+      }
+    );
+
+  $("gear-lightbox-modal")
+    ?.addEventListener(
+      "click",
+      (event) => {
+        if (
+          event.target.id ===
+          "gear-lightbox-modal"
+        ) {
+          event.currentTarget
+            .classList.add(
+              "hidden"
+            );
+        }
+      }
+    );
+
+  $("lightbox-checkout-btn")
+    ?.addEventListener(
+      "click",
+      (event) => {
+        const payloadRaw =
+          event.currentTarget
+            .dataset
+            .productPayload;
+
+        if (!payloadRaw) {
+          return;
+        }
+
+        let product;
+
+        try {
+          product =
+            JSON.parse(
+              payloadRaw
+            );
+        } catch (error) {
+          console.error(
+            "Marketplace product payload is invalid:",
+            error
+          );
+
+          return;
+        }
+
+        if (
+          product.isExternal
+        ) {
+          if (
+            product.affiliateUrl
+          ) {
+            window.open(
+              product.affiliateUrl,
+              "_blank",
+              "noopener,noreferrer"
+            );
+          } else {
+            alert(
+              "This external product does not have a valid purchase link."
+            );
+          }
+
+          return;
+        }
+
+        if (
+          typeof redirectToStripeCheckout ===
+          "function"
+        ) {
+          redirectToStripeCheckout(
+            product.stripePriceId
+          );
+        } else {
+          alert(
+            `Launching checkout for ${
+              product.name ||
+              "this product"
+            }...`
+          );
+        }
+      }
+    );
+}
+
+// ======================================================
+// CLOUD INVENTORY SUBSCRIPTION
+// ======================================================
+
+let unsubscribeMarketplace = null;
+
+function loadLiveGearMarketplace() {
+  if (unsubscribeMarketplace) {
+    return;
+  }
+
+  const merchandiseCollection =
+    collection(
+      db,
+      "merchandise"
+    );
+
+  unsubscribeMarketplace =
+    onSnapshot(
+      merchandiseCollection,
+
+      (snapshot) => {
+        const products =
+          snapshot.docs.map(
+            (productDocument) => ({
+              id:
+                productDocument.id,
+
+              ...productDocument.data()
+            })
+          );
+
+        renderGlobalGearMarketplace(
+          products
+        );
+      },
+
+      (error) => {
+        console.error(
+          "Marketplace inventory subscription failed:",
+          error
+        );
+
+        renderGlobalGearMarketplace(
+          []
+        );
+      }
+    );
+}
+
+// ======================================================
+// ADMIN PAGE RENDERER
+// ======================================================
+
+function renderAdmin() {
+  const root =
+    document.getElementById(
+      "admin-platform"
+    );
+
+  if (!root) {
+    return;
+  }
+
+  root.innerHTML =
+    renderAdminPage();
+
+  updateAdminAnalytics();
+
+  processAndRenderFilteredAthletes();
+
+  renderDraftBoards();
+
+  initializeMediaLockerEngine();
+}
+
+// ======================================================
+// ADMIN ANALYTICS HELPERS
+// ======================================================
+
+function normalizeAnalyticsValue(
+  value = ""
+) {
+  return String(value ?? "")
+    .trim();
+}
+
+function getAthleteVideos(
+  athlete = {}
+) {
+  return Array.isArray(
+    athlete.videos
+  )
+    ? athlete.videos.filter(
+        Boolean
+      )
+    : [];
+}
+
+function getAthleteVideoCount(
+  athlete = {}
+) {
+  const videos =
+    getAthleteVideos(athlete);
+
+  if (videos.length) {
+    return videos.length;
+  }
+
+  return athleteHasFilm(athlete)
+    ? 1
+    : 0;
+}
+
+function getAthleteVideoMetric(
+  athlete = {},
+  metricName
+) {
+  return getAthleteVideos(
+    athlete
+  ).reduce(
+    (total, video) =>
+      total +
+      safeNumber(
+        video?.[metricName]
+      ),
+    0
+  );
+}
+
+function buildFrequencyMap(
+  values = []
+) {
+  return values.reduce(
+    (totals, value) => {
+      const normalized =
+        normalizeAnalyticsValue(
+          value
+        );
+
+      if (!normalized) {
+        return totals;
+      }
+
+      totals[normalized] =
+        (
+          totals[normalized] ||
+          0
+        ) + 1;
+
+      return totals;
+    },
+    {}
+  );
+}
+
+function getTopFrequencyEntry(
+  frequencyMap = {}
+) {
+  return (
+    Object.entries(
+      frequencyMap
+    )
+      .sort(
+        (first, second) =>
+          second[1] -
+          first[1]
+      )[0] ||
+    ["None", 0]
+  );
+}
+
+function getTrendingAthlete(
+  athletes = []
+) {
+  return athletes.reduce(
+    (
+      currentLeader,
+      athlete
+    ) => {
+      const likes =
+        getAthleteVideoMetric(
+          athlete,
+          "likes"
+        );
+
+      const views =
+        getAthleteVideoMetric(
+          athlete,
+          "views"
+        );
+
+      const zeusRating =
+        safeNumber(
+          athlete.zeusRating ||
+          athlete.total ||
+          mergeRosterScores(
+            athlete
+          )
+        );
+
+      const trendScore =
+        zeusRating +
+        likes +
+        Math.floor(
+          views / 100
+        );
+
+      if (
+        trendScore <=
+        currentLeader.score
+      ) {
+        return currentLeader;
+      }
+
+      return {
+        name:
+          athlete.name ||
+          "Unknown Athlete",
+
+        sport:
+          athlete.sport ||
+          "Sport",
+
+        score:
+          trendScore
+      };
+    },
+    {
+      name: "None",
+      sport: "",
+      score: 0
+    }
+  );
+}
+
+// ======================================================
+// ADMIN ANALYTICS
+// ======================================================
+
+function updateAdminAnalytics() {
+  const athletes =
+    allAthletesCache.map(
+      (item) =>
+        item?.data || {}
+    );
+
+  const totalAthletes =
+    athletes.length;
+
+  const schoolNames =
+    athletes
+      .map(
+        (athlete) =>
+          athlete.school ||
+          athlete.schoolName ||
+          athlete["school name"] ||
+          ""
+      )
+      .map(
+        normalizeAnalyticsValue
+      )
+      .filter(Boolean);
+
+  const stateNames =
+    athletes
+      .map(
+        (athlete) =>
+          normalizeAnalyticsValue(
+            athlete.state
+          ).toUpperCase()
+      )
+      .filter(Boolean);
+
+  const schools =
+    new Set(
+      schoolNames.map(
+        (school) =>
+          school.toLowerCase()
+      )
+    );
+
+  const states =
+    new Set(stateNames);
+
+  const totalVideos =
+    athletes.reduce(
+      (
+        total,
+        athlete
+      ) =>
+        total +
+        getAthleteVideoCount(
+          athlete
+        ),
+      0
+    );
+
+  const totalLikes =
+    athletes.reduce(
+      (
+        total,
+        athlete
+      ) =>
+        total +
+        getAthleteVideoMetric(
+          athlete,
+          "likes"
+        ),
+      0
+    );
+
+  const totalViews =
+    athletes.reduce(
+      (
+        total,
+        athlete
+      ) =>
+        total +
+        getAthleteVideoMetric(
+          athlete,
+          "views"
+        ),
+      0
+    );
+
+  const recruiterCount =
+    Math.max(
+      Math.round(
+        totalAthletes *
+        0.35
+      ),
+      0
+    );
+
+  const reportCount =
+    Math.round(
+      totalVideos *
+      1.4
+    );
+
+  const sportFrequency =
+    buildFrequencyMap(
+      athletes.map(
+        (athlete) =>
+          athlete.sport ||
+          "Unknown"
+      )
+    );
+
+  const fastestSport =
+    getTopFrequencyEntry(
+      sportFrequency
+    );
+
+  const schoolFrequency =
+    buildFrequencyMap(
+      schoolNames
+    );
+
+  const topSchool =
+    getTopFrequencyEntry(
+      schoolFrequency
+    );
+
+  const trendingAthlete =
+    getTrendingAthlete(
+      athletes
+    );
+
+  // ====================================================
+  // PRIMARY ANALYTICS CARDS
+  // ====================================================
+
+  setText(
+    "admin-athlete-count",
+    totalAthletes.toLocaleString()
+  );
+
+  setText(
+    "admin-school-count",
+    schools.size.toLocaleString()
+  );
+
+  setText(
+    "admin-state-count",
+    states.size.toLocaleString()
+  );
+
+  setText(
+    "admin-video-count",
+    totalVideos.toLocaleString()
+  );
+
+  setText(
+    "admin-like-count",
+    totalLikes.toLocaleString()
+  );
+
+  setText(
+    "admin-view-count",
+    totalViews.toLocaleString()
+  );
+
+  setText(
+    "admin-recruiter-count",
+    recruiterCount.toLocaleString()
+  );
+
+  setText(
+    "admin-report-count",
+    reportCount.toLocaleString()
+  );
+
+  setText(
+    "admin-map-state-count",
+    states.size.toLocaleString()
+  );
+
+  // ====================================================
+  // PLATFORM LEADERS
+  // ====================================================
+
+  setText(
+    "admin-fastest-sport",
+    fastestSport[0]
+  );
+
+  setText(
+    "admin-fastest-sport-detail",
+    `${fastestSport[1]} athletes represented`
+  );
+
+  setText(
+    "admin-trending-athlete",
+    trendingAthlete.name
+  );
+
+  setText(
+    "admin-trending-athlete-detail",
+    trendingAthlete.score
+      ? `${trendingAthlete.sport} • Trend score ${trendingAthlete.score}`
+      : "No athlete activity yet"
+  );
+
+  setText(
+    "admin-top-school",
+    topSchool[0]
+  );
+
+  setText(
+    "admin-top-school-detail",
+    `${topSchool[1]} athletes represented`
+  );
+
+  renderAdminStateDistribution(
+    athletes
+  );
+}
+
+// ======================================================
+// ADMIN STATE DISTRIBUTION
+// ======================================================
+
+const STATE_ALIASES = {
+  alabama: "AL",
+  alaska: "AK",
+  arizona: "AZ",
+  arkansas: "AR",
+  california: "CA",
+  colorado: "CO",
+  connecticut: "CT",
+  delaware: "DE",
+  florida: "FL",
+  georgia: "GA",
+  hawaii: "HI",
+  idaho: "ID",
+  illinois: "IL",
+  indiana: "IN",
+  iowa: "IA",
+  kansas: "KS",
+  kentucky: "KY",
+  louisiana: "LA",
+  maine: "ME",
+  maryland: "MD",
+  massachusetts: "MA",
+  michigan: "MI",
+  minnesota: "MN",
+  mississippi: "MS",
+  missouri: "MO",
+  montana: "MT",
+  nebraska: "NE",
+  nevada: "NV",
+  "new hampshire": "NH",
+  "new jersey": "NJ",
+  "new mexico": "NM",
+  "new york": "NY",
+  "north carolina": "NC",
+  "north dakota": "ND",
+  ohio: "OH",
+  oklahoma: "OK",
+  oregon: "OR",
+  pennsylvania: "PA",
+  "rhode island": "RI",
+  "south carolina": "SC",
+  "south dakota": "SD",
+  tennessee: "TN",
+  texas: "TX",
+  utah: "UT",
+  vermont: "VT",
+  virginia: "VA",
+  washington: "WA",
+  "west virginia": "WV",
+  wisconsin: "WI",
+  wyoming: "WY",
+  "district of columbia": "DC"
+};
+
+function normalizeStateCode(value = "") {
+  const cleaned =
+    String(value ?? "")
+      .trim();
+
+  if (!cleaned) {
+    return "";
+  }
+
+  if (cleaned.length === 2) {
+    return cleaned.toUpperCase();
+  }
+
+  return (
+    STATE_ALIASES[
+      cleaned.toLowerCase()
+    ] ||
+    cleaned.toUpperCase()
+  );
+}
+
+function renderAdminStateDistribution(
+  athletes = []
+) {
+  const mapRoot =
+    $("admin-us-map");
+
+  const breakdownRoot =
+    $("admin-state-breakdown");
+
+  if (!mapRoot || !breakdownRoot) {
+    return;
+  }
 
   const stateTotals = {};
 
   athletes.forEach((athlete) => {
-    const state = normalizeState(athlete.state);
+    const state =
+      normalizeStateCode(
+        athlete?.state
+      );
 
-    if (!state) return;
+    if (!state) {
+      return;
+    }
 
-    stateTotals[state] = (stateTotals[state] || 0) + 1;
+    stateTotals[state] =
+      (stateTotals[state] || 0) + 1;
   });
 
-  const stateEntries = Object.entries(stateTotals)
-    .sort((a, b) => b[1] - a[1]);
+  const stateEntries =
+    Object.entries(stateTotals)
+      .sort(
+        (first, second) =>
+          second[1] - first[1]
+      );
 
-  const athletesWithStates = stateEntries.reduce(
-    (total, [, count]) => total + count,
-    0
-  );
+  const athleteStateTotal =
+    stateEntries.reduce(
+      (total, [, count]) =>
+        total + count,
+      0
+    );
 
   if (!stateEntries.length) {
     mapRoot.innerHTML = `
@@ -1719,7 +5386,9 @@ function renderAdminStateDistribution(athletes = []) {
 
         <span>🇺🇸</span>
 
-        <strong>No State Data Yet</strong>
+        <strong>
+          No State Data Yet
+        </strong>
 
         <p>
           Add state information to athlete profiles
@@ -1738,366 +5407,762 @@ function renderAdminStateDistribution(athletes = []) {
     return;
   }
 
-  const highestStateCount = stateEntries[0][1];
+  const highestStateCount =
+    stateEntries[0]?.[1] || 1;
 
   mapRoot.innerHTML = `
     <div class="admin-state-map-grid">
 
-      ${stateEntries.map(([state, count], index) => {
-        const strength = highestStateCount
-          ? Math.max(0.2, count / highestStateCount)
-          : 0.2;
+      ${stateEntries
+        .map(
+          ([state, count], index) => {
+            const strength =
+              Math.max(
+                0.2,
+                count /
+                  highestStateCount
+              );
 
-        const percentage = athletesWithStates
-          ? Math.round((count / athletesWithStates) * 100)
-          : 0;
+            const percentage =
+              athleteStateTotal
+                ? Math.round(
+                    (
+                      count /
+                      athleteStateTotal
+                    ) * 100
+                  )
+                : 0;
 
-        return `
-          <button
-            type="button"
-            class="admin-state-map-tile"
-            style="--state-strength:${strength}"
-            onclick="window.openAdminStateDetails('${state}')">
+            return `
+              <button
+                type="button"
+                class="admin-state-map-tile"
+                style="--state-strength:${strength}"
+                data-admin-state="${escapeHtml(
+                  state
+                )}">
 
-            <span class="admin-state-rank">
-              #${index + 1}
-            </span>
+                <span class="admin-state-rank">
+                  #${index + 1}
+                </span>
 
-            <strong>
-              ${state}
-            </strong>
+                <strong>
+                  ${escapeHtml(state)}
+                </strong>
 
-            <small>
-              ${count} Athlete${count === 1 ? "" : "s"}
-            </small>
+                <small>
+                  ${count}
+                  Athlete${count === 1 ? "" : "s"}
+                </small>
 
-            <em>
-              ${percentage}%
-            </em>
+                <em>
+                  ${percentage}%
+                </em>
 
-          </button>
-        `;
-      }).join("")}
+              </button>
+            `;
+          }
+        )
+        .join("")}
 
     </div>
   `;
 
-  breakdownRoot.innerHTML = stateEntries.map(
-    ([state, count], index) => {
-      const percentage = athletesWithStates
-        ? Math.round((count / athletesWithStates) * 100)
-        : 0;
+  breakdownRoot.innerHTML =
+    stateEntries
+      .map(
+        ([state, count], index) => {
+          const percentage =
+            athleteStateTotal
+              ? Math.round(
+                  (
+                    count /
+                    athleteStateTotal
+                  ) * 100
+                )
+              : 0;
 
-      return `
-        <div class="admin-state-breakdown-row">
+          return `
+            <div class="admin-state-breakdown-row">
 
-          <div class="admin-state-breakdown-rank">
-            ${index + 1}
-          </div>
+              <div class="admin-state-breakdown-rank">
+                ${index + 1}
+              </div>
 
-          <div class="admin-state-breakdown-name">
+              <div class="admin-state-breakdown-name">
 
-            <strong>
-              ${state}
-            </strong>
+                <strong>
+                  ${escapeHtml(state)}
+                </strong>
 
-            <span>
-              ${count} athlete${count === 1 ? "" : "s"}
-            </span>
+                <span>
+                  ${count}
+                  athlete${count === 1 ? "" : "s"}
+                </span>
 
-          </div>
+              </div>
 
-          <div class="admin-state-breakdown-bar">
+              <div class="admin-state-breakdown-bar">
+                <i style="width:${percentage}%"></i>
+              </div>
 
-            <i style="width:${percentage}%"></i>
+              <div class="admin-state-breakdown-percent">
+                ${percentage}%
+              </div>
 
-          </div>
+            </div>
+          `;
+        }
+      )
+      .join("");
 
-          <div class="admin-state-breakdown-percent">
-            ${percentage}%
-          </div>
+  mapRoot.onclick = (event) => {
+    const stateButton =
+      event.target.closest(
+        "[data-admin-state]"
+      );
 
-        </div>
-      `;
-    }
-  ).join("");
-
-}
-  
-window.openAdminStateDetails = function(state) {
-  const athletesInState = allAthletesCache.filter(({ data }) => {
-    const athleteState = String(data.state || "")
-      .trim()
-      .toUpperCase();
-
-    return athleteState === state;
-  });
-
-  if (!athletesInState.length) {
-    alert(`No athlete profiles found for ${state}.`);
-    return;
-  }
-
-  const names = athletesInState
-    .slice(0, 12)
-    .map(({ data }) => `• ${data.name || "Unknown Athlete"}`)
-    .join("\n");
-
-  const remaining = athletesInState.length - 12;
-
-  alert(
-    `${state} Athlete Distribution\n\n` +
-    names +
-    (remaining > 0
-      ? `\n\n+ ${remaining} more athlete${remaining === 1 ? "" : "s"}`
-      : "")
-  );
-};
-
-
-
-  function initializeAdminEvents() {
-
-$("reset-draft-btn")?.addEventListener("click", () => {
-
-  squadA = [];
-  squadB = [];
-  squadC = [];
-
-  renderDraftBoards();
-
-});
-
- const scores = [
-  safeNumber($("score-0")?.value || 90),
-  safeNumber($("score-1")?.value || 90),
-  safeNumber($("score-2")?.value || 90),
-  safeNumber($("score-3")?.value || 90),
-  safeNumber($("score-4")?.value || 90)
-];
-
-  $("athlete-form")?.addEventListener("submit", async (e) => {
-const zeusRating = Math.round(
-  scores.reduce((sum, value) => sum + value, 0) / scores.length
-);
-
-  const newTitan = {
-    name: nameIn.value.trim(),
-    sport: sportSel?.value || "Football",
-    tier: "pro-players",
-    subCategory: "pro-major",
-    scores: [
-      safeNumber($("score-0")?.value || 90),
-      safeNumber($("score-1")?.value || 90),
-      safeNumber($("score-2")?.value || 90),
-      safeNumber($("score-3")?.value || 90),
-      safeNumber($("score-4")?.value || 90)
-    ],
-    highlightUrl: hlIn?.value.trim() || "",
-    videos: [],
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    createdBy: currentUser?.uid || "unknown"
-  };
-
-  try {
-    await addDoc(collection(db, "athletes"), newTitan);
-    alert("Athlete added to grid.");
-
-    nameIn.value = "";
-    if (hlIn) hlIn.value = "";
-    ["score-0", "score-1", "score-2", "score-3", "score-4"].forEach(id => {
-      const el = $(id);
-      if (el) el.value = "";
-    });
-  } catch (err) {
-    console.error("Athlete save failed:", err);
-    alert("Athlete did not save. Check browser console.");
-  }
-});
-
-  $("admin-purge-btn")?.addEventListener("click", async () => {
-    if (confirm("Clean all duplicate entries off the St. Louis scoreboard?")) await purgeGridDuplicates();
-  });
-  $("header-auth-btn")?.addEventListener("click", async () => { if (currentUser) await signOut(auth); else show("login-modal"); });
-  $("modal-submit-login")?.addEventListener(
-  "click",
-  async () => {
-    const email =
-      $("login-email")?.value.trim() || "";
-
-    const password =
-      $("login-pass")?.value || "";
-
-    if (!email || !password) {
-      alert("Enter your email and password.");
+    if (!stateButton) {
       return;
     }
 
-    const loginButton =
-      $("modal-submit-login");
+    window.openAdminStateDetails?.(
+      stateButton.dataset.adminState
+    );
+  };
+}
 
-    if (loginButton) {
-      loginButton.disabled = true;
-      loginButton.textContent = "Verifying...";
-    }
+window.openAdminStateDetails =
+  function (state) {
+    const normalizedState =
+      normalizeStateCode(state);
 
-    try {
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
+    const athletesInState =
+      allAthletesCache.filter(
+        ({ data }) =>
+          normalizeStateCode(
+            data?.state
+          ) === normalizedState
       );
 
-      hide("login-modal");
+    if (!athletesInState.length) {
+      alert(
+        `No athlete profiles found for ${normalizedState}.`
+      );
+
+      return;
+    }
+
+    const names =
+      athletesInState
+        .slice(0, 12)
+        .map(
+          ({ data }) =>
+            `• ${
+              data?.name ||
+              "Unknown Athlete"
+            }`
+        )
+        .join("\n");
+
+    const remaining =
+      athletesInState.length - 12;
+
+    alert(
+      `${normalizedState} Athlete Distribution\n\n` +
+      names +
+      (
+        remaining > 0
+          ? `\n\n+ ${remaining} more athlete${
+              remaining === 1 ? "" : "s"
+            }`
+          : ""
+      )
+    );
+  };
+
+// ======================================================
+// ADMIN EVENT INITIALIZATION
+// ======================================================
+
+let adminEventsInitialized = false;
+
+function initializeAdminEvents() {
+  if (adminEventsInitialized) {
+    return;
+  }
+
+  const athleteForm =
+    $("athlete-form");
+
+  if (!athleteForm) {
+    return;
+  }
+
+  adminEventsInitialized = true;
+
+  $("reset-draft-btn")
+    ?.addEventListener(
+      "click",
+      () => {
+        squadA = [];
+        squadB = [];
+        squadC = [];
+
+        renderDraftBoards();
+      }
+    );
+
+  athleteForm.addEventListener(
+    "submit",
+    async (event) => {
+      event.preventDefault();
+
+      const nameInput =
+        $("athlete-name");
+
+      const athleteName =
+        nameInput?.value
+          .trim() || "";
+
+      if (!athleteName) {
+        alert(
+          "Enter an athlete name."
+        );
+
+        return;
+      }
+
+      const scores = [
+        safeNumber(
+          $("score-0")?.value
+        ),
+        safeNumber(
+          $("score-1")?.value
+        ),
+        safeNumber(
+          $("score-2")?.value
+        ),
+        safeNumber(
+          $("score-3")?.value
+        ),
+        safeNumber(
+          $("score-4")?.value
+        )
+      ];
+
+      const zeusRating =
+        scores.reduce(
+          (sum, value) =>
+            sum + value,
+          0
+        );
+
+      const existingRecord =
+        editingAthleteId
+          ? allAthletesCache.find(
+              (item) =>
+                item.id ===
+                editingAthleteId
+            )
+          : null;
+
+      const newTitan = {
+        name:
+          athleteName,
+
+        sport:
+          $("athlete-sport")
+            ?.value ||
+          "Football",
+
+        position:
+          $("athlete-position")
+            ?.value
+            .trim() ||
+          "ATH",
+
+        school:
+          $("athlete-school")
+            ?.value
+            .trim() ||
+          "",
+
+        city:
+          $("athlete-city")
+            ?.value
+            .trim() ||
+          "",
+
+        state:
+          normalizeStateCode(
+            $("athlete-state")
+              ?.value
+          ),
+
+        height:
+          $("athlete-height")
+            ?.value
+            .trim() ||
+          "",
+
+        weight:
+          $("athlete-weight")
+            ?.value
+            .trim() ||
+          "",
+
+        classYear:
+          $("athlete-class-year")
+            ?.value
+            .trim() ||
+          "",
+
+        recruitingStatus:
+          $("athlete-recruiting-status")
+            ?.value ||
+          "Open",
+
+        tier:
+          $("athlete-tier")
+            ?.value ||
+          "highschool",
+
+        subCategory:
+          $("sub-tier-select")
+            ?.value ||
+          "all",
+
+        bio:
+          $("athlete-bio")
+            ?.value
+            .trim() ||
+          "",
+
+        offers:
+          normalizeAthleteOffers(
+            $("athlete-offers")
+              ?.value
+          ),
+
+        achievements:
+          normalizeAthleteOffers(
+            $("athlete-achievements")
+              ?.value
+          ),
+
+        photoUrl:
+          $("athlete-photo")
+            ?.value
+            .trim() ||
+          "",
+
+        highlightUrl:
+          $("athlete-highlight")
+            ?.value
+            .trim() ||
+          "",
+
+        scores,
+
+        zeusRating,
+
+        videos:
+          Array.isArray(
+            existingRecord
+              ?.data
+              ?.videos
+          )
+            ? existingRecord
+                .data
+                .videos
+            : [],
+
+        verified:
+          Boolean(
+            existingRecord
+              ?.data
+              ?.verified ||
+            existingRecord
+              ?.data
+              ?.isVerified ||
+            existingRecord
+              ?.data
+              ?.profileVerified
+          ),
+
+        recordType:
+          "athlete",
+
+        updatedAt:
+          serverTimestamp(),
+
+        createdBy:
+          existingRecord
+            ?.data
+            ?.createdBy ||
+          currentUser?.uid ||
+          "unknown"
+      };
+
+      if (!editingAthleteId) {
+        newTitan.createdAt =
+          serverTimestamp();
+      }
+
+      const submitButton =
+        $("athlete-submit-btn");
+
+      if (submitButton) {
+        submitButton.disabled =
+          true;
+
+        submitButton.textContent =
+          editingAthleteId
+            ? "Updating Athlete..."
+            : "Saving Athlete...";
+      }
+
+      try {
+        if (editingAthleteId) {
+          await updateDoc(
+            doc(
+              db,
+              "athletes",
+              editingAthleteId
+            ),
+            newTitan
+          );
+
+          alert(
+            "Athlete profile updated."
+          );
+        } else {
+          const duplicateKey =
+            buildAthleteDuplicateKey(
+              newTitan
+            );
+
+          const duplicateRecord =
+            allAthletesCache.find(
+              (item) =>
+                buildAthleteDuplicateKey(
+                  item.data
+                ) === duplicateKey
+            );
+
+          if (duplicateRecord) {
+            alert(
+              "This athlete profile already exists. Use Edit instead of adding another copy."
+            );
+
+            return;
+          }
+
+          await addDoc(
+            collection(
+              db,
+              "athletes"
+            ),
+            newTitan
+          );
+
+          alert(
+            "Athlete added to the grid."
+          );
+        }
+
+        editingAthleteId = null;
+
+        athleteForm.reset();
+
+        $("cancel-athlete-edit-btn")
+          ?.classList.add(
+            "hidden"
+          );
+      } catch (error) {
+        console.error(
+          "Athlete save failed:",
+          error
+        );
+
+        alert(
+          "The athlete could not be saved. Check the browser console."
+        );
+      } finally {
+        if (submitButton) {
+          submitButton.disabled =
+            false;
+
+          submitButton.textContent =
+            "Commit Titan to Grid";
+        }
+      }
+    }
+  );
+}
+
+window.appAuth = {
+  logIn: (email, password) =>
+    signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    ),
+
+  logOut: () =>
+    signOut(auth)
+};
+
+// ======================================================
+// RUNTIME INITIALIZATION
+// ======================================================
+
+const nationalDashboardRoot =
+  document.getElementById(
+    "national-dashboard-root"
+  );
+
+if (nationalDashboardRoot) {
+  nationalDashboardRoot.innerHTML =
+    renderNationalDashboard();
+}
+
+// ======================================================
+// HIGHLIGHT FEED ACTIONS
+// ======================================================
+
+window.likeHighlight = function (
+  id
+) {
+  const likesElement =
+    document.getElementById(
+      `likes-${id}`
+    );
+
+  if (!likesElement) {
+    return;
+  }
+
+  const currentTotal =
+    Number.parseInt(
+      likesElement.textContent,
+      10
+    ) || 0;
+
+  likesElement.textContent =
+    String(currentTotal + 1);
+};
+
+window.shareHighlight =
+  async function (id) {
+    const highlightUrl =
+      `${window.location.origin}` +
+      `${window.location.pathname}` +
+      `?highlight=${encodeURIComponent(id)}`;
+
+    try {
+      await navigator.clipboard.writeText(
+        highlightUrl
+      );
+
+      alert(
+        "Highlight link copied!"
+      );
     } catch (error) {
       console.error(
-        "Firebase login failed:",
+        "Highlight link copy failed:",
         error
       );
 
-      const errorCode =
-        error?.code || "unknown-error";
-
-      const messages = {
-        "auth/invalid-credential":
-          "The email or password is incorrect.",
-
-        "auth/user-not-found":
-          "No account was found for this email.",
-
-        "auth/wrong-password":
-          "The password is incorrect.",
-
-        "auth/invalid-email":
-          "The email address is not valid.",
-
-        "auth/too-many-requests":
-          "Too many login attempts. Wait a few minutes and try again.",
-
-        "auth/user-disabled":
-          "This Firebase account has been disabled.",
-
-        "auth/network-request-failed":
-          "The login request could not reach Firebase. Check your internet connection.",
-
-        "auth/operation-not-allowed":
-          "Email and password login is not enabled in Firebase Authentication."
-      };
-
-      alert(
-        messages[errorCode] ||
-        `Login failed: ${errorCode}`
+      window.prompt(
+        "Copy this highlight link:",
+        highlightUrl
       );
-    } finally {
-      if (loginButton) {
-        loginButton.disabled = false;
-        loginButton.textContent = "Verify Authority";
-      }
+    }
+  };
+
+window.zeusAnalyze = function (
+  id
+) {
+  if (id) {
+    const athleteRecord =
+      allAthletesCache.find(
+        (item) => item.id === id
+      );
+
+    if (athleteRecord) {
+      window.setActiveAthlete(
+        athleteRecord.id,
+        athleteRecord.data
+      );
     }
   }
-);
-  $("login-pass")?.addEventListener(
-  "keydown",
-  async (e) => {
-    if (e.key === "Enter") {
-      $("modal-submit-login")?.click();
+
+  window
+    .generateZeusScoutingReport
+    ?.();
+};
+
+window.toggleReelSound =
+  function (button) {
+    const card =
+      button?.closest(
+        ".reel-card"
+      );
+
+    const video =
+      card?.querySelector(
+        "video"
+      );
+
+    if (!video) {
+      return;
     }
+
+    video.muted = !video.muted;
+
+    button.textContent =
+      video.muted
+        ? "🔇"
+        : "🔊";
+  };
+
+// ======================================================
+// APPLICATION BOOT
+// ======================================================
+
+function initializePublicPlatform() {
+  refreshSubTierOptions();
+  bindEvents();
+
+  show("main-content");
+  hide("paywall-content");
+  hide("loading-overlay");
+
+  renderHome();
+  renderAthleteDirectoryPage();
+  renderSchools();
+  renderRankings();
+  renderRecruiting();
+  renderHighlightFeedPage();
+  renderLiveGames();
+  renderMarketplace();
+  renderZeusAI();
+
+  subscribeToSportsFeed();
+
+  initializeLiveSportsTicker();
+  initializeGearLightbox();
+  loadLiveGearMarketplace();
+}
+
+function initializeAuthenticatedAdmin() {
+  if (
+    !isAdminProfile(
+      currentProfile
+    )
+  ) {
+    hide("admin-platform");
+    return;
   }
-);
-  $("send-chat-btn")?.addEventListener("click", sendChatMessage);
-  $("chat-message-input")?.addEventListener("keydown", async (e) => { if (e.key === "Enter") await sendChatMessage(); });
-}
 
-// ==========================================
-// RUNTIME TRIGGER INITIATION
-// ==========================================
-
-const nationalDashboardRoot = document.getElementById("national-dashboard-root");
-
-if (nationalDashboardRoot) {
-  nationalDashboardRoot.innerHTML = renderNationalDashboard();
-}
-
-// ==========================================
-// TIKTOK FEED ACTIONS
-// ==========================================
-
-window.likeHighlight = function(id) {
-  const el = document.getElementById(`likes-${id}`);
-  if (!el) return;
-
-  let total = parseInt(el.innerText) || 0;
-  el.innerText = total + 1;
-};
-
-window.shareHighlight = function(id) {
-  navigator.clipboard.writeText(
-    window.location.origin + "/?highlight=" + id
-  );
-
-  alert("Highlight link copied!");
-};
-
-window.zeusAnalyze = function(id) {
-  window.generateZeusScoutingReport();
-};
-
-window.toggleReelSound = function(button) {
-  const card = button.closest(".reel-card");
-  const video = card?.querySelector("video");
-
-  if (!video) return;
-
-  video.muted = !video.muted;
-  button.textContent = video.muted ? "🔇" : "🔊";
-};
-
-// ==========================================
-// BOOT
-// ==========================================
-
-refreshSubTierOptions();
-bindEvents();
-show("main-content");
-hide("paywall-content");
-hide("loading-overlay");
-
-registerAccountSetupHandlers(auth, db);
-registerZeusBrainHandlers(db);
-renderHome();
-subscribeToSportsFeed();
-renderAthleteDirectoryPage();
-renderSchools();
-renderRankings();
-renderRecruiting();
-renderHighlightFeedPage();
-renderLiveGames();
-renderMarketplace();
-renderZeusAI();
-renderAdmin();
-initializeAdminEvents();
-
-initializeLiveSportsTicker();
-initializeGearLightbox();
-initializeMediaLockerEngine();
-loadLiveGearMarketplace();
-
-onAuthStateChanged(auth, async (user) => {
+  show("admin-platform");
 
   renderAdmin();
 
-const adminPlatform =
-document.getElementById("admin-platform");
+  initializeAdminEvents();
+  initializeMediaLockerEngine();
+
+  renderDraftBoards();
+  processAndRenderFilteredAthletes();
+  updateAdminAnalytics();
+}
+
+// Register controller handlers once.
+registerAccountSetupHandlers(
+  auth,
+  db
+);
+
+registerZeusBrainHandlers(
+  db
+);
+
+initializePublicPlatform();
+
+// ======================================================
+// AUTHENTICATION STATE
+// ======================================================
+
+onAuthStateChanged(
+  auth,
+  async (user) => {
+    const adminPlatform =
+      document.getElementById(
+        "admin-platform"
+      );
+
+    if (user) {
+      await handleSignedInUser(
+        user
+      );
+
+      if (
+        isAdminProfile(
+          currentProfile
+        )
+      ) {
+        initializeAuthenticatedAdmin();
+      } else if (adminPlatform) {
+        adminPlatform.style.display =
+          "none";
+      }
+
+      return;
+    }
+
+    currentUser = null;
+    currentProfile = null;
+
+    window.appState.currentUser =
+      null;
+
+    window.appState.currentProfile =
+      null;
+
+    updateAccessUI(null);
+    hide("loading-overlay");
+
+    if (adminPlatform) {
+      adminPlatform.style.display =
+        "none";
+    }
+  }
+);  
+
+   onAuthStateChanged(auth, async (user) => {
+  const adminPlatform =
+    document.getElementById("admin-platform");
+
   if (user) {
     await handleSignedInUser(user);
 
+    renderAdmin();
+
     if (adminPlatform) {
-      adminPlatform.style.display = isAdminProfile(currentProfile)
-        ? "block"
-        : "none";
+      adminPlatform.style.display =
+        isAdminProfile(currentProfile)
+          ? "block"
+          : "none";
     }
   } else {
+    currentUser = null;
+    currentProfile = null;
+
+    window.appState.currentUser = null;
+    window.appState.currentProfile = null;
+
     updateAccessUI(null);
     hide("loading-overlay");
 
@@ -2107,13 +6172,20 @@ document.getElementById("admin-platform");
   }
 });
 
-window.appAuth = {
-  logIn: (e, p) => signInWithEmailAndPassword(auth, e, p),
-  logOut: () => signOut(auth)
-};
-
 window.show = show;
-window.hide = hide; 
+window.hide = hide;
+
+window.appAuth = {
+  logIn: (email, password) =>
+    signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    ),
+
+  logOut: () =>
+    signOut(auth)
+};
 
 // ==========================================
 // HIGHLIGHT FILM CENTER CONTROLS
@@ -2306,54 +6378,165 @@ window.openGearVault = function () {
 // PLATFORM BUTTON ACTION SYSTEM
 // ==========================================
 
-window.platformAction = function (action = "", label = "This feature") {
+const PLATFORM_VIEW_IDS = [
+  "home-root",
+  "account-setup-root",
+  "national-dashboard-root",
+  "athlete-directory-page",
+  "schools-root",
+  "rankings-root",
+  "recruiting-root",
+  "highlights-root",
+  "live-root",
+  "marketplace-root",
+  "zeus-ai-root",
+  "platform-features"
+];
+
+function hideAllPlatformViews() {
+  PLATFORM_VIEW_IDS.forEach((id) => {
+    document
+      .getElementById(id)
+      ?.classList.add("hidden");
+  });
+}
+
+function showPlatformView(id) {
+  hideAllPlatformViews();
+
+  document
+    .getElementById(id)
+    ?.classList.remove("hidden");
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+function updateActiveNavigation(action) {
+  document
+    .querySelectorAll(".national-nav button")
+    .forEach((button) => {
+      const clickCode =
+        button.getAttribute("onclick") || "";
+
+      button.classList.toggle(
+        "active",
+        clickCode.includes(
+          `platformAction('${action}')`
+        )
+      );
+    });
+}
+
+window.platformAction = function (
+  action = "home",
+  options = {}
+) {
+  const shouldPushHistory =
+    options.pushHistory !== false;
+
   switch (action) {
     case "home":
       renderHome();
-      window.scrollToSection("home-root");
+      hideAllPlatformViews();
+
+      $("home-root")
+        ?.classList.remove("hidden");
+
+      $("national-dashboard-root")
+        ?.classList.remove("hidden");
+
+      $("platform-features")
+        ?.classList.remove("hidden");
       break;
 
     case "feed":
       renderSportsFeed();
-      window.scrollToSection("home-root");
+      showPlatformView("home-root");
       break;
 
     case "athletes":
-      window.scrollToSection("athlete-directory-page");
+      renderAthleteDirectoryPage();
+      showPlatformView(
+        "athlete-directory-page"
+      );
       break;
 
     case "schools":
-      window.scrollToSection("schools-root");
+      renderSchools();
+      showPlatformView("schools-root");
       break;
 
     case "rankings":
-      window.scrollToSection("rankings-root");
+      renderRankings();
+      showPlatformView("rankings-root");
       break;
 
     case "highlights":
-      window.scrollToSection("highlights-root");
+      renderHighlightFeedPage();
+      showPlatformView("highlights-root");
       break;
 
     case "recruiting":
-      window.scrollToSection("recruiting-root");
+      renderRecruiting();
+      showPlatformView("recruiting-root");
       break;
 
+    case "live":
+      renderLiveGames();
+      showPlatformView("live-root");
+      break;
+
+    case "gear":
     case "marketplace":
-      window.scrollToSection("marketplace-root");
+      renderMarketplace();
+      showPlatformView("marketplace-root");
+      action = "gear";
       break;
 
     case "zeus":
-      window.scrollToSection("zeus-ai-root");
-      break;
-
-    case "search":
-      window.focusGlobalSearch?.();
+      renderZeusAI();
+      showPlatformView("zeus-ai-root");
       break;
 
     default:
-      window.comingSoon(label);
+      window.comingSoon(
+        String(action || "This feature")
+      );
+
+      return;
+  }
+
+  window.appState.activeView = action;
+  updateActiveNavigation(action);
+
+  if (shouldPushHistory) {
+    window.history.pushState(
+      { platformView: action },
+      "",
+      `#${action}`
+    );
   }
 };
+
+window.addEventListener(
+  "popstate",
+  (event) => {
+    const previousView =
+      event.state?.platformView ||
+      location.hash.replace("#", "") ||
+      "home";
+
+    window.platformAction(
+      previousView,
+      {
+        pushHistory: false
+      }
+    );
+  }
+);
 
 // ==========================================
 // RECRUITER WORKFLOW
