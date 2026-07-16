@@ -17,6 +17,35 @@ import { renderLiveGamesPage } from "./pages/live.js";
 import { renderMarketplacePage } from "./pages/marketplace.js";
 import { renderAccountSetupPage } from "./pages/account-setup.js";
 import { renderZeusDashboard } from "./pages/zeusDashboard.js";
+import {
+  deleteAthleteRecord,
+  findDuplicateAthlete,
+  purgeDuplicateAthletes,
+  saveAthleteRecord,
+  subscribeToAthleteRecords
+} from "./services/athleteService.js";
+
+import {
+  calculateSquadAverage,
+  getAthleteScoreTotal,
+  getAthleteZeusRating
+} from "./utils/scoring.js";
+
+import {
+  athleteHasFilm,
+  filterAthleteRecords,
+  getAthleteRecruitingStatus,
+  getRecruitingStatusClasses,
+  normalizeCommaList,
+  normalizeFilterValue
+} from "./utils/filters.js";
+
+import {
+  auth,
+  db,
+  rtdb,
+  storage
+} from "./services/firebaseService.js";
 
 // ======================================================
 // CONTROLLER / REPOSITORY IMPORTS
@@ -24,6 +53,14 @@ import { renderZeusDashboard } from "./pages/zeusDashboard.js";
 
 import { initializeSportsFeed } from "./feed/feedController.js";
 import { subscribeToFeedPosts } from "./feed/feedRepository.js";
+
+import {
+  initializeAdminController
+} from "./controllers/adminController.js";
+
+import {
+  initializeAuthController
+} from "./controllers/authController.js";
 
 import {
   registerAccountSetupHandlers
@@ -84,46 +121,6 @@ import {
   uploadBytesResumable,
   getDownloadURL
 } from "firebase/storage";
-
-// ======================================================
-// FIREBASE CONFIGURATION
-// ======================================================
-
-const firebaseConfig = {
-  apiKey:
-    "AIzaSyDbt0ITM9G4LOZTlXuAGGvuO80uazFpZSs",
-
-  authDomain:
-    "sntlmoexclusivesportsgrid.firebaseapp.com",
-
-  projectId:
-    "sntlmoexclusivesportsgrid",
-
-  storageBucket:
-    "sntlmoexclusivesportsgrid.firebasestorage.app",
-
-  messagingSenderId:
-    "735791748207",
-
-  appId:
-    "1:735791748207:web:74fd6412684db238b6e99a",
-
-  databaseURL:
-    "https://sntlmoexclusivesportsgrid-default-rtdb.firebaseio.com/"
-};
-
-const app = initializeApp(firebaseConfig);
-
-const auth = getAuth(app);
-
-const db = getFirestore(
-  app,
-  "(default)"
-);
-
-const rtdb = getDatabase(app);
-
-const storage = getStorage(app);
 
 // ======================================================
 // APPLICATION STATE
@@ -836,69 +833,19 @@ function initializeMediaLockerEngine() {
 // ATHLETE SCORING ENGINE
 // ======================================================
 
-function getAthleteScores(
-  athlete = {}
-) {
-  if (
-    Array.isArray(athlete.scores)
-  ) {
-    return athlete.scores.map(
-      safeNumber
-    );
-  }
-
-  return [
-    athlete.score0,
-    athlete.score1,
-    athlete.score2,
-    athlete.score3,
-    athlete.score4
-  ].map(safeNumber);
-}
-
 function athleteTotal(
   athlete = {}
 ) {
-  return getAthleteScores(
+  return getAthleteScoreTotal(
     athlete
-  ).reduce(
-    (total, score) =>
-      total + score,
-    0
   );
 }
 
 function mergeRosterScores(
   athlete = {}
 ) {
-  return athleteTotal(athlete);
-}
-
-// ======================================================
-// WAR ROOM DRAFT BOARD
-// ======================================================
-
-function calculateSquadAverage(
-  squad = []
-) {
-  if (!Array.isArray(squad)) {
-    return 0;
-  }
-
-  if (!squad.length) {
-    return 0;
-  }
-
-  const total =
-    squad.reduce(
-      (sum, athlete) =>
-        sum +
-        athleteTotal(athlete),
-      0
-    );
-
-  return Math.round(
-    total / squad.length
+  return getAthleteScoreTotal(
+    athlete
   );
 }
 
@@ -925,328 +872,159 @@ function calculateSquadAverages() {
   );
 }
 
-function renderEmptyDraftMessage(
-  message
-) {
-  return `
-    <div
-      class="my-auto py-6 text-center font-mono text-[11px] italic text-gray-600">
-
-      ${escapeHtml(message)}
-
-    </div>
-  `;
-}
-
-function renderDraftPlayer(
-  player = {},
-  squadType,
-  index
-) {
-  const name =
-    player.name ||
-    "Unknown Athlete";
-
-  const rating =
-    athleteTotal(player);
-
-  const nameClass =
-    squadType === "A"
-      ? "text-white"
-      : squadType === "B"
-        ? "text-gray-300"
-        : "text-zeus-gold";
-
-  const borderClass =
-    squadType === "C"
-      ? "border-zeus-gold/20"
-      : "border-zeus-border/40";
-
-  return `
-    <div
-      class="flex items-center justify-between rounded border ${borderClass} bg-zeus-panel p-2 font-mono text-xs">
-
-      <div class="min-w-0">
-
-        <span
-          class="block truncate font-bold ${nameClass}">
-
-          ${escapeHtml(name)}
-
-        </span>
-
-        <small
-          class="text-[9px] text-gray-600">
-
-          Zeus ${rating}
-
-        </small>
-
-      </div>
-
-      <button
-        type="button"
-        onclick="window.dropFromSquad('${escapeHtml(
-          squadType
-        )}', ${index})"
-        class="px-2 font-bold text-red-400 transition hover:text-red-500"
-        aria-label="Remove ${escapeHtml(
-          name
-        )} from squad">
-
-        &times;
-
-      </button>
-
-    </div>
-  `;
-}
-
-function renderSquadSlot(
-  slotId,
-  squadType,
-  squad,
-  emptyMessage
-) {
-  const slot =
-    $(slotId);
-
-  if (!slot) {
-    return;
-  }
-
-  if (!squad.length) {
-    slot.innerHTML =
-      renderEmptyDraftMessage(
-        emptyMessage
-      );
-
-    return;
-  }
-
-  slot.innerHTML =
-    squad
-      .map(
-        (player, index) =>
-          renderDraftPlayer(
-            player,
-            squadType,
-            index
-          )
-      )
-      .join("");
-}
+// ======================================================
+// WAR ROOM DRAFT BOARD
+// ======================================================
 
 function renderDraftBoards() {
-  renderSquadSlot(
-    "squad-a-slots",
-    "A",
-    squadA,
-    "Roster vacant. Select an athlete above to draft."
-  );
+  const slotA = $("squad-a-slots");
+  const slotB = $("squad-b-slots");
+  const slotC = $("squad-c-slots");
 
-  renderSquadSlot(
-    "squad-b-slots",
-    "B",
-    squadB,
-    "Roster vacant. Select an athlete above to draft."
-  );
+  if (slotA) {
+    slotA.innerHTML =
+      squadA.length === 0
+        ? `
+          <div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">
+            Roster vacant. Select an athlete above to draft.
+          </div>
+        `
+        : squadA
+            .map(
+              (player, index) => `
+              <div class="flex justify-between items-center bg-zeus-panel border border-zeus-border/40 p-2 rounded text-xs font-mono">
 
-  renderSquadSlot(
-    "squad-c-slots",
-    "C",
-    squadC,
-    "Roster vacant. Select National from the athlete matrix."
-  );
+                <span class="text-white font-bold">
+                  ${escapeHtml(player.name)}
+                </span>
+
+                <button
+                  onclick="window.dropFromSquad('A', ${index})"
+                  class="text-red-400 hover:text-red-500 font-bold px-1">
+
+                  &times;
+
+                </button>
+
+              </div>
+            `
+            )
+            .join("");
+  }
+
+  if (slotB) {
+    slotB.innerHTML =
+      squadB.length === 0
+        ? `
+          <div class="text-[11px] text-gray-600 font-mono italic text-center my-auto py-4">
+            Roster vacant. Select an athlete above to draft.
+          </div>
+        `
+        : squadB
+            .map(
+              (player, index) => `
+              <div class="flex justify-between items-center bg-zeus-panel border border-zeus-border/40 p-2 rounded text-xs font-mono">
+
+                <span class="text-gray-300">
+                  ${escapeHtml(player.name)}
+                </span>
+
+                <button
+                  onclick="window.dropFromSquad('B', ${index})"
+                  class="text-red-400 hover:text-red-500 font-bold px-1">
+
+                  &times;
+
+                </button>
+
+              </div>
+            `
+            )
+            .join("");
+  }
+
+  if (slotC) {
+    slotC.innerHTML =
+      squadC.length === 0
+        ? `
+          <div class="text-sm text-gray-600 font-mono italic text-center my-auto py-8">
+            Roster vacant. Select National from the athlete matrix.
+          </div>
+        `
+        : squadC
+            .map(
+              (player, index) => `
+              <div class="flex justify-between items-center bg-zeus-panel border border-zeus-gold/20 p-2 rounded text-xs font-mono">
+
+                <span class="text-zeus-gold font-bold">
+                  ${escapeHtml(player.name)}
+                </span>
+
+                <button
+                  onclick="window.dropFromSquad('C', ${index})"
+                  class="text-red-400 hover:text-red-500 font-bold px-1">
+
+                  &times;
+
+                </button>
+
+              </div>
+            `
+            )
+            .join("");
+
+  }
 
   calculateSquadAverages();
 }
 
-function getSquadByType(
-  squadType
-) {
-  if (squadType === "A") {
-    return squadA;
+window.renderDraftBoards = renderDraftBoards;
+
+window.dropFromSquad = (team, index) => {
+  if (team === "A") {
+    squadA.splice(index, 1);
+  } else if (team === "B") {
+    squadB.splice(index, 1);
+  } else if (team === "C") {
+    squadC.splice(index, 1);
   }
-
-  if (squadType === "B") {
-    return squadB;
-  }
-
-  if (squadType === "C") {
-    return squadC;
-  }
-
-  return null;
-}
-
-function getSquadLabel(
-  squadType
-) {
-  if (squadType === "A") {
-    return "Team St. Louis Elite";
-  }
-
-  if (squadType === "B") {
-    return "Regional Challengers";
-  }
-
-  if (squadType === "C") {
-    return "National Select";
-  }
-
-  return "this squad";
-}
-
-function athleteAlreadyDrafted(
-  squad = [],
-  athleteId,
-  athlete = {}
-) {
-  return squad.some(
-    (player) => {
-      const sameId =
-        athleteId &&
-        player.id === athleteId;
-
-      const sameNameAndSport =
-        String(
-          player.name || ""
-        )
-          .trim()
-          .toLowerCase() ===
-          String(
-            athlete.name || ""
-          )
-            .trim()
-            .toLowerCase() &&
-        String(
-          player.sport || ""
-        )
-          .trim()
-          .toLowerCase() ===
-          String(
-            athlete.sport || ""
-          )
-            .trim()
-            .toLowerCase();
-
-      return (
-        sameId ||
-        sameNameAndSport
-      );
-    }
-  );
-}
-
-window.renderDraftBoards =
-  renderDraftBoards;
-
-window.dropFromSquad = function (
-  squadType,
-  index
-) {
-  const squad =
-    getSquadByType(squadType);
-
-  if (!squad) {
-    return;
-  }
-
-  const safeIndex =
-    Number(index);
-
-  if (
-    !Number.isInteger(
-      safeIndex
-    ) ||
-    safeIndex < 0 ||
-    safeIndex >= squad.length
-  ) {
-    return;
-  }
-
-  squad.splice(
-    safeIndex,
-    1
-  );
 
   renderDraftBoards();
 };
 
-window.inlineDraftDispatch =
-  function (
-    athleteId,
-    targetSquadNumber
-  ) {
-    const athleteRecord =
-      allAthletesCache.find(
-        (item) =>
-          item.id === athleteId
-      );
+window.inlineDraftDispatch = (athleteId, team) => {
+  const athlete = allAthletesCache.find(
+    (item) => item.id === athleteId
+  );
 
-    if (!athleteRecord) {
-      alert(
-        "Athlete profile was not found."
-      );
+  if (!athlete) return;
 
-      return;
+  if (team === 1) {
+    if (squadA.some((p) => p.name === athlete.data.name)) {
+      return alert("Athlete already drafted.");
     }
 
-    const athlete =
-      {
-        id:
-          athleteRecord.id,
+    squadA.push(athlete.data);
+  }
 
-        ...athleteRecord.data
-      };
-
-    const squadType =
-      Number(targetSquadNumber) === 1
-        ? "A"
-        : Number(
-              targetSquadNumber
-            ) === 2
-          ? "B"
-          : Number(
-                targetSquadNumber
-              ) === 3
-            ? "C"
-            : "";
-
-    const squad =
-      getSquadByType(
-        squadType
-      );
-
-    if (!squad) {
-      alert(
-        "Invalid draft destination."
-      );
-
-      return;
+  if (team === 2) {
+    if (squadB.some((p) => p.name === athlete.data.name)) {
+      return alert("Athlete already drafted.");
     }
 
-    if (
-      athleteAlreadyDrafted(
-        squad,
-        athleteId,
-        athlete
-      )
-    ) {
-      alert(
-        `Athlete already selected for ${getSquadLabel(
-          squadType
-        )}.`
-      );
+    squadB.push(athlete.data);
+  }
 
-      return;
+  if (team === 3) {
+    if (squadC.some((p) => p.name === athlete.data.name)) {
+      return alert("Athlete already drafted.");
     }
 
-    squad.push(athlete);
+    squadC.push(athlete.data);
+  }
 
-    renderDraftBoards();
-  };
+  renderDraftBoards();
+};
 
 // ======================================================
 // LIVE GAMES
@@ -2441,282 +2219,47 @@ function refreshSubTierOptions() {
 // ATHLETE FILTER HELPERS
 // ======================================================
 
-function normalizeFilterValue(
-  value = ""
-) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase();
-}
 
-function normalizeAthleteOffers(
-  value
-) {
-  if (Array.isArray(value)) {
-    return value
-      .map((offer) =>
-        String(offer ?? "").trim()
-      )
-      .filter(Boolean);
-  }
-
-  if (typeof value === "string") {
-    return value
-      .split(",")
-      .map((offer) =>
-        offer.trim()
-      )
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function getAthleteRecruitingStatus(
-  athlete = {}
-) {
-  if (
-    athlete.recruitingStatus ||
-    athlete.commitmentStatus
-  ) {
-    return (
-      athlete.recruitingStatus ||
-      athlete.commitmentStatus
-    );
-  }
-
-  if (
-    athlete.signedSchool ||
-    athlete.signingDate
-  ) {
-    return "Signed";
-  }
-
-  if (
-    athlete.committedSchool ||
-    athlete.committedTo ||
-    athlete.commitment
-  ) {
-    return "Committed";
-  }
-
-  if (
-    athlete.transferPortal === true ||
-    athlete.inTransferPortal === true
-  ) {
-    return "Transfer Portal";
-  }
-
-  if (
-    athlete.tier === "pro-players" ||
-    athlete.professional === true
-  ) {
-    return "Professional";
-  }
-
-  if (
-    normalizeAthleteOffers(
-      athlete.offers
-    ).length
-  ) {
-    return "Offered";
-  }
-
-  return "Open";
-}
-
-function athleteHasFilm(
-  athlete = {}
-) {
-  return Boolean(
-    (
-      Array.isArray(athlete.videos) &&
-      athlete.videos.length > 0
-    ) ||
-    athlete.highlightUrl ||
-    athlete.highlight ||
-    athlete.higlightightUrl
-  );
-}
-
-function getRecruitingStatusClasses(
-  status = ""
-) {
-  switch (
-    normalizeFilterValue(status)
-  ) {
-    case "signed":
-      return (
-        "bg-gray-800 text-gray-200 " +
-        "border-gray-600"
-      );
-
-    case "committed":
-      return (
-        "bg-purple-950/50 text-purple-300 " +
-        "border-purple-800"
-      );
-
-    case "offered":
-      return (
-        "bg-blue-950/50 text-blue-300 " +
-        "border-blue-800"
-      );
-
-    case "visiting":
-      return (
-        "bg-yellow-950/40 text-yellow-300 " +
-        "border-yellow-800"
-      );
-
-    case "transfer portal":
-      return (
-        "bg-orange-950/50 text-orange-300 " +
-        "border-orange-800"
-      );
-
-    case "professional":
-      return (
-        "bg-red-950/50 text-red-300 " +
-        "border-red-800"
-      );
-
-    default:
-      return (
-        "bg-green-950/40 text-green-300 " +
-        "border-green-800"
-      );
-  }
-}
 
 // ======================================================
 // FILTER ATHLETE DATABASE
 // ======================================================
 
 function getFilteredAthletes() {
-  const selectedTier =
-    $("tier-select")?.value ||
-    "all";
+  return filterAthleteRecords(
+    allAthletesCache,
+    {
+      tier:
+        $("tier-select")?.value ||
+        "all",
 
-  const selectedSubTier =
-    $("sub-tier-select")?.value ||
-    "all";
+      subTier:
+        $("sub-tier-select")?.value ||
+        "all",
 
-  const selectedSport =
-    $("admin-sport-filter")?.value ||
-    "all";
+      sport:
+        $("admin-sport-filter")?.value ||
+        "all",
 
-  const positionQuery =
-    normalizeFilterValue(
-      $("admin-position-filter")?.value
-    );
+      position:
+        $("admin-position-filter")
+          ?.value ||
+        "",
 
-  const classQuery =
-    normalizeFilterValue(
-      $("admin-class-filter")?.value
-    );
+      classYear:
+        $("admin-class-filter")
+          ?.value ||
+        "",
 
-  const recruitingFilter =
-    $("admin-recruiting-filter")?.value ||
-    "all";
+      recruitingStatus:
+        $("admin-recruiting-filter")
+          ?.value ||
+        "all",
 
-  const filmFilter =
-    $("admin-film-filter")?.value ||
-    "all";
-
-  return allAthletesCache.filter(
-    (item) => {
-      const athlete =
-        item?.data || {};
-
-      if (
-        athlete.recordType &&
-        athlete.recordType !== "athlete"
-      ) {
-        return false;
-      }
-
-      const athleteTier =
-        athlete.tier || "";
-
-      const athleteSubTier =
-        athlete.subCategory || "";
-
-      const athleteSport =
-        athlete.sport || "";
-
-      const athletePosition =
-        normalizeFilterValue(
-          athlete.position ||
-          athlete.posion ||
-          athlete.role
-        );
-
-      const athleteClass =
-        normalizeFilterValue(
-          athlete.classYear ||
-          athlete.graduationYear ||
-          athlete.gradYear
-        );
-
-      const recruitingStatus =
-        getAthleteRecruitingStatus(
-          athlete
-        );
-
-      const hasFilm =
-        athleteHasFilm(athlete);
-
-      const matchesTier =
-        selectedTier === "all" ||
-        athleteTier === selectedTier;
-
-      const matchesSubTier =
-        selectedSubTier === "all" ||
-        athleteSubTier ===
-          selectedSubTier;
-
-      const matchesSport =
-        selectedSport === "all" ||
-        athleteSport === selectedSport;
-
-      const matchesPosition =
-        !positionQuery ||
-        athletePosition.includes(
-          positionQuery
-        );
-
-      const matchesClass =
-        !classQuery ||
-        athleteClass.includes(
-          classQuery
-        );
-
-      const matchesRecruiting =
-        recruitingFilter === "all" ||
-        recruitingStatus ===
-          recruitingFilter;
-
-      const matchesFilm =
-        filmFilter === "all" ||
-        (
-          filmFilter === "with-film" &&
-          hasFilm
-        ) ||
-        (
-          filmFilter === "without-film" &&
-          !hasFilm
-        );
-
-      return (
-        matchesTier &&
-        matchesSubTier &&
-        matchesSport &&
-        matchesPosition &&
-        matchesClass &&
-        matchesRecruiting &&
-        matchesFilm
-      );
+      film:
+        $("admin-film-filter")
+          ?.value ||
+        "all"
     }
   );
 }
@@ -2907,10 +2450,12 @@ function renderAdminAthleteRow(
     "N/A";
 
   const zeusRating =
-    mergeRosterScores(athlete);
+  getAthleteZeusRating(
+    athlete
+  );
 
   const offers =
-    normalizeAthleteOffers(
+    normalizeCommaList(
       athlete.offers
     );
 
@@ -3620,38 +3165,20 @@ function subscribeToAthletes() {
     return;
   }
 
-  const athletesQuery =
-    query(
-      collection(
-        db,
-        "athletes"
-      ),
-      limit(120)
-    );
-
   unsubscribeAthletes =
-    onSnapshot(
-      athletesQuery,
+    subscribeToAthleteRecords({
+      db,
 
-      (snapshot) => {
-        const loadedAthletes =
-          snapshot.docs.map(
-            (athleteDocument) => ({
-              id:
-                athleteDocument.id,
+      normalizeRecord:
+        normalizeAthleteRecord,
 
-              data:
-                normalizeAthleteRecord(
-                  athleteDocument.data(),
-                  athleteDocument.id
-                )
-            })
-          );
+      maxResults: 120,
 
+      onData: (
+        athleteRecords
+      ) => {
         allAthletesCache =
-          buildUniqueAthleteCache(
-            loadedAthletes
-          );
+          athleteRecords;
 
         window.appState.athletes =
           allAthletesCache.map(
@@ -3661,21 +3188,16 @@ function subscribeToAthletes() {
             })
           );
 
-        console.log(
-          "ATHLETES LOADED:",
-          allAthletesCache
-        );
-
         refreshAthleteDependentViews();
       },
 
-      (error) => {
+      onError: (error) => {
         console.error(
-          "Unable to subscribe to athletes:",
+          "Unable to load athletes:",
           error
         );
       }
-    );
+    });
 }
 
 // ======================================================
@@ -3849,175 +3371,6 @@ async function handleSignedInUser(
     updateAccessUI(null);
   } finally {
     hide("loading-overlay");
-  }
-}
-
-// ======================================================
-// DUPLICATE ATHLETE PURGE
-// ======================================================
-
-function getDuplicateCleanupKey(
-  athlete = {}
-) {
-  return buildAthleteDuplicateKey(
-    athlete
-  );
-}
-
-async function purgeGridDuplicates() {
-  if (
-    !isAdminProfile(
-      currentProfile
-    )
-  ) {
-    alert("Admin access denied.");
-    return;
-  }
-
-  const confirmed =
-    window.confirm(
-      "Remove duplicate athlete profiles from the database?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  const statusElement =
-    $("user-status");
-
-  const previousText =
-    statusElement?.textContent ||
-    "";
-
-  if (statusElement) {
-    statusElement.textContent =
-      "Purging duplicates...";
-  }
-
-  try {
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "athletes"
-        )
-      );
-
-    const savedRecords =
-      new Map();
-
-    const deleteTasks = [];
-
-    snapshot.docs.forEach(
-      (athleteDocument) => {
-        const athlete =
-          athleteDocument.data();
-
-        const key =
-          getDuplicateCleanupKey(
-            athlete
-          );
-
-        if (!key.replace(/\|/g, "")) {
-          return;
-        }
-
-        const existing =
-          savedRecords.get(key);
-
-        if (!existing) {
-          savedRecords.set(
-            key,
-            {
-              id:
-                athleteDocument.id,
-
-              score:
-                mergeRosterScores(
-                  athlete
-                )
-            }
-          );
-
-          return;
-        }
-
-        const incomingScore =
-          mergeRosterScores(
-            athlete
-          );
-
-        if (
-          incomingScore >
-          existing.score
-        ) {
-          deleteTasks.push(
-            deleteDoc(
-              doc(
-                db,
-                "athletes",
-                existing.id
-              )
-            )
-          );
-
-          savedRecords.set(
-            key,
-            {
-              id:
-                athleteDocument.id,
-
-              score:
-                incomingScore
-            }
-          );
-        } else {
-          deleteTasks.push(
-            deleteDoc(
-              doc(
-                db,
-                "athletes",
-                athleteDocument.id
-              )
-            )
-          );
-        }
-      }
-    );
-
-    await Promise.all(
-      deleteTasks
-    );
-
-    if (statusElement) {
-      statusElement.textContent =
-        `Cleaned ${deleteTasks.length} duplicate profiles`;
-    }
-  } catch (error) {
-    console.error(
-      "Duplicate purge failed:",
-      error
-    );
-
-    if (statusElement) {
-      statusElement.textContent =
-        "Duplicate purge failed";
-    }
-
-    alert(
-      "Duplicate cleanup failed. Check the browser console."
-    );
-  } finally {
-    window.setTimeout(
-      () => {
-        if (statusElement) {
-          statusElement.textContent =
-            previousText;
-        }
-      },
-      3000
-    );
   }
 }
 
@@ -5582,338 +4935,62 @@ window.openAdminStateDetails =
   };
 
 // ======================================================
-// ADMIN EVENT INITIALIZATION
+// ADMIN SAVE HELPER
 // ======================================================
 
-let adminEventsInitialized = false;
-
-function initializeAdminEvents() {
-  if (adminEventsInitialized) {
-    return;
-  }
-
-  const athleteForm =
-    $("athlete-form");
-
-  if (!athleteForm) {
-    return;
-  }
-
-  adminEventsInitialized = true;
-
-  $("reset-draft-btn")
-    ?.addEventListener(
-      "click",
-      () => {
-        squadA = [];
-        squadB = [];
-        squadC = [];
-
-        renderDraftBoards();
-      }
-    );
-
-  athleteForm.addEventListener(
-    "submit",
-    async (event) => {
-      event.preventDefault();
-
-      const nameInput =
-        $("athlete-name");
-
-      const athleteName =
-        nameInput?.value
-          .trim() || "";
-
-      if (!athleteName) {
-        alert(
-          "Enter an athlete name."
-        );
-
-        return;
-      }
-
-      const scores = [
-        safeNumber(
-          $("score-0")?.value
-        ),
-        safeNumber(
-          $("score-1")?.value
-        ),
-        safeNumber(
-          $("score-2")?.value
-        ),
-        safeNumber(
-          $("score-3")?.value
-        ),
-        safeNumber(
-          $("score-4")?.value
+async function saveAthleteFromAdmin(
+  athleteData
+) {
+  const existingRecord =
+    editingAthleteId
+      ? allAthletesCache.find(
+          (item) =>
+            item.id ===
+            editingAthleteId
         )
-      ];
+      : null;
 
-      const zeusRating =
-        scores.reduce(
-          (sum, value) =>
-            sum + value,
-          0
-        );
+  if (!editingAthleteId) {
+    const duplicateRecord =
+      findDuplicateAthlete(
+        allAthletesCache,
+        athleteData
+      );
 
-      const existingRecord =
-        editingAthleteId
-          ? allAthletesCache.find(
-              (item) =>
-                item.id ===
-                editingAthleteId
-            )
-          : null;
-
-      const newTitan = {
-        name:
-          athleteName,
-
-        sport:
-          $("athlete-sport")
-            ?.value ||
-          "Football",
-
-        position:
-          $("athlete-position")
-            ?.value
-            .trim() ||
-          "ATH",
-
-        school:
-          $("athlete-school")
-            ?.value
-            .trim() ||
-          "",
-
-        city:
-          $("athlete-city")
-            ?.value
-            .trim() ||
-          "",
-
-        state:
-          normalizeStateCode(
-            $("athlete-state")
-              ?.value
-          ),
-
-        height:
-          $("athlete-height")
-            ?.value
-            .trim() ||
-          "",
-
-        weight:
-          $("athlete-weight")
-            ?.value
-            .trim() ||
-          "",
-
-        classYear:
-          $("athlete-class-year")
-            ?.value
-            .trim() ||
-          "",
-
-        recruitingStatus:
-          $("athlete-recruiting-status")
-            ?.value ||
-          "Open",
-
-        tier:
-          $("athlete-tier")
-            ?.value ||
-          "highschool",
-
-        subCategory:
-          $("sub-tier-select")
-            ?.value ||
-          "all",
-
-        bio:
-          $("athlete-bio")
-            ?.value
-            .trim() ||
-          "",
-
-        offers:
-          normalizeAthleteOffers(
-            $("athlete-offers")
-              ?.value
-          ),
-
-        achievements:
-          normalizeAthleteOffers(
-            $("athlete-achievements")
-              ?.value
-          ),
-
-        photoUrl:
-          $("athlete-photo")
-            ?.value
-            .trim() ||
-          "",
-
-        highlightUrl:
-          $("athlete-highlight")
-            ?.value
-            .trim() ||
-          "",
-
-        scores,
-
-        zeusRating,
-
-        videos:
-          Array.isArray(
-            existingRecord
-              ?.data
-              ?.videos
-          )
-            ? existingRecord
-                .data
-                .videos
-            : [],
-
-        verified:
-          Boolean(
-            existingRecord
-              ?.data
-              ?.verified ||
-            existingRecord
-              ?.data
-              ?.isVerified ||
-            existingRecord
-              ?.data
-              ?.profileVerified
-          ),
-
-        recordType:
-          "athlete",
-
-        updatedAt:
-          serverTimestamp(),
-
-        createdBy:
-          existingRecord
-            ?.data
-            ?.createdBy ||
-          currentUser?.uid ||
-          "unknown"
-      };
-
-      if (!editingAthleteId) {
-        newTitan.createdAt =
-          serverTimestamp();
-      }
-
-      const submitButton =
-        $("athlete-submit-btn");
-
-      if (submitButton) {
-        submitButton.disabled =
-          true;
-
-        submitButton.textContent =
-          editingAthleteId
-            ? "Updating Athlete..."
-            : "Saving Athlete...";
-      }
-
-      try {
-        if (editingAthleteId) {
-          await updateDoc(
-            doc(
-              db,
-              "athletes",
-              editingAthleteId
-            ),
-            newTitan
-          );
-
-          alert(
-            "Athlete profile updated."
-          );
-        } else {
-          const duplicateKey =
-            buildAthleteDuplicateKey(
-              newTitan
-            );
-
-          const duplicateRecord =
-            allAthletesCache.find(
-              (item) =>
-                buildAthleteDuplicateKey(
-                  item.data
-                ) === duplicateKey
-            );
-
-          if (duplicateRecord) {
-            alert(
-              "This athlete profile already exists. Use Edit instead of adding another copy."
-            );
-
-            return;
-          }
-
-          await addDoc(
-            collection(
-              db,
-              "athletes"
-            ),
-            newTitan
-          );
-
-          alert(
-            "Athlete added to the grid."
-          );
-        }
-
-        editingAthleteId = null;
-
-        athleteForm.reset();
-
-        $("cancel-athlete-edit-btn")
-          ?.classList.add(
-            "hidden"
-          );
-      } catch (error) {
-        console.error(
-          "Athlete save failed:",
-          error
-        );
-
-        alert(
-          "The athlete could not be saved. Check the browser console."
-        );
-      } finally {
-        if (submitButton) {
-          submitButton.disabled =
-            false;
-
-          submitButton.textContent =
-            "Commit Titan to Grid";
-        }
-      }
+    if (duplicateRecord) {
+      throw new Error(
+        "This athlete already exists. Use Edit instead."
+      );
     }
+  }
+
+  const result =
+    await saveAthleteRecord({
+      db,
+
+      athleteData,
+
+      athleteId:
+        editingAthleteId,
+
+      currentUserId:
+        currentUser?.uid ||
+        "unknown",
+
+      existingRecord:
+        existingRecord?.data ||
+        null
+    });
+
+  editingAthleteId = null;
+
+  alert(
+    result.mode === "updated"
+      ? "Athlete profile updated."
+      : "Athlete added to the grid."
   );
 }
-
-window.appAuth = {
-  logIn: (email, password) =>
-    signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    ),
-
-  logOut: () =>
-    signOut(auth)
-};
-
+        
 // ======================================================
 // RUNTIME INITIALIZATION
 // ======================================================
@@ -5929,8 +5006,62 @@ if (nationalDashboardRoot) {
 }
 
 // ======================================================
-// HIGHLIGHT FEED ACTIONS
+// APPLICATION START
 // ======================================================
+
+initializePublicPlatform();
+
+// ======================================================
+// AUTHENTICATION STATE
+// ======================================================
+
+onAuthStateChanged(
+  auth,
+  async (user) => {
+    const adminPlatform =
+      document.getElementById(
+        "admin-platform"
+      );
+
+    if (user) {
+      await handleSignedInUser(user);
+
+      if (
+        isAdminProfile(
+          currentProfile
+        )
+      ) {
+        initializeAuthenticatedAdmin();
+      } else if (adminPlatform) {
+        adminPlatform.style.display =
+          "none";
+      }
+
+      return;
+    }
+
+    currentUser = null;
+    currentProfile = null;
+
+    window.appState.currentUser =
+      null;
+
+    window.appState.currentProfile =
+      null;
+
+    updateAccessUI(null);
+    hide("loading-overlay");
+
+    if (adminPlatform) {
+      adminPlatform.style.display =
+        "none";
+    }
+  }
+);
+
+// ==========================================
+// HIGHLIGHT FILM CENTER CONTROLS
+// ==========================================
 
 window.likeHighlight = function (
   id
@@ -6057,136 +5188,6 @@ function initializePublicPlatform() {
   loadLiveGearMarketplace();
 }
 
-function initializeAuthenticatedAdmin() {
-  if (
-    !isAdminProfile(
-      currentProfile
-    )
-  ) {
-    hide("admin-platform");
-    return;
-  }
-
-  show("admin-platform");
-
-  renderAdmin();
-
-  initializeAdminEvents();
-  initializeMediaLockerEngine();
-
-  renderDraftBoards();
-  processAndRenderFilteredAthletes();
-  updateAdminAnalytics();
-}
-
-// Register controller handlers once.
-registerAccountSetupHandlers(
-  auth,
-  db
-);
-
-registerZeusBrainHandlers(
-  db
-);
-
-initializePublicPlatform();
-
-// ======================================================
-// AUTHENTICATION STATE
-// ======================================================
-
-onAuthStateChanged(
-  auth,
-  async (user) => {
-    const adminPlatform =
-      document.getElementById(
-        "admin-platform"
-      );
-
-    if (user) {
-      await handleSignedInUser(
-        user
-      );
-
-      if (
-        isAdminProfile(
-          currentProfile
-        )
-      ) {
-        initializeAuthenticatedAdmin();
-      } else if (adminPlatform) {
-        adminPlatform.style.display =
-          "none";
-      }
-
-      return;
-    }
-
-    currentUser = null;
-    currentProfile = null;
-
-    window.appState.currentUser =
-      null;
-
-    window.appState.currentProfile =
-      null;
-
-    updateAccessUI(null);
-    hide("loading-overlay");
-
-    if (adminPlatform) {
-      adminPlatform.style.display =
-        "none";
-    }
-  }
-);  
-
-   onAuthStateChanged(auth, async (user) => {
-  const adminPlatform =
-    document.getElementById("admin-platform");
-
-  if (user) {
-    await handleSignedInUser(user);
-
-    renderAdmin();
-
-    if (adminPlatform) {
-      adminPlatform.style.display =
-        isAdminProfile(currentProfile)
-          ? "block"
-          : "none";
-    }
-  } else {
-    currentUser = null;
-    currentProfile = null;
-
-    window.appState.currentUser = null;
-    window.appState.currentProfile = null;
-
-    updateAccessUI(null);
-    hide("loading-overlay");
-
-    if (adminPlatform) {
-      adminPlatform.style.display = "none";
-    }
-  }
-});
-
-window.show = show;
-window.hide = hide;
-
-window.appAuth = {
-  logIn: (email, password) =>
-    signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    ),
-
-  logOut: () =>
-    signOut(auth)
-};
-
 // ==========================================
 // HIGHLIGHT FILM CENTER CONTROLS
 // ==========================================
@@ -6221,12 +5222,6 @@ window.selectFilm = function(videoId) {
   window.appState.activeVideo = selected;
 
   renderHighlightFeedPage();
-
-};
-
-window.likeHighlight = function(id) {
-
-  alert("👍 Likes will be connected to Firestore next.");
 
 };
 
