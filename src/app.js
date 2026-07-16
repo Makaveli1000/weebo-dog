@@ -2,43 +2,69 @@
 // PAGE RENDER IMPORTS
 // ======================================================
 
-import { renderAdminPage } from "./pages/admin.js";
-import { renderHomePage } from "./pages/home.js";
-import { renderSportsFeedPage } from "./pages/feed.js";
-import { renderAthletesDirectory } from "./pages/athletes.js";
-import { renderAthletePage } from "./pages/athlete.js";
-import { renderHighlightFeed } from "./pages/highlights.js";
-import { renderNationalDashboard } from "./pages/national-dashboard.js";
-import { renderSchoolsPage } from "./pages/schools.js";
-import { renderRankingsPage } from "./pages/rankings.js";
-import { renderRecruitingPage } from "./pages/recruiting.js";
-import { renderZeusAiPage } from "./pages/zeus-ai.js";
-import { renderLiveGamesPage } from "./pages/live.js";
-import { renderMarketplacePage } from "./pages/marketplace.js";
-import { renderAccountSetupPage } from "./pages/account-setup.js";
-import { renderZeusDashboard } from "./pages/zeusDashboard.js";
 import {
-  deleteAthleteRecord,
-  findDuplicateAthlete,
-  purgeDuplicateAthletes,
-  saveAthleteRecord,
-  subscribeToAthleteRecords
-} from "./services/athleteService.js";
+  renderAdminPage
+} from "./pages/admin.js";
 
 import {
-  calculateSquadAverage,
-  getAthleteScoreTotal,
-  getAthleteZeusRating
-} from "./utils/scoring.js";
+  renderHomePage
+} from "./pages/home.js";
 
 import {
-  athleteHasFilm,
-  filterAthleteRecords,
-  getAthleteRecruitingStatus,
-  getRecruitingStatusClasses,
-  normalizeCommaList,
-  normalizeFilterValue
-} from "./utils/filters.js";
+  renderSportsFeedPage
+} from "./pages/feed.js";
+
+import {
+  renderAthletesDirectory
+} from "./pages/athletes.js";
+
+import {
+  renderAthletePage
+} from "./pages/athlete.js";
+
+import {
+  renderHighlightFeed
+} from "./pages/highlights.js";
+
+import {
+  renderNationalDashboard
+} from "./pages/national-dashboard.js";
+
+import {
+  renderSchoolsPage
+} from "./pages/schools.js";
+
+import {
+  renderRankingsPage
+} from "./pages/rankings.js";
+
+import {
+  renderRecruitingPage
+} from "./pages/recruiting.js";
+
+import {
+  renderZeusAiPage
+} from "./pages/zeus-ai.js";
+
+import {
+  renderLiveGamesPage
+} from "./pages/live.js";
+
+import {
+  renderMarketplacePage
+} from "./pages/marketplace.js";
+
+import {
+  renderAccountSetupPage
+} from "./pages/account-setup.js";
+
+import {
+  renderZeusDashboard
+} from "./pages/zeusDashboard.js";
+
+// ======================================================
+// FIREBASE SERVICE INSTANCES
+// ======================================================
 
 import {
   auth,
@@ -48,11 +74,32 @@ import {
 } from "./services/firebaseService.js";
 
 // ======================================================
-// CONTROLLER / REPOSITORY IMPORTS
+// APPLICATION SERVICES
 // ======================================================
 
-import { initializeSportsFeed } from "./feed/feedController.js";
-import { subscribeToFeedPosts } from "./feed/feedRepository.js";
+import {
+  deleteAthleteRecord,
+  findDuplicateAthlete,
+  purgeDuplicateAthletes,
+  saveAthleteRecord,
+  subscribeToAthleteRecords
+} from "./services/athleteService.js";
+
+import {
+  uploadAthleteVideo
+} from "./services/mediaService.js";
+
+// ======================================================
+// CONTROLLERS AND REPOSITORIES
+// ======================================================
+
+import {
+  initializeSportsFeed
+} from "./feed/feedController.js";
+
+import {
+  subscribeToFeedPosts
+} from "./feed/feedRepository.js";
 
 import {
   initializeAdminController
@@ -71,25 +118,50 @@ import {
 } from "./controllers/zeusBrainController.js";
 
 import {
+  findAthleteRecord,
+  openAthleteFromRecords,
+  selectAthleteRow
+} from "./controllers/athleteController.js";
+
+// ======================================================
+// SHARED UTILITIES
+// ======================================================
+
+import {
   normalizeAthleteRecord
 } from "./utils/normalizeAthlete.js";
 
-// ======================================================
-// FIREBASE IMPORTS
-// ======================================================
-
-import { initializeApp } from "firebase/app";
+import {
+  calculateSquadAverage,
+  getAthleteScoreTotal,
+  getAthleteZeusRating
+} from "./utils/scoring.js";
 
 import {
-  getAuth,
+  athleteHasFilm,
+  filterAthleteRecords,
+  getAthleteRecruitingStatus,
+  getRecruitingStatusClasses,
+  normalizeCommaList,
+  normalizeFilterValue
+} from "./utils/filters.js";
+
+// ======================================================
+// FIREBASE AUTHENTICATION FUNCTIONS
+// ======================================================
+
+import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
   createUserWithEmailAndPassword
 } from "firebase/auth";
 
+// ======================================================
+// FIRESTORE FUNCTIONS STILL USED BY APP.JS
+// ======================================================
+
 import {
-  getFirestore,
   doc,
   getDoc,
   addDoc,
@@ -105,8 +177,11 @@ import {
   getDocs
 } from "firebase/firestore";
 
+// ======================================================
+// REALTIME DATABASE FUNCTIONS
+// ======================================================
+
 import {
-  getDatabase,
   ref as rtdbRef,
   push,
   onValue,
@@ -114,13 +189,6 @@ import {
   query as rtdbQuery,
   limitToLast
 } from "firebase/database";
-
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytesResumable,
-  getDownloadURL
-} from "firebase/storage";
 
 // ======================================================
 // APPLICATION STATE
@@ -578,7 +646,11 @@ function initializeMediaLockerEngine() {
         return;
       }
 
-      if (!isAdminProfile(currentProfile)) {
+      if (
+        !isAdminProfile(
+          currentProfile
+        )
+      ) {
         alert("Admin access denied.");
         fileInput.value = "";
         return;
@@ -593,238 +665,60 @@ function initializeMediaLockerEngine() {
         return;
       }
 
-      const allowedVideoTypes = [
-        "video/mp4",
-        "video/webm",
-        "video/quicktime"
-      ];
-
-      if (
-        file.type &&
-        !allowedVideoTypes.includes(
-          file.type
-        )
-      ) {
-        alert(
-          "Select an MP4, WebM, or MOV video file."
-        );
-
-        fileInput.value = "";
-        return;
-      }
-
-      const maximumFileSize =
-        500 * 1024 * 1024;
-
-      if (file.size > maximumFileSize) {
-        alert(
-          "This video is larger than 500 MB."
-        );
-
-        fileInput.value = "";
-        return;
-      }
-
-      const subLabel =
+      const progressLabel =
         $("upload-progress-sub");
 
-      const uploadBadge =
-        $("upload-count-badge");
+      try {
+        if (progressLabel) {
+          progressLabel.textContent =
+            "PREPARING VIDEO UPLOAD...";
+        }
 
-      if (subLabel) {
-        subLabel.textContent =
-          "PREPARING VIDEO UPLOAD...";
-      }
-
-      const safeFileName =
-        file.name
-          .replace(
-            /[^a-zA-Z0-9._-]/g,
-            "_"
-          );
-
-      const storagePath =
-        `highlights/` +
-        `${activeSelectedAthleteId}/` +
-        `${Date.now()}_` +
-        `${safeFileName}`;
-
-      const uploadReference =
-        storageRef(
+        await uploadAthleteVideo({
           storage,
-          storagePath
-        );
+          db,
 
-      const uploadTask =
-        uploadBytesResumable(
-          uploadReference,
+          athleteId:
+            activeSelectedAthleteId,
+
           file,
-          {
-            contentType:
-              file.type ||
-              "video/mp4",
 
-            customMetadata: {
-              athleteId:
-                activeSelectedAthleteId,
-
-              uploadedBy:
-                currentUser?.uid ||
-                "unknown",
-
-              originalFileName:
-                file.name
+          onProgress: (percent) => {
+            if (progressLabel) {
+              progressLabel.textContent =
+                `UPLOADING VIDEO: ${percent}%`;
             }
-          }
-        );
+          },
 
-      uploadTask.on(
-        "state_changed",
-
-        (snapshot) => {
-          const progress =
-            snapshot.totalBytes
-              ? Math.round(
-                  (
-                    snapshot.bytesTransferred /
-                    snapshot.totalBytes
-                  ) * 100
-                )
-              : 0;
-
-          if (subLabel) {
-            subLabel.textContent =
-              `UPLOADING VIDEO: ${progress}%`;
-          }
-        },
-
-        (error) => {
-          console.error(
-            "Upload process rejected:",
-            error
-          );
-
-          if (subLabel) {
-            subLabel.textContent =
-              "UPLOAD FAILED.";
-          }
-
-          alert(
-            "Video upload failed. Check the browser console."
-          );
-
-          fileInput.value = "";
-        },
-
-        async () => {
-          try {
-            const downloadUrl =
-              await getDownloadURL(
-                uploadTask.snapshot.ref
-              );
-
-            const athleteReference =
-              doc(
-                db,
-                "athletes",
-                activeSelectedAthleteId
-              );
-
-            const videoTitle =
-              file.name
-                .split(".")
-                .slice(0, -1)
-                .join(".")
-                .trim() ||
-              "Uploaded Video";
-
-            const videoRecord = {
-              title: videoTitle,
-              url: downloadUrl,
-              storagePath,
-              fileName: file.name,
-              mimeType:
-                file.type ||
-                "video/mp4",
-              sizeBytes:
-                Number(file.size || 0),
-              uploadedBy:
-                currentUser?.uid ||
-                "unknown",
-              createdAt:
-                new Date()
-                  .toISOString()
-            };
-
-            await updateDoc(
-              athleteReference,
-              {
-                highlightUrl:
-                  downloadUrl,
-
-                videos:
-                  arrayUnion(
-                    videoRecord
-                  ),
-
-                updatedAt:
-                  serverTimestamp()
-              }
-            );
-
-            if (subLabel) {
-              subLabel.textContent =
+          onComplete: () => {
+            if (progressLabel) {
+              progressLabel.textContent =
                 "UPLOAD MATRIX SECURE.";
             }
-
-            if (uploadBadge) {
-              const selectedAthlete =
-                allAthletesCache.find(
-                  (item) =>
-                    item.id ===
-                    activeSelectedAthleteId
-                );
-
-              const currentVideoCount =
-                Array.isArray(
-                  selectedAthlete
-                    ?.data
-                    ?.videos
-                )
-                  ? selectedAthlete
-                      .data
-                      .videos
-                      .length
-                  : 0;
-
-              uploadBadge.textContent =
-                `Uploads: ${
-                  currentVideoCount + 1
-                }`;
-            }
-
-            alert(
-              "Video successfully attached to the athlete profile."
-            );
-          } catch (error) {
-            console.error(
-              "Failed to commit video data:",
-              error
-            );
-
-            if (subLabel) {
-              subLabel.textContent =
-                "DATABASE SAVE FAILED.";
-            }
-
-            alert(
-              "The video uploaded, but the athlete profile could not be updated."
-            );
-          } finally {
-            fileInput.value = "";
           }
+        });
+
+        alert(
+          "Video successfully attached to the athlete profile."
+        );
+      } catch (error) {
+        console.error(
+          "Media locker upload failed:",
+          error
+        );
+
+        if (progressLabel) {
+          progressLabel.textContent =
+            "UPLOAD FAILED.";
         }
-      );
+
+        alert(
+          error?.message ||
+          "Video upload failed."
+        );
+      } finally {
+        fileInput.value = "";
+      }
     }
   );
 }
@@ -1551,24 +1445,29 @@ function openAthleteProfile(
 
 window.openAthleteFromDirectory =
   function (athleteId) {
-    const found =
-      allAthletesCache.find(
-        (item) =>
-          item.id === athleteId
+    try {
+      return openAthleteFromRecords({
+        athleteId,
+
+        records:
+          allAthletesCache,
+
+        onOpenProfile:
+          openAthleteProfile
+      });
+    } catch (error) {
+      console.error(
+        "Athlete profile open failed:",
+        error
       );
 
-    if (!found) {
       alert(
+        error?.message ||
         "Athlete profile not found."
       );
 
-      return;
+      return null;
     }
-
-    openAthleteProfile(
-      found.id,
-      found.data
-    );
   };
 
 // ======================================================
@@ -2875,66 +2774,58 @@ function processAndRenderFilteredAthletes() {
     }
 
     activeSelectedAthleteId =
-      athleteId;
+  athleteId;
 
-    gridBody
-      .querySelectorAll(
-        "tr[data-athlete-id]"
-      )
-      .forEach((currentRow) => {
-        currentRow.classList.remove(
-          "bg-zeus-gold/10",
-          "border-l-2",
-          "border-zeus-gold"
-        );
-      });
+setText(
+  "upload-progress-sub",
+  `BOUNDING TARGET: ${
+    (
+      record.data.name ||
+      "Athlete"
+    ).substring(0, 20)
+  }`
+);
 
-    row.classList.add(
-      "bg-zeus-gold/10",
-      "border-l-2",
-      "border-zeus-gold"
-    );
+const mediaLocker =
+  $("media-locker-container");
 
-    setText(
-      "upload-progress-sub",
-      `BOUNDING TARGET: ${
-        (
-          record.data.name ||
-          "Athlete"
-        ).substring(0, 20)
-      }`
-    );
+mediaLocker?.classList.add(
+  "border-zeus-gold",
+  "shadow-[0_0_15px_rgba(212,175,55,0.15)]"
+);
 
-    const mediaLocker =
-      $("media-locker-container");
+const videoCount =
+  Array.isArray(
+    record.data.videos
+  )
+    ? record.data.videos.length
+    : athleteHasFilm(
+          record.data
+        )
+      ? 1
+      : 0;
 
-    mediaLocker?.classList.add(
-      "border-zeus-gold",
-      "shadow-[0_0_15px_rgba(212,175,55,0.15)]"
-    );
+setText(
+  "upload-count-badge",
+  `Uploads: ${videoCount}`
+);
 
-    const videoCount =
-      Array.isArray(
-        record.data.videos
-      )
-        ? record.data.videos.length
-        : athleteHasFilm(
-              record.data
-            )
-          ? 1
-          : 0;
+selectAthleteRow({
+  athleteId:
+    record.id,
 
-    setText(
-      "upload-count-badge",
-      `Uploads: ${videoCount}`
-    );
+  athlete:
+    record.data,
 
-    window.setActiveAthlete(
-      record.id,
-      record.data
-    );
+  tableBody:
+    gridBody,
 
-    playHighlight(record.data);
+  onSetActiveAthlete:
+    window.setActiveAthlete,
+
+  onPlayHighlight:
+    playHighlight
+    });
   };
 }
                
