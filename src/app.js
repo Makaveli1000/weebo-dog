@@ -119,9 +119,23 @@ import {
 
 import {
   findAthleteRecord,
+  initializeAthleteDirectoryController,
   openAthleteFromRecords,
+  selectAthleteFilm,
   selectAthleteRow
 } from "./controllers/athleteController.js";
+
+import {
+  initializeRankingsController
+} from "./controllers/rankingsController.js";
+
+import {
+  initializeMarketplaceController
+} from "./controllers/marketplaceController.js";
+
+import {
+  initializeRecruitingController
+} from "./controllers/recruitingController.js";
 
 // ======================================================
 // SHARED UTILITIES
@@ -940,84 +954,6 @@ function renderLiveGames() {
 // MARKETPLACE
 // ======================================================
 
-function initializeMarketplaceFilters() {
-  const tabs =
-    document.getElementById(
-      "marketplace-tabs"
-    );
-
-  const grid =
-    document.getElementById(
-      "marketplace-grid"
-    );
-
-  const emptyState =
-    document.getElementById(
-      "marketplace-empty"
-    );
-
-  if (!tabs || !grid) {
-    return;
-  }
-
-  const buttons = Array.from(
-    tabs.querySelectorAll(
-      "[data-marketplace-filter]"
-    )
-  );
-
-  const cards = Array.from(
-    grid.querySelectorAll(
-      "[data-marketplace-item]"
-    )
-  );
-
-  buttons.forEach((button) => {
-    button.addEventListener(
-      "click",
-      () => {
-        const selectedFilter =
-          button.dataset
-            .marketplaceFilter ||
-          "All";
-
-        buttons.forEach(
-          (currentButton) => {
-            currentButton.classList.toggle(
-              "active",
-              currentButton === button
-            );
-          }
-        );
-
-        let visibleCount = 0;
-
-        cards.forEach((card) => {
-          const category =
-            card.dataset
-              .marketplaceCategory ||
-            "";
-
-          const shouldShow =
-            selectedFilter === "All" ||
-            category === selectedFilter;
-
-          card.hidden = !shouldShow;
-
-          if (shouldShow) {
-            visibleCount += 1;
-          }
-        });
-
-        emptyState?.classList.toggle(
-          "hidden",
-          visibleCount > 0
-        );
-      }
-    );
-  });
-}
-
 function renderMarketplace() {
   const container =
     document.getElementById(
@@ -1031,7 +967,9 @@ function renderMarketplace() {
   container.innerHTML =
     renderMarketplacePage();
 
-  initializeMarketplaceFilters();
+  initializeMarketplaceController({
+    root: container
+  });
 }
 
 // ======================================================
@@ -1760,67 +1698,9 @@ function renderAthleteDirectoryPage() {
       allAthletesCache
     );
 
-  const searchInput =
-    $("athlete-directory-search");
-
-  const sportFilter =
-    $("athlete-directory-sport");
-
-  function filterDirectory() {
-    const searchQuery =
-      (
-        searchInput?.value ||
-        ""
-      )
-        .trim()
-        .toLowerCase();
-
-    const selectedSport =
-      sportFilter?.value ||
-      "all";
-
-    document
-      .querySelectorAll(
-        ".athlete-directory-card"
-      )
-      .forEach((card) => {
-        const searchValue =
-          String(
-            card.dataset.search ||
-            ""
-          ).toLowerCase();
-
-        const cardSport =
-          card.dataset.sport ||
-          "";
-
-        const matchesSearch =
-          !searchQuery ||
-          searchValue.includes(
-            searchQuery
-          );
-
-        const matchesSport =
-          selectedSport === "all" ||
-          cardSport === selectedSport;
-
-        card.hidden =
-          !(
-            matchesSearch &&
-            matchesSport
-          );
-      });
-  }
-
-  searchInput?.addEventListener(
-    "input",
-    filterDirectory
-  );
-
-  sportFilter?.addEventListener(
-    "change",
-    filterDirectory
-  );
+  initializeAthleteDirectoryController({
+    root: container
+  });
 }
 
 function renderHighlightFeedPage() {
@@ -1839,136 +1719,7 @@ function renderHighlightFeedPage() {
     );
 
   initializeHighlightAutoplay();
-}
-
-function initializeRankingsFilters() {
-  const sportFilter =
-    $("rankings-sport-filter");
-
-  const classFilter =
-    $("rankings-class-filter");
-
-  const searchInput =
-    $("rankings-search-input");
-
-  const tableBody =
-    $("rankings-table-body");
-
-  const emptyState =
-    $("rankings-empty-state");
-
-  if (!tableBody) {
-    return;
-  }
-
-  const rows = Array.from(
-    tableBody.querySelectorAll(
-      "[data-ranking-row]"
-    )
-  );
-
-  function applyRankingsFilters() {
-    const selectedSport =
-      sportFilter?.value ||
-      "all";
-
-    const selectedClass =
-      classFilter?.value ||
-      "all";
-
-    const searchQuery =
-      (
-        searchInput?.value ||
-        ""
-      )
-        .trim()
-        .toLowerCase();
-
-    let visibleCount = 0;
-
-    rows.forEach((row) => {
-      const rowSport =
-        row.dataset
-          .rankingSport ||
-        "";
-
-      const rowClass =
-        row.dataset
-          .rankingClass ||
-        "";
-
-      const rowName =
-        row.dataset
-          .rankingName ||
-        "";
-
-      const rowText =
-        (
-          row.textContent ||
-          ""
-        ).toLowerCase();
-
-      const matchesSport =
-        selectedSport === "all" ||
-        rowSport === selectedSport;
-
-      const matchesClass =
-        selectedClass === "all" ||
-        rowClass === selectedClass;
-
-      const matchesSearch =
-        !searchQuery ||
-        rowName
-          .toLowerCase()
-          .includes(searchQuery) ||
-        rowText.includes(
-          searchQuery
-        );
-
-      const shouldShow =
-        matchesSport &&
-        matchesClass &&
-        matchesSearch;
-
-      row.hidden = !shouldShow;
-
-      if (shouldShow) {
-        visibleCount += 1;
-      }
-    });
-
-    emptyState?.classList.toggle(
-      "hidden",
-      visibleCount > 0
-    );
-
-    tableBody
-      .closest(
-        ".rankings-table-wrapper"
-      )
-      ?.classList.toggle(
-        "hidden",
-        visibleCount === 0
-      );
-  }
-
-  sportFilter?.addEventListener(
-    "change",
-    applyRankingsFilters
-  );
-
-  classFilter?.addEventListener(
-    "change",
-    applyRankingsFilters
-  );
-
-  searchInput?.addEventListener(
-    "input",
-    applyRankingsFilters
-  );
-
-  applyRankingsFilters();
-}
+} 
 
 function renderRankings() {
   const container =
@@ -1985,7 +1736,9 @@ function renderRankings() {
       allAthletesCache
     );
 
-  initializeRankingsFilters();
+  initializeRankingsController({
+  root: container
+  });
 }
 
 function renderRecruiting() {
@@ -1999,7 +1752,21 @@ function renderRecruiting() {
   }
 
   container.innerHTML =
-    renderRecruitingPage();
+    renderRecruitingPage(
+      allAthletesCache
+    );
+
+  initializeRecruitingController({
+    root: container,
+
+    onOpenAthlete: (
+      athleteId
+    ) => {
+      window
+        .openAthleteFromDirectory
+        ?.(athleteId);
+    }
+  });
 }
 
 // ======================================================
@@ -2706,31 +2473,29 @@ function processAndRenderFilteredAthletes() {
       );
 
     if (filmButton) {
-      event.stopPropagation();
+  event.stopPropagation();
 
-      const athleteId =
-        filmButton.dataset.athleteFilm;
+  const athleteId =
+    filmButton.dataset.athleteFilm;
 
-      const record =
-        allAthletesCache.find(
-          (item) =>
-            item.id === athleteId
-        );
+  activeSelectedAthleteId =
+    athleteId;
 
-      if (record) {
-        activeSelectedAthleteId =
-          athleteId;
+  selectAthleteFilm({
+    athleteId,
 
-        window.setActiveAthlete(
-          record.id,
-          record.data
-        );
+    records:
+      allAthletesCache,
 
-        playHighlight(record.data);
-      }
+    onSetActiveAthlete:
+      window.setActiveAthlete,
 
-      return;
-    }
+    onPlayHighlight:
+      playHighlight
+  });
+
+  return;
+}
 
     const draftButton =
       event.target.closest(

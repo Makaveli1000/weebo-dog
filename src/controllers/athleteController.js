@@ -97,3 +97,148 @@ export function findAthleteRecord(
     ) || null
   );
 }
+
+// ======================================================
+// ATHLETE DIRECTORY CONTROLLER
+// Handles athlete-directory search and sport filtering.
+// ======================================================
+
+let athleteDirectoryCleanup = null;
+
+export function initializeAthleteDirectoryController({
+  root = "athlete-directory-page"
+} = {}) {
+  if (
+    typeof athleteDirectoryCleanup ===
+    "function"
+  ) {
+    athleteDirectoryCleanup();
+  }
+
+  const directoryRoot =
+    typeof root === "string"
+      ? document.getElementById(
+          root
+        )
+      : root;
+
+  if (!directoryRoot) {
+    return () => {};
+  }
+
+  const searchInput =
+    directoryRoot.querySelector(
+      "#athlete-directory-search"
+    );
+
+  const sportFilter =
+    directoryRoot.querySelector(
+      "#athlete-directory-sport"
+    );
+
+  const cards = () =>
+    Array.from(
+      directoryRoot.querySelectorAll(
+        ".athlete-directory-card"
+      )
+    );
+
+  const abortController =
+    new AbortController();
+
+  const signal =
+    abortController.signal;
+
+  function applyDirectoryFilters() {
+    const searchQuery =
+      String(
+        searchInput?.value || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    const selectedSport =
+      sportFilter?.value ||
+      "all";
+
+    cards().forEach((card) => {
+      const searchableText =
+        String(
+          card.dataset.search ||
+          ""
+        ).toLowerCase();
+
+      const cardSport =
+        card.dataset.sport ||
+        "";
+
+      const matchesSearch =
+        !searchQuery ||
+        searchableText.includes(
+          searchQuery
+        );
+
+      const matchesSport =
+        selectedSport === "all" ||
+        cardSport === selectedSport;
+
+      card.hidden =
+        !(
+          matchesSearch &&
+          matchesSport
+        );
+    });
+  }
+
+  searchInput?.addEventListener(
+    "input",
+    applyDirectoryFilters,
+    { signal }
+  );
+
+  sportFilter?.addEventListener(
+    "change",
+    applyDirectoryFilters,
+    { signal }
+  );
+
+  applyDirectoryFilters();
+
+  athleteDirectoryCleanup =
+    () => {
+      abortController.abort();
+
+      athleteDirectoryCleanup =
+        null;
+    };
+
+  return athleteDirectoryCleanup;
+}
+
+export function selectAthleteFilm({
+  athleteId,
+  records = [],
+  onSetActiveAthlete,
+  onPlayHighlight
+} = {}) {
+  const record =
+    records.find(
+      (item) =>
+        item.id === athleteId
+    );
+
+  if (!record) {
+    return null;
+  }
+
+  onSetActiveAthlete?.(
+    record.id,
+    record.data || {}
+  );
+
+  onPlayHighlight?.(
+    record.data || {}
+  );
+
+  return record;
+}
