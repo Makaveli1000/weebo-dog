@@ -483,3 +483,226 @@ export function openAthleteProfileFromRecords({
     renderZeusReport
   });
 }
+
+// ======================================================
+// ATHLETE EDIT-FORM POPULATION
+// Finds an athlete record and fills the Admin athlete form.
+// ======================================================
+
+function setAthleteFormValue(
+  elementId,
+  value = ""
+) {
+  const element =
+    document.getElementById(
+      elementId
+    );
+
+  if (!element) {
+    return;
+  }
+
+  element.value =
+    value ?? "";
+}
+
+export function populateAthleteEditForm({
+  athleteId,
+  records = [],
+  onTierChanged
+} = {}) {
+  if (!athleteId) {
+    throw new Error(
+      "Athlete ID is required."
+    );
+  }
+
+  const record =
+    findAthleteRecord(
+      records,
+      athleteId
+    );
+
+  if (!record) {
+    throw new Error(
+      "Athlete profile not found."
+    );
+  }
+
+  const athlete =
+    record.data || {};
+
+  const scores =
+    Array.isArray(
+      athlete.scores
+    )
+      ? athlete.scores
+      : [
+          athlete.score0,
+          athlete.score1,
+          athlete.score2,
+          athlete.score3,
+          athlete.score4
+        ];
+
+  const offers =
+    Array.isArray(
+      athlete.offers
+    )
+      ? athlete.offers.join(", ")
+      : athlete.offers || "";
+
+  const achievements =
+    Array.isArray(
+      athlete.achievements
+    )
+      ? athlete.achievements.join(", ")
+      : athlete.achievements || "";
+
+  setAthleteFormValue(
+    "athlete-name",
+    athlete.name
+  );
+
+  setAthleteFormValue(
+    "athlete-sport",
+    athlete.sport || "Football"
+  );
+
+  setAthleteFormValue(
+    "athlete-position",
+    athlete.position ||
+    athlete.posion ||
+    athlete.role ||
+    "ATH"
+  );
+
+  setAthleteFormValue(
+    "athlete-school",
+    athlete.school ||
+    athlete.schoolName ||
+    athlete["school name"] ||
+    ""
+  );
+
+  setAthleteFormValue(
+    "athlete-city",
+    athlete.city
+  );
+
+  setAthleteFormValue(
+    "athlete-state",
+    athlete.state
+  );
+
+  setAthleteFormValue(
+    "athlete-height",
+    athlete.height
+  );
+
+  setAthleteFormValue(
+    "athlete-weight",
+    athlete.weight
+  );
+
+  setAthleteFormValue(
+    "athlete-class-year",
+    athlete.classYear ||
+    athlete.graduationYear ||
+    athlete.gradYear ||
+    ""
+  );
+
+  setAthleteFormValue(
+    "athlete-recruiting-status",
+    athlete.recruitingStatus ||
+    athlete.commitmentStatus ||
+    "Open"
+  );
+
+  setAthleteFormValue(
+    "athlete-tier",
+    athlete.tier ||
+    "highschool"
+  );
+
+  onTierChanged?.();
+
+  setAthleteFormValue(
+    "sub-tier-select",
+    athlete.subCategory ||
+    "all"
+  );
+
+  setAthleteFormValue(
+    "athlete-bio",
+    athlete.bio
+  );
+
+  setAthleteFormValue(
+    "athlete-offers",
+    offers
+  );
+
+  setAthleteFormValue(
+    "athlete-achievements",
+    achievements
+  );
+
+  setAthleteFormValue(
+    "athlete-photo",
+    athlete.photoUrl ||
+    athlete.profilePhoto ||
+    ""
+  );
+
+  setAthleteFormValue(
+    "athlete-highlight",
+    athlete.highlightUrl ||
+    athlete.highlight ||
+    ""
+  );
+
+  for (
+    let index = 0;
+    index < 5;
+    index += 1
+  ) {
+    setAthleteFormValue(
+      `score-${index}`,
+      Number(scores[index]) || 0
+    );
+  }
+
+  const cancelButton =
+    document.getElementById(
+      "cancel-athlete-edit-btn"
+    );
+
+  cancelButton?.classList.remove(
+    "hidden"
+  );
+
+  const submitButton =
+    document.getElementById(
+      "athlete-submit-btn"
+    );
+
+  if (submitButton) {
+    submitButton.disabled = false;
+    submitButton.textContent =
+      "Update Athlete Profile";
+  }
+
+  const form =
+    document.getElementById(
+      "athlete-form"
+    );
+
+  form?.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+  return record;
+}

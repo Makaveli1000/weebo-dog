@@ -7,7 +7,7 @@ function escapeMarketplaceHtml(value = "") {
     .replace(/'/g, "&#039;");
 }
 
-function formatMarketplacePrice(value) {
+export function formatMarketplacePrice(value) {
   const amount = Number(value);
 
   if (!Number.isFinite(amount)) {
@@ -21,6 +21,47 @@ function formatMarketplacePrice(value) {
       currency: "USD"
     }
   ).format(amount);
+}
+
+export function normalizeMarketplaceProduct(
+  product = {}
+) {
+  const name =
+    product.name ||
+    product.title ||
+    "Untitled Product";
+
+  const numericPrice =
+    Number(product.price);
+
+  return {
+    ...product,
+
+    name,
+
+    price:
+      Number.isFinite(
+        numericPrice
+      )
+        ? numericPrice
+        : 0,
+
+    image:
+      product.image ||
+      product.imageUrl ||
+      "assets/gear-placeholder.png",
+
+    location:
+      product.location ||
+      "US Shipping",
+
+    storeName:
+      product.storeName ||
+      "Snt.L.Mo. Exclusive",
+
+    isExternal:
+      product.isExternal === true
+  };
 }
 
 function normalizeMarketplaceProducts(products = []) {
@@ -661,4 +702,568 @@ export function renderMarketplacePage(
 
     </section>
   `;
+}
+
+export function renderGlobalGearMarketplace(
+  products = [],
+  {
+    normalizeProduct,
+    openProduct
+  } = {}
+) {
+  const container =
+    document.getElementById(
+      "gear-grid-container"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  const normalizedProducts =
+    Array.isArray(products)
+      ? products.map(
+          (product) =>
+            typeof normalizeProduct ===
+            "function"
+              ? normalizeProduct(
+                  product
+                )
+              : product
+        )
+      : [];
+
+  if (
+    !normalizedProducts.length
+  ) {
+    container.innerHTML = `
+      <div class="col-span-full rounded-xl border border-zeus-border bg-zeus-black/60 p-8 text-center">
+
+        <span class="text-3xl">
+          🛍️
+        </span>
+
+        <strong class="mt-3 block text-sm text-white">
+          No marketplace items available
+        </strong>
+
+        <p class="mt-1 text-xs text-gray-500">
+          Products will appear here when inventory is published.
+        </p>
+
+      </div>
+    `;
+
+    return;
+  }
+
+  container.innerHTML =
+    normalizedProducts
+      .map(
+        (product, index) => `
+          <article
+            class="group flex flex-col justify-between rounded-xl border border-zeus-border bg-zeus-black/60 p-3 transition hover:border-zeus-gold/30"
+            data-marketplace-card="${index}">
+
+            <div>
+
+              <div class="mb-2 flex items-center justify-between gap-2">
+
+                <span class="font-mono text-[8px] uppercase tracking-wider text-gray-500">
+                  ${escapeMarketplaceHtml(
+                    product.location
+                  )}
+                </span>
+
+                <span
+                  class="rounded border border-zeus-gold/20 bg-zeus-goldSoft px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-wide text-zeus-gold">
+
+                  ${
+                    product.isExternal
+                      ? escapeMarketplaceHtml(
+                          product.storeName
+                        )
+                      : "Snt.L.Mo. Exclusive"
+                  }
+
+                </span>
+
+              </div>
+
+              <div
+                class="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded border border-zeus-border bg-zeus-panel p-2">
+
+                <img
+                  src="${escapeMarketplaceHtml(
+                    product.image
+                  )}"
+                  alt="${escapeMarketplaceHtml(
+                    product.name
+                  )}"
+                  class="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy">
+
+              </div>
+
+              <div class="mt-2">
+
+                <h3
+                  class="truncate text-[10px] font-bold tracking-tight text-white"
+                  title="${escapeMarketplaceHtml(
+                    product.name
+                  )}">
+
+                  ${escapeMarketplaceHtml(
+                    product.name
+                  )}
+
+                </h3>
+
+                <p class="mt-0.5 font-mono text-xs font-black text-zeus-gold">
+                  ${formatMarketplacePrice(
+                    product.price
+                  )}
+                </p>
+
+              </div>
+
+            </div>
+
+            <button
+              type="button"
+              data-marketplace-open="${index}"
+              class="mt-3 w-full rounded border border-zeus-border bg-zeus-panel px-2 py-1.5 font-mono text-[9px] font-bold uppercase text-gray-400 transition hover:bg-zeus-gold hover:text-black">
+
+              View Details
+
+            </button>
+
+          </article>
+        `
+      )
+      .join("");
+
+  container.onclick = (
+    event
+  ) => {
+    const button =
+      event.target.closest(
+        "[data-marketplace-open]"
+      );
+
+    if (!button) {
+      return;
+    }
+
+    const productIndex =
+      Number(
+        button.dataset
+          .marketplaceOpen
+      );
+
+    const product =
+      normalizedProducts[
+        productIndex
+      ];
+
+    if (
+      product &&
+      typeof openProduct ===
+        "function"
+    ) {
+      openProduct(product);
+    }
+  };
+}
+
+export function openGearLightbox(
+  product = {},
+  {
+    normalizeProduct
+  } = {}
+) {
+  const modal =
+    document.getElementById(
+      "gear-lightbox-modal"
+    );
+
+  if (!modal) {
+    return;
+  }
+
+  const normalizedProduct =
+    typeof normalizeProduct ===
+    "function"
+      ? normalizeProduct(product)
+      : product;
+
+  const titleElement =
+    document.getElementById(
+      "lightbox-title"
+    );
+
+  if (titleElement) {
+    titleElement.textContent =
+      normalizedProduct.name ||
+      "Marketplace Item";
+  }
+
+  const priceElement =
+    document.getElementById(
+      "lightbox-price"
+    );
+
+  if (priceElement) {
+    priceElement.textContent =
+      formatMarketplacePrice(
+        normalizedProduct.price
+      );
+  }
+
+  const subtitle =
+    normalizedProduct.isExternal
+      ? `Available via ${
+          normalizedProduct.storeName ||
+          "External Store"
+        } (${
+          normalizedProduct.location ||
+          "Global"
+        })`
+      : (
+          normalizedProduct.sub ||
+          '"Dominate Today" Edition'
+        );
+
+  const subtitleElement =
+    document.getElementById(
+      "lightbox-sub"
+    );
+
+  if (subtitleElement) {
+    subtitleElement.textContent =
+      subtitle;
+  }
+
+  const iconElement =
+    document.getElementById(
+      "lightbox-icon"
+    );
+
+  if (iconElement) {
+    iconElement.textContent =
+      normalizedProduct.isExternal
+        ? "👟"
+        : (
+            normalizedProduct.icon ||
+            "🧥"
+          );
+  }
+
+  const checkoutButton =
+    document.getElementById(
+      "lightbox-checkout-btn"
+    );
+
+  if (checkoutButton) {
+    checkoutButton.dataset
+      .productPayload =
+      JSON.stringify(
+        normalizedProduct
+      );
+
+    checkoutButton.textContent =
+      normalizedProduct.isExternal
+        ? `Buy via ${
+            normalizedProduct.storeName ||
+            "External Store"
+          }`
+        : "Secure Local Checkout";
+
+    checkoutButton.className =
+      normalizedProduct.isExternal
+        ? (
+            "block w-full cursor-pointer rounded-lg " +
+            "bg-white py-3 text-center text-xs font-black " +
+            "uppercase tracking-wider text-black transition-all"
+          )
+        : (
+            "block w-full cursor-pointer rounded-lg " +
+            "bg-zeus-gold py-3 text-center text-xs font-black " +
+            "uppercase tracking-wider text-black transition-all " +
+            "hover:bg-yellow-400"
+          );
+  }
+
+  modal.classList.remove(
+    "hidden"
+  );
+}
+
+let gearLightboxInitialized = false;
+
+export function initializeGearLightbox({
+  normalizeProduct,
+  redirectToCheckout
+} = {}) {
+  if (gearLightboxInitialized) {
+    return;
+  }
+
+  gearLightboxInitialized = true;
+
+  const getElement = (id) =>
+    document.getElementById(id);
+
+  getElement("gear-view-tee")
+    ?.addEventListener(
+      "click",
+      () => {
+        openGearLightbox(
+          {
+            name:
+              "Wolverines Premium Tee",
+
+            sub:
+              '"Outwork Yesterday" Edition',
+
+            price: 30,
+
+            isExternal: false,
+
+            stripePriceId:
+              "price_tee_123",
+
+            icon: "👕"
+          },
+          {
+            normalizeProduct
+          }
+        );
+      }
+    );
+
+  getElement("gear-view-hoodie")
+    ?.addEventListener(
+      "click",
+      () => {
+        openGearLightbox(
+          {
+            name:
+              "Snt.L.Mo Elite Hoodie",
+
+            sub:
+              '"Dominate Today" Heavyweight',
+
+            price: 65,
+
+            isExternal: false,
+
+            stripePriceId:
+              "price_1QxXYZ123456",
+
+            icon: "🧥"
+          },
+          {
+            normalizeProduct
+          }
+        );
+      }
+    );
+
+  getElement("gear-lightbox-close")
+    ?.addEventListener(
+      "click",
+      () => {
+        getElement(
+          "gear-lightbox-modal"
+        )?.classList.add(
+          "hidden"
+        );
+      }
+    );
+
+  getElement("gear-lightbox-modal")
+    ?.addEventListener(
+      "click",
+      (event) => {
+        if (
+          event.target.id ===
+          "gear-lightbox-modal"
+        ) {
+          event.currentTarget
+            .classList.add(
+              "hidden"
+            );
+        }
+      }
+    );
+
+  document
+  .getElementById(
+    "lightbox-checkout-btn"
+  )
+  ?.addEventListener(
+    "click",
+    (event) => {
+      const payloadRaw =
+        event.currentTarget
+          .dataset
+          .productPayload;
+
+      if (!payloadRaw) {
+        return;
+      }
+
+      let product;
+
+      try {
+        product =
+          JSON.parse(
+            payloadRaw
+          );
+      } catch (error) {
+        console.error(
+          "Marketplace product payload is invalid:",
+          error
+        );
+
+        return;
+      }
+
+      if (product.isExternal) {
+        if (product.affiliateUrl) {
+          window.open(
+            product.affiliateUrl,
+            "_blank",
+            "noopener,noreferrer"
+          );
+        } else {
+          alert(
+            "This external product does not have a valid purchase link."
+          );
+        }
+
+        return;
+      }
+
+      if (
+        typeof redirectToCheckout ===
+        "function"
+      ) {
+        redirectToCheckout(
+          product.stripePriceId
+        );
+
+        return;
+      }
+
+      alert(
+        `Launching checkout for ${
+          product.name ||
+          "this product"
+        }...`
+      );
+    }
+  );
+}
+
+let unsubscribeMarketplace = null;
+
+export function loadLiveGearMarketplace({
+  db,
+  collection,
+  onSnapshot
+} = {}) {
+  if (unsubscribeMarketplace) {
+    return;
+  }
+
+  if (
+    !db ||
+    typeof collection !== "function" ||
+    typeof onSnapshot !== "function"
+  ) {
+    console.error(
+      "Marketplace Firebase dependencies are unavailable."
+    );
+
+    renderGlobalGearMarketplace(
+      [],
+      {
+        normalizeProduct:
+          normalizeMarketplaceProduct,
+
+        openProduct:
+          openGearLightbox
+      }
+    );
+
+    return;
+  }
+
+  const merchandiseCollection =
+    collection(
+      db,
+      "merchandise"
+    );
+
+  unsubscribeMarketplace =
+    onSnapshot(
+      merchandiseCollection,
+
+      (snapshot) => {
+        const products =
+          snapshot.docs.map(
+            (productDocument) => ({
+              id:
+                productDocument.id,
+
+              ...productDocument.data()
+            })
+          );
+
+        renderGlobalGearMarketplace(
+          products,
+          {
+            normalizeProduct:
+              normalizeMarketplaceProduct,
+
+            openProduct:
+              (product) =>
+                openGearLightbox(
+                  product,
+                  {
+                    normalizeProduct:
+                      normalizeMarketplaceProduct
+                  }
+                )
+          }
+        );
+      },
+
+      (error) => {
+        console.error(
+          "Marketplace inventory subscription failed:",
+          error
+        );
+
+        renderGlobalGearMarketplace(
+          [],
+          {
+            normalizeProduct:
+              normalizeMarketplaceProduct,
+
+            openProduct:
+              (product) =>
+                openGearLightbox(
+                  product,
+                  {
+                    normalizeProduct:
+                      normalizeMarketplaceProduct
+                  }
+                )
+          }
+        );
+      }
+    );
 }

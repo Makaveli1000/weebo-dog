@@ -51,6 +51,12 @@ import {
 } from "./pages/live.js";
 
 import {
+  formatMarketplacePrice,
+  initializeGearLightbox,
+  normalizeMarketplaceProduct,
+  openGearLightbox,
+  loadLiveGearMarketplace,
+  renderGlobalGearMarketplace,
   renderMarketplacePage
 } from "./pages/marketplace.js";
 
@@ -78,16 +84,21 @@ import {
 // ======================================================
 
 import {
-  deleteAthleteRecord,
   findDuplicateAthlete,
   purgeDuplicateAthletes,
   saveAthleteRecord,
+  deleteAthleteRecord,
   subscribeToAthleteRecords
 } from "./services/athleteService.js";
 
 import {
-  uploadAthleteVideo
+  uploadAthleteVideo,
+  addAthleteVideoUrl
 } from "./services/mediaService.js";
+
+import {
+  checkAndSeedDatabase
+} from "./services/seedService.js";
 
 // ======================================================
 // CONTROLLERS AND REPOSITORIES
@@ -102,7 +113,8 @@ import {
 } from "./feed/feedRepository.js";
 
 import {
-  initializeAdminController
+  initializeAdminController,
+  handleDirectAthletePurge
 } from "./controllers/adminController.js";
 
 import {
@@ -118,13 +130,31 @@ import {
 } from "./controllers/zeusBrainController.js";
 
 import {
+  synchronizeAthletes,
+  synchronizeCurrentUser,
+  synchronizeCurrentProfile,
+  clearAuthenticatedState
+} from "./controllers/stateController.js";
+
+import {
   findAthleteRecord,
   initializeAthleteDirectoryController,
   openAthleteProfileFromRecords,
+  populateAthleteEditForm,
   selectAthleteFilm,
   selectAthleteFromMatrix,
   selectAthleteRow
 } from "./controllers/athleteController.js";
+
+import {
+  scrollToSection,
+  openFirstAthleteProfile,
+  watchFeaturedHighlight,
+  openGearVault,
+  hideAllPlatformViews,
+  showPlatformView,
+  updateActiveNavigation
+} from "./controllers/navigationController.js";
 
 import {
   initializeRankingsController
@@ -137,6 +167,11 @@ import {
 import {
   initializeRecruitingController
 } from "./controllers/recruitingController.js";
+
+import {
+  initializeSignedInSession,
+  initializeSignedOutSession
+} from "./controllers/sessionController.js";
 
 // ======================================================
 // SHARED UTILITIES
@@ -1003,56 +1038,51 @@ window.directPurgeRow =
     athleteId,
     athleteName = "this athlete"
   ) {
-    event?.stopPropagation();
+    await handleDirectAthletePurge({
+      event,
+      athleteId,
+      athleteName,
 
-    if (
-      !isAdminProfile(currentProfile)
-    ) {
-      alert("Admin access denied.");
-      return;
-    }
+      canManage: () =>
+        isAdminProfile(
+          currentProfile
+        ),
 
-    const confirmed =
-      window.confirm(
-        `Are you sure you want to permanently erase ${athleteName} from the database?`
-      );
+      onDeleteAthlete:
+        async (
+          selectedAthleteId
+        ) => {
+          await deleteAthleteRecord({
+            db,
 
-    if (!confirmed) {
-      return;
-    }
+            athleteId:
+              selectedAthleteId
+          });
+        },
 
-    try {
-      await deleteDoc(
-        doc(
-          db,
-          "athletes",
-          athleteId
-        )
-      );
+      onAthleteDeleted:
+        (
+          deletedAthleteId
+        ) => {
+          if (
+            activeSelectedAthleteId !==
+            deletedAthleteId
+          ) {
+            return;
+          }
 
-      if (
-        activeSelectedAthleteId ===
-        athleteId
-      ) {
-        activeSelectedAthleteId =
-          null;
+          activeSelectedAthleteId =
+            null;
 
-        window.appState
-          .activeAthleteId = null;
+          window.appState
+            .activeAthleteId =
+            null;
 
-        window.appState
-          .activeAthlete = null;
-      }
-    } catch (error) {
-      console.error(
-        "Purge system rejected:",
-        error
-      );
-
-      alert(
-        "The athlete could not be deleted."
-      );
-    }
+          window.appState
+            .activeAthlete =
+            null;
+        }
+    });
   };
 
 window.handleAdminAddVideo =
@@ -1074,9 +1104,14 @@ window.handleAdminAddVideo =
         .trim() || "";
 
     if (
-      !isAdminProfile(currentProfile)
+      !isAdminProfile(
+        currentProfile
+      )
     ) {
-      alert("Admin access denied.");
+      alert(
+        "Admin access denied."
+      );
+
       return;
     }
 
@@ -1097,11 +1132,20 @@ window.handleAdminAddVideo =
     }
 
     try {
-      await addVideoToTitan(
-        activeSelectedAthleteId,
+      await addAthleteVideoUrl({
+        db,
+
+        athleteId:
+          activeSelectedAthleteId,
+
         title,
-        url
-      );
+
+        url,
+
+        currentUserId:
+          currentUser?.uid ||
+          "unknown"
+      });
 
       if (titleElement) {
         titleElement.value = "";
@@ -1116,131 +1160,16 @@ window.handleAdminAddVideo =
       );
     } catch (error) {
       console.error(
-        "Video save failed:",
+        "Manual video URL save failed:",
         error
       );
 
       alert(
+        error?.message ||
         "The video could not be saved."
       );
     }
   };
-
-// ======================================================
-// INITIAL ATHLETE SEED DATA
-// ======================================================
-
-const ST_LOUIS_INITIAL_SEEDS = [
-  {
-    name: "Vashon Elite Squad",
-    sport: "Basketball",
-    tier: "highschool",
-    subCategory: "phsl",
-    scores: [95, 92, 94, 96, 98],
-    highlightUrl:
-      "https://www.youtube.com/watch?v=ifiFShFX5Pg",
-    recordType: "athlete"
-  },
-  {
-    name: "Soldan Prep Leader",
-    sport: "Basketball",
-    tier: "highschool",
-    subCategory: "phsl",
-    scores: [88, 85, 90, 89, 91],
-    highlightUrl: "",
-    recordType: "athlete"
-  },
-  {
-    name: "CBC Cadet Core",
-    sport: "Football",
-    tier: "highschool",
-    subCategory: "mcc",
-    scores: [94, 96, 95, 93, 97],
-    highlightUrl: "",
-    recordType: "athlete"
-  },
-  {
-    name: "SLUH Jr. Billikens",
-    sport: "Track & Field",
-    tier: "highschool",
-    subCategory: "mcc",
-    scores: [89, 92, 91, 90, 94],
-    highlightUrl: "",
-    recordType: "athlete"
-  },
-  {
-    name: "Macler Cody (Mac10)",
-    sport: "Football",
-    tier: "pro-players",
-    subCategory: "pro-cfl-alt",
-    scores: [98, 97, 99, 96, 98],
-    highlightUrl: "",
-    recordType: "athlete"
-  },
-  {
-    name: "David Freese (Lafayette HS)",
-    sport: "Baseball",
-    tier: "pro-players",
-    subCategory: "pro-major",
-    scores: [95, 94, 96, 92, 95],
-    highlightUrl: "",
-    recordType: "athlete"
-  },
-  {
-    name: "Pat Maroon (Oakville HS)",
-    sport: "Hockey",
-    tier: "pro-players",
-    subCategory: "pro-major",
-    scores: [93, 95, 94, 91, 96],
-    highlightUrl: "",
-    recordType: "athlete"
-  },
-  {
-    name: "Bradley Beal (Chaminade)",
-    sport: "Basketball",
-    tier: "pro-players",
-    subCategory: "pro-major",
-    scores: [97, 98, 96, 95, 99],
-    highlightUrl: "",
-    recordType: "athlete"
-  }
-];
-
-async function checkAndSeedDatabase() {
-  const existingSnapshot =
-    await getDocs(
-      query(
-        collection(db, "athletes"),
-        limit(1)
-      )
-    );
-
-  if (!existingSnapshot.empty) {
-    return;
-  }
-
-  const athletesCollection =
-    collection(db, "athletes");
-
-  for (
-    const athlete of
-    ST_LOUIS_INITIAL_SEEDS
-  ) {
-    await addDoc(
-      athletesCollection,
-      {
-        ...athlete,
-        videos: [],
-        createdAt:
-          serverTimestamp(),
-        updatedAt:
-          serverTimestamp(),
-        createdBy:
-          "auto_init"
-      }
-    );
-  }
-}
 
 // ======================================================
 // ACCESS AND AUTHENTICATION UI
@@ -1270,7 +1199,7 @@ function updateAccessUI(
     show("admin-panel");
     show("admin-purge-btn");
 
-    checkAndSeedDatabase()
+    checkAndSeedDatabase(db)
       .catch((error) => {
         console.error(
           "Database seed check failed:",
@@ -2800,21 +2729,19 @@ function subscribeToAthletes() {
       maxResults: 120,
 
       onData: (
-        athleteRecords
-      ) => {
-        allAthletesCache =
-          athleteRecords;
+  athleteRecords
+) => {
+  allAthletesCache =
+    synchronizeAthletes({
+      athleteRecords,
 
-        window.appState.athletes =
-          allAthletesCache.map(
-            (item) => ({
-              id: item.id,
-              ...item.data
-            })
-          );
+      appState:
+        window.appState,
 
-        refreshAthleteDependentViews();
-      },
+      onRefresh:
+        refreshAthleteDependentViews
+    });
+},
 
       onError: (error) => {
         console.error(
@@ -2868,73 +2795,7 @@ function subscribeToSportsFeed() {
 // ADMIN VIDEO MANAGEMENT
 // ======================================================
 
-async function addVideoToTitan(
-  athleteId,
-  videoTitle,
-  videoUrl
-) {
-  if (
-    !isAdminProfile(
-      currentProfile
-    )
-  ) {
-    throw new Error(
-      "Admin access denied."
-    );
-  }
 
-  const normalizedTitle =
-    String(
-      videoTitle || ""
-    ).trim();
-
-  const normalizedUrl =
-    String(
-      videoUrl || ""
-    ).trim();
-
-  if (
-    !athleteId ||
-    !normalizedTitle ||
-    !normalizedUrl
-  ) {
-    throw new Error(
-      "Athlete ID, video title, and URL are required."
-    );
-  }
-
-  const athleteReference =
-    doc(
-      db,
-      "athletes",
-      athleteId
-    );
-
-  await updateDoc(
-    athleteReference,
-    {
-      videos:
-        arrayUnion({
-          title:
-            normalizedTitle,
-
-          url:
-            normalizedUrl,
-
-          createdAt:
-            new Date()
-              .toISOString(),
-
-          createdBy:
-            currentUser?.uid ||
-            "unknown"
-        }),
-
-      updatedAt:
-        serverTimestamp()
-    }
-  );
-}
 
 // ======================================================
 // AUTHENTICATED USER LIFECYCLE
@@ -2943,60 +2804,113 @@ async function addVideoToTitan(
 async function handleSignedInUser(
   user
 ) {
-  currentUser = user;
+  const profile =
+    await initializeSignedInSession({
+      user,
 
-  window.appState.currentUser =
-    user;
+      onSynchronizeUser:
+        (
+          signedInUser
+        ) => {
+          currentUser =
+            synchronizeCurrentUser({
+              user:
+                signedInUser,
 
-  try {
-    const profileSnapshot =
-      await getDoc(
-        doc(
-          db,
-          "users",
-          user.uid
-        )
-      );
+              appState:
+                window.appState
+            });
+        },
 
-    currentProfile =
-      profileSnapshot.exists()
-        ? profileSnapshot.data()
-        : {
-            uid: user.uid,
-            email:
-              user.email || "",
-            role: "fan",
-            nickname:
-              user.displayName ||
-              user.email ||
-              "Sports Fan"
-          };
+      onLoadProfile:
+        async (
+          signedInUser
+        ) => {
+          const profileSnapshot =
+            await getDoc(
+              doc(
+                db,
+                "users",
+                signedInUser.uid
+              )
+            );
 
-    window.appState.currentProfile =
-      currentProfile;
+          return profileSnapshot.exists()
+            ? profileSnapshot.data()
+            : {
+                uid:
+                  signedInUser.uid,
 
-    updateAccessUI(
-      currentProfile
-    );
+                email:
+                  signedInUser.email ||
+                  "",
 
-    subscribeToAthletes();
-    subscribeToSportsFeed();
-    subscribeToChat();
-  } catch (error) {
-    console.error(
-      "Signed-in user initialization failed:",
-      error
-    );
+                role:
+                  "fan",
 
-    currentProfile = null;
+                nickname:
+                  signedInUser.displayName ||
+                  signedInUser.email ||
+                  "Sports Fan"
+              };
+        },
 
-    window.appState.currentProfile =
-      null;
+      onSynchronizeProfile:
+        (
+          loadedProfile
+        ) => {
+          currentProfile =
+            synchronizeCurrentProfile({
+              profile:
+                loadedProfile,
 
-    updateAccessUI(null);
-  } finally {
-    hide("loading-overlay");
-  }
+              appState:
+                window.appState,
+
+              onAccessUpdate:
+                updateAccessUI
+            });
+        },
+
+      onSubscribeToAthletes:
+        subscribeToAthletes,
+
+      onSubscribeToSportsFeed:
+        subscribeToSportsFeed,
+
+      onSubscribeToChat:
+        subscribeToChat,
+
+      onSessionError:
+        (
+          error
+        ) => {
+          console.error(
+            "Signed-in user initialization failed:",
+            error
+          );
+
+          currentProfile =
+            synchronizeCurrentProfile({
+              profile: null,
+
+              appState:
+                window.appState,
+
+              onAccessUpdate:
+                updateAccessUI
+            });
+        },
+
+      onSessionComplete:
+        () => {
+          hide(
+            "loading-overlay"
+          );
+        }
+    });
+
+  return profile;
 }
 
 // ======================================================
@@ -3302,527 +3216,6 @@ function initializeLiveSportsTicker() {
           container.scrollHeight;
       },
       3000
-    );
-}
-
-// ======================================================
-// MARKETPLACE PRODUCT HELPERS
-// ======================================================
-
-function normalizeMarketplaceProduct(
-  product = {}
-) {
-  const name =
-    product.name ||
-    product.title ||
-    "Untitled Product";
-
-  const numericPrice =
-    Number(product.price);
-
-  return {
-    ...product,
-
-    name,
-
-    price:
-      Number.isFinite(
-        numericPrice
-      )
-        ? numericPrice
-        : 0,
-
-    image:
-      product.image ||
-      product.imageUrl ||
-      "assets/gear-placeholder.png",
-
-    location:
-      product.location ||
-      "US Shipping",
-
-    storeName:
-      product.storeName ||
-      "Snt.L.Mo. Exclusive",
-
-    isExternal:
-      product.isExternal === true
-  };
-}
-
-function formatMarketplacePrice(
-  price
-) {
-  const numericPrice =
-    Number(price);
-
-  return Number.isFinite(
-    numericPrice
-  )
-    ? `$${numericPrice.toFixed(2)}`
-    : "$0.00";
-}
-
-// ======================================================
-// MARKETPLACE GRID
-// ======================================================
-
-function renderGlobalGearMarketplace(
-  products = []
-) {
-  const container =
-    $("gear-grid-container");
-
-  if (!container) {
-    return;
-  }
-
-  const normalizedProducts =
-    Array.isArray(products)
-      ? products.map(
-          normalizeMarketplaceProduct
-        )
-      : [];
-
-  if (
-    !normalizedProducts.length
-  ) {
-    container.innerHTML = `
-      <div class="col-span-full rounded-xl border border-zeus-border bg-zeus-black/60 p-8 text-center">
-
-        <span class="text-3xl">
-          🛍️
-        </span>
-
-        <strong class="mt-3 block text-sm text-white">
-          No marketplace items available
-        </strong>
-
-        <p class="mt-1 text-xs text-gray-500">
-          Products will appear here when inventory is published.
-        </p>
-
-      </div>
-    `;
-
-    return;
-  }
-
-  container.innerHTML =
-    normalizedProducts
-      .map(
-        (product, index) => `
-          <article
-            class="group flex flex-col justify-between rounded-xl border border-zeus-border bg-zeus-black/60 p-3 transition hover:border-zeus-gold/30"
-            data-marketplace-card="${index}">
-
-            <div>
-
-              <div class="mb-2 flex items-center justify-between gap-2">
-
-                <span class="font-mono text-[8px] uppercase tracking-wider text-gray-500">
-                  ${escapeHtml(
-                    product.location
-                  )}
-                </span>
-
-                <span
-                  class="rounded border border-zeus-gold/20 bg-zeus-goldSoft px-2 py-0.5 font-mono text-[8px] font-bold uppercase tracking-wide text-zeus-gold">
-
-                  ${
-                    product.isExternal
-                      ? escapeHtml(
-                          product.storeName
-                        )
-                      : "Snt.L.Mo. Exclusive"
-                  }
-
-                </span>
-
-              </div>
-
-              <div
-                class="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded border border-zeus-border bg-zeus-panel p-2">
-
-                <img
-                  src="${escapeHtml(
-                    product.image
-                  )}"
-                  alt="${escapeHtml(
-                    product.name
-                  )}"
-                  class="absolute inset-0 h-full w-full object-cover"
-                  loading="lazy">
-
-              </div>
-
-              <div class="mt-2">
-
-                <h3
-                  class="truncate text-[10px] font-bold tracking-tight text-white"
-                  title="${escapeHtml(
-                    product.name
-                  )}">
-
-                  ${escapeHtml(
-                    product.name
-                  )}
-
-                </h3>
-
-                <p class="mt-0.5 font-mono text-xs font-black text-zeus-gold">
-                  ${formatMarketplacePrice(
-                    product.price
-                  )}
-                </p>
-
-              </div>
-
-            </div>
-
-            <button
-              type="button"
-              data-marketplace-open="${index}"
-              class="mt-3 w-full rounded border border-zeus-border bg-zeus-panel px-2 py-1.5 font-mono text-[9px] font-bold uppercase text-gray-400 transition hover:bg-zeus-gold hover:text-black">
-
-              View Details
-
-            </button>
-
-          </article>
-        `
-      )
-      .join("");
-
-  container.onclick = (
-    event
-  ) => {
-    const button =
-      event.target.closest(
-        "[data-marketplace-open]"
-      );
-
-    if (!button) {
-      return;
-    }
-
-    const productIndex =
-      Number(
-        button.dataset
-          .marketplaceOpen
-      );
-
-    const product =
-      normalizedProducts[
-        productIndex
-      ];
-
-    if (product) {
-      openGearLightbox(
-        product
-      );
-    }
-  };
-}
-
-// ======================================================
-// MARKETPLACE LIGHTBOX
-// ======================================================
-
-function openGearLightbox(
-  product = {}
-) {
-  const modal =
-    $("gear-lightbox-modal");
-
-  if (!modal) {
-    return;
-  }
-
-  const normalizedProduct =
-    normalizeMarketplaceProduct(
-      product
-    );
-
-  setText(
-    "lightbox-title",
-    normalizedProduct.name
-  );
-
-  setText(
-    "lightbox-price",
-    formatMarketplacePrice(
-      normalizedProduct.price
-    )
-  );
-
-  const subtitle =
-    normalizedProduct.isExternal
-      ? `Available via ${
-          normalizedProduct.storeName
-        } (${
-          normalizedProduct.location ||
-          "Global"
-        })`
-      : (
-          normalizedProduct.sub ||
-          '"Dominate Today" Edition'
-        );
-
-  setText(
-    "lightbox-sub",
-    subtitle
-  );
-
-  const iconElement =
-    $("lightbox-icon");
-
-  if (iconElement) {
-    iconElement.textContent =
-      normalizedProduct.isExternal
-        ? "👟"
-        : (
-            normalizedProduct.icon ||
-            "🧥"
-          );
-  }
-
-  const checkoutButton =
-    $("lightbox-checkout-btn");
-
-  if (checkoutButton) {
-    checkoutButton.dataset
-      .productPayload =
-      JSON.stringify(
-        normalizedProduct
-      );
-
-    checkoutButton.textContent =
-      normalizedProduct.isExternal
-        ? `Buy via ${
-            normalizedProduct.storeName
-          }`
-        : "Secure Local Checkout";
-
-    checkoutButton.className =
-      normalizedProduct.isExternal
-        ? (
-            "block w-full cursor-pointer rounded-lg " +
-            "bg-white py-3 text-center text-xs font-black " +
-            "uppercase tracking-wider text-black transition-all"
-          )
-        : (
-            "block w-full cursor-pointer rounded-lg " +
-            "bg-zeus-gold py-3 text-center text-xs font-black " +
-            "uppercase tracking-wider text-black transition-all " +
-            "hover:bg-yellow-400"
-          );
-  }
-
-  modal.classList.remove(
-    "hidden"
-  );
-}
-
-let gearLightboxInitialized =
-  false;
-
-function initializeGearLightbox() {
-  if (gearLightboxInitialized) {
-    return;
-  }
-
-  gearLightboxInitialized =
-    true;
-
-  $("gear-view-tee")
-    ?.addEventListener(
-      "click",
-      () => {
-        openGearLightbox({
-          name:
-            "Wolverines Premium Tee",
-
-          sub:
-            '"Outwork Yesterday" Edition',
-
-          price: 30,
-
-          isExternal: false,
-
-          stripePriceId:
-            "price_tee_123",
-
-          icon: "👕"
-        });
-      }
-    );
-
-  $("gear-view-hoodie")
-    ?.addEventListener(
-      "click",
-      () => {
-        openGearLightbox({
-          name:
-            "Snt.L.Mo Elite Hoodie",
-
-          sub:
-            '"Dominate Today" Heavyweight',
-
-          price: 65,
-
-          isExternal: false,
-
-          stripePriceId:
-            "price_1QxXYZ123456",
-
-          icon: "🧥"
-        });
-      }
-    );
-
-  $("gear-lightbox-close")
-    ?.addEventListener(
-      "click",
-      () => {
-        $("gear-lightbox-modal")
-          ?.classList.add(
-            "hidden"
-          );
-      }
-    );
-
-  $("gear-lightbox-modal")
-    ?.addEventListener(
-      "click",
-      (event) => {
-        if (
-          event.target.id ===
-          "gear-lightbox-modal"
-        ) {
-          event.currentTarget
-            .classList.add(
-              "hidden"
-            );
-        }
-      }
-    );
-
-  $("lightbox-checkout-btn")
-    ?.addEventListener(
-      "click",
-      (event) => {
-        const payloadRaw =
-          event.currentTarget
-            .dataset
-            .productPayload;
-
-        if (!payloadRaw) {
-          return;
-        }
-
-        let product;
-
-        try {
-          product =
-            JSON.parse(
-              payloadRaw
-            );
-        } catch (error) {
-          console.error(
-            "Marketplace product payload is invalid:",
-            error
-          );
-
-          return;
-        }
-
-        if (
-          product.isExternal
-        ) {
-          if (
-            product.affiliateUrl
-          ) {
-            window.open(
-              product.affiliateUrl,
-              "_blank",
-              "noopener,noreferrer"
-            );
-          } else {
-            alert(
-              "This external product does not have a valid purchase link."
-            );
-          }
-
-          return;
-        }
-
-        if (
-          typeof redirectToStripeCheckout ===
-          "function"
-        ) {
-          redirectToStripeCheckout(
-            product.stripePriceId
-          );
-        } else {
-          alert(
-            `Launching checkout for ${
-              product.name ||
-              "this product"
-            }...`
-          );
-        }
-      }
-    );
-}
-
-// ======================================================
-// CLOUD INVENTORY SUBSCRIPTION
-// ======================================================
-
-let unsubscribeMarketplace = null;
-
-function loadLiveGearMarketplace() {
-  if (unsubscribeMarketplace) {
-    return;
-  }
-
-  const merchandiseCollection =
-    collection(
-      db,
-      "merchandise"
-    );
-
-  unsubscribeMarketplace =
-    onSnapshot(
-      merchandiseCollection,
-
-      (snapshot) => {
-        const products =
-          snapshot.docs.map(
-            (productDocument) => ({
-              id:
-                productDocument.id,
-
-              ...productDocument.data()
-            })
-          );
-
-        renderGlobalGearMarketplace(
-          products
-        );
-      },
-
-      (error) => {
-        console.error(
-          "Marketplace inventory subscription failed:",
-          error
-        );
-
-        renderGlobalGearMarketplace(
-          []
-        );
-      }
     );
 }
 
@@ -4665,22 +4058,28 @@ onAuthStateChanged(
       return;
     }
 
+    initializeSignedOutSession({
+  onClearState: () => {
     currentUser = null;
     currentProfile = null;
 
-    window.appState.currentUser =
-      null;
+    clearAuthenticatedState({
+      appState: window.appState,
+      onAccessUpdate: updateAccessUI
+    });
+  },
 
-    window.appState.currentProfile =
-      null;
-
-    updateAccessUI(null);
-    hide("loading-overlay");
-
+  onHideAdminPlatform: () => {
     if (adminPlatform) {
       adminPlatform.style.display =
         "none";
     }
+  },
+
+  onSessionComplete: () => {
+    hide("loading-overlay");
+  }
+});
   }
 );
 
@@ -4809,8 +4208,23 @@ function initializePublicPlatform() {
   subscribeToSportsFeed();
 
   initializeLiveSportsTicker();
-  initializeGearLightbox();
-  loadLiveGearMarketplace();
+  initializeGearLightbox({
+  normalizeProduct:
+    normalizeMarketplaceProduct,
+
+  redirectToCheckout:
+    typeof globalThis
+      .redirectToStripeCheckout ===
+    "function"
+      ? globalThis
+          .redirectToStripeCheckout
+      : null
+});
+  loadLiveGearMarketplace({
+  db,
+  collection,
+  onSnapshot
+ });
 }
 
 // ==========================================
@@ -4942,57 +4356,104 @@ window.comingSoon = function (feature = "This feature") {
   alert(`${feature} is coming soon in the next Snt.L.Mo. update.`);
 };
 
-window.scrollToSection = function (sectionId) {
-  const el = document.getElementById(sectionId);
-  if (!el) {
-    window.comingSoon(sectionId);
-    return;
-  }
+window.scrollToSection =
+  function (
+    sectionId
+  ) {
+    return scrollToSection({
+      sectionId,
 
-  el.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-};
+      onMissingSection:
+        (
+          missingSectionId
+        ) => {
+          window.comingSoon(
+            missingSectionId
+          );
+        }
+    });
+  };
 
-window.openFirstAthleteProfile = function () {
-  const first = window.appState?.athletes?.[0];
+window.openFirstAthleteProfile =
+  function () {
+    return openFirstAthleteProfile({
+      athletes:
+        window.appState
+          ?.athletes ||
+        [],
 
-  if (!first) {
-    window.comingSoon("Athlete profiles");
-    return;
-  }
+      onMissingAthlete:
+        (
+          label
+        ) => {
+          window.comingSoon(
+            label
+          );
+        },
 
-  window.setActiveAthlete(first.id, first);
-  window.openAthleteFromDirectory(first.id);
-};
+      onSetActiveAthlete:
+        (
+          athleteId,
+          athlete
+        ) => {
+          window.setActiveAthlete(
+            athleteId,
+            athlete
+          );
+        },
 
-window.watchFeaturedHighlight = function () {
-  const firstWithFilm =
-    (window.appState?.athletes || []).find(a =>
-      a.highlightUrl ||
-      a.highlight ||
-      (Array.isArray(a.videos) && a.videos.length)
-    );
+      onOpenAthlete:
+        (
+          athleteId
+        ) => {
+          window.openAthleteFromDirectory(
+            athleteId
+          );
+        }
+    });
+  };
 
-  if (!firstWithFilm) {
-    window.comingSoon("Highlight film");
-    return;
-  }
+window.watchFeaturedHighlight =
+  function () {
+    return watchFeaturedHighlight({
+      athletes:
+        window.appState
+          ?.athletes ||
+        [],
 
-  window.scrollToSection("highlights-root");
-};
+      onMissingHighlight:
+        (
+          label
+        ) => {
+          window.comingSoon(
+            label
+          );
+        },
 
-window.openGearVault = function () {
-  const modal = document.getElementById("gear-lightbox-modal");
+      onScrollToHighlights:
+        (
+          sectionId
+        ) => {
+          window.scrollToSection(
+            sectionId
+          );
+        }
+    });
+  };
 
-  if (modal) {
-    modal.classList.remove("hidden");
-    return;
-  }
-
-  window.scrollToSection("marketplace-root");
-};
+window.openGearVault =
+  function () {
+    return openGearVault({
+      onScrollToMarketplace:
+        (
+          sectionId
+        ) => {
+          window.scrollToSection(
+            sectionId
+          );
+        }
+    });
+  };
 
 // ==========================================
 // PLATFORM BUTTON ACTION SYSTEM
@@ -5013,42 +4474,7 @@ const PLATFORM_VIEW_IDS = [
   "platform-features"
 ];
 
-function hideAllPlatformViews() {
-  PLATFORM_VIEW_IDS.forEach((id) => {
-    document
-      .getElementById(id)
-      ?.classList.add("hidden");
-  });
-}
 
-function showPlatformView(id) {
-  hideAllPlatformViews();
-
-  document
-    .getElementById(id)
-    ?.classList.remove("hidden");
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-}
-
-function updateActiveNavigation(action) {
-  document
-    .querySelectorAll(".national-nav button")
-    .forEach((button) => {
-      const clickCode =
-        button.getAttribute("onclick") || "";
-
-      button.classList.toggle(
-        "active",
-        clickCode.includes(
-          `platformAction('${action}')`
-        )
-      );
-    });
-}
 
 window.platformAction = function (
   action = "home",
@@ -5059,67 +4485,125 @@ window.platformAction = function (
 
   switch (action) {
     case "home":
-      renderHome();
-      hideAllPlatformViews();
+  renderHome();
 
-      $("home-root")
-        ?.classList.remove("hidden");
+  hideAllPlatformViews({
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
 
-      $("national-dashboard-root")
-        ?.classList.remove("hidden");
+  $("home-root")
+    ?.classList.remove("hidden");
 
-      $("platform-features")
-        ?.classList.remove("hidden");
-      break;
+  $("national-dashboard-root")
+    ?.classList.remove("hidden");
 
-    case "feed":
-      renderSportsFeed();
-      showPlatformView("home-root");
-      break;
+  $("platform-features")
+    ?.classList.remove("hidden");
 
-    case "athletes":
-      renderAthleteDirectoryPage();
-      showPlatformView(
-        "athlete-directory-page"
-      );
-      break;
+  break;
 
-    case "schools":
-      renderSchools();
-      showPlatformView("schools-root");
-      break;
+case "feed":
+  renderSportsFeed();
 
-    case "rankings":
-      renderRankings();
-      showPlatformView("rankings-root");
-      break;
+  showPlatformView({
+    id: "home-root",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
 
-    case "highlights":
-      renderHighlightFeedPage();
-      showPlatformView("highlights-root");
-      break;
+  break;
 
-    case "recruiting":
-      renderRecruiting();
-      showPlatformView("recruiting-root");
-      break;
+case "athletes":
+  renderAthleteDirectoryPage();
 
-    case "live":
-      renderLiveGames();
-      showPlatformView("live-root");
-      break;
+  showPlatformView({
+    id: "athlete-directory-page",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
 
-    case "gear":
-    case "marketplace":
-      renderMarketplace();
-      showPlatformView("marketplace-root");
-      action = "gear";
-      break;
+  break;
 
-    case "zeus":
-      renderZeusAI();
-      showPlatformView("zeus-ai-root");
-      break;
+case "schools":
+  renderSchools();
+
+  showPlatformView({
+    id: "schools-root",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
+
+  break;
+
+case "rankings":
+  renderRankings();
+
+  showPlatformView({
+    id: "rankings-root",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
+
+  break;
+
+case "highlights":
+  renderHighlightFeedPage();
+
+  showPlatformView({
+    id: "highlights-root",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
+
+  break;
+
+case "recruiting":
+  renderRecruiting();
+
+  showPlatformView({
+    id: "recruiting-root",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
+
+  break;
+
+case "live":
+  renderLiveGames();
+
+  showPlatformView({
+    id: "live-root",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
+
+  break;
+
+case "gear":
+case "marketplace":
+  renderMarketplace();
+
+  showPlatformView({
+    id: "marketplace-root",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
+
+  action = "gear";
+
+  break;
+
+case "zeus":
+  renderZeusAI();
+
+  showPlatformView({
+    id: "zeus-ai-root",
+    platformViewIds:
+      PLATFORM_VIEW_IDS
+  });
+
+  break;
 
     default:
       window.comingSoon(
