@@ -352,3 +352,134 @@ export function selectAthleteFromMatrix({
     videoCount
   };
 }
+
+// ======================================================
+// ATHLETE PROFILE MODAL
+// Handles athlete lookup, active state, profile rendering,
+// Zeus sidebar rendering, and modal opening.
+// ======================================================
+
+export function openAthleteProfileModal({
+  athleteId,
+  athlete = {},
+  modalId = "athlete-profile-modal",
+  contentId = "athlete-profile-content",
+  onSetActiveAthlete,
+  renderProfile,
+  renderZeusDashboard,
+  renderZeusReport
+} = {}) {
+  if (!athleteId) {
+    throw new Error(
+      "Athlete ID is required."
+    );
+  }
+
+  const modal =
+    document.getElementById(
+      modalId
+    );
+
+  const content =
+    document.getElementById(
+      contentId
+    );
+
+  if (!modal || !content) {
+    throw new Error(
+      "Athlete profile modal could not be found."
+    );
+  }
+
+  const activeAthlete = {
+    id: athleteId,
+    ...athlete
+  };
+
+  window.activeAthlete =
+    activeAthlete;
+
+  onSetActiveAthlete?.(
+    athleteId,
+    athlete
+  );
+
+  const profileMarkup =
+    typeof renderProfile ===
+    "function"
+      ? renderProfile(
+          activeAthlete
+        )
+      : "";
+
+  const reportMarkup =
+    typeof renderZeusReport ===
+    "function"
+      ? renderZeusReport(
+          activeAthlete
+        )
+      : "";
+
+  const dashboardMarkup =
+    typeof renderZeusDashboard ===
+    "function"
+      ? renderZeusDashboard(
+          activeAthlete
+        )
+      : "";
+
+  content.innerHTML = `
+    <div class="recruiter-profile-layout">
+
+      <div class="recruiter-profile-main">
+        ${profileMarkup}
+      </div>
+
+      <aside class="recruiter-zeus-sidebar">
+        ${reportMarkup}
+        ${dashboardMarkup}
+      </aside>
+
+    </div>
+  `;
+
+  modal.classList.remove(
+    "hidden"
+  );
+
+  return activeAthlete;
+}
+
+export function openAthleteProfileFromRecords({
+  athleteId,
+  records = [],
+  onSetActiveAthlete,
+  renderProfile,
+  renderZeusDashboard,
+  renderZeusReport
+} = {}) {
+  const record =
+    findAthleteRecord(
+      records,
+      athleteId
+    );
+
+  if (!record) {
+    throw new Error(
+      "Athlete profile not found."
+    );
+  }
+
+  return openAthleteProfileModal({
+    athleteId:
+      record.id,
+
+    athlete:
+      record.data || {},
+
+    onSetActiveAthlete,
+    renderProfile,
+    renderZeusDashboard,
+    renderZeusReport
+  });
+}

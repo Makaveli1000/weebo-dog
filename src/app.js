@@ -120,7 +120,7 @@ import {
 import {
   findAthleteRecord,
   initializeAthleteDirectoryController,
-  openAthleteFromRecords,
+  openAthleteProfileFromRecords,
   selectAthleteFilm,
   selectAthleteFromMatrix,
   selectAthleteRow
@@ -1315,84 +1315,48 @@ function updateAccessUI(
 // ATHLETE PROFILE MODAL
 // ======================================================
 
-function openAthleteProfile(
-  athleteId,
-  athlete = {}
-) {
-  const modal =
-    document.getElementById(
-      "athlete-profile-modal"
-    );
-
-  const content =
-    document.getElementById(
-      "athlete-profile-content"
-    );
-
-  if (!modal || !content) {
-    return;
-  }
-
-  const activeAthlete = {
-    id: athleteId,
-    ...athlete
-  };
-
-  window.activeAthlete =
-    activeAthlete;
-
-  window.setActiveAthlete(
-    athleteId,
-    athlete
-  );
-
-  content.innerHTML = `
-    <div class="recruiter-profile-layout">
-
-      <div class="recruiter-profile-main">
-
-        ${renderAthletePage(
-          activeAthlete
-        )}
-
-      </div>
-
-      <aside class="recruiter-zeus-sidebar">
-
-        ${
-          typeof buildZeusScoutingReport ===
-          "function"
-            ? buildZeusScoutingReport(
-                activeAthlete
-              )
-            : ""
-        }
-
-        ${renderZeusDashboard(
-          activeAthlete
-        )}
-
-      </aside>
-
-    </div>
-  `;
-
-  modal.classList.remove(
-    "hidden"
-  );
-}
-
 window.openAthleteFromDirectory =
   function (athleteId) {
     try {
-      return openAthleteFromRecords({
+      return openAthleteProfileFromRecords({
         athleteId,
 
         records:
           allAthletesCache,
 
-        onOpenProfile:
-          openAthleteProfile
+        onSetActiveAthlete:
+          window.setActiveAthlete,
+
+        renderProfile:
+          renderAthletePage,
+
+        renderZeusDashboard,
+
+        renderZeusReport: (
+          athlete
+        ) => {
+          if (
+            typeof window
+              .buildZeusScoutingReport ===
+            "function"
+          ) {
+            return window
+              .buildZeusScoutingReport(
+                athlete
+              );
+          }
+
+          if (
+            typeof buildZeusScoutingReport ===
+            "function"
+          ) {
+            return buildZeusScoutingReport(
+              athlete
+            );
+          }
+
+          return "";
+        }
       });
     } catch (error) {
       console.error(
