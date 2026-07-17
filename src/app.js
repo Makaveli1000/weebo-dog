@@ -122,6 +122,7 @@ import {
   initializeAthleteDirectoryController,
   openAthleteFromRecords,
   selectAthleteFilm,
+  selectAthleteFromMatrix,
   selectAthleteRow
 } from "./controllers/athleteController.js";
 
@@ -2473,29 +2474,30 @@ function processAndRenderFilteredAthletes() {
       );
 
     if (filmButton) {
-  event.stopPropagation();
+      event.stopPropagation();
 
-  const athleteId =
-    filmButton.dataset.athleteFilm;
+      const athleteId =
+        filmButton.dataset
+          .athleteFilm;
 
-  activeSelectedAthleteId =
-    athleteId;
+      activeSelectedAthleteId =
+        athleteId;
 
-  selectAthleteFilm({
-    athleteId,
+      selectAthleteFilm({
+        athleteId,
 
-    records:
-      allAthletesCache,
+        records:
+          allAthletesCache,
 
-    onSetActiveAthlete:
-      window.setActiveAthlete,
+        onSetActiveAthlete:
+          window.setActiveAthlete,
 
-    onPlayHighlight:
-      playHighlight
-  });
+        onPlayHighlight:
+          playHighlight
+      });
 
-  return;
-}
+      return;
+    }
 
     const draftButton =
       event.target.closest(
@@ -2506,7 +2508,9 @@ function processAndRenderFilteredAthletes() {
       event.stopPropagation();
 
       window.inlineDraftDispatch?.(
-        draftButton.dataset.athleteId,
+        draftButton.dataset
+          .athleteId,
+
         Number(
           draftButton.dataset
             .athleteDraft
@@ -2538,62 +2542,63 @@ function processAndRenderFilteredAthletes() {
       return;
     }
 
-    activeSelectedAthleteId =
-  athleteId;
+    const selection =
+      selectAthleteFromMatrix({
+        athleteId,
 
-setText(
-  "upload-progress-sub",
-  `BOUNDING TARGET: ${
-    (
-      record.data.name ||
-      "Athlete"
-    ).substring(0, 20)
-  }`
-);
+        records:
+          allAthletesCache,
 
-const mediaLocker =
-  $("media-locker-container");
+        tableBody:
+          gridBody,
 
-mediaLocker?.classList.add(
-  "border-zeus-gold",
-  "shadow-[0_0_15px_rgba(212,175,55,0.15)]"
-);
+        onSetActiveAthlete:
+          window.setActiveAthlete,
 
-const videoCount =
-  Array.isArray(
-    record.data.videos
-  )
-    ? record.data.videos.length
-    : athleteHasFilm(
-          record.data
-        )
-      ? 1
-      : 0;
+        onPlayHighlight:
+          playHighlight,
 
-setText(
-  "upload-count-badge",
-  `Uploads: ${videoCount}`
-);
+        onSelectionChange: ({
+          athlete,
+          athleteId:
+            selectedAthleteId,
+          videoCount
+        }) => {
+          activeSelectedAthleteId =
+            selectedAthleteId;
 
-selectAthleteRow({
-  athleteId:
-    record.id,
+          setText(
+            "upload-progress-sub",
+            `BOUNDING TARGET: ${
+              (
+                athlete.name ||
+                "Athlete"
+              ).substring(0, 20)
+            }`
+          );
 
-  athlete:
-    record.data,
+          setText(
+            "upload-count-badge",
+            `Uploads: ${videoCount}`
+          );
 
-  tableBody:
-    gridBody,
+          $("media-locker-container")
+            ?.classList.add(
+              "border-zeus-gold",
+              "shadow-[0_0_15px_rgba(212,175,55,0.15)]"
+            );
+        }
+      });
 
-  onSetActiveAthlete:
-    window.setActiveAthlete,
-
-  onPlayHighlight:
-    playHighlight
-    });
+    if (!selection) {
+      console.warn(
+        "Athlete matrix selection failed:",
+        athleteId
+      );
+    }
   };
-}
-               
+}                  
+
 // ======================================================
 // HIGHLIGHT AUTOPLAY
 // ======================================================

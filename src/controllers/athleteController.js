@@ -242,3 +242,113 @@ export function selectAthleteFilm({
 
   return record;
 }
+
+// ======================================================
+// ADMIN ATHLETE MATRIX SELECTION
+// Handles selected-row styling, Media Locker information,
+// active athlete state, upload count, and film preview.
+// ======================================================
+
+export function selectAthleteFromMatrix({
+  athleteId,
+  records = [],
+  tableBody,
+  onSetActiveAthlete,
+  onPlayHighlight,
+  onSelectionChange
+} = {}) {
+  if (!athleteId) {
+    return null;
+  }
+
+  const record =
+    records.find(
+      (item) =>
+        item.id === athleteId
+    );
+
+  if (!record) {
+    return null;
+  }
+
+  const athlete =
+    record.data || {};
+
+  if (tableBody) {
+    tableBody
+      .querySelectorAll(
+        "tr[data-athlete-id]"
+      )
+      .forEach((row) => {
+        row.classList.remove(
+          "bg-zeus-gold/10",
+          "border-l-2",
+          "border-zeus-gold"
+        );
+      });
+
+    const selectedRow =
+      Array.from(
+        tableBody.querySelectorAll(
+          "tr[data-athlete-id]"
+        )
+      ).find(
+        (row) =>
+          row.dataset.athleteId ===
+          athleteId
+      );
+
+    selectedRow?.classList.add(
+      "bg-zeus-gold/10",
+      "border-l-2",
+      "border-zeus-gold"
+    );
+  }
+
+  const videos =
+    Array.isArray(
+      athlete.videos
+    )
+      ? athlete.videos
+      : [];
+
+  const hasFallbackFilm =
+    Boolean(
+      athlete.highlightUrl ||
+      athlete.highlight ||
+      athlete.higlightightUrl
+    );
+
+  const videoCount =
+    videos.length ||
+    (
+      hasFallbackFilm
+        ? 1
+        : 0
+    );
+
+  onSetActiveAthlete?.(
+    record.id,
+    athlete
+  );
+
+  onPlayHighlight?.(
+    athlete
+  );
+
+  onSelectionChange?.({
+    record,
+    athlete,
+    athleteId:
+      record.id,
+    videoCount
+  });
+
+  return {
+    record,
+    athlete,
+    athleteId:
+      record.id,
+    videoCount
+  };
+}
