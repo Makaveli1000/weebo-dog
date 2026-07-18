@@ -173,6 +173,11 @@ import {
   initializeSignedOutSession
 } from "./controllers/sessionController.js";
 
+import {
+  buildZeusIntroLines,
+  buildZeusDashboardBriefing
+} from "./components/zeusAI.js";
+
 // ======================================================
 // SHARED UTILITIES
 // ======================================================
@@ -1022,11 +1027,42 @@ function renderZeusAI() {
     return;
   }
 
+  const athletes =
+    window.appState?.athletes || [];
+
+  const schools =
+    window.appState?.schools || [];
+
+  const featuredAthlete =
+    athletes[0]?.name || "";
+
+  const briefingLines =
+    buildZeusDashboardBriefing({
+      adminName: "Mac10",
+      athleteCount:
+        athletes.length,
+      recruitingUpdates: 0,
+      schoolCount:
+        schools.length,
+      featuredAthlete
+    });
+
   container.innerHTML =
-    renderZeusAiPage();
+    renderZeusAiPage({
+      briefingLines
+    });
 
   registerZeusBrainHandlers?.();
 }
+
+window.setTimeout(
+  () => {
+    speakZeusDashboardBriefing(
+      briefingLines
+    );
+  },
+  700
+);
 
 // ======================================================
 // ADMIN ACTIONS
@@ -1361,57 +1397,354 @@ function renderHome() {
   const skipButton =
     $("skip-zeus-intro");
 
-  const inlineSkipButton =
-    $("skip-zeus-intro-inline");
-
   const introLine =
-    $("zeus-intro-line");
+  $("zeus-intro-line");
 
-  const introLines = [
-    "Welcome to Snt.L.Mo. Sports Network...",
-    "The home of every athlete...",
-    "Every school...",
-    "Every coach...",
-    "Every recruiter...",
-    "Every fan...",
-    "Discover athletes from every city...",
-    "Watch highlights from around the country...",
-    "Explore school programs...",
-    "Track national rankings...",
-    "Connect through recruiting...",
-    "Shop exclusive team gear...",
-    "And let Zeus AI analyze the future of sports...",
-    "Greatness is not born...",
-    "It is discovered...",
-    "Now... let's discover the next generation of greatness."
-  ];
+const introLines =
+  buildZeusIntroLines();
 
-  let introIndex = 0;
-  let introTimer = null;
-  let closeTimer = null;
+if (
+  introLine &&
+  introLines.length
+) {
+  introLine.textContent =
+    introLines[0];
+}
+
+let introIndex = 0;
+let closeTimer = null;
 
   const thunder =
-    new Audio(
-      "audio/thunder.mp3"
+  new Audio(
+    "audio/thunder.mp3"
+  );
+
+const music =
+  new Audio(
+    "audio/ambient.mp3"
+  );
+
+let zeusSpeechUtterance = null;
+
+function speakZeusIntro() {
+  if (
+    !("speechSynthesis" in window) ||
+    !introLines.length
+  ) {
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  if (closeTimer) {
+    clearTimeout(closeTimer);
+    closeTimer = null;
+  }
+
+  introIndex = 0;
+
+  const voices =
+    window.speechSynthesis
+      .getVoices();
+
+  const preferredVoice =
+    voices.find(
+      (availableVoice) =>
+        availableVoice.lang
+          ?.toLowerCase()
+          .startsWith("en-us") &&
+        /male|david|mark|guy|english/i.test(
+          availableVoice.name
+        )
+    ) ||
+    voices.find(
+      (availableVoice) =>
+        availableVoice.lang
+          ?.toLowerCase()
+          .startsWith("en-us")
+    ) ||
+    voices.find(
+      (availableVoice) =>
+        availableVoice.lang
+          ?.toLowerCase()
+          .startsWith("en")
     );
 
-  const voice =
-    new Audio(
-      "audio/zeus-intro.mp3"
+  function speakCurrentLine() {
+    const currentLine =
+      introLines[introIndex];
+
+    if (!currentLine) {
+      closeTimer =
+        window.setTimeout(
+          closeIntro,
+          2500
+        );
+
+      return;
+    }
+
+    if (introLine) {
+      introLine.textContent =
+        currentLine;
+    }
+
+    zeusSpeechUtterance =
+      new SpeechSynthesisUtterance(
+        currentLine
+      );
+
+    zeusSpeechUtterance.rate =
+      0.82;
+
+    zeusSpeechUtterance.pitch =
+      0.72;
+
+    zeusSpeechUtterance.volume =
+      1;
+
+    if (preferredVoice) {
+      zeusSpeechUtterance.voice =
+        preferredVoice;
+    }
+
+    zeusSpeechUtterance.onend =
+      () => {
+        introIndex += 1;
+
+        if (
+          introIndex >=
+          introLines.length
+        ) {
+          zeusSpeechUtterance =
+            null;
+
+          closeTimer =
+            window.setTimeout(
+              closeIntro,
+              2500
+            );
+
+          return;
+        }
+
+        window.setTimeout(
+          speakCurrentLine,
+          450
+        );
+      };
+
+    zeusSpeechUtterance.onerror =
+      () => {
+        zeusSpeechUtterance =
+          null;
+      };
+
+    window.speechSynthesis.speak(
+      zeusSpeechUtterance
+    );
+  }
+
+  speakCurrentLine();
+}
+
+function speakZeusDashboardBriefing(
+  briefingLines = []
+) {
+  if (
+    !("speechSynthesis" in window) ||
+    !briefingLines.length
+  ) {
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const spokenLines = [
+    briefingLines[0],
+    briefingLines[1],
+    briefingLines[4],
+    "What would you like to do today?"
+  ].filter(Boolean);
+
+  const briefingSpeech =
+    new SpeechSynthesisUtterance(
+      spokenLines.join(" ")
     );
 
-  const music =
-    new Audio(
-      "audio/ambient.mp3"
+  const voices =
+    window.speechSynthesis.getVoices();
+
+  const preferredVoice =
+    voices.find(
+      (voice) =>
+        /Microsoft Guy|Microsoft Christopher|Google UK English Male|Daniel|David/i.test(
+          voice.name
+        )
+    ) ||
+    voices.find(
+      (voice) =>
+        voice.lang
+          ?.toLowerCase()
+          .startsWith("en-us")
+    ) ||
+    voices.find(
+      (voice) =>
+        voice.lang
+          ?.toLowerCase()
+          .startsWith("en")
     );
+
+  if (preferredVoice) {
+    briefingSpeech.voice =
+      preferredVoice;
+  }
+
+  briefingSpeech.lang = "en-US";
+  briefingSpeech.rate = 0.88;
+  briefingSpeech.pitch = 0.72;
+  briefingSpeech.volume = 1;
+
+  briefingSpeech.onstart = () => {
+    document
+      .querySelector(
+        ".zeus-dashboard-briefing"
+      )
+      ?.classList.add(
+        "zeus-is-speaking"
+      );
+  };
+
+  briefingSpeech.onend = () => {
+    document
+      .querySelector(
+        ".zeus-dashboard-briefing"
+      )
+      ?.classList.remove(
+        "zeus-is-speaking"
+      );
+  };
+
+  briefingSpeech.onerror = () => {
+    document
+      .querySelector(
+        ".zeus-dashboard-briefing"
+      )
+      ?.classList.remove(
+        "zeus-is-speaking"
+      );
+  };
+
+  window.speechSynthesis.speak(
+    briefingSpeech
+  );
+}
+
+window.startZeusVoiceCommand =
+  function () {
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    const button =
+      document.getElementById(
+        "zeus-voice-command-button"
+      );
+
+    const prompt =
+      document.getElementById(
+        "zeus-center-prompt"
+      );
+
+    if (!SpeechRecognition) {
+      alert(
+        "Voice commands are not supported in this browser."
+      );
+
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const recognition =
+      new SpeechRecognition();
+
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    if (button) {
+      button.textContent =
+        "🎙️ Listening...";
+      button.disabled = true;
+    }
+
+    recognition.onresult =
+  function (event) {
+
+    const command =
+      event.results?.[0]?.[0]
+        ?.transcript?.trim() || "";
+
+    if (prompt) {
+      prompt.value = command;
+    }
+
+    const normalizedCommand =
+      command.toLowerCase();
+
+    if (
+      normalizedCommand.includes(
+        "open recruiting"
+      )
+    ) {
+      renderRecruiting();
+    }
+
+    if (button) {
+      button.textContent =
+        "🎤 Speak to Zeus";
+      button.disabled = false;
+    }
+
+  };
+
+    recognition.onerror =
+      function () {
+        if (button) {
+          button.textContent =
+            "🎤 Speak to Zeus";
+          button.disabled = false;
+        }
+      };
+
+    recognition.onend =
+      function () {
+        if (button) {
+          button.textContent =
+            "🎤 Speak to Zeus";
+          button.disabled = false;
+        }
+      };
+
+    recognition.start();
+  };
 
   function stopIntroAudio() {
-    [thunder, voice, music]
-      .forEach((audio) => {
-        audio.pause();
-        audio.currentTime = 0;
-      });
+  [thunder, music]
+    .forEach((audio) => {
+      audio.pause();
+      audio.currentTime = 0;
+    });
+
+  if (
+    "speechSynthesis" in window
+  ) {
+    window.speechSynthesis.cancel();
   }
+
+  zeusSpeechUtterance = null;
+}
 
   function closeIntro() {
     overlay?.classList.add(
@@ -1448,46 +1781,21 @@ function renderHome() {
 
   if (overlay) {
     thunder.volume = 0.6;
-    voice.volume = 0.95;
-    music.volume = 0.25;
+music.volume = 0.18;
 
-    thunder.play().catch(() => {});
-    voice.play().catch(() => {});
-    music.play().catch(() => {});
+thunder
+  .play()
+  .catch(() => {});
 
-    introTimer =
-      window.setInterval(
-        () => {
-          introIndex += 1;
+music
+  .play()
+  .catch(() => {});
 
-          if (
-            introLine &&
-            introLines[introIndex]
-          ) {
-            introLine.textContent =
-              introLines[introIndex];
-          }
-
-          if (
-            introIndex >=
-            introLines.length - 1
-          ) {
-            clearInterval(
-              introTimer
-            );
-
-            introTimer = null;
-
-            closeTimer =
-              window.setTimeout(
-                closeIntro,
-                4500
-              );
-          }
-        },
-        2800
-      );
-  }
+window.setTimeout(
+  speakZeusIntro,
+  900
+ );    
+}
 
   window.setTimeout(
     animateHomeCounters,
@@ -4028,6 +4336,18 @@ if (nationalDashboardRoot) {
 // ======================================================
 
 initializePublicPlatform();
+initializeAuthController({
+  auth,
+
+  signIn:
+    signInWithEmailAndPassword,
+
+  signOutUser:
+    signOut,
+
+  getCurrentUser:
+    () => currentUser
+});
 
 // ======================================================
 // AUTHENTICATION STATE
@@ -4041,6 +4361,11 @@ onAuthStateChanged(
         "admin-platform"
       );
 
+    if (adminPlatform) {
+      adminPlatform.style.display =
+        "none";
+    }
+
     if (user) {
       await handleSignedInUser(user);
 
@@ -4049,6 +4374,11 @@ onAuthStateChanged(
           currentProfile
         )
       ) {
+        if (adminPlatform) {
+          adminPlatform.style.display =
+            "";
+        }
+
         initializeAuthenticatedAdmin();
       } else if (adminPlatform) {
         adminPlatform.style.display =
@@ -4059,27 +4389,32 @@ onAuthStateChanged(
     }
 
     initializeSignedOutSession({
-  onClearState: () => {
-    currentUser = null;
-    currentProfile = null;
+      onClearState: () => {
+        currentUser = null;
+        currentProfile = null;
 
-    clearAuthenticatedState({
-      appState: window.appState,
-      onAccessUpdate: updateAccessUI
+        clearAuthenticatedState({
+          appState:
+            window.appState,
+
+          onAccessUpdate:
+            updateAccessUI
+        });
+      },
+
+      onHideAdminPlatform: () => {
+        if (adminPlatform) {
+          adminPlatform.style.display =
+            "none";
+        }
+      },
+
+      onSessionComplete: () => {
+        hide(
+          "loading-overlay"
+        );
+      }
     });
-  },
-
-  onHideAdminPlatform: () => {
-    if (adminPlatform) {
-      adminPlatform.style.display =
-        "none";
-    }
-  },
-
-  onSessionComplete: () => {
-    hide("loading-overlay");
-  }
-});
   }
 );
 

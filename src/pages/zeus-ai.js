@@ -1,5 +1,6 @@
-export function renderZeusAiPage() {
-  return `
+export function renderZeusAiPage({
+  briefingLines = []
+} = {}) {  return `
     <section class="zeus-ai-page national-zeus-center">
 
       <div class="section-header">
@@ -9,6 +10,31 @@ export function renderZeusAiPage() {
           AI scouting, film breakdowns, recruiting projections,
           college fit, NIL outlook, comparisons, and printable reports.
         </p>
+      </div>
+
+           <div class="zeus-dashboard-briefing">
+        <div class="zeus-briefing-header">
+          <span>⚡</span>
+
+          <div>
+            <p class="network-kicker">
+              Zeus Daily Briefing
+            </p>
+
+            <h3>
+              Command Center Status
+            </h3>
+          </div>
+        </div>
+
+        <div class="zeus-briefing-lines">
+          ${briefingLines
+            .map(
+              (line) =>
+                `<p>${line}</p>`
+            )
+            .join("")}
+        </div>
       </div>
 
       <div class="zeus-center-hero">
@@ -31,11 +57,32 @@ export function renderZeusAiPage() {
           ></textarea>
 
           <div class="zeus-center-actions">
-            <button onclick="window.runZeusCenterTool('scout')">🤖 Zeus Scout</button>
-            <button onclick="window.runZeusCenterTool('film')">🎥 Film Breakdown</button>
-            <button onclick="window.runZeusCenterTool('projection')">📊 Projection</button>
-            <button onclick="window.runZeusCenterTool('pdf')">📄 Print Report</button>
-          </div>
+
+  <button
+    id="zeus-voice-command-button"
+    type="button"
+    onclick="window.startZeusVoiceCommand?.()"
+  >
+    🎤 Speak to Zeus
+  </button>
+
+  <button onclick="window.runZeusCenterTool('scout')">
+    🤖 Zeus Scout
+  </button>
+
+  <button onclick="window.runZeusCenterTool('film')">
+    🎥 Film Breakdown
+  </button>
+
+  <button onclick="window.runZeusCenterTool('projection')">
+    📊 Projection
+  </button>
+
+  <button onclick="window.runZeusCenterTool('pdf')">
+    📄 Print Report
+  </button>
+
+</div>
         </div>
 
       </div>

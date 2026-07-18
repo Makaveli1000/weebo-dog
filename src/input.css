@@ -759,3 +759,127 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ======================================================
+   ZEUS DAILY BRIEFING
+====================================================== */
+
+.zeus-dashboard-briefing {
+  position: relative;
+  display: grid;
+  gap: 24px;
+  margin: 0 0 28px;
+  padding: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 24px;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(234, 179, 8, 0.16),
+      transparent 34%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(15, 23, 42, 0.96),
+      rgba(3, 7, 18, 0.98)
+    );
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.zeus-dashboard-briefing::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(
+    180deg,
+    #facc15,
+    #eab308,
+    #7f1d1d
+  );
+}
+
+.zeus-briefing-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.zeus-briefing-header > span {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: 18px;
+  background: rgba(234, 179, 8, 0.1);
+  font-size: 28px;
+  box-shadow:
+    0 0 28px rgba(234, 179, 8, 0.14);
+}
+
+.zeus-briefing-header h3 {
+  margin: 4px 0 0;
+  color: #ffffff;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.zeus-briefing-lines {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(240px, 1fr)
+    );
+  gap: 12px;
+}
+
+.zeus-briefing-lines p {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.68);
+  color: #e5e7eb;
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
+.zeus-briefing-lines p:first-child {
+  border-color: rgba(234, 179, 8, 0.3);
+  background: rgba(234, 179, 8, 0.1);
+  color: #fde68a;
+  font-weight: 900;
+}
+
+@media (max-width: 640px) {
+  .zeus-dashboard-briefing {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .zeus-briefing-header {
+    align-items: flex-start;
+  }
+
+  .zeus-briefing-header > span {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    font-size: 24px;
+  }
+
+  .zeus-briefing-lines {
+    grid-template-columns: 1fr;
+  }
+}
