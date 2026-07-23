@@ -102,6 +102,10 @@ import {
   checkAndSeedDatabase
 } from "./services/seedService.js";
 
+import {
+  ensureUserProfile
+} from "./services/userProfileService.js";
+
 // ======================================================
 // CONTROLLERS AND REPOSITORIES
 // ======================================================
@@ -4388,7 +4392,11 @@ async function startApplication() {
     // Step 4:
     // Initialize login and logout controls after
     // the login modal has been created.
-    initializeAuthController({
+    // Step 4:
+// Initialize login and logout controls after
+// the login modal has been created.
+
+initializeAuthController({
   auth,
 
   signIn:
@@ -4404,7 +4412,14 @@ async function startApplication() {
     signOut,
 
   getCurrentUser:
-    () => currentUser
+    () => currentUser,
+
+  onLoginSuccess:
+    (user) =>
+      ensureUserProfile(
+        db,
+        user
+      )
 });
 
     // Step 5:

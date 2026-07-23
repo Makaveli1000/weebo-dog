@@ -19,6 +19,10 @@ import {
   initializeLoginModal
 } from "./loginModalController.js";
 
+import {
+  initializeMortalVisionController
+} from "./mortalVisionController.js";
+
 export async function initializeAppController() {
   initializeApplicationShell();
 
