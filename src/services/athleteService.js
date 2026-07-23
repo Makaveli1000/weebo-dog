@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. ATHLETE SERVICE
+// SNT.L.MO. Sports Network ATHLETE SERVICE
 // Handles Firestore athlete reads, writes, subscriptions,
 // duplicate detection, and cleanup.
 // ======================================================

@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. NAVIGATION CONTROLLER
+// SNT.L.MO. Sports Network NAVIGATION CONTROLLER
 // Handles section scrolling, featured athlete navigation,
 // highlight navigation, and marketplace navigation.
 // ======================================================

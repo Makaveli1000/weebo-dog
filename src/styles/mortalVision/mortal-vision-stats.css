@@ -1,0 +1,95 @@
+/* =========================================================
+   MORTAL VISION — STATS
+   National network statistics row.
+   ========================================================= */
+
+.mortal-vision-stats {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.mortal-vision-stat-card {
+  position: relative;
+  overflow: hidden;
+
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+
+  padding: 24px 18px;
+
+  border:
+    1px solid rgba(234, 179, 8, 0.22);
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15, 23, 42, 0.92),
+      rgba(2, 6, 23, 0.95)
+    );
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.28);
+
+  text-align: center;
+}
+
+.mortal-vision-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at top center,
+      rgba(234, 179, 8, 0.13),
+      transparent 58%
+    );
+
+  pointer-events: none;
+}
+
+.mortal-vision-stat-value,
+.mortal-vision-stat-label {
+  position: relative;
+  z-index: 1;
+}
+
+.mortal-vision-stat-value {
+  color: #facc15;
+
+  font-size:
+    clamp(1.9rem, 4vw, 3rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.mortal-vision-stat-label {
+  color: #cbd5e1;
+
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mortal-vision-stat-card:hover {
+  transform: translateY(-4px);
+
+  border-color:
+    rgba(250, 204, 21, 0.46);
+
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.38),
+    0 0 28px rgba(234, 179, 8, 0.08);
+}
+
+.mortal-vision-stat-card {
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}

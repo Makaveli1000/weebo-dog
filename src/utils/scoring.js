@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. SCORING UTILITIES
+// SNT.L.MO. Sports Network SCORING UTILITIES
 // ======================================================
 
 export function safeScoreNumber(

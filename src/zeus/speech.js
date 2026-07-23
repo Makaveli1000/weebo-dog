@@ -6,9 +6,28 @@ function initVoice() {
   if (!voices.length) return;
 
   selectedVoice =
-    voices.find(v => v.name.toLowerCase().includes("male")) ||
-    voices.find(v => v.lang.startsWith("en")) ||
-    voices[0];
+  voices.find(
+    (voice) =>
+      /Microsoft Guy|Microsoft Christopher|Microsoft David|Google UK English Male|Daniel/i.test(
+        voice.name
+      )
+  ) ||
+  voices.find(
+    (voice) =>
+      voice.lang
+        ?.toLowerCase()
+        .startsWith("en-us") &&
+      !/zira|aria|jenny|samantha/i.test(
+        voice.name
+      )
+  ) ||
+  voices.find(
+    (voice) =>
+      voice.lang
+        ?.toLowerCase()
+        .startsWith("en")
+  ) ||
+  voices[0];
 
   voiceReady = true;
 }

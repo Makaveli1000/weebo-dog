@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. FILTER UTILITIES
+// SNT.L.MO. Sports Network FILTER UTILITIES
 // Shared athlete filtering and normalization helpers.
 // ======================================================
 

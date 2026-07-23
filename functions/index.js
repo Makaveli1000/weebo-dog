@@ -17,15 +17,14 @@ exports.createCheckoutSession = onRequest({ cors: true }, async (req, res) => {
             line_items: [{
                 price_data: {
                     currency: 'usd',
-                    product_data: { name: 'Titan Status - Snt.L.Mo. Exclusive' },
-                    unit_amount: 1000, // $10.00
-                },
+                    product_data: { name: 'Titan Status - Snt.L.Mo. Sports Network' },
+unit_amount: 1000, // $10.00                },
                 quantity: 1,
             }],
-            mode: 'payment',
+            mode: 'pant',
             customer_email: email,
             client_reference_id: uid, 
-            success_url: 'https://your-site.com/success.html',
+            success_url: 'https://yymeour-site.com/success.html',
             cancel_url: 'https://your-site.com/cancel.html',
         });
         res.json({ url: session.url });

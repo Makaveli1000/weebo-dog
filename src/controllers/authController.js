@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. AUTH CONTROLLER
+// SNT.L.MO. Sports Network AUTH CONTROLLER
 // Handles login modal, login submission, Enter key,
 // logout button, and Firebase authentication messages.
 // ======================================================
@@ -118,6 +118,12 @@ export function initializeAuthController({
 
   signIn,
 
+  signInWithPopup,
+
+  googleProvider,
+
+  facebookProvider,
+
   signOutUser,
 
   getCurrentUser =
@@ -221,6 +227,64 @@ export function initializeAuthController({
     }
   }
 
+async function loginWithProvider(provider) {
+  if (
+    typeof signInWithPopup !== "function" ||
+    !provider
+  ) {
+    console.error(
+      "Social login provider is not connected."
+    );
+
+    alert(
+      "Social login is not connected."
+    );
+
+    return;
+  }
+
+  try {
+    const credential =
+      await signInWithPopup(
+        auth,
+        provider
+      );
+
+    hideElement(
+      "login-modal"
+    );
+
+    onLoginSuccess?.(
+      credential?.user ||
+      null
+    );
+
+  } catch (error) {
+    console.error(
+      "Social login failed:",
+      error
+    );
+
+    alert(
+      getFirebaseAuthMessage(
+        error?.code
+      )
+    );
+  }
+}
+
+async function loginWithGoogle() {
+  await loginWithProvider(
+    googleProvider
+  );
+}
+
+async function loginWithFacebook() {
+  await loginWithProvider(
+    facebookProvider
+  );
+}
+
   async function handleHeaderAuth() {
     const currentUser =
       getCurrentUser?.();
@@ -286,6 +350,22 @@ export function initializeAuthController({
     submitLogin,
     { signal }
   );
+
+  getElement(
+  "google-login-btn"
+)?.addEventListener(
+  "click",
+  loginWithGoogle,
+  { signal }
+);
+
+getElement(
+  "facebook-login-btn"
+)?.addEventListener(
+  "click",
+  loginWithFacebook,
+  { signal }
+);
 
   getElement(
     "login-pass"

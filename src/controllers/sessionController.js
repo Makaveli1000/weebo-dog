@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. SESSION CONTROLLER
+// SNT.L.MO. Sports Network SESSION CONTROLLER
 // Owns Firebase authentication session lifecycle.
 // Login modal and login form behavior remain in
 // authController.js.

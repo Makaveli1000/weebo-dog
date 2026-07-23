@@ -52,7 +52,7 @@ export function initializeFeedActions(feedRoot) {
       post.querySelector("h3")
         ?.textContent
         ?.trim() ||
-      "Snt.L.Mo. Sports Highlight";
+      "Snt.L.Mo. Sports Network Highlight";
 
     if (
       postId &&

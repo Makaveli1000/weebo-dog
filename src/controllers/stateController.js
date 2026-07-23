@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. STATE CONTROLLER
+// SNT.L.MO. Sports Network STATE CONTROLLER
 // Synchronizes application state with UI.
 // ======================================================
 

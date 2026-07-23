@@ -2,6 +2,8 @@
 // PAGE RENDER IMPORTS
 // ======================================================
 
+import { speak } from "./zeus/speech.js";
+
 import {
   renderAdminPage
 } from "./pages/admin.js";
@@ -105,6 +107,10 @@ import {
 // ======================================================
 
 import {
+  initializeAppController
+} from "./controllers/appController.js";
+
+import {
   initializeSportsFeed
 } from "./feed/feedController.js";
 
@@ -178,6 +184,10 @@ import {
   buildZeusDashboardBriefing
 } from "./components/zeusAI.js";
 
+import {
+  initializeAppState
+} from "./state/appState.js";
+
 // ======================================================
 // SHARED UTILITIES
 // ======================================================
@@ -201,6 +211,24 @@ import {
   normalizeFilterValue
 } from "./utils/filters.js";
 
+import {
+  getElement,
+  showElement,
+  hideElement,
+  setElementText,
+  escapeHtml
+} from "./utils/dom.js";
+
+import {
+  safeNumber,
+  isFirebaseStorageUrl
+} from "./utils/value.js";
+
+import {
+  isAdminProfile,
+  hasMainAccess
+} from "./utils/permissions.js";
+
 // ======================================================
 // FIREBASE AUTHENTICATION FUNCTIONS
 // ======================================================
@@ -208,9 +236,16 @@ import {
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
   signOut,
   createUserWithEmailAndPassword
 } from "firebase/auth";
+  
+const googleProvider = new GoogleAuthProvider();
+
+const facebookProvider = new FacebookAuthProvider();
 
 // ======================================================
 // FIRESTORE FUNCTIONS STILL USED BY APP.JS
@@ -266,19 +301,7 @@ let squadA = [];
 let squadB = [];
 let squadC = [];
 
-window.appState = {
-  currentUser: null,
-  currentProfile: null,
-
-  athletes: [],
-
-  activeAthleteId: null,
-  activeAthlete: null,
-  activeSchool: null,
-  activeVideo: null,
-
-  activeView: "home"
-};
+initializeAppState();
 
 // ======================================================
 // ACTIVE ATHLETE STATE
@@ -312,81 +335,13 @@ window.setActiveAthlete = function (
 // SHARED UTILITIES
 // ======================================================
 
-const $ = (id) =>
-  document.getElementById(id);
+const $ = getElement;
+const show = showElement;
+const hide = hideElement;
+const setText = setElementText;
 
-function escapeHtml(value = "") {
-  return String(value ?? "")
-    .replace(
-      /[&<>"']/g,
-      (character) => {
-        const entities = {
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;"
-        };
-
-        return (
-          entities[character] ||
-          character
-        );
-      }
-    );
-}
-
-function show(id) {
-  $(id)?.classList.remove("hidden");
-}
-
-function hide(id) {
-  $(id)?.classList.add("hidden");
-}
-
-function safeNumber(value) {
-  const number = Number(value);
-
-  return Number.isFinite(number)
-    ? number
-    : 0;
-}
-
-function setText(id, text = "") {
-  const element = $(id);
-
-  if (element) {
-    element.textContent =
-      String(text ?? "");
-  }
-}
-
-function isAdminProfile(profile) {
-  return (
-    profile?.role === "admin" ||
-    profile?.role === "editor"
-  );
-}
-
-function hasMainAccess(profile) {
-  return (
-    isAdminProfile(profile) ||
-    profile?.isPro === true
-  );
-}
-
-function isFirebaseStorageUrl(value = "") {
-  const url =
-    String(value || "");
-
-  return (
-    url.includes("firebasestorage") ||
-    url.includes(".appspot.com")
-  );
-}
-
-window.show = show;
-window.hide = hide;
+window.show = showElement;
+window.hide = hideElement;
 
 // ======================================================
 // VIDEO URL HELPERS
@@ -1055,15 +1010,6 @@ function renderZeusAI() {
   registerZeusBrainHandlers?.();
 }
 
-window.setTimeout(
-  () => {
-    speakZeusDashboardBriefing(
-      briefingLines
-    );
-  },
-  700
-);
-
 // ======================================================
 // ADMIN ACTIONS
 // ======================================================
@@ -1374,180 +1320,6 @@ function renderSportsFeed() {
   });
 }
 
-function renderHome() {
-  const container =
-    document.getElementById(
-      "home-root"
-    );
-
-  if (!container) {
-    return;
-  }
-
-  container.innerHTML =
-    renderHomePage(
-      allAthletesCache
-    );
-
-  initializeHomeSportFilters?.();
-
-  const overlay =
-    $("zeus-intro-overlay");
-
-  const skipButton =
-    $("skip-zeus-intro");
-
-  const introLine =
-  $("zeus-intro-line");
-
-const introLines =
-  buildZeusIntroLines();
-
-if (
-  introLine &&
-  introLines.length
-) {
-  introLine.textContent =
-    introLines[0];
-}
-
-let introIndex = 0;
-let closeTimer = null;
-
-  const thunder =
-  new Audio(
-    "audio/thunder.mp3"
-  );
-
-const music =
-  new Audio(
-    "audio/ambient.mp3"
-  );
-
-let zeusSpeechUtterance = null;
-
-function speakZeusIntro() {
-  if (
-    !("speechSynthesis" in window) ||
-    !introLines.length
-  ) {
-    return;
-  }
-
-  window.speechSynthesis.cancel();
-
-  if (closeTimer) {
-    clearTimeout(closeTimer);
-    closeTimer = null;
-  }
-
-  introIndex = 0;
-
-  const voices =
-    window.speechSynthesis
-      .getVoices();
-
-  const preferredVoice =
-    voices.find(
-      (availableVoice) =>
-        availableVoice.lang
-          ?.toLowerCase()
-          .startsWith("en-us") &&
-        /male|david|mark|guy|english/i.test(
-          availableVoice.name
-        )
-    ) ||
-    voices.find(
-      (availableVoice) =>
-        availableVoice.lang
-          ?.toLowerCase()
-          .startsWith("en-us")
-    ) ||
-    voices.find(
-      (availableVoice) =>
-        availableVoice.lang
-          ?.toLowerCase()
-          .startsWith("en")
-    );
-
-  function speakCurrentLine() {
-    const currentLine =
-      introLines[introIndex];
-
-    if (!currentLine) {
-      closeTimer =
-        window.setTimeout(
-          closeIntro,
-          2500
-        );
-
-      return;
-    }
-
-    if (introLine) {
-      introLine.textContent =
-        currentLine;
-    }
-
-    zeusSpeechUtterance =
-      new SpeechSynthesisUtterance(
-        currentLine
-      );
-
-    zeusSpeechUtterance.rate =
-      0.82;
-
-    zeusSpeechUtterance.pitch =
-      0.72;
-
-    zeusSpeechUtterance.volume =
-      1;
-
-    if (preferredVoice) {
-      zeusSpeechUtterance.voice =
-        preferredVoice;
-    }
-
-    zeusSpeechUtterance.onend =
-      () => {
-        introIndex += 1;
-
-        if (
-          introIndex >=
-          introLines.length
-        ) {
-          zeusSpeechUtterance =
-            null;
-
-          closeTimer =
-            window.setTimeout(
-              closeIntro,
-              2500
-            );
-
-          return;
-        }
-
-        window.setTimeout(
-          speakCurrentLine,
-          450
-        );
-      };
-
-    zeusSpeechUtterance.onerror =
-      () => {
-        zeusSpeechUtterance =
-          null;
-      };
-
-    window.speechSynthesis.speak(
-      zeusSpeechUtterance
-    );
-  }
-
-  speakCurrentLine();
-}
-
 function speakZeusDashboardBriefing(
   briefingLines = []
 ) {
@@ -1640,126 +1412,323 @@ function speakZeusDashboardBriefing(
   );
 }
 
-window.startZeusVoiceCommand =
-  function () {
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition;
+function renderHome() {
+  const container =
+    document.getElementById(
+      "home-root"
+    );
 
-    const button =
-      document.getElementById(
-        "zeus-voice-command-button"
-      );
-
-    const prompt =
-      document.getElementById(
-        "zeus-center-prompt"
-      );
-
-    if (!SpeechRecognition) {
-      alert(
-        "Voice commands are not supported in this browser."
-      );
-
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const recognition =
-      new SpeechRecognition();
-
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    if (button) {
-      button.textContent =
-        "🎙️ Listening...";
-      button.disabled = true;
-    }
-
-    recognition.onresult =
-  function (event) {
-
-    const command =
-      event.results?.[0]?.[0]
-        ?.transcript?.trim() || "";
-
-    if (prompt) {
-      prompt.value = command;
-    }
-
-    const normalizedCommand =
-      command.toLowerCase();
-
-    if (
-      normalizedCommand.includes(
-        "open recruiting"
-      )
-    ) {
-      renderRecruiting();
-    }
-
-    if (button) {
-      button.textContent =
-        "🎤 Speak to Zeus";
-      button.disabled = false;
-    }
-
-  };
-
-    recognition.onerror =
-      function () {
-        if (button) {
-          button.textContent =
-            "🎤 Speak to Zeus";
-          button.disabled = false;
-        }
-      };
-
-    recognition.onend =
-      function () {
-        if (button) {
-          button.textContent =
-            "🎤 Speak to Zeus";
-          button.disabled = false;
-        }
-      };
-
-    recognition.start();
-  };
-
-  function stopIntroAudio() {
-  [thunder, music]
-    .forEach((audio) => {
-      audio.pause();
-      audio.currentTime = 0;
-    });
-
-  if (
-    "speechSynthesis" in window
-  ) {
-    window.speechSynthesis.cancel();
+  if (!container) {
+    return;
   }
 
-  zeusSpeechUtterance = null;
-}
+  container.innerHTML =
+    renderHomePage(
+      allAthletesCache
+    );
+
+  initializeHomeSportFilters?.();
+
+  const overlay =
+    document.getElementById(
+      "zeus-intro-overlay"
+    );
+
+  const skipButton =
+    document.getElementById(
+      "skip-zeus-intro"
+    );
+
+  const inlineSkipButton =
+    document.getElementById(
+      "skip-zeus-intro-inline"
+    );
+
+  const introLine =
+    document.getElementById(
+      "zeus-intro-line"
+    );
+
+  const introLines =
+    buildZeusIntroLines();
+
+  if (
+    introLine &&
+    introLines.length
+  ) {
+    introLine.textContent =
+      introLines[0];
+  }
+
+  let introIndex = 0;
+  let closeTimer = null;
+  let introTimer = null;
+
+  const thunder =
+    new Audio(
+      "audio/thunder.mp3"
+    );
+
+  const music =
+    new Audio(
+      "audio/ambient.mp3"
+    );
+
+  const zeusVoice =
+    new Audio(
+      "audio/zeus-intro.mp3"
+    );
+
+  /*
+   * Add the official SN Olympus crest
+   * to the cinematic intro.
+   */
+  if (overlay) {
+    let introLogo =
+      document.getElementById(
+        "zeus-intro-logo"
+      );
+
+    if (!introLogo) {
+      introLogo =
+        document.createElement(
+          "img"
+        );
+
+      introLogo.id =
+        "zeus-intro-logo";
+
+      introLogo.src =
+        "sn-olympus-logo.png";
+
+      introLogo.alt =
+        "Snt.L.Mo. Sports Network";
+
+      introLogo.style.width =
+        "min(620px, 88vw)";
+
+      introLogo.style.maxHeight =
+        "64vh";
+
+      introLogo.style.objectFit =
+        "contain";
+
+      introLogo.style.display =
+        "block";
+
+      introLogo.style.margin =
+        "0 auto 24px";
+
+      introLogo.style.opacity =
+        "0";
+
+      introLogo.style.transform =
+        "scale(0.82)";
+
+      introLogo.style.filter =
+        "drop-shadow(0 0 12px rgba(234, 179, 8, 0.45))";
+
+      introLogo.style.transition =
+        "opacity 1.8s ease, transform 2.2s ease, filter 1.5s ease";
+
+      const introContent =
+        introLine?.parentElement;
+
+      if (introContent) {
+        introContent.insertBefore(
+          introLogo,
+          introContent.firstChild
+        );
+      } else {
+        overlay.prepend(
+          introLogo
+        );
+      }
+    }
+
+    window.setTimeout(
+      () => {
+        introLogo.style.opacity =
+          "1";
+
+        introLogo.style.transform =
+          "scale(1)";
+
+        introLogo.style.filter =
+          "drop-shadow(0 0 30px rgba(234, 179, 8, 0.8))";
+      },
+      300
+    );
+  }
+
+  window.startZeusVoiceCommand =
+    function () {
+      const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+      const button =
+        document.getElementById(
+          "zeus-voice-command-button"
+        );
+
+      const prompt =
+        document.getElementById(
+          "zeus-center-prompt"
+        );
+
+      if (!SpeechRecognition) {
+        alert(
+          "Voice commands are not supported in this browser."
+        );
+
+        return;
+      }
+
+      if (
+        "speechSynthesis" in window
+      ) {
+        window.speechSynthesis.cancel();
+      }
+
+      const recognition =
+        new SpeechRecognition();
+
+      recognition.lang =
+        "en-US";
+
+      recognition.interimResults =
+        false;
+
+      recognition.maxAlternatives =
+        1;
+
+      if (button) {
+        button.textContent =
+          "🎙️ Listening...";
+
+        button.disabled =
+          true;
+      }
+
+      recognition.onresult =
+        function (event) {
+          const command =
+            event.results?.[0]?.[0]
+              ?.transcript
+              ?.trim() || "";
+
+          if (prompt) {
+            prompt.value =
+              command;
+          }
+
+          const normalizedCommand =
+            command.toLowerCase();
+
+          if (
+            normalizedCommand.includes(
+              "open recruiting"
+            )
+          ) {
+            renderRecruiting();
+          }
+
+          if (button) {
+            button.textContent =
+              "🎤 Speak to Zeus";
+
+            button.disabled =
+              false;
+          }
+        };
+
+      recognition.onerror =
+        function () {
+          if (button) {
+            button.textContent =
+              "🎤 Speak to Zeus";
+
+            button.disabled =
+              false;
+          }
+        };
+
+      recognition.onend =
+        function () {
+          if (button) {
+            button.textContent =
+              "🎤 Speak to Zeus";
+
+            button.disabled =
+              false;
+          }
+        };
+
+      recognition.start();
+    };
+
+  function stopIntroAudio() {
+    [
+      thunder,
+      music,
+      zeusVoice
+    ].forEach(
+      (audio) => {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    );
+
+    if (
+      "speechSynthesis" in window
+    ) {
+      window.speechSynthesis.cancel();
+    }
+  }
 
   function closeIntro() {
+    const introLogo =
+      document.getElementById(
+        "zeus-intro-logo"
+      );
+
+    if (introLogo) {
+      introLogo.style.opacity =
+        "0";
+
+      introLogo.style.transform =
+        "scale(0.72)";
+    }
+
     overlay?.classList.add(
-      "hidden"
+      "zeus-intro-closing"
+    );
+
+    window.setTimeout(
+      () => {
+        overlay?.classList.add(
+          "hidden"
+        );
+      },
+      700
     );
 
     stopIntroAudio();
 
     if (introTimer) {
-      clearInterval(introTimer);
+      clearInterval(
+        introTimer
+      );
+
       introTimer = null;
     }
 
     if (closeTimer) {
-      clearTimeout(closeTimer);
+      clearTimeout(
+        closeTimer
+      );
+
       closeTimer = null;
     }
 
@@ -1769,34 +1738,102 @@ window.startZeusVoiceCommand =
   skipButton?.addEventListener(
     "click",
     closeIntro,
-    { once: true }
+    {
+      once: true
+    }
   );
 
   inlineSkipButton
     ?.addEventListener(
       "click",
       closeIntro,
-      { once: true }
+      {
+        once: true
+      }
     );
 
   if (overlay) {
-    thunder.volume = 0.6;
-music.volume = 0.18;
+    thunder.volume =
+      0.85;
 
-thunder
-  .play()
-  .catch(() => {});
+    music.volume =
+      0.35;
 
-music
-  .play()
-  .catch(() => {});
+    music.loop =
+      true;
 
-window.setTimeout(
-  speakZeusIntro,
-  900
- );    
-}
+    zeusVoice.volume =
+      1;
 
+    thunder
+      .play()
+      .catch(
+        () => {}
+      );
+
+    music
+      .play()
+      .catch(
+        () => {}
+      );
+
+    window.setTimeout(
+      () => {
+        zeusVoice
+          .play()
+          .catch(
+            () => {}
+          );
+      },
+      350
+    );
+
+    introTimer =
+      window.setInterval(
+        () => {
+          introIndex += 1;
+
+          if (
+            introLine &&
+            introLines[
+              introIndex
+            ]
+          ) {
+            introLine.textContent =
+              introLines[
+                introIndex
+              ];
+          }
+
+          if (
+            introIndex >=
+            introLines.length - 1
+          ) {
+            clearInterval(
+              introTimer
+            );
+
+            introTimer = null;
+          }
+        },
+        2800
+      );
+
+    zeusVoice.addEventListener(
+      "ended",
+      () => {
+        closeTimer =
+          window.setTimeout(
+            closeIntro,
+            1800
+          );
+      },
+      {
+        once: true
+      }
+    );
+  }
+  
   window.setTimeout(
     animateHomeCounters,
     900
@@ -4318,29 +4355,50 @@ async function saveAthleteFromAdmin(
 }
         
 // ======================================================
-// RUNTIME INITIALIZATION
+// APPLICATION STARTUP
+// The application shell and global components must mount
+// before any page attempts to render into their roots.
 // ======================================================
 
-const nationalDashboardRoot =
-  document.getElementById(
-    "national-dashboard-root"
-  );
+async function startApplication() {
+  try {
+    // Step 1:
+    // Create the application shell, header,
+    // login modal, paywall, and global mount points.
+    await initializeAppController();
 
-if (nationalDashboardRoot) {
-  nationalDashboardRoot.innerHTML =
-    renderNationalDashboard();
-}
+    // Step 2:
+    // The national dashboard root now exists because
+    // the application shell has already been mounted.
+    const nationalDashboardRoot =
+      document.getElementById(
+        "national-dashboard-root"
+      );
 
-// ======================================================
-// APPLICATION START
-// ======================================================
+    if (nationalDashboardRoot) {
+      nationalDashboardRoot.innerHTML =
+        renderNationalDashboard();
+    }
 
-initializePublicPlatform();
-initializeAuthController({
+    // Step 3:
+    // Render the public platform into the roots
+    // created by the application shell.
+    initializePublicPlatform();
+
+    // Step 4:
+    // Initialize login and logout controls after
+    // the login modal has been created.
+    initializeAuthController({
   auth,
 
   signIn:
     signInWithEmailAndPassword,
+
+  signInWithPopup,
+
+  googleProvider,
+
+  facebookProvider,
 
   signOutUser:
     signOut,
@@ -4349,74 +4407,131 @@ initializeAuthController({
     () => currentUser
 });
 
-// ======================================================
-// AUTHENTICATION STATE
-// ======================================================
+    // Step 5:
+    // Listen for Firebase authentication changes.
+    initializeAuthenticationStateListener();
 
-onAuthStateChanged(
-  auth,
-  async (user) => {
-    const adminPlatform =
+    console.log(
+      "Snt.L.Mo. Sports Network started."
+    );
+  } catch (error) {
+    console.error(
+      "Application startup failed:",
+      error
+    );
+
+    const shellRoot =
       document.getElementById(
-        "admin-platform"
+        "application-shell-root"
       );
 
-    if (adminPlatform) {
-      adminPlatform.style.display =
-        "none";
+    if (shellRoot) {
+      shellRoot.innerHTML = `
+        <section class="max-w-grid mx-auto px-4 py-10">
+          <div class="border border-red-900 bg-black rounded-2xl p-8">
+            <h2 class="text-xl font-black text-red-500">
+              Application Startup Error
+            </h2>
+
+            <p class="mt-3 text-gray-300">
+              Open the browser console to see the exact error.
+            </p>
+          </div>
+        </section>
+      `;
     }
+  }
+}
 
-    if (user) {
-      await handleSignedInUser(user);
+// ======================================================
+// AUTHENTICATION STATE LISTENER
+// ======================================================
 
-      if (
-        isAdminProfile(
-          currentProfile
-        )
-      ) {
-        if (adminPlatform) {
-          adminPlatform.style.display =
-            "";
-        }
+function initializeAuthenticationStateListener() {
+  onAuthStateChanged(
+    auth,
+    async (user) => {
+      const adminPlatform =
+        document.getElementById(
+          "admin-platform"
+        );
 
-        initializeAuthenticatedAdmin();
-      } else if (adminPlatform) {
+      if (adminPlatform) {
         adminPlatform.style.display =
           "none";
       }
 
-      return;
-    }
+      if (user) {
+        await handleSignedInUser(user);
 
-    initializeSignedOutSession({
-      onClearState: () => {
-        currentUser = null;
-        currentProfile = null;
+        if (
+          isAdminProfile(
+            currentProfile
+          )
+        ) {
+          if (adminPlatform) {
+            adminPlatform.style.display =
+              "";
+          }
 
-        clearAuthenticatedState({
-          appState:
-            window.appState,
-
-          onAccessUpdate:
-            updateAccessUI
-        });
-      },
-
-      onHideAdminPlatform: () => {
-        if (adminPlatform) {
+          initializeAuthenticatedAdmin();
+        } else if (adminPlatform) {
           adminPlatform.style.display =
             "none";
         }
-      },
 
-      onSessionComplete: () => {
-        hide(
-          "loading-overlay"
-        );
+        return;
       }
-    });
-  }
-);
+
+      initializeSignedOutSession({
+        onClearState: () => {
+          currentUser = null;
+          currentProfile = null;
+
+          clearAuthenticatedState({
+            appState:
+              window.appState,
+
+            onAccessUpdate:
+              updateAccessUI
+          });
+        },
+
+        onHideAdminPlatform: () => {
+          if (adminPlatform) {
+            adminPlatform.style.display =
+              "none";
+          }
+        },
+
+        onSessionComplete: () => {
+          hide(
+            "loading-overlay"
+          );
+        }
+      });
+    }
+  );
+}
+
+// ======================================================
+// SAFE DOM START
+// ======================================================
+
+if (
+  document.readyState ===
+  "loading"
+) {
+  document.addEventListener(
+    "DOMContentLoaded",
+    startApplication,
+    {
+      once: true
+    }
+  );
+} else {
+  startApplication();
+}
 
 // ==========================================
 // HIGHLIGHT FILM CENTER CONTROLS
@@ -4527,7 +4642,6 @@ function initializePublicPlatform() {
   bindEvents();
 
   show("main-content");
-  hide("paywall-content");
   hide("loading-overlay");
 
   renderHome();
@@ -4688,7 +4802,7 @@ window.shareHighlight = function(id) {
 // ==========================================
 
 window.comingSoon = function (feature = "This feature") {
-  alert(`${feature} is coming soon in the next Snt.L.Mo. update.`);
+  alert(`${feature} is coming soon in the next Snt.L.Mo. Sports Network update.`);
 };
 
 window.scrollToSection =

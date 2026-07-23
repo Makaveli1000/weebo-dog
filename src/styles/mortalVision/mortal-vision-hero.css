@@ -1,0 +1,241 @@
+/* =========================================================
+   MORTAL VISION — HERO
+   Zeus AI Command Center Hero
+   ========================================================= */
+
+.mortal-vision-hero{
+    display:grid;
+    gap:24px;
+    text-align:center;
+    justify-items:center;
+}
+
+.mortal-vision-eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+
+    padding:8px 18px;
+
+    border:1px solid rgba(234,179,8,.35);
+    border-radius:999px;
+
+    background:rgba(15,23,42,.82);
+
+    color:#facc15;
+
+    font-size:.85rem;
+    font-weight:800;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+}
+
+.mortal-vision-title{
+
+    max-width:900px;
+
+    color:#ffffff;
+
+    font-size:clamp(3rem,7vw,5.5rem);
+
+    font-weight:900;
+
+    line-height:.95;
+
+    text-shadow:
+        0 0 25px rgba(234,179,8,.18);
+}
+
+.mortal-vision-description{
+
+    max-width:900px;
+
+    color:#cbd5e1;
+
+    font-size:1.15rem;
+
+    line-height:1.8;
+}
+
+.mortal-vision-actions{
+
+    display:flex;
+
+    gap:18px;
+
+    flex-wrap:wrap;
+
+    justify-content:center;
+}
+
+.mortal-vision-button{
+
+    padding:15px 28px;
+
+    border-radius:14px;
+
+    font-weight:800;
+
+    cursor:pointer;
+
+    transition:.25s;
+}
+
+.mortal-vision-button-primary{
+
+    border:none;
+
+    background:#eab308;
+
+    color:#020617;
+}
+
+.mortal-vision-button-primary:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+        0 15px 40px rgba(234,179,8,.35);
+}
+
+.mortal-vision-button-secondary{
+
+    background:transparent;
+
+    border:1px solid rgba(234,179,8,.35);
+
+    color:white;
+}
+
+.mortal-vision-button-secondary:hover{
+
+    background:rgba(234,179,8,.08);
+}
+
+/* =========================================================
+   HERO DECORATIONS
+========================================================= */
+
+.mortal-vision-hero{
+    position:relative;
+    overflow:hidden;
+    min-height:520px;
+    align-content:center;
+    padding:70px 30px;
+}
+
+.mortal-vision-hero-content{
+    position:relative;
+    z-index:20;
+}
+
+/* ---------- Floating Olympus Logos ---------- */
+
+.mortal-corner-logo{
+    position:absolute;
+    width:240px;
+    opacity:.12;
+    pointer-events:none;
+    z-index:1;
+
+    animation:mortalFloat 7s ease-in-out infinite;
+}
+
+.mortal-corner-logo img{
+    width:100%;
+    display:block;
+}
+
+.mortal-corner-logo-left{
+    left:-70px;
+    top:40px;
+}
+
+.mortal-corner-logo-right{
+    right:-70px;
+    bottom:40px;
+
+    animation-delay:2.5s;
+}
+
+/* ---------- Rotating Zeus Symbols ---------- */
+
+.mortal-symbol{
+
+    position:absolute;
+
+    width:110px;
+    height:110px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:50%;
+
+    border:2px solid rgba(234,179,8,.35);
+
+    color:#facc15;
+
+    font-size:52px;
+
+    background:
+        radial-gradient(circle,
+        rgba(234,179,8,.10),
+        transparent 70%);
+
+    box-shadow:
+        0 0 35px rgba(234,179,8,.15);
+
+    z-index:5;
+
+    animation:
+        mortalRotate 12s linear infinite;
+}
+
+.mortal-symbol-left{
+
+    top:50%;
+    left:40px;
+
+    transform:translateY(-50%);
+}
+
+.mortal-symbol-right{
+
+    top:50%;
+    right:40px;
+
+    transform:translateY(-50%);
+
+    animation-direction:reverse;
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes mortalFloat{
+
+    0%{
+        transform:translateY(0px);
+    }
+
+    50%{
+        transform:translateY(-18px);
+    }
+
+    100%{
+        transform:translateY(0px);
+    }
+
+}
+
+@keyframes mortalRotate{
+
+    from{
+        transform:translateY(-50%) rotate(0deg);
+    }
+
+    to{
+        transform:translateY(-50%) rotate(360deg);
+    }
+
+}

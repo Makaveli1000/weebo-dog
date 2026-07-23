@@ -57,7 +57,7 @@ export function normalizeMarketplaceProduct(
 
     storeName:
       product.storeName ||
-      "Snt.L.Mo. Exclusive",
+      "Snt.L.Mo. Sports Network",
 
     isExternal:
       product.isExternal === true
@@ -182,7 +182,7 @@ function getDefaultMarketplaceProducts() {
     },
     {
       icon: "🧥",
-      title: "Snt.L.Mo Elite Hoodie",
+      title: "Snt.L.Mo Sports Network Elite Hoodie",
       price: 65,
       category: "Exclusive Drop",
       description:
@@ -222,7 +222,7 @@ function getDefaultMarketplaceProducts() {
       description:
         "Local business sponsorship placement for a verified athlete or team.",
       sellerName:
-        "Snt.L.Mo. Partnerships",
+        "Snt.L.Mo. Sports Network Partnerships",
       sellerVerified: true,
       campaignStatus: "Open"
     },
@@ -234,7 +234,7 @@ function getDefaultMarketplaceProducts() {
       description:
         "Promoted highlight placement across the network and recruiting feed.",
       sellerName:
-        "Snt.L.Mo. Media",
+        "Snt.L.Mo. Sports Network Media",
       sellerVerified: true,
       campaignStatus: "Active"
     }
@@ -783,7 +783,7 @@ export function renderGlobalGearMarketplace(
                       ? escapeMarketplaceHtml(
                           product.storeName
                         )
-                      : "Snt.L.Mo. Exclusive"
+                      : "Snt.L.Mo. Sports Network"
                   }
 
                 </span>
@@ -1049,7 +1049,7 @@ export function initializeGearLightbox({
         openGearLightbox(
           {
             name:
-              "Snt.L.Mo Elite Hoodie",
+              "Snt.L.Mo Sports Network Elite Hoodie",
 
             sub:
               '"Dominate Today" Heavyweight',

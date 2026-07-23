@@ -6,7 +6,7 @@ export function renderAdminPage() {
 
         <div>
           <p class="network-kicker">Admin Center</p>
-          <h2>Snt.L.Mo. Platform Control Center</h2>
+          <h2>Snt.L.Mo. Sports Network Platform Control Center</h2>
           <p>
             Manage athletes, videos, draft boards, media uploads,
             analytics, and platform settings from one clean dashboard.

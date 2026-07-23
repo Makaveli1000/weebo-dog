@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. RANKINGS CONTROLLER
+// SNT.L.MO. Sports Network RANKINGS CONTROLLER
 // Handles Rankings sport, class, search, and scope filters.
 // ======================================================
 

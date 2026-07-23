@@ -1,5 +1,5 @@
 // ======================================================
-// SNT.L.MO. MARKETPLACE CONTROLLER
+// SNT.L.MO. Sports Network MARKETPLACE CONTROLLER
 // Handles marketplace category filters.
 // ======================================================
 

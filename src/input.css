@@ -14,6 +14,14 @@
    Pages
 ========================== */
 
+@import "./styles/mortal-vision-storm.css";
+/* New Mortal Vision styles */
+@import "./styles/mortalVision/mortal-vision-stats.css";
+@import "./styles/mortalVision/mortal-vision-modules.css";
+@import "./styles/mortalVision/mortal-vision-dashboard.css";
+@import "./styles/mortalVision/live-rankings-widget.css";
+@import "./styles/mortalVision/zeus-ai-search-widget.css";
+
 @import "./styles/home.css";
 @import "./styles/athletes.css";
 @import "./styles/athlete-profile.css";
@@ -26,7 +34,6 @@
 @import "./styles/zeus2.css";
 @import "./styles/national-dashboard.css";
 @import "./styles/account-setup.css";
-@import "./styles/athlete-zeus.css";
 @import "./styles/athlete-zeus.css";
 @import "./styles/athlete-panels.css";
 @import "./styles/athlete-video.css";
@@ -55,14 +62,43 @@
    ATHLETE PROFILE HERO 3.0
 ========================================== */
 
-.athlete-profile-hero-v3 {
+.mortal-sn-emblem span {
   position: relative;
-  min-height: 430px;
-  overflow: hidden;
-  border: 1px solid rgba(212,175,55,.28);
-  border-radius: 28px;
-  background: #020617;
-  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  z-index: 2;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.55rem;
+  font-weight: 950;
+  letter-spacing: -0.08em;
+  text-shadow:
+    0 0 10px rgba(250, 204, 21, 0.75),
+    0 0 22px rgba(234, 179, 8, 0.35);
+}
+
+.mortal-lightning-sn-emblem {
+  display: grid;
+  place-items: center;
+}
+
+.mortal-lightning-sn-emblem strong {
+  position: relative;
+  z-index: 3;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.25rem;
+  font-weight: 950;
+  color: #facc15;
+  text-shadow:
+    0 0 10px rgba(250, 204, 21, 0.8),
+    0 0 22px rgba(234, 179, 8, 0.4);
+}
+
+.mortal-lightning-bolt {
+  position: absolute;
+  z-index: 2;
+  top: 4px;
+  right: 8px;
+  font-size: 1.15rem;
+  transform: rotate(12deg);
+  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.95));
 }
 
 .athlete-profile-hero-v3 .recruiter-hero-bg {
@@ -511,30 +547,30 @@
 .athlete-film-room-header,
 .athlete-film-library-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 18px;
-  align-items: center;
 }
 
 .athlete-film-room-header h3,
 .athlete-film-library-header h4 {
   margin: 0;
-  color: white;
+  color: #ffffff;
   font-weight: 950;
 }
 
 .athlete-film-room-header p,
 .athlete-film-library-header p {
-  margin-top: 6px;
+  margin: 6px 0 0;
   color: #94a3b8;
 }
 
 .athlete-film-count {
   min-width: 90px;
   padding: 13px;
-  border: 1px solid rgba(212,175,55,.24);
+  border: 1px solid rgba(212, 175, 55, 0.24);
   border-radius: 14px;
-  background: rgba(212,175,55,.08);
+  background: rgba(212, 175, 55, 0.08);
   text-align: center;
 }
 
@@ -543,11 +579,13 @@
   color: #64748b;
   font-size: 10px;
   font-weight: 900;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .athlete-film-count strong {
   display: block;
+  margin-top: 3px;
   color: #f8d34d;
   font-size: 28px;
   font-weight: 950;
@@ -562,41 +600,57 @@
 
 .athlete-film-category-tabs button {
   padding: 8px 12px;
-  border: 1px solid rgba(212,175,55,.2);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 999px;
   background: #020617;
   color: #94a3b8;
   font-size: 11px;
   font-weight: 900;
   cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
 }
 
-.athlete-film-category-tabs button.active,
-.athlete-film-category-tabs button:hover {
+.athlete-film-category-tabs button:hover,
+.athlete-film-category-tabs button.active {
   border-color: #d4af37;
   background: #d4af37;
   color: #020617;
+  transform: translateY(-1px);
 }
 
 .athlete-featured-film {
   display: grid;
-  grid-template-columns: minmax(0,1.5fr) minmax(260px,.75fr);
+  grid-template-columns:
+    minmax(0, 1.5fr)
+    minmax(260px, 0.75fr);
   gap: 20px;
   padding: 18px;
-  border: 1px solid rgba(212,175,55,.2);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 20px;
-  background: #020617;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 23, 42, 0.92),
+      rgba(2, 6, 23, 0.98)
+    );
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
 }
 
 .athlete-featured-player {
+  width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 16px;
-  background: black;
+  background: #000000;
 }
 
 .athlete-featured-player iframe,
 .athlete-featured-player video {
+  display: block;
   width: 100%;
   height: 100%;
   border: 0;
@@ -605,17 +659,21 @@
 
 .athlete-featured-film-info {
   align-self: center;
+  min-width: 0;
 }
 
 .athlete-featured-film-info h4 {
   margin: 4px 0 8px;
-  color: white;
+  color: #ffffff;
   font-size: 25px;
   font-weight: 950;
+  line-height: 1.15;
 }
 
 .athlete-featured-film-info > p {
+  margin: 0;
   color: #94a3b8;
+  line-height: 1.6;
 }
 
 .athlete-film-badges {
@@ -627,9 +685,9 @@
 
 .athlete-film-badges span {
   padding: 7px 10px;
-  border: 1px solid rgba(212,175,55,.2);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 999px;
-  background: rgba(212,175,55,.08);
+  background: rgba(212, 175, 55, 0.08);
   color: #f8d34d;
   font-size: 10px;
   font-weight: 900;
@@ -644,16 +702,23 @@
 .athlete-film-actions button {
   width: 100%;
   padding: 11px;
-  border: 1px solid rgba(212,175,55,.22);
+  border: 1px solid rgba(212, 175, 55, 0.22);
   border-radius: 12px;
   background: #0f172a;
-  color: white;
+  color: #ffffff;
   font-weight: 900;
   cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    color 180ms ease;
 }
 
 .athlete-film-actions button:hover {
+  transform: translateY(-2px);
   border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
   color: #f8d34d;
 }
 
@@ -669,23 +734,32 @@
 
 .athlete-film-library {
   display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(190px,1fr));
+  grid-template-columns:
+    repeat(
+      auto-fit,
+      minmax(190px, 1fr)
+    );
   gap: 14px;
 }
 
 .athlete-film-card {
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   background: #020617;
-  color: white;
+  color: #ffffff;
   text-align: left;
   cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .athlete-film-card:hover {
+  transform: translateY(-3px);
   border-color: #d4af37;
-  transform: translateY(-2px);
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.32);
 }
 
 .athlete-film-thumb {
@@ -694,13 +768,20 @@
   aspect-ratio: 16 / 9;
   place-items: center;
   background:
-    radial-gradient(circle at center,rgba(212,175,55,.12),transparent 50%),
+    radial-gradient(
+      circle at center,
+      rgba(212, 175, 55, 0.12),
+      transparent 50%
+    ),
     #0f172a;
 }
 
 .athlete-film-play {
   color: #f8d34d;
   font-size: 30px;
+  filter: drop-shadow(
+    0 0 10px rgba(212, 175, 55, 0.35)
+  );
 }
 
 .athlete-film-tag {
@@ -708,8 +789,9 @@
   top: 8px;
   right: 8px;
   padding: 5px 8px;
+  border: 1px solid rgba(212, 175, 55, 0.18);
   border-radius: 999px;
-  background: rgba(2,6,23,.85);
+  background: rgba(2, 6, 23, 0.88);
   color: #f8d34d;
   font-size: 9px;
   font-weight: 900;
@@ -721,6 +803,7 @@
 
 .athlete-film-card-copy strong {
   display: block;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 950;
 }
@@ -733,30 +816,56 @@
 
 .athlete-film-empty {
   padding: 55px 20px;
-  border: 1px dashed rgba(212,175,55,.22);
+  border: 1px dashed rgba(212, 175, 55, 0.22);
   border-radius: 18px;
+  background: rgba(2, 6, 23, 0.52);
   text-align: center;
 }
 
 .athlete-film-empty span {
+  display: block;
   font-size: 42px;
 }
 
 .athlete-film-empty h4 {
-  margin-top: 10px;
-  color: white;
+  margin: 10px 0 0;
+  color: #ffffff;
   font-size: 20px;
   font-weight: 950;
 }
 
 .athlete-film-empty p {
-  margin-top: 6px;
+  margin: 6px 0 0;
   color: #64748b;
 }
 
 @media (max-width: 850px) {
   .athlete-featured-film {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .athlete-film-room-header,
+  .athlete-film-library-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .athlete-film-count {
+    min-width: 78px;
+  }
+
+  .athlete-film-library {
+    grid-template-columns: 1fr;
+  }
+
+  .athlete-featured-film {
+    padding: 13px;
+  }
+
+  .athlete-featured-film-info h4 {
+    font-size: 21px;
   }
 }
 
@@ -794,12 +903,13 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
-  background: linear-gradient(
-    180deg,
-    #facc15,
-    #eab308,
-    #7f1d1d
-  );
+  background:
+    linear-gradient(
+      180deg,
+      #facc15,
+      #eab308,
+      #7f1d1d
+    );
 }
 
 .zeus-briefing-header {
@@ -864,6 +974,7 @@
 
 @media (max-width: 640px) {
   .zeus-dashboard-briefing {
+    gap: 18px;
     padding: 22px 18px;
     border-radius: 20px;
   }
@@ -882,4 +993,515 @@
   .zeus-briefing-lines {
     grid-template-columns: 1fr;
   }
+
+  .zeus-briefing-lines p {
+    padding: 13px 14px;
+    font-size: 0.9rem;
+  }
 }
+
+/* =========================================================
+   MORTAL VISION — CONSOLIDATED PAGE LAYOUT
+   Storm animation remains in mortal-vision-storm.css.
+  =========================================================*/
+
+.mortal-vision-page {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 88px);
+  overflow: visible;
+}
+
+.mortal-vision-stage {
+  position: relative;
+  isolation: isolate;
+
+  width: 100%;
+  min-height: calc(100vh - 88px);
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  overflow: visible;
+
+  padding-top: 40px;
+}
+
+/* Keeps visible content above the storm. */
+
+/* =========================================================
+   LARGE OLYMPUS LOGOS
+   ========================================================= */
+
+.mortal-large-crest {
+  position: absolute !important;
+  z-index: 12;
+  width: clamp(210px, 22vw, 390px);
+  height: auto;
+  object-fit: contain;
+  opacity: 0.9;
+  pointer-events: none;
+  user-select: none;
+  filter:
+    drop-shadow(0 0 14px rgba(234, 179, 8, 0.75))
+    drop-shadow(0 0 42px rgba(234, 179, 8, 0.3));
+}
+
+.mortal-large-crest-left {
+  top: 50%;
+  left: clamp(18px, 4vw, 72px);
+  transform: translateY(-50%);
+  animation: mortalLargeLeftFloat 7s ease-in-out infinite;
+}
+
+.mortal-large-crest-right {
+  right: clamp(18px, 4vw, 72px);
+  bottom: clamp(18px, 5vh, 70px);
+  width: clamp(130px, 14vw, 230px);
+  opacity: 0.68;
+  animation: mortalLargeRightFloat 8s ease-in-out infinite;
+}
+
+/* =========================================================
+   CENTER GLOW AND ENERGY RINGS
+   ========================================================= */
+
+.mortal-energy-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  width: min(900px, 75vw);
+  height: min(600px, 70vh);
+
+  padding: 24px 25px 27px;
+
+  text-align: center;
+
+  visibility: visible;
+  opacity: 1;
+
+  border: 1px solid rgba(234,179,8,.42);
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(234,179,8,.08),
+      transparent 66%
+    ),
+    rgba(3,3,3,.9);
+
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 28px 75px rgba(0,0,0,.82),
+    0 0 40px rgba(234,179,8,.13);
+}
+
+.mortal-energy-ring-two {
+  width: min(790px, 61vw);
+  height: min(490px, 57vh);
+  border: 1px dashed rgba(234, 179, 8, 0.12);
+}
+
+/* =========================================================
+   CENTERED MORTAL VISION SYSTEM
+   ========================================================= */
+
+.mortal-vision-panel {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mortal-orbit-system {
+  position: relative;
+  width: min(760px, 66vw);
+  height: min(440px, 64vh);
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+}
+
+/* =========================================================
+   ROTATING ORBIT
+   ========================================================= */
+
+.mortal-icon-orbit {
+  position: absolute;
+  z-index: 10;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(234, 179, 8, 0.26);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center;
+  pointer-events: none;
+  box-shadow:
+    0 0 26px rgba(234, 179, 8, 0.08),
+    inset 0 0 20px rgba(234, 179, 8, 0.04);
+  animation: mortalTrackOrbit 24s linear infinite;
+}
+
+.mortal-icon-position {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  transform-origin: center;
+  animation: mortalIconStayUpright 24s linear infinite;
+}
+
+.mortal-icon-position-one {
+  top: -48px;
+  left: calc(50% - 48px);
+}
+
+.mortal-icon-position-two {
+  top: calc(50% - 48px);
+  right: -48px;
+}
+
+.mortal-icon-position-three {
+  bottom: -48px;
+  left: calc(50% - 48px);
+}
+
+.mortal-icon-position-four {
+  top: calc(50% - 48px);
+  left: -48px;
+}
+
+.mortal-custom-icon {
+  display: block;
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  filter:
+    drop-shadow(0 0 9px rgba(234, 179, 8, 0.86))
+    drop-shadow(0 0 24px rgba(234, 179, 8, 0.42));
+}
+
+/* =========================================================
+   STATIONARY CENTER PANEL
+   ========================================================= */
+
+.mortal-stationary-content {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  z-index: 30;
+
+  width: min(420px, calc(100% - 70px));
+  padding: 24px 25px 27px;
+
+  text-align: center;
+
+  visibility: visible;
+  opacity: 1;
+
+  border: 1px solid rgba(234, 179, 8, 0.42);
+  border-radius: 22px;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(234,179,8,.08),
+      transparent 66%
+    ),
+    rgba(3,3,3,.9);
+
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 28px 75px rgba(0,0,0,.82),
+    0 0 40px rgba(234,179,8,.13);
+}
+
+.mortal-stationary-content,
+.mortal-stationary-content * {
+  rotate: none !important;
+}
+
+.mortal-stationary-content {
+  animation: none !important;
+}
+
+.mortal-stationary-content * {
+  animation: none;
+}
+
+.mortal-network-name {
+  margin: 0 0 8px;
+  color: #eab308;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.mortal-crown {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 9px rgba(234, 179, 8, 0.62));
+}
+
+.mortal-small-title {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  color: #ffffff;
+  line-height: 1.05;
+}
+
+.mortal-small-title span {
+  font-size: clamp(1.35rem, 2.2vw, 2rem);
+  font-weight: 950;
+  letter-spacing: 0.02em;
+}
+
+.mortal-small-title strong {
+  color: #eab308;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.mortal-small-divider {
+  width: 72px;
+  height: 1px;
+  margin: 15px auto;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(234, 179, 8, 0.95),
+      transparent
+    );
+}
+
+.mortal-small-description {
+  max-width: 350px;
+  margin: 0 auto;
+  color: rgba(226, 232, 240, 0.86);
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.mortal-small-button {
+  margin-top: 20px;
+  padding: 11px 22px;
+  border: 1px solid rgba(234, 179, 8, 0.62);
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(234, 179, 8, 0.22),
+      rgba(234, 179, 8, 0.07)
+    );
+  color: #fef3c7;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    0 0 22px rgba(234, 179, 8, 0.12);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.mortal-small-button:hover {
+  transform: translateY(-2px);
+  border-color: #facc15;
+  box-shadow:
+    0 0 30px rgba(234, 179, 8, 0.26);
+}
+
+/* =========================================================
+   LOCAL ANIMATIONS
+   ========================================================= */
+
+@keyframes mortalTrackOrbit {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes mortalIconStayUpright {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes mortalLargeLeftFloat {
+  0%,
+  100% {
+    transform: translateY(-50%);
+  }
+
+  50% {
+    transform: translateY(calc(-50% - 24px));
+  }
+}
+
+@keyframes mortalLargeRightFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-22px);
+  }
+}
+
+@keyframes mortalGlowPulse {
+  0%,
+  100% {
+    opacity: 0.68;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .mortal-large-crest-left {
+    left: -30px;
+    width: 230px;
+    opacity: 0.48;
+  }
+
+  .mortal-large-crest-right {
+    right: -20px;
+    width: 145px;
+    opacity: 0.36;
+  }
+
+  .mortal-orbit-system {
+    width: min(700px, 78vw);
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  .mortal-vision-page,
+  .mortal-vision-stage,
+  .mortal-vision-panel {
+    min-height: calc(100vh - 72px);
+  }
+
+  .mortal-orbit-system {
+    width: 86vw;
+    height: 390px;
+    min-height: 390px;
+  }
+
+  .mortal-icon-position {
+    width: 62px;
+    height: 62px;
+  }
+
+  .mortal-icon-position-one {
+    top: -31px;
+    left: calc(50% - 31px);
+  }
+
+  .mortal-icon-position-two {
+    top: calc(50% - 31px);
+    right: -31px;
+  }
+
+  .mortal-icon-position-three {
+    bottom: -31px;
+    left: calc(50% - 31px);
+  }
+
+  .mortal-icon-position-four {
+    top: calc(50% - 31px);
+    left: -31px;
+  }
+
+  .mortal-custom-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .mortal-stationary-content {
+    width: calc(100% - 58px);
+    padding: 21px 15px 23px;
+  }
+
+  .mortal-large-crest {
+    width: 125px;
+    opacity: 0.25;
+  }
+
+  .mortal-large-crest-left {
+    top: 48%;
+    left: -42px;
+  }
+
+  .mortal-large-crest-right {
+    right: -35px;
+    bottom: 20px;
+    width: 100px;
+  }
+
+  .mortal-energy-ring {
+    display: none;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .mortal-icon-orbit,
+  .mortal-icon-position,
+  .mortal-large-crest,
+  .mortal-background-glow {
+    animation: none !important;
+  }
+}
+

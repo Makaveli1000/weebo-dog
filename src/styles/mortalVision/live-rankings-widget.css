@@ -1,0 +1,211 @@
+/* =========================================================
+   LIVE RANKINGS WIDGET
+   Zeus AI National Rankings
+   ========================================================= */
+
+.live-rankings-widget {
+  display: grid;
+  gap: 24px;
+
+  padding: 32px;
+
+  border: 1px solid rgba(234,179,8,.22);
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15,23,42,.95),
+      rgba(2,6,23,.98)
+    );
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.35);
+}
+
+.mortal-widget-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:24px;
+  flex-wrap:wrap;
+}
+
+.mortal-widget-eyebrow{
+
+  display:inline-block;
+
+  margin-bottom:10px;
+
+  color:#facc15;
+
+  font-size:.8rem;
+
+  font-weight:900;
+
+  letter-spacing:.12em;
+
+  text-transform:uppercase;
+}
+
+.mortal-widget-header h2{
+
+  color:white;
+
+  font-size:2rem;
+
+  font-weight:900;
+
+  margin-bottom:8px;
+}
+
+.mortal-widget-header p{
+
+  max-width:650px;
+
+  color:#94a3b8;
+
+  line-height:1.7;
+}
+
+.mortal-widget-action{
+
+  padding:12px 22px;
+
+  border:none;
+
+  border-radius:12px;
+
+  background:#eab308;
+
+  color:#020617;
+
+  font-weight:900;
+
+  cursor:pointer;
+
+  transition:.25s;
+}
+
+.mortal-widget-action:hover{
+
+  transform:translateY(-3px);
+
+  box-shadow:
+      0 15px 35px rgba(234,179,8,.30);
+}
+
+.live-rankings-list{
+
+  display:grid;
+
+  gap:14px;
+}
+
+.live-ranking-row{
+
+  display:grid;
+
+  grid-template-columns:
+      70px
+      1.8fr
+      1fr
+      150px;
+
+  align-items:center;
+
+  gap:18px;
+
+  padding:18px;
+
+  border-radius:16px;
+
+  background:
+      rgba(255,255,255,.03);
+
+  transition:.25s;
+}
+
+.live-ranking-row:hover{
+
+  background:
+      rgba(234,179,8,.06);
+}
+
+.live-ranking-position{
+
+  display:grid;
+
+  place-items:center;
+
+  width:52px;
+
+  height:52px;
+
+  border-radius:50%;
+
+  background:#eab308;
+
+  color:#020617;
+
+  font-size:1.3rem;
+
+  font-weight:900;
+}
+
+.live-ranking-athlete{
+
+  display:grid;
+
+  gap:4px;
+}
+
+.live-ranking-athlete strong{
+
+  color:white;
+
+  font-size:1rem;
+}
+
+.live-ranking-athlete span{
+
+  color:#94a3b8;
+
+  font-size:.85rem;
+}
+
+.live-ranking-sport{
+
+  color:#cbd5e1;
+
+  font-weight:700;
+}
+
+.live-ranking-rating{
+
+  text-align:right;
+
+  display:grid;
+
+  gap:4px;
+}
+
+.live-ranking-rating span{
+
+  color:#94a3b8;
+
+  font-size:.75rem;
+
+  text-transform:uppercase;
+
+  letter-spacing:.08em;
+}
+
+.live-ranking-rating strong{
+
+  color:#facc15;
+
+  font-size:1.5rem;
+
+  font-weight:900;
+}

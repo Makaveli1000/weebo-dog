@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snt.L.Mo. Exclusive Sports Grid</title>
+  <title>Snt.L.Mo. Sports Network</title>
   <link rel="stylesheet" href="output.css">
 </head>
 <body class="bg-zeus-black text-gray-100 min-h-screen font-sans antialiased selection:bg-zeus-gold selection:text-black">
@@ -12,105 +12,10 @@
        ⚡ SYSTEM HEADER NAVIGATION MATRIX
        ========================================== -->
   
-  <header class="national-header">
-
-  <!-- BRAND -->
-  <div class="national-brand" onclick="window.scrollToSection('home-root')">
-
-    <img src="zeus-avatar.png" alt="Zeus Avatar">
-
-    <div>
-      <strong>Snt.L.Mo.</strong>
-      <span>Sports Network</span>
-    </div>
-
-  </div>
-
-  <!-- SEARCH -->
-  <div class="national-search-wrapper">
-
-  <div class="national-search">
-
-    <span>🔍</span>
-
-    <input
-      id="global-search-input"
-      type="text"
-      placeholder="Search athletes, schools, highlights..."
-      oninput="window.runGlobalSearch(this.value)"
-      onkeydown="if(event.key==='Enter') window.openGlobalSearchResults(this.value)">
-
-  </div>
-
-  <div id="global-search-results" class="global-search-results hidden"></div>
-
-</div>
-
-  <!-- MAIN NAV -->
-
-  <nav class="national-nav">
-
-  <button
-  type="button"
-  class="national-back-btn"
-  onclick="history.back()">
-
-  ← Back
-
-</button>
-
-  <button onclick="window.platformAction('home')">
-    Home
-  </button>
-
-  <button onclick="window.platformAction('feed')">
-    Sports Feed
-  </button>
-
-  <button onclick="window.platformAction('athletes')">
-    Athletes
-  </button>
-
-  <button onclick="window.platformAction('schools')">
-    Schools
-  </button>
-
-  <button onclick="window.platformAction('rankings')">
-    Rankings
-  </button>
-
-  <button onclick="window.platformAction('highlights')">
-    Highlights
-  </button>
-
-  <button onclick="window.platformAction('recruiting')">
-    Recruiting
-  </button>
-
-  <button onclick="window.platformAction('gear')">
-    Gear
-  </button>
-
-  <button onclick="window.platformAction('zeus')">
-    Zeus AI
-  </button>
-
-</nav>  
-  
-  <!-- RIGHT SIDE -->
-  <div class="national-actions">
-
-    <button onclick="window.comingSoon('Notifications')">
-      🔔
-    </button>
-
-    <button id="header-auth-btn">
-      Login
-    </button>
-
-  </div>
-
-</header>
+  <header
+  id="national-header-root"
+  class="national-header"
+></header>
   
   <!-- ==========================================
        ⏳ PROTECTIVE CRASH EXIT GATEWAY (LOADING OVERLAY)
@@ -123,16 +28,11 @@
   <!-- ==========================================
        🛡️ UNAUTHENTICATED RESTRICTION (PAYWALL LAYER)
        ========================================== -->
-  <main id="paywall-content" class="hidden max-w-md mx-auto mt-20 px-6 text-center">
-    <div class="border border-zeus-border bg-zeus-panel p-8 rounded-xl shadow-panel-deep">
-      <div class="text-4xl mb-4">👑</div>
-      <h2 class="text-xl font-black text-white uppercase tracking-tight">Mortal Vision Active</h2>
-      <p class="text-gray-400 text-sm mt-2 leading-relaxed">Access to the real-time St. Louis athlete rating matrix, statistical projections, and the War Room portal requires a secure administrative connection.</p>
-      <button onclick="show('login-modal')" class="mt-6 w-full bg-zeus-gold hover:bg-yellow-400 text-black font-bold py-3 px-4 rounded font-mono uppercase tracking-wider text-sm transition duration-150">
-        Establish Connection
-      </button>
-    </div>
-  </main>
+
+ <main
+  id="paywall-content"
+  class="hidden"
+></main> 
 
   <!-- ==========================================
        🏆 MAIN GRID ENVIRONMENT (UNIFIED ACTIVE LAYER)
@@ -144,28 +44,7 @@
      NATIONAL DASHBOARD
 =========================================== -->
 
-<section id="home-root" class="network-section"></section>
-
-<section id="account-setup-root" class="network-section hidden"></section>
-
-
-<section id="national-dashboard-root" class="network-section"></section>
-
-<section id="athlete-directory-page" class="network-section"></section>
-
-<section id="schools-root" class="network-section"></section>
-
-<section id="rankings-root" class="network-section"></section>
-
-<section id="recruiting-root" class="network-section"></section>
-
-<section id="highlights-root" class="network-section"></section>
-
-<section id="live-root" class="network-section"></section>
-
-<section id="marketplace-root" class="network-section"></section>
-
-<section id="zeus-ai-root" class="network-section"></section>
+<div id="application-shell-root"></div>
 
 <!-- PLATFORM FEATURES -->
 
@@ -192,26 +71,14 @@
      ADMIN PLATFORM
 ========================================== -->
 
-<div id="admin-platform" class="hidden"></div>
+<div id="admin-panel" class="admin-panel hidden">
+  <div id="admin-platform"></div>
+</div>
 
 </main>
       
-  <!-- ==========================================
-       🔐 ACCESS CHALLENGE CAPTURE GATE (LOGIN MODAL)
-       ========================================== -->
-  <div id="login-modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-modal-pop">
-    <div class="border border-zeus-border bg-zeus-black max-w-sm w-full p-6 rounded-xl shadow-panel-deep relative">
-      <h3 class="text-base font-black text-white uppercase tracking-tight mb-4 font-mono text-center">Establish Administrative Security</h3>
-      <div class="space-y-3">
-        <input type="email" id="login-email" placeholder="Terminal Access Identity Key" class="w-full bg-zeus-panel border border-zeus-border rounded p-2 text-sm text-white focus:outline-none focus:border-zeus-gold">
-        <input type="password" id="login-pass" placeholder="Authorization Pin Lock" class="w-full bg-zeus-panel border border-zeus-border rounded p-2 text-sm text-white focus:outline-none focus:border-zeus-gold">
-        <button id="modal-submit-login" class="w-full bg-zeus-gold hover:bg-yellow-400 text-black font-bold py-2 rounded transition font-mono uppercase text-xs tracking-wider">
-          Verify Authorization
-        </button>
-      </div>
-      <button onclick="hide('login-modal')" class="absolute top-3 right-3 text-gray-600 hover:text-white text-sm font-mono">&times;</button>
-    </div>
-  </div>
+<!-- LOGIN MODAL MOUNT -->
+<div id="login-modal-root"></div>
 
   <!-- ==========================================
        🧥 GEAR LIGHTBOX FOCUS FRAME MODAL
@@ -242,7 +109,7 @@
         
         <div>
           <span class="block text-[9px] text-gray-600 uppercase mb-1">Specifications & Telemetry</span>
-          <p class="text-[11px] text-gray-400 leading-relaxed bg-zeus-panel/40 p-2.5 rounded border border-zeus-border/40"> Engineered for high-output environments. Premium drop-shoulder custom tailored geometry cuts featuring extreme tensile strength fiber matrices. Finished with signature Snt.L.Mo custom reflective gold brand detailing. </p>
+          <p class="text-[11px] text-gray-400 leading-relaxed bg-zeus-panel/40 p-2.5 rounded border border-zeus-border/40"> Engineered for high-output environments. Premium drop-shoulder custom tailored geometry cuts featuring extreme tensile strength fiber matrices. Finished with signature Snt.L.Mo. Sports Network custom reflective gold brand detailing. </p>
         </div>
       </div>
 

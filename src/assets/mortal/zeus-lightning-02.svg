@@ -1,0 +1,13 @@
+<svg width="720" height="1080" viewBox="0 0 720 1080" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<filter id="lightningGlowTwo" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="14" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<linearGradient id="boltGoldTwo" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="30%" stop-color="#fef9c3"/><stop offset="65%" stop-color="#eab308"/><stop offset="100%" stop-color="#a16207"/></linearGradient>
+</defs>
+<g fill="none" stroke="url(#boltGoldTwo)" stroke-linecap="round" stroke-linejoin="round" filter="url(#lightningGlowTwo)">
+<path d="M304 18 L362 151 L326 242 L421 362 L378 446 L484 581 L438 665 L542 818 L498 806 L574 1042" stroke-width="13"/>
+<path d="M362 150 L450 222 L508 316" stroke-width="6"/>
+<path d="M327 241 L244 316 L198 412" stroke-width="6"/>
+<path d="M420 361 L508 430 L564 526" stroke-width="5"/>
+<path d="M379 445 L292 516 L236 612" stroke-width="5"/>
+<path d="M484 580 L566 644 L620 735" stroke-width="4"/>
+</g></svg>

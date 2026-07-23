@@ -1,0 +1,68 @@
+/* =========================================================
+   MORTAL VISION — PAGE LAYOUT
+   Controls the main command-center structure and spacing.
+   ========================================================= */
+
+.mortal-vision-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(
+      circle at 50% 15%,
+      rgba(71, 85, 105, 0.18),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 50% 65%,
+      rgba(234, 179, 8, 0.055),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      #020308 0%,
+      #03050b 42%,
+      #010102 100%
+    );
+}
+
+.mortal-vision-stage {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.mortal-vision-content {
+  position: relative;
+  z-index: 10;
+
+  width: min(1500px, calc(100% - 32px));
+  margin: 0 auto;
+
+  display: grid;
+  gap: 34px;
+
+  padding:
+    clamp(60px, 8vw, 110px)
+    0
+    clamp(80px, 10vw, 140px);
+}
+
+.mortal-vision-content > section {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .mortal-vision-content {
+    width: min(100% - 20px, 1500px);
+    gap: 24px;
+
+    padding:
+      48px
+      0
+      80px;
+  }
+}
